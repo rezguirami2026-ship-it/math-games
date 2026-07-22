@@ -1,4 +1,0 @@
-User-agent: *
-Allow: /
-
-Sitemap: https://rezguirami2026-ship-it.github.io/math-games/sitemap.xml
