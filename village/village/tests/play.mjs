@@ -600,13 +600,142 @@ S.probabilityLang = async () => {
   }
 };
 
+/* ═══ الوحدة ٣: العدد (سوق الجمعية) ═══ */
+const ST7 = () => W.coop.ST7;
+// زر «اضغط مطولاً»: ضغطة قصيرة = خطوة واحدة
+const tap = (sel, inPanel = true) => G(([sel, inPanel]) => {
+  const b = inPanel ? document.querySelector('#panel ' + sel) : [...document.querySelectorAll('#actions button')].find(b => b.textContent === sel && !b.disabled);
+  if (!b) throw new Error('غير موجود: ' + sel);
+  b.dispatchEvent(new PointerEvent('pointerdown', { bubbles: true, cancelable: true })); b.dispatchEvent(new PointerEvent('pointerup', { bubbles: true }));
+}, [sel, inPanel]).then(() => sleep(60));
+// ٤٧. نظام الأعداد (٢): عجلات القفل (مئات، عشرات، آحاد، أعشار، أجزاء من مئة)
+S.numberSystem2 = async () => {
+  await station(ST7().vault, '🔐 قفل الخزينة');
+  await sheetBtn('#benchGo');   // خطأ: ٠٠٠٫٠٠
+  expect((await data('numberSystem2')).r === 0, 'رمز خاطئ فتح الخزينة');
+  for (let r = 0; r < 3; r++) {
+    const c = Math.round((await data('numberSystem2')).rounds[r].ans * 100), dg = [Math.floor(c / 10000), Math.floor(c / 1000) % 10, Math.floor(c / 100) % 10, Math.floor(c / 10) % 10, c % 10];
+    for (let i = 0; i < 5; i++) for (let k = 0; k < dg[i]; k++) await panelClick(`[data-w="${i}"][data-v="1"]`);
+    await sheetBtn('#benchGo');
+  }
+};
+// ٤٨. الأرقام الرومانية
+const ROM = [[1000, 'M'], [900, 'CM'], [500, 'D'], [400, 'CD'], [100, 'C'], [90, 'XC'], [50, 'L'], [40, 'XL'], [10, 'X'], [9, 'IX'], [5, 'V'], [4, 'IV'], [1, 'I']];
+const roman = n => { let s = ''; for (const [v, r] of ROM) while (n >= v) { s += r; n -= v; } return s; };
+S.numberHistory2 = async () => {
+  await station(ST7().roman, '🏛️ لوح الرومان');
+  await sheetBtn('#benchGo');   // خطأ: لوح فارغ
+  expect((await data('numberHistory2')).r === 0, 'نقش خاطئ قُبل');
+  for (let r = 0; r < 3; r++) {
+    const q = (await data('numberHistory2')).rounds[r];
+    if (q.t === 'r') { await typePad(q.v); continue; }
+    for (const ch of roman(q.v)) await panelClick(`[data-r="${ch}"]`);
+    await sheetBtn('#benchGo');
+  }
+};
+// ٤٩ و٥٠. دفتر البقالة وسوق السمك: لوحة أرقام
+S.addSub1 = padLesson('addSub1', '🧾 دفتر البقالة', () => ST7().grocery, (d, r) => d.rounds[r].ans);
+S.mulDiv = padLesson('mulDiv', '🐟 صندوق السمك', () => ST7().fish, (d, r) => d.rounds[r].ans);
+// ٥١. الجمع والطرح (٢): أزواج مجموعها ١٠ (القيم مخزنة × ١٠٠)
+S.addSub2 = async () => {
+  await station(ST7().pairs, '🔟 لوح العشرات');
+  const tile = i => sheetBtn(`.tile[data-i="${i}"]`);
+  const t0 = (await data('addSub2')).rounds[0].tiles;
+  await tile(0); await tile(t0.findIndex((v, i) => i > 0 && v + t0[0] !== 1000));   // خطأ: زوج مجموعه ليس ١٠
+  expect((await data('addSub2')).gone.length === 0, 'زوج خاطئ قُبل');
+  for (let r = 0; r < 2; r++) {
+    const tiles = (await data('addSub2')).rounds[r].tiles;
+    for (let i = 0; i < 6; i++) { const j = tiles.findIndex((v, k) => k > i && v + tiles[i] === 1000); if (j > 0) { await tile(i); await tile(j); } }
+  }
+  await typePad((await data('addSub2')).rounds[2].ans);
+};
+// ٥٢. ترتيب العمليات: داخل أعمق قوس، الضرب والقسمة قبل الجمع والطرح، والأسبق في القراءة أولاً
+const firstOp = tk => {
+  let lo = 0, hi = tk.length - 1;
+  const open = tk.lastIndexOf('(');
+  if (open >= 0) { lo = open + 1; hi = tk.indexOf(')', open) - 1; }
+  const ops = tk.map((x, i) => i).filter(i => i >= lo && i <= hi && '+−×÷'.includes(tk[i]));
+  return ops.find(i => '×÷'.includes(tk[i])) ?? ops[0];
+};
+S.operationLaws = async () => {
+  await station(ST7().machine, '⚙️ آلة الأقواس');
+  const tk0 = (await data('operationLaws')).cur, ok0 = firstOp(tk0);
+  await sheetBtn(`.tok[data-i="${tk0.findIndex((x, i) => i !== ok0 && '+−×÷'.includes(x))}"]`);   // خطأ: عملية ليست الأولى
+  expect((await data('operationLaws')).cur.length === tk0.length, 'عملية خاطئة نُفّذت');
+  for (let r = 0; r < 2; r++) {
+    for (;;) { const tk = (await data('operationLaws')).cur; if (!tk || tk.length === 1) break; await sheetBtn(`.tok[data-i="${firstOp(tk)}"]`); }
+    await sheetBtn('#benchGo');
+  }
+  await typePad((await data('operationLaws')).rounds[2].ans);
+};
+// ٥٣. الكسور والقسمة: نصيب الطفل = الكعكات ÷ الأطفال
+S.fractionDiv = async () => {
+  await station(ST7().cakes, '🍰 طاولة الكعك');
+  await sheetBtn('#benchGo');   // خطأ: كسر فارغ
+  expect((await data('fractionDiv')).r === 0, 'كسر خاطئ قُبل');
+  const q = (await data('fractionDiv')).rounds[0];
+  await setCounter('fn', 0, q.cakes); await setCounter('fd', 0, q.kids); await sheetBtn('#benchGo');
+  for (let r = 1; r < 3; r++) await typePad((await data('fractionDiv')).rounds[r].ans);
+};
+// ٥٤. النسب المئوية: الكسر من مئة، ثم السعر بعد الخصم
+S.percentages = async () => {
+  await station(ST7().sale, '🏷️ لافتات التخفيض');
+  await sheetBtn('#benchGo');   // خطأ: ٠٪
+  expect((await data('percentages')).r === 0, 'نسبة خاطئة قُبلت');
+  await steps((await data('percentages')).rounds[0].ans, 10, 1, '[data-p="10"]', '', '[data-p="1"]', ''); await sheetBtn('#benchGo');
+  for (let r = 1; r < 3; r++) await typePad((await data('percentages')).rounds[r].ans);
+};
+// ٥٥. النسبة والتناسب
+S.ratioProportion = async () => {
+  await station(ST7().mix, '🥣 طاولة الخلط');
+  await sheetBtn('#benchGo');   // خطأ: سلة فارغة
+  expect((await data('ratioProportion')).r === 0, 'نسبة خاطئة قُبلت');
+  const q = (await data('ratioProportion')).rounds;
+  await setCounter('o', 0, q[0].ans); await sheetBtn('#benchGo');
+  await typePad(q[1].ans);
+  await setCounter('A', 0, q[2].A); await setCounter('B', 0, q[2].B); await sheetBtn('#benchGo');
+};
+// ٥٦. الكسور: قطع اللوح = الكسر × عدد القطع، ثم كسر التفاح الأحمر
+S.fractions = async () => {
+  await station(ST7().choco, '🍫 ألواح الشوكولاتة');
+  await sheetBtn('#benchGo');   // خطأ: بلا قطع
+  expect((await data('fractions')).r === 0, 'قطع خاطئة قُبلت');
+  for (let r = 0; r < 2; r++) { const [N, , , a, b] = (await data('fractions')).rounds[r].bar; for (let i = 0; i < a * N / b; i++) await panelClick(`.piece[data-i="${i}"]`); await sheetBtn('#benchGo'); }
+  const q = (await data('fractions')).rounds[2];
+  await setCounter('fn', 0, q.y); await setCounter('fd', 0, q.g + q.y); await sheetBtn('#benchGo');
+};
+// ٥٧. الأعداد الكسرية: ضخ أجزاء البراميل، ثم تحويل كسر غير اعتيادي
+S.mixedNumbers = async () => {
+  await station(ST7().barrels, '🛢️ مضخة البراميل');
+  await sheetBtn('#benchGo');   // خطأ: براميل فارغة
+  expect((await data('mixedNumbers')).r === 0, 'مقدار خاطئ قُبل');
+  for (let r = 0; r < 2; r++) { const q = (await data('mixedNumbers')).rounds[r]; for (let i = 0; i < q.parts; i++) await tap('#pump'); await sheetBtn('#benchGo'); }
+  const q = (await data('mixedNumbers')).rounds[2];
+  await setCounter('fw', 0, Math.floor(q.tot / q.den)); await setCounter('fn', 0, q.tot % q.den); await setCounter('fd', 0, q.den); await sheetBtn('#benchGo');
+};
+// ٥٨. الكسور والكسور العشرية: كل خزان عشرة أقسام، والهدف كسر أو عشري أو نسبة
+S.decimalFractions = async () => {
+  const T = W.village.TANKS, m = () => G(() => window.__game.state.missions.tanks);
+  for (let i = 0; i < 3; i++) {
+    await goTo(T[i].x, T[i].y + 10);
+    const want = (await m()).targets[i].v;
+    for (let k = 0; k < want + (i === 0 ? 1 : 0); k++) await tap('💧 اضخ (اضغط مطولاً)', false);
+    if (i === 0) {   // خطأ: قسم زائد
+      await press('🔒 أغلق الصمام'); expect(!(await m()).done[0], 'خزان فائض قُبل');
+      await press('↩ صرّف قليلاً');
+    }
+    await press('🔒 أغلق الصمام');
+  }
+};
+
 /* ── البوابات: لا طريق عبرها قبل وقتها ── */
 const GATES = [
   { after: 'sequences', name: 'بوابة السوق', a: { x: 1380, y: 640 }, b: { x: 1620, y: 640 } },
   { after: 'areaPerimeterT1', name: 'بوابة الميناء', a: { x: 2200, y: 640 }, b: { x: 2400, y: 640 } },
   { after: 'coordinates', name: 'بوابة القلعة', a: { x: 1240, y: 1660 }, b: { x: 1240, y: 1780 } },
   { after: 'specialNumbers', name: 'بوابة ساحة المهرجان', a: { x: 1240, y: 2540 }, b: { x: 1240, y: 2680 } },
-  { after: 'probabilityLang', name: 'بوابة سوق الجمعية', a: { x: 1240, y: 3440 }, b: { x: 1240, y: 3580 } }
+  { after: 'probabilityLang', name: 'بوابة سوق الجمعية', a: { x: 1240, y: 3440 }, b: { x: 1240, y: 3580 } },
+  { after: 'decimalFractions', name: 'بوابة طريق القافلة', a: { x: 1240, y: 4440 }, b: { x: 1240, y: 4580 } }
 ];
 const pathLen = (a, b) => G(([a, b]) => window.__game.findPath(a, b).length, [a, b]);
 
@@ -619,12 +748,13 @@ try {
   await page.click('#bNew'); await page.fill('#hname', 'مختبر'); await page.click('#bGo');
   await until(() => G(() => !!window.__game.W), 'دخول القرية');
   await settle();
-  const vil = await G(async () => { const v = await import('./world/village.js'), c = await import('./missions/convoy.js'); return { PILE: v.PILE, SIGNAL: v.SIGNAL, VAN: c.VAN }; });
+  const vil = await G(async () => { const v = await import('./world/village.js'), c = await import('./missions/convoy.js'), t = await import('./missions/tanks.js'); return { PILE: v.PILE, SIGNAL: v.SIGNAL, VAN: c.VAN, TANKS: t.TANKS }; });
   W.village = vil;
   W.market = await G(async () => { const m = await import('./world/market.js'); return { BENCH: m.BENCH, BOARD: m.BOARD, BAYS: m.BAYS, CAL: m.CAL, PEN: m.PEN }; });
   W.harbor = await G(async () => { const h = await import('./world/harbor.js'); return { PIER_Y: h.PIER_Y, SEA_X: h.SEA_X, CRATES: h.CRATES, FRAME_TABLE: h.FRAME_TABLE, GIFT_TABLE: h.GIFT_TABLE, ROOF_TABLE: h.ROOF_TABLE, FISH_STAND: h.FISH_STAND, POOL_STAND: h.POOL_STAND, MILL_STAND: h.MILL_STAND, BEACH: h.BEACH }; });
   W.fort = await G(async () => { const f = await import('./world/fort.js'); return { BW: f.BW, ST4: f.ST4 }; });
   W.festival = await G(async () => { const f = await import('./world/festival.js'); return { ST5: f.ST5, ST6: f.ST6, VISITORS: f.VISITORS }; });
+  W.coop = await G(async () => { const c = await import('./world/coop.js'); return { ST7: c.ST7 }; });
   const lessons = await G(async () => (await import('./content/lessons.js')).LESSONS.map(l => ({ id: l.id, title: l.title, giver: l.giver, u: l.u })));
   for (const g of GATES) expect(await pathLen(g.a, g.b) === 0, `${g.name} مفتوحة قبل وقتها`);
   let played = 0;
