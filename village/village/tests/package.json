@@ -1,0 +1,12 @@
+{
+  "name": "village-tests",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "test": "node play.mjs",
+    "test:show": "node play.mjs --show"
+  },
+  "devDependencies": {
+    "playwright-core": "^1.50.0"
+  }
+}
