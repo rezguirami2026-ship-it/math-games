@@ -14,7 +14,7 @@ import { CHAPTER, introLines, npcLines } from './story/dialogues.js';
 import * as convoy from './missions/convoy.js';
 import { plant } from './missions/planting.js';
 import * as tanks from './missions/tanks.js';
-import { SHOP, openCounter, drawShop, drawGarden } from './missions/shop.js';
+import { SHOP, openCounter, drawShop, drawShopBack, drawGarden } from './missions/shop.js';
 import { UNIT1, POND } from './missions/unit1.js';
 import { UNIT2 } from './missions/unit2.js';
 import { UNIT3 } from './missions/unit3.js';
@@ -25,6 +25,7 @@ import { T2U3 } from './missions/t2u3.js';
 import { T2U4 } from './missions/t2u4.js';
 import { T2U5 } from './missions/t2u5.js';
 import { workshopColliders, drawWorkshopGround, workshopDrawables, STAGE } from './world/workshop.js';
+import { signboard } from './world/art.js';
 import { caravanColliders, drawCaravanGround, caravanDrawables } from './world/caravan.js';
 import { coopColliders, drawCoopGround, coopDrawables } from './world/coop.js';
 import { festivalColliders, drawFestivalGround, festivalDrawables } from './world/festival.js';
@@ -321,10 +322,11 @@ function render(ctx, view, t) {
   const T = s.missions.tanks, tanksOn = quests.isStarted('decimalFractions') || quests.isDone('decimalFractions');
   if (tanksOn) tanks.TANKS.forEach((tk, i) => list.push({ y: tk.y, draw: cc => tanks.drawTank(cc, i, T.levels[i], T.targets ? T.targets[i] : { t: 'd', s: '؟' }, T.done[i], t) }));
   tanks.TANKS.forEach((tk, i) => { if (T.done[i]) { const hs = HOUSES[tk.house]; list.push({ y: hs.y + hs.h + 9, draw: cc => tanks.drawFlowers(cc, hs) }); } });
-  list.push({ y: SHOP.y, draw: cc => drawShop(cc) });
-  list.push({ y: HERO_DOOR.y - 13, draw: cc => bubble(cc, HERO_DOOR.x, HERO_DOOR.y - 58, '🚪 خزانة البطل', '#2A1B66') });
+  list.push({ y: SHOP.y - 42, draw: cc => drawShopBack(cc) }, { y: SHOP.y, draw: cc => drawShop(cc) });
+  list.push({ y: HERO_DOOR.y - 13, draw: cc => signboard(cc, HERO_DOOR.x + 52, HERO_DOOR.y - 66, '🚪 خزانة البطل') });   // لافتة على جدار بيت البطل
   const giverMark = n => c && c.ready && MODS[c.id] && c.giver === n.id && !quests.isStarted(c.id) ? '!' : null;
-  W.npcs.filter(n => npcVisible(n, s)).forEach(n => list.push({ y: n.y, draw: cc => drawNpc(cc, n, giverMark(n)) }));
+  // الشخصيات خارج الشاشة لا تُرسم (كانت كلها تُرسم في كل إطار)
+  W.npcs.filter(n => npcVisible(n, s) && n.x > view.x - 60 && n.x < view.x + view.w + 60 && n.y > view.y - 20 && n.y < view.y + view.h + 110).forEach(n => list.push({ y: n.y, draw: cc => drawNpc(cc, n, giverMark(n)) }));
   const pl = W.player, mod = curMod(), hand = mod && mod.hand && c && quests.isStarted(c.id) ? mod.hand(quests.data(c.id)) : null;
   const pa = pl.anim ? pl.anim.name : pl.moving ? (pl.speed > 160 ? 'run' : 'walk') : 'idle';
   list.push({ y: pl.y, draw: cc => drawHuman(cc, Object.assign(hero(), { x: pl.x, y: pl.y, dir: pl.dir, phase: pl.phase, moving: pl.moving, carry: hand ? Math.min(hand.n, 6) : s.carry, bend: pl.act === 'plant', anim: pa, animT: pl.anim ? pl.anim.t : 0 })) });

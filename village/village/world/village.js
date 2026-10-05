@@ -1,7 +1,7 @@
 // قرية الخير: تخطيط العالم ورسمه. المزرعة والبئر والنخيل تتغير حسب حالة العالم.
 // الرسم بأسلوب 2.5D مشترك (world/art.js): مبانٍ بجدران وأسطح، ظلال نحو الأسفل يميناً، أرصفة بحواف، وأنسجة مواد.
 import { rng, shade, mix, rr, clamp } from '../core/util.js';
-import { PAL, SUN, INK, pattern, boxShadow, blobShadow, building, palm, shrub, streetLamp, bench, signboard } from './art.js';
+import { PAL, SUN, INK, pattern, sprite, boxShadow, blobShadow, building, palm, palmCached, shrub, streetLamp, bench, signboard } from './art.js';
 
 export const WORLD = { w: 3200, h: 6500 };   // القرية في الشمال، ثم السوق والميناء شرقاً، والقلعة والمهرجان والجمعية والقافلة والورشة جنوباً
 export const ROADS = [{ x: 0, y: 600, w: 2930, h: 80 }, { x: 700, y: 0, w: 70, h: 600 }];
@@ -48,7 +48,12 @@ const boxInView = (v, x, y, w, h, m) => x + w > v.x - m && x < v.x + v.w + m && 
 
 /* ── الأرض (تُرسم أولاً): رمل بملمس وتفاوت، شوارع وأرصفة بحواف، ساحات، ثم ظلال المباني ── */
 const R = rng(7), PATCHES = Array.from({ length: 70 }, () => ({ x: R() * 3000, y: R() * 1800, r: 40 + R() * 120, k: R() < .5 ? 'rgba(205,176,125,.35)' : 'rgba(244,228,192,.4)' }));
-export function drawGround(ctx, view) {
+export function drawGround(ctx, view) {   // الأرض ثابتة: تُرسم في قطع ٥١٢×٥١٢ محفوظة، وتُنسخ في كل إطار
+  const CH = 512;
+  for (let cy = Math.floor(view.y / CH); cy * CH < view.y + view.h; cy++) for (let cx = Math.floor(view.x / CH); cx * CH < view.x + view.w; cx++)
+    if (cx >= 0 && cy >= 0) sprite(ctx, `ground|${cx}|${cy}`, cx * CH, cy * CH, CH, CH, c => paintGround(c, { x: cx * CH, y: cy * CH, w: CH, h: CH }), 2);
+}
+function paintGround(ctx, view) {
   const v = view, m = 40;
   ctx.fillStyle = pattern(ctx, 'sand'); ctx.fillRect(v.x - m, v.y - m, v.w + 2 * m, v.h + 2 * m);
   PATCHES.forEach(p => { if (inView(v, p.x, p.y, p.r)) { const g = ctx.createRadialGradient(p.x, p.y, 0, p.x, p.y, p.r); g.addColorStop(0, p.k); g.addColorStop(1, 'rgba(0,0,0,0)'); ctx.fillStyle = g; ctx.fillRect(p.x - p.r, p.y - p.r * .6, p.r * 2, p.r * 1.2); } });
@@ -98,8 +103,15 @@ const PLOTS = [   // الحقول: [x, y, w, h, نوع]
   [FI.x + 8, FI.y + 166, 238, 128, 'mounds'], [FI.x + 280, FI.y + 166, 126, 128, 'young']
 ];
 const CH_Y = FI.y + 18, CH_X = [FI.x + 262, FI.x + 418];   // القناة الرئيسة وفرعاها
-export function drawFarm(ctx, g, t) {
-  const F = FARM;
+export function drawFarm(ctx, g, t) {   // المزرعة من الذاكرة لكل مستوى ماء، ولمعة الماء الجاري حية فوقها
+  const gq = Math.round(g * 20) / 20, F = FARM;
+  sprite(ctx, 'farm|' + gq, F.x - 12, F.y - 34, F.w + 24, F.h + 46, c => paintFarm(c, gq));
+  const flow = clamp(gq * 1.3, 0, 1);
+  channelGlints(ctx, FI.x + 4, CH_Y, FI.w - 8, true, flow, t);
+  CH_X.forEach((cx, i) => channelGlints(ctx, cx, CH_Y + 6, FI.h - 30, false, clamp(flow * 1.4 - .3 - i * .2, 0, 1), t));
+}
+function paintFarm(ctx, g) {
+  const F = FARM, t = 0;
   // التربة: جافة متشققة ثم رطبة داكنة كلما وصل الماء
   ctx.fillStyle = mix('#D3B07E', '#B99566', g); rr(ctx, F.x, F.y, F.w, F.h, 10); ctx.fill();
   PLOTS.forEach(([x, y, w, h, kind], i) => {
@@ -136,7 +148,10 @@ function channel(ctx, x, y, len, horiz, flow, t) {   // قناة الفلج: ح�
   if (flow <= 0) return;
   const L = len * flow;
   ctx.fillStyle = PAL.water; horiz ? ctx.fillRect(x + len - L, y - W / 2 + 1.5, L, W - 3) : ctx.fillRect(x - W / 2 + 1.5, y, W - 3, L);
-  ctx.fillStyle = PAL.waterLight;
+}
+function channelGlints(ctx, x, y, len, horiz, flow, t) {   // لمعة الماء الجاري في الفلج
+  if (flow <= 0) return;
+  const L = len * flow; ctx.fillStyle = PAL.waterLight;
   for (let k = 0; k < L; k += 22) { const o = (t * 34 + k) % L; horiz ? ctx.fillRect(x + len - o - 7, y - 1, 7, 1.6) : ctx.fillRect(x - 1, y + o, 1.6, 7); }
 }
 function crops(ctx, x, y, w, h, kind, k, t) {   // المحاصيل تنمو بقدر k
@@ -170,12 +185,14 @@ export function drawPalm(ctx, x, y, sc, dry, t) { palm(ctx, x, y, sc, dry, t); }
 const behind = (pl, b, H) => pl && pl.x > b.x - 8 && pl.x < b.x + b.w + 8 && pl.y < b.y + b.h - 4 && pl.y > b.y - H - 10;
 export function staticDrawables(state, t, pl) {
   const out = [];
-  HOUSES.forEach(b => out.push({ y: b.y + b.h, draw: c => building(c, Object.assign({}, b, { H: H_HOUSE, faded: behind(pl, b, H_HOUSE) }), t) }));
-  SOUTH.forEach(b => out.push({ y: b.y + b.h, draw: c => building(c, Object.assign({}, b, { H: H_SOUTH, style: 'shop', faded: behind(pl, b, H_SOUTH) }), t) }));
-  out.push({ y: WAREHOUSE.y + WAREHOUSE.h, draw: c => drawWarehouse(c, behind(pl, WAREHOUSE, H_WARE)) });
+  // المباني من الذاكرة: صورة واحدة لكل مبنى، وشفافة إن وقف البطل خلفها
+  const cachedBox = (key, b, H, paint) => c => { const f = behind(pl, b, H); if (f) c.globalAlpha = .42; sprite(c, key, b.x - 14, b.y - H - 26, b.w + 28, b.h + H + 36, paint); c.globalAlpha = 1; };
+  HOUSES.forEach((b, i) => out.push({ y: b.y + b.h, draw: cachedBox('house' + i, b, H_HOUSE, c => building(c, Object.assign({}, b, { H: H_HOUSE }), 0)) }));
+  SOUTH.forEach((b, i) => out.push({ y: b.y + b.h, draw: cachedBox('south' + i, b, H_SOUTH, c => building(c, Object.assign({}, b, { H: H_SOUTH, style: 'shop' }), 0)) }));
+  out.push({ y: WAREHOUSE.y + WAREHOUSE.h, draw: cachedBox('warehouse', WAREHOUSE, H_WARE, c => drawWarehouse(c, false)) });
   out.push({ y: WELL.y + WELL.r, draw: c => drawWell(c, state.world.delivered, t) });
-  PALMS.forEach(p => out.push({ y: p.y, draw: c => palm(c, p.x, p.y, 1, false, t) }));
-  FARM_PALMS.forEach(p => out.push({ y: p.y, draw: c => palm(c, p.x, p.y, .95, !state.world.delivered, t) }));
+  PALMS.forEach(p => out.push({ y: p.y, draw: c => palmCached(c, p.x, p.y, 1, false, t) }));
+  FARM_PALMS.forEach(p => out.push({ y: p.y, draw: c => palmCached(c, p.x, p.y, .95, !state.world.delivered, t) }));
   LAMPS.forEach(p => out.push({ y: p.y, draw: c => streetLamp(c, p.x, p.y, t, false) }));
   SHRUBS.forEach(p => out.push({ y: p.y, draw: c => shrub(c, p.x, p.y, 9, p.f) }));
   out.push({ y: 548, draw: c => bench(c, 1196, 548) });

@@ -4,10 +4,15 @@ export const dist = (a, b) => Math.hypot(a.x - b.x, a.y - b.y);
 export const lerp = (a, b, t) => a + (b - a) * t;
 export const wait = ms => new Promise(r => setTimeout(r, ms));
 export function rng(seed) { let s = seed >>> 0; return () => { s = (s * 1664525 + 1013904223) >>> 0; return s / 4294967296; }; }
+const shades = new Map();   // الألوان المحسوبة محفوظة: تُستدعى آلاف المرات في كل إطار
 export function shade(hex, amt) {
+  const k = hex + amt; let r = shades.get(k);
+  if (r) return r;
   const n = parseInt(hex.slice(1), 16);
   const c = [n >> 16, (n >> 8) & 255, n & 255].map(v => clamp(v + amt, 0, 255));
-  return '#' + c.map(v => v.toString(16).padStart(2, '0')).join('');
+  r = '#' + c.map(v => v.toString(16).padStart(2, '0')).join('');
+  if (shades.size < 4000) shades.set(k, r);
+  return r;
 }
 export function mix(a, b, t) {
   const pa = parseInt(a.slice(1), 16), pb = parseInt(b.slice(1), 16);

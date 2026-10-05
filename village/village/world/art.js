@@ -14,18 +14,37 @@ export const PAL = {
 /* الشمس: من أعلى اليسار. الظل لكل وحدة ارتفاع ينزاح يميناً وأسفل */
 export const SUN = { dx: .5, dy: .3, color: 'rgba(70,42,20,.24)', soft: 'rgba(70,42,20,.10)' };
 
-/* ── الأنسجة: بلاطة صغيرة مولّدة مرة واحدة بدقة مضاعفة، وتُكرَّر كنمط ── */
-const patterns = new Map();
+/* ── الأنسجة: بلاطة صغيرة مولّدة مرة واحدة بدقة مضاعفة، وتُكرَّر كنمط (النمط محفوظ لكل لوحة رسم) ── */
+const tiles = new Map(), ctxPatterns = new WeakMap();
 function tile(key, size, paint) {
-  if (patterns.has(key)) return patterns.get(key);
+  if (tiles.has(key)) return tiles.get(key);
   const c = document.createElement('canvas'); c.width = c.height = size * 2;
   const x = c.getContext('2d'); x.scale(2, 2); paint(x, size);
-  patterns.set(key, c); return c;
+  tiles.set(key, c); return c;
 }
 export function pattern(ctx, key) {
-  const src = tile(key, ...TILES[key]), p = ctx.createPattern(src, 'repeat');
+  let m = ctxPatterns.get(ctx); if (!m) ctxPatterns.set(ctx, m = new Map());
+  if (m.has(key)) return m.get(key);
+  const p = ctx.createPattern(tile(key, ...TILES[key]), 'repeat');
   if (p.setTransform) p.setTransform(new DOMMatrix().scale(.5));
-  return p;
+  m.set(key, p); return p;
+}
+
+/* ── ذاكرة الصور (Sprite cache): ما هو ثابت يُرسم مرة واحدة بدقة الشاشة الحالية ثم يُنسخ في كل إطار ──
+   (bx, by, bw, bh) مستطيل الصورة بإحداثيات العالم، وpaint يرسم بإحداثيات العالم نفسها. maxScale يحدّ الذاكرة. */
+const sprites = new Map();
+export function sprite(ctx, key, bx, by, bw, bh, paint, maxScale = 3) {
+  const m = ctx.getTransform(), s = Math.max(1, Math.min(maxScale, Math.floor(Math.hypot(m.a, m.b) * 2) / 2));
+  const k = key + '@' + s;
+  let c = sprites.get(k);
+  if (c) { sprites.delete(k); sprites.set(k, c); }   // الأحدث استعمالاً في آخر القائمة
+  else {
+    c = document.createElement('canvas'); c.width = Math.ceil(bw * s); c.height = Math.ceil(bh * s);
+    const x = c.getContext('2d'); x.scale(s, s); x.translate(-bx, -by); paint(x);
+    sprites.set(k, c);
+    while (sprites.size > 140) sprites.delete(sprites.keys().next().value);   // حدّ للذاكرة على الأجهزة الضعيفة
+  }
+  ctx.drawImage(c, bx, by, bw, bh);
 }
 const speckle = (x, s, n, cols, rmin, rmax, seed) => { const R = rng(seed); for (let i = 0; i < n; i++) { x.fillStyle = cols[Math.floor(R() * cols.length)]; x.globalAlpha = .35 + R() * .45; x.beginPath(); x.ellipse(R() * s, R() * s, rmin + R() * (rmax - rmin), (rmin + R() * (rmax - rmin)) * .7, R() * 3, 0, 7); x.fill(); } x.globalAlpha = 1; };
 const TILES = {
@@ -176,10 +195,17 @@ function roofProps(ctx, b, ry, t) {   // ما على السطح: خزان ماء
 }
 
 /* ── النبات ── */
-export function palm(ctx, x, y, sc, dry, t) {   // نخلة: جذع بحراشف، وسعف بوريقات، وعذوق تمر
+/* نخلة ثابتة من الذاكرة، تتمايل بإمالة الصورة حول قاعدتها (لا إعادة رسم في كل إطار) */
+export function palmCached(ctx, x, y, sc, dry, t) {
+  const sway = Math.sin((t || 0) * 1.1 + x * .01) * .035, v = Math.round(Math.abs(Math.sin(x * .07)) * 3);
+  ctx.save(); ctx.translate(x, y); ctx.transform(1, 0, -sway, 1, 0, 0);
+  sprite(ctx, `palm|${dry ? 1 : 0}|${sc}|${v}`, -64 * sc, -140 * sc, 128 * sc, 150 * sc, c => palm(c, 0, 0, sc, dry, 0, v));
+  ctx.restore();
+}
+export function palm(ctx, x, y, sc, dry, t, variant) {   // نخلة: جذع بحراشف، وسعف بوريقات، وعذوق تمر
   if (sc <= 0) return;
   ctx.save(); ctx.translate(x, y); ctx.scale(sc, sc);
-  const H = 80, sway = Math.sin((t || 0) * 1.1 + x * .01) * .04, lean = Math.sin(x * .07) * 6;
+  const H = 80, sway = Math.sin((t || 0) * 1.1 + x * .01) * .04, lean = variant !== undefined ? (variant - 1.5) * 4 : Math.sin(x * .07) * 6;
   const cx = k => lean * k * k;   // انحناء الجذع
   // الجذع: مستدق ومنحنٍ، مضاء من اليسار، بحراشف ماسية
   ctx.beginPath(); for (let i = 0; i <= 10; i++) { const k = i / 10; ctx.lineTo(cx(k) - (6 - k * 2), -k * H); } for (let i = 10; i >= 0; i--) { const k = i / 10; ctx.lineTo(cx(k) + (6 - k * 2), -k * H); } ctx.closePath();
@@ -193,13 +219,13 @@ export function palm(ctx, x, y, sc, dry, t) {   // نخلة: جذع بحراشف
   // سعفة: جريدة منحنية ووريقات رفيعة على الجانبين تقصر نحو الطرف
   const frond = (a, len, col, droop) => {
     const ex = top[0] + Math.cos(a) * len, ey = top[1] + Math.sin(a) * len * .5 + droop, mx = top[0] + Math.cos(a) * len * .55, my = top[1] + Math.sin(a) * len * .28 - 7;
-    ctx.strokeStyle = col; ctx.lineCap = 'round';
+    ctx.strokeStyle = col; ctx.lineCap = 'round'; ctx.lineWidth = 1.5; ctx.beginPath();   // كل وريقات السعفة في مسار واحد
     for (let k = 1; k <= 12; k++) {
       const u = k / 13, qx = (1 - u) * (1 - u) * top[0] + 2 * (1 - u) * u * mx + u * u * ex, qy = (1 - u) * (1 - u) * top[1] + 2 * (1 - u) * u * my + u * u * ey;
       const tx = 2 * (1 - u) * (mx - top[0]) + 2 * u * (ex - mx), ty = 2 * (1 - u) * (my - top[1]) + 2 * u * (ey - my), tl = Math.hypot(tx, ty) || 1, l = 11 * Math.sin(Math.PI * (u * .85 + .1));
-      ctx.lineWidth = 1.5;
-      [1, -1].forEach(sd => { const nx = -ty / tl * sd, ny = tx / tl * sd; ctx.beginPath(); ctx.moveTo(qx, qy); ctx.lineTo(qx + (nx * .8 + tx / tl * .55) * l, qy + (ny * .8 + tx / tl * .1) * l + l * .45); ctx.stroke(); });
+      [1, -1].forEach(sd => { const nx = -ty / tl * sd, ny = tx / tl * sd; ctx.moveTo(qx, qy); ctx.lineTo(qx + (nx * .8 + tx / tl * .55) * l, qy + (ny * .8 + tx / tl * .1) * l + l * .45); });
     }
+    ctx.stroke();
     ctx.strokeStyle = shade(col, -30); ctx.lineWidth = 1.5; ctx.beginPath(); ctx.moveTo(top[0], top[1]); ctx.quadraticCurveTo(mx, my, ex, ey); ctx.stroke();
   };
   if (!dry) [-2.2, -1, 2.6].forEach(a => frond(a, 26, '#9C8148', 22));   // سعف يابس متدلٍّ تحت التاج
