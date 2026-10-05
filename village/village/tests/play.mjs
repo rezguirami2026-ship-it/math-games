@@ -484,12 +484,129 @@ S.specialNumbers = async () => {
   for (let r = 0; r < 3; r++) { const q = (await data('specialNumbers')).rounds[r]; for (let i = 0; i < q.nums.length; i++) if (RIDDLES[q.k](q.nums[i])) await panelClick(`.stone[data-i="${i}"]`); await sheetBtn('#benchGo'); }
 };
 
+/* ═══ الفصل الثاني — الوحدة ١: القياس (مطبخ المهرجان) ═══ */
+const ST5 = () => W.festival.ST5, ST6 = () => W.festival.ST6;
+const mod = (v, m) => ((v % m) + m) % m;
+// ٣٧. الكتلة والسعة (١): أثقال تساوي كتلة الكيس، وإبريق يُصب ٥٠ مل في كل ضغطة
+S.massCapacity1 = async () => {
+  await station(ST5().scale, '⚖️ ميزان المطبخ');
+  await sheetBtn('#benchGo');   // خطأ: كفة بلا أثقال
+  expect((await data('massCapacity1')).r === 0, 'وزن خاطئ قُبل');
+  for (let r = 0; r < 3; r++) {
+    const q = (await data('massCapacity1')).rounds[r];
+    if (q.t === 'w') for (const w of coinsFor(q.g, [1000, 500, 200, 100, 50])) await panelClick(`.money[data-v="${w}"]`);
+    else for (let i = 0; i < q.ml / 50; i++) { await G(() => { const b = document.getElementById('pour'); b.dispatchEvent(new PointerEvent('pointerdown', { bubbles: true })); b.dispatchEvent(new PointerEvent('pointerup', { bubbles: true })); }); await sleep(40); }
+    await sheetBtn('#benchGo'); await until(async () => (await data('massCapacity1')).r > r, 'جولة المطبخ');
+  }
+};
+// ٣٨. الكتلة والسعة (٢): المقدار × (عدد الضيوف ÷ ٤)
+S.massCapacity2 = async () => {
+  await station(ST5().recipe, '🍲 دفتر الوصفات');
+  await sheetBtn('#benchGo');   // خطأ: مقادير صفرية
+  expect((await data('massCapacity2')).r === 0, 'وصفة خاطئة قُبلت');
+  for (let r = 0; r < 3; r++) {
+    const q = (await data('massCapacity2')).rounds[r];
+    for (const [i, k] of ['a', 'b', 'c'].entries()) { const v = q.ing[i][2] * q.p / 4; for (let n = 0; n < Math.floor(v / 100); n++) await panelClick(`[data-c="${k}"][data-v="100"]`); for (let n = 0; n < v % 100 / 10; n++) await panelClick(`[data-c="${k}"][data-v="10"]`); }
+    await sheetBtn('#benchGo');
+  }
+};
+// ٣٩. تحويل الوقت: عقارب ساعة (كل ١٢ ساعة دورة)، ثم أيام → ساعات
+S.timeConvert = async () => {
+  await station(ST5().clock, '⏰ آلة ساعة البرج');
+  await sheetBtn('#benchGo');   // خطأ: الساعة كما هي
+  expect((await data('timeConvert')).r === 0, 'وقت خاطئ قُبل');
+  for (let r = 0; r < 3; r++) {
+    const d = await data('timeConvert'), q = d.rounds[r];
+    if (q.t === 'c') await steps(mod(q.ans - d.tm, 720), 60, 5, '[data-m="60"]', '', '[data-m="5"]', '');
+    else await setCounter('n', 0, q.ans);
+    await sheetBtn('#benchGo');
+  }
+};
+// ٤٠. المناطق الزمنية (١): وقت المدينة = وقت مسقط + الفرق
+S.timeZones1 = async () => {
+  await station(ST5().calls, '🌍 جدار الساعات');
+  await sheetBtn('#benchGo');   // خطأ: وقت مسقط نفسه
+  expect((await data('timeZones1')).r === 0, 'ساعة خاطئة قُبلت');
+  for (let r = 0; r < 3; r++) { const d = await data('timeZones1'), q = d.rounds[r]; await steps(mod(q.ans - (d.tm || q.m), 1440), 60, 15, '[data-m="60"]', '', '[data-m="15"]', ''); await sheetBtn('#benchGo'); }
+};
+// ٤١. المساحة والمحيط: بُعد ناقص من المساحة أو المحيط، ثم مساحة شكل L
+S.areaPerimeter = async () => {
+  await station(ST5().guest, '🏠 مخططات البيت');
+  await sheetBtn('#build');   // خطأ: طول ١ م
+  expect((await data('areaPerimeter')).r === 0, 'بُعد خاطئ قُبل');
+  for (let r = 0; r < 3; r++) {
+    const d = await data('areaPerimeter'), q = d.rounds[r];
+    if (q.t === 'L') { await typePad(q.ans); continue; }
+    for (let i = d.n; i < q.ans; i++) await panelClick('[data-s="1"]');
+    await sheetBtn('#build');
+  }
+};
+
+/* ═══ الوحدة ٢: معالجة البيانات (ساحة المهرجان) ═══ */
+// ٤٢. الرسم الخطي: نقطة لكل ساعة (س = ٤٠ + ٥٢ × الزمن، ص = ١٩٦ − المسافة ÷ أقصى مسافة × ١٧٠)
+S.lineGraphs = async () => {
+  await station(ST6().graph, '📈 لوح الرحلة');
+  await sheetBtn('#benchGo');   // خطأ: بلا نقاط
+  expect((await data('lineGraphs')).r === 0, 'رسم ناقص قُبل');
+  for (let t = 1; t <= 5; t++) await canvasClick('gr', 40 + t * 52, 196 - t / 5 * 170);
+  await sheetBtn('#benchGo');
+  for (let r = 1; r < 3; r++) await typePad((await data('lineGraphs')).rounds[r].ans);
+};
+// ٤٣. المخططات الدائرية: النسب بخطوات ٥٪، ثم نسبة مئوية من عدد
+S.pieCharts = async () => {
+  await station(ST6().pie, '🥧 خطة الحقل');
+  await sheetBtn('#benchGo');   // خطأ: حقل فارغ
+  expect((await data('pieCharts')).r === 0, 'تقسيم خاطئ قُبل');
+  for (let r = 0; r < 2; r++) { const q = (await data('pieCharts')).rounds[r]; for (let i = 0; i < 3; i++) for (let k = 0; k < q.ans[i] / 5; k++) await panelClick(`[data-i="${i}"][data-v="5"]`); await sheetBtn('#benchGo'); }
+  await typePad((await data('pieCharts')).rounds[2].ans);
+};
+// ٤٤. المتوسط: نقل التمر من السلال الممتلئة إلى الناقصة حتى تتساوى، ثم حساب المتوسط
+S.statsAverage = async () => {
+  await station(ST6().harvest, '🧺 سلال التمر');
+  await sheetBtn('#benchGo');   // خطأ: السلال غير متساوية
+  expect((await data('statsAverage')).r === 0, 'سلال غير متساوية قُبلت');
+  const basket = i => canvasClick('bk', 34 + i * 63, 140);
+  for (;;) {
+    const d = await data('statsAverage'), m = d.rounds[0].m, from = d.bk.findIndex(v => v > m), to = d.bk.findIndex(v => v < m);
+    if (from < 0) break;
+    await basket(from); await basket(to);
+  }
+  await sheetBtn('#benchGo');
+  for (let r = 1; r < 3; r++) await typePad((await data('statsAverage')).rounds[r].ans);
+};
+// ٤٥. استخدام الإحصاء: سؤال الزوار، ثم أعمدة تطابق علامات العدّ، ثم المنوال
+S.usingStats = async () => {
+  const V = W.festival.VISITORS;
+  for (;;) { const i = (await data('usingStats')).asked.findIndex(a => !a); if (i < 0) break; await goTo(V[i].x, V[i].y + 10); await press('📋 اسأل الزائر'); }
+  await station(ST6().survey, '📊 لوح الاستبيان');
+  await sheetBtn('#benchGo');   // خطأ: أعمدة صفرية
+  expect(!(await G(() => !!document.querySelector('#panel [data-pick]'))), 'مخطط خاطئ قُبل');
+  const ans = (await data('usingStats')).ans, tally = [0, 1, 2].map(k => ans.filter(x => x === k).length);
+  for (let k = 0; k < 3; k++) for (let i = 0; i < tally[k]; i++) await panelClick(`[data-k="${k}"][data-v="1"]`);
+  await sheetBtn('#benchGo');
+  await sheetBtn(`[data-pick="${tally.indexOf(Math.max(...tally))}"]`);
+};
+// ٤٦. لغة الاحتمال: عدد القطاعات الحمراء من ٨ (القطاع i عند الزاوية (i + ½) × ٤٥° + دوران القرص)
+const RED = [4, 2, 6, 8, 0];   // متساوٍ، غير مرجّح، مرجّح، مؤكد، مستحيل
+S.probabilityLang = async () => {
+  await station(ST6().spinner, '🎡 دوّار المهرجان');
+  const spin = async r => { await sheetBtn('#benchGo'); await until(async () => (await data('probabilityLang')).r > r || await G(() => document.getElementById('benchMsg')?.classList.contains('bad')), 'الدوّار'); await sleep(200); };
+  await spin(0);   // خطأ: لا أحمر (لا تطلبه الجولة الأولى أبداً)
+  expect((await data('probabilityLang')).r === 0, 'تلوين خاطئ قُبل');
+  for (let r = 0; r < 3; r++) {
+    const d = await data('probabilityLang');
+    for (let i = 0; i < RED[d.rounds[r]]; i++) { const a = (i + .5) * Math.PI / 4 + d.rot; await canvasClick('sp', 120 + 60 * Math.cos(a), 124 + 60 * Math.sin(a)); }
+    await spin(r);
+  }
+};
+
 /* ── البوابات: لا طريق عبرها قبل وقتها ── */
 const GATES = [
   { after: 'sequences', name: 'بوابة السوق', a: { x: 1380, y: 640 }, b: { x: 1620, y: 640 } },
   { after: 'areaPerimeterT1', name: 'بوابة الميناء', a: { x: 2200, y: 640 }, b: { x: 2400, y: 640 } },
   { after: 'coordinates', name: 'بوابة القلعة', a: { x: 1240, y: 1660 }, b: { x: 1240, y: 1780 } },
-  { after: 'specialNumbers', name: 'بوابة ساحة المهرجان', a: { x: 1240, y: 2540 }, b: { x: 1240, y: 2680 } }
+  { after: 'specialNumbers', name: 'بوابة ساحة المهرجان', a: { x: 1240, y: 2540 }, b: { x: 1240, y: 2680 } },
+  { after: 'probabilityLang', name: 'بوابة سوق الجمعية', a: { x: 1240, y: 3440 }, b: { x: 1240, y: 3580 } }
 ];
 const pathLen = (a, b) => G(([a, b]) => window.__game.findPath(a, b).length, [a, b]);
 
@@ -507,6 +624,7 @@ try {
   W.market = await G(async () => { const m = await import('./world/market.js'); return { BENCH: m.BENCH, BOARD: m.BOARD, BAYS: m.BAYS, CAL: m.CAL, PEN: m.PEN }; });
   W.harbor = await G(async () => { const h = await import('./world/harbor.js'); return { PIER_Y: h.PIER_Y, SEA_X: h.SEA_X, CRATES: h.CRATES, FRAME_TABLE: h.FRAME_TABLE, GIFT_TABLE: h.GIFT_TABLE, ROOF_TABLE: h.ROOF_TABLE, FISH_STAND: h.FISH_STAND, POOL_STAND: h.POOL_STAND, MILL_STAND: h.MILL_STAND, BEACH: h.BEACH }; });
   W.fort = await G(async () => { const f = await import('./world/fort.js'); return { BW: f.BW, ST4: f.ST4 }; });
+  W.festival = await G(async () => { const f = await import('./world/festival.js'); return { ST5: f.ST5, ST6: f.ST6, VISITORS: f.VISITORS }; });
   const lessons = await G(async () => (await import('./content/lessons.js')).LESSONS.map(l => ({ id: l.id, title: l.title, giver: l.giver, u: l.u })));
   for (const g of GATES) expect(await pathLen(g.a, g.b) === 0, `${g.name} مفتوحة قبل وقتها`);
   let played = 0;
