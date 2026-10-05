@@ -189,8 +189,72 @@ S.sequences = async () => {
   for (let r = 0; r < 5; r++) await stone(d.rows[r].ok);
 };
 
+/* ═══ الوحدة ٢: القياس (السوق الأسبوعي) ═══ */
+const sheetBtn = sel => panelClick(sel).then(() => sleep(120));
+// ١١. رسم وقياس الخطوط: المنشار يبدأ عند ٥٠ ملم
+S.lengthMeasure = async () => {
+  const { BENCH } = W.market; await goTo(BENCH.x, BENCH.y + 16); await press('🪚 طاولة النجار');
+  await sheetBtn('#benchGo');   // خطأ: القطع عند ٥٠ ملم (الطلب الأول لا يكون من مضاعفات ١٠)
+  expect((await data('lengthMeasure')).r === 0, 'قطعة خاطئة قُبلت');
+  for (let r = 0; r < 3; r++) {
+    const d = await data('lengthMeasure'); let diff = d.rounds[r].mm - d.pos;
+    while (diff >= 10) { await sheetBtn('[data-d="10"]'); diff -= 10; } while (diff <= -10) { await sheetBtn('[data-d="-10"]'); diff += 10; }
+    while (diff > 0) { await sheetBtn('[data-d="1"]'); diff--; } while (diff < 0) { await sheetBtn('[data-d="-1"]'); diff++; }
+    await sheetBtn('#benchGo');
+  }
+};
+// ١٢. رسم الخطوط: نقرة بالفأرة على المسطرة (كل ملم = ٢٫٥ بكسل، والبداية عند ١٨)
+S.lineDrawing = async () => {
+  const { BOARD } = W.market; await goTo(BOARD.x, BOARD.y + 14); await press('✏️ لوح المدرب');
+  const drawAt = async mm => { const b = await page.locator('#draw').boundingBox(); await page.mouse.click(b.x + 18 + mm * 2.5, b.y + 44); await sleep(80); await sheetBtn('#benchGo'); };
+  await drawAt((await data('lineDrawing')).rounds[0].mm - 3);   // خطأ: أقصر بـ ٣ ملم
+  expect((await data('lineDrawing')).r === 0, 'خط خاطئ قُبل');
+  for (let r = 0; r < 3; r++) await drawAt((await data('lineDrawing')).rounds[r].mm);
+};
+// ١٣. الجداول الزمنية: كل مسافر يعرف حافلته (bus)، والخطأ رصيف آخر
+S.timeTables = async () => {
+  const { BAYS } = W.market;
+  for (let i = 0; i < 3; i++) {
+    const p = (await data('timeTables')).pax[i];
+    await goTo(p.x, p.y + 10); await press('🧳 رافِق ' + p.name); await settle();
+    const bay = async j => { await goTo(BAYS[j].x, BAYS[j].y + 8); await press('🚌 أركبه حافلة الرصيف ' + BAYS[j].id); };
+    if (i === 0) { await bay((p.bus + 1) % 3); expect((await data('timeTables')).pax[0].st === 'follow', 'مسافر ركب حافلة خاطئة'); }
+    await bay(p.bus);
+  }
+};
+// ١٤. التقويمات: التقويم يفتح على شهر البداية، والجواب قد يكون في شهر لاحق
+S.calendars = async () => {
+  const { CAL } = W.market; await goTo(CAL.x, CAL.y + 16); await press('📅 تقويم المهرجان');
+  for (let r = 0; r < 3; r++) {
+    const q = (await data('calendars')).rounds[r], a = new Date(q.ans), s = new Date(q.show);
+    const months = (a.getUTCFullYear() - s.getUTCFullYear()) * 12 + a.getUTCMonth() - s.getUTCMonth();
+    if (r === 0) { await sheetBtn(`.day[data-day="${months === 0 && a.getUTCDate() === 1 ? 2 : 1}"]`); expect((await data('calendars')).r === 0, 'يوم خاطئ قُبل'); }
+    for (let k = 0; k < months; k++) await sheetBtn('#calNext');
+    await sheetBtn(`.day[data-day="${a.getUTCDate()}"]`);
+  }
+};
+// ١٥. المساحة والمحيط: الطول × العرض = المساحة، و٢ × (الطول + العرض) = المحيط؛ وأكبر مساحة بمحيط ثابت = مربع
+S.areaPerimeterT1 = async () => {
+  const { PEN } = W.market; await goTo(PEN.x + 160, PEN.y + PEN.cell * PEN.n + 20);
+  await press('🔨 ابنِ السياج');   // خطأ: ١ × ١
+  expect((await data('areaPerimeterT1')).r === 0, 'حظيرة خاطئة قُبلت');
+  for (let r = 0; r < 3; r++) {
+    const q = (await data('areaPerimeterT1')).rounds[r]; let l, w;
+    if (q.max) l = w = q.P / 4;
+    else for (let a = 1; a <= PEN.n && !l; a++) if (q.A % a === 0 && 2 * (a + q.A / a) === q.P && q.A / a <= PEN.n) { l = a; w = q.A / a; }
+    expect(l, `لا يوجد مستطيل يحقق الطلب ${JSON.stringify(q)}`);
+    for (let i = 1; i < l; i++) await press('➕ الطول');
+    for (let i = 1; i < w; i++) await press('➕ العرض');
+    await press('🔨 ابنِ السياج');
+    await until(async () => (await data('areaPerimeterT1')).r > r || await isDone('areaPerimeterT1'), 'بناء الحظيرة');
+  }
+};
+
 /* ── البوابات: لا طريق عبرها قبل وقتها ── */
-const GATES = [{ after: 'sequences', name: 'بوابة السوق', a: { x: 1380, y: 640 }, b: { x: 1620, y: 640 } }];
+const GATES = [
+  { after: 'sequences', name: 'بوابة السوق', a: { x: 1380, y: 640 }, b: { x: 1620, y: 640 } },
+  { after: 'areaPerimeterT1', name: 'بوابة الميناء', a: { x: 2200, y: 640 }, b: { x: 2400, y: 640 } }
+];
 const pathLen = (a, b) => G(([a, b]) => window.__game.findPath(a, b).length, [a, b]);
 
 /* ── التشغيل ── */
@@ -204,6 +268,7 @@ try {
   await settle();
   const vil = await G(async () => { const v = await import('./world/village.js'), c = await import('./missions/convoy.js'); return { PILE: v.PILE, SIGNAL: v.SIGNAL, VAN: c.VAN }; });
   W.village = vil;
+  W.market = await G(async () => { const m = await import('./world/market.js'); return { BENCH: m.BENCH, BOARD: m.BOARD, BAYS: m.BAYS, CAL: m.CAL, PEN: m.PEN }; });
   const lessons = await G(async () => (await import('./content/lessons.js')).LESSONS.map(l => ({ id: l.id, title: l.title, giver: l.giver, u: l.u })));
   for (const g of GATES) expect(await pathLen(g.a, g.b) === 0, `${g.name} مفتوحة قبل وقتها`);
   let played = 0;
