@@ -250,10 +250,246 @@ S.areaPerimeterT1 = async () => {
   }
 };
 
+/* ═══ الوحدة ٣: الهندسة (الميناء) ═══ */
+const canvasClick = async (id, x, y) => { const b = await page.locator('#' + id).boundingBox(); await page.mouse.click(b.x + x, b.y + y); await sleep(60); };
+// ١٦. تمييز الأشكال: مثلثات، رباعيات، مجسمات
+S.shapesIdentify = async () => {
+  const { PIER_Y, SEA_X, CRATES } = W.harbor, NAMES = ['المثلثات', 'الرباعيات', 'المجسمات'];
+  const cls = k => k.startsWith('tri') ? 0 : ['square', 'rect', 'rhombus', 'trap', 'para', 'kite'].includes(k) ? 1 : 2;
+  const ship = async j => { await goTo(SEA_X - 20, PIER_Y[j]); await press('🚢 حمّله على سفينة ' + NAMES[j]); };
+  for (let i = 0; i < 8; i++) {
+    await goTo(CRATES.x, CRATES.y + 18); await press('📦 خذ الصندوق');
+    const d = await data('shapesIdentify'), j = cls(d.crates[d.i]);
+    if (i === 0) { await ship((j + 1) % 3); expect((await data('shapesIdentify')).i === 0, 'صندوق على سفينة خاطئة قُبل'); }
+    await ship(j);
+  }
+};
+// ١٧. خصائص المجسمات: منشور قاعدته n: رؤوس ٢n وأحرف ٣n وأوجه n+٢؛ هرم: رؤوس وأوجه n+١ وأحرف ٢n
+const SOLIDS = [['prism', 4], ['prism', 3], ['prism', 5], ['prism', 6], ['pyr', 4], ['pyr', 3]];
+S.shapes3D = async () => {
+  const { FRAME_TABLE: T } = W.harbor; await goTo(T.x, T.y + 16); await press('🔧 طاولة الهياكل');
+  await sheetBtn('#benchGo');   // خطأ: هيكل بلا قطع
+  expect((await data('shapes3D')).r === 0, 'هيكل ناقص قُبل');
+  for (let r = 0; r < 3; r++) {
+    const [t, n] = SOLIDS[(await data('shapes3D')).rounds[r]], want = t === 'prism' ? { v: 2 * n, e: 3 * n, f: n + 2 } : { v: n + 1, e: 2 * n, f: n + 1 };
+    for (const k of ['v', 'e', 'f']) for (let i = 0; i < want[k]; i++) await panelClick(`[data-k="${k}"][data-v="1"]`);
+    await sheetBtn('#benchGo');
+  }
+};
+// ١٨. الشبكات: ثلاث شبكات مكعب مختلفة على لوح ٥ × ٤ (كل مربع ٤٤ بكسل)
+const NETS = [[[1, 0], [0, 1], [1, 1], [2, 1], [3, 1], [1, 2]], [[0, 0], [0, 1], [1, 1], [2, 1], [3, 1], [0, 2]], [[0, 0], [1, 0], [1, 1], [2, 1], [2, 2], [3, 2]]];
+S.nets = async () => {
+  const { GIFT_TABLE: T } = W.harbor; await goTo(T.x, T.y + 16); await press('📦 لوح العلب');
+  const put = async cells => { for (const [x, y] of cells) await canvasClick('net', 4 + x * 44 + 22, 4 + y * 44 + 22); await sheetBtn('#benchGo'); };
+  await put([[0, 0], [1, 0], [2, 0], [0, 1], [1, 1], [2, 1]]);   // خطأ: مستطيل ٣ × ٢ تتراكب وجوهه
+  expect((await data('nets')).found.length === 0, 'شبكة خاطئة قُبلت');
+  await sheetBtn('#netClear');
+  for (const n of NETS) await put(n);
+};
+// ١٩. الزوايا في المثلثات: المنقلة تبدأ عند ٦٠°
+S.triangleAngles = async () => {
+  const { ROOF_TABLE: T } = W.harbor; await goTo(T.x, T.y + 16); await press('📐 طاولة الدعامات');
+  if ((await data('triangleAngles')).rounds[0].ans === 60) await sheetBtn('[data-a="1"]');
+  await sheetBtn('#benchGo');   // خطأ: الزاوية الابتدائية
+  expect((await data('triangleAngles')).r === 0, 'زاوية خاطئة قُبلت');
+  for (let r = 0; r < 3; r++) {
+    const d = await data('triangleAngles'); let diff = d.rounds[r].ans - d.set;
+    while (diff >= 10) { await sheetBtn('[data-a="10"]'); diff -= 10; } while (diff <= -10) { await sheetBtn('[data-a="-10"]'); diff += 10; }
+    while (diff > 0) { await sheetBtn('[data-a="1"]'); diff--; } while (diff < 0) { await sheetBtn('[data-a="-1"]'); diff++; }
+    await sheetBtn('#benchGo');
+  }
+};
+// ٢٠. الانسحاب: المتجه = العوامة − القارب (ص للأسفل موجبة على الشبكة)
+S.translation = async () => {
+  const { FISH_STAND: F } = W.harbor; await goTo(F.x, F.y);
+  const sail = async r => { await press('⛵ أبحر'); await until(async () => { const d = await data('translation'); return !d.anim || d.r > r; }, 'الإبحار'); await sleep(150); };
+  await press('➡ يميناً'); await sail(0);   // خطأ: خطوة واحدة يميناً (العوامة دائماً في صف آخر)
+  expect((await data('translation')).r === 0, 'انسحاب خاطئ قُبل');
+  for (let r = 0; r < 3; r++) {
+    const { b, t } = (await data('translation')).rounds[r], vx = t[0] - b[0], vy = t[1] - b[1];
+    await press('↺ صفّر');
+    for (let i = 0; i < Math.abs(vx); i++) await press(vx > 0 ? '➡ يميناً' : '⬅ يساراً');
+    for (let i = 0; i < Math.abs(vy); i++) await press(vy > 0 ? '⬇ أسفل' : '⬆ أعلى');
+    await sail(r);
+  }
+};
+// ٢١ و٢٢. الانعكاس والدوران: نقاط الصورة على شبكة ٨ × ٨ (كل خانة ٣٠ بكسل والهامش ١٥)
+const imageLesson = (id, label, standKey) => async () => {
+  const P = W.harbor[standKey]; await goTo(P.x, P.y); await press(label);
+  const dots = async pts => { for (const [x, y] of pts) await canvasClick('img', 15 + x * 30, 15 + y * 30); await sheetBtn('#benchGo'); };
+  await dots((await data(id)).rounds[0].shape);   // خطأ: الشكل الأصلي نفسه بدل صورته
+  expect((await data(id)).r === 0, 'صورة خاطئة قُبلت');
+  await sheetBtn('#imgClear');
+  for (let r = 0; r < 3; r++) await dots((await data(id)).rounds[r].image);
+};
+S.reflection = imageLesson('reflection', '🪞 لوح المرآة', 'POOL_STAND');
+S.rotation = imageLesson('rotation', '🌀 لوح الطاحونة', 'MILL_STAND');
+// ٢٣. الإحداثيات: الوقوف على النقطة (س، ص) ثم الحفر
+S.coordinates = async () => {
+  const B = W.harbor.BEACH, dig = async ([x, y]) => { await goTo(B.ox + x * B.u, B.oy - y * B.u); await press('⛏️ احفر هنا'); };
+  await dig([0, 0]);   // خطأ: نقطة الأصل لا تكون كنزاً أبداً
+  expect((await data('coordinates')).r === 0, 'حفر خاطئ وجد كنزاً');
+  for (let r = 0; r < 3; r++) await dig((await data('coordinates')).targets[r]);
+};
+
+/* ═══ أدوات الطاولات المشتركة (bench.js) ═══ */
+const station = async (st, label) => { await goTo(st.x, st.y + 16); await press(label); };
+// لوحة الأرقام: تكتب العدد مفتاحاً مفتاحاً ثم تضغط زر التأكيد
+async function typePad(v) {
+  const s = String(+(+v).toFixed(3));
+  for (const ch of s.replace('-', '')) await panelClick(`[data-k="${ch}"]`);
+  if (s.startsWith('-')) await panelClick('[data-k="−"]');
+  await sheetBtn('[data-k="go"]');
+}
+// عدّادات − و+ (و+١٠ إن وُجد)
+async function setCounter(k, from, to) {
+  let n = to - from;
+  while (n >= 10 && await G(k => !!document.querySelector(`#panel [data-c="${k}"][data-v="10"]`), k)) { await panelClick(`[data-c="${k}"][data-v="10"]`); n -= 10; }
+  for (; n > 0; n--) await panelClick(`[data-c="${k}"][data-v="1"]`);
+  for (; n < 0; n++) await panelClick(`[data-c="${k}"][data-v="-1"]`);
+}
+const steps = async (diff, big, small, bigUp, bigDown, up, down) => {   // تحريك مؤشر بخطوات كبيرة ثم صغيرة
+  while (diff >= big) { await sheetBtn(bigUp); diff -= big; } while (diff <= -big) { await sheetBtn(bigDown); diff += big; }
+  while (diff >= small) { await sheetBtn(up); diff -= small; } while (diff <= -small) { await sheetBtn(down); diff += small; }
+};
+const coinsFor = (t, list = [5000, 1000, 500, 100, 50]) => { const out = []; for (const c of list) while (t >= c) { out.push(c); t -= c; } return out; };
+// درس فيه جولات بلوحة أرقام: st() موضع الطاولة، ans(d, r) الجواب
+const padLesson = (id, label, st, ans, n = 3) => async () => {
+  await station(st(), label);
+  await typePad(ans(await data(id), 0) + 1);   // خطأ: الجواب + ١
+  expect((await data(id)).r === 0, 'جواب خاطئ قُبل');
+  for (let r = 0; r < n; r++) await typePad(ans(await data(id), r));
+};
+
+/* ═══ الوحدة ٤: الأعداد (٢) (القلعة) ═══ */
+// ٢٤. خط الأعداد: الموضع = البداية + (العدد − الصغرى) ÷ (الكبرى − الصغرى) × الطول
+S.numberLineEstimate = async () => {
+  const B = W.fort.BW, at = async v => { const r = (await data('numberLineEstimate')).rounds[(await data('numberLineEstimate')).r]; await goTo(B.x0 + (v - r.lo) / (r.hi - r.lo) * (B.x1 - B.x0), B.y); await press('🚩 ثبّت الراية هنا'); };
+  await at((await data('numberLineEstimate')).rounds[0].lo);   // خطأ: عند علامة البداية
+  expect((await data('numberLineEstimate')).r === 0, 'راية في موضع خاطئ قُبلت');
+  for (let r = 0; r < 3; r++) await at((await data('numberLineEstimate')).rounds[r].v);
+};
+// ٢٥. الهيروغليفية: زهرة ١٠٠٠، لفافة ١٠٠، قوس ١٠، عصا ١
+S.hieroNumbers = async () => {
+  await station(W.fort.ST4.museum, '🏺 باب المتحف');
+  await sheetBtn('#benchGo');   // خطأ: باب بلا نقش
+  expect((await data('hieroNumbers')).r === 0, 'نقش فارغ فتح الباب');
+  for (let r = 0; r < 3; r++) {
+    const q = (await data('hieroNumbers')).rounds[r];
+    if (q.t === 'r') { await typePad(q.v); continue; }
+    for (const g of [1000, 100, 10, 1]) for (let i = 0; i < Math.floor(q.v / g) % 10; i++) await panelClick(`[data-g="${g}"]`);
+    await sheetBtn('#benchGo');
+  }
+};
+// ٢٦. النظام العشري: سبائك (آحاد) وقطع (أعشار) وحبات (أجزاء من مئة)
+S.decimalSystem = async () => {
+  await station(W.fort.ST4.gold, '⚖️ ميزان الذهب');
+  await sheetBtn('#benchGo');   // خطأ: كفة فارغة
+  expect((await data('decimalSystem')).r === 0, 'وزن خاطئ قُبل');
+  for (let r = 0; r < 3; r++) {
+    const c = Math.round((await data('decimalSystem')).rounds[r] * 100);
+    await setCounter('a', 0, Math.floor(c / 100)); await setCounter('b', 0, Math.floor(c / 10) % 10); await setCounter('c', 0, c % 10);
+    await sheetBtn('#benchGo');
+  }
+};
+// ٢٧. العمليات على العشرية
+S.decimalOperations = padLesson('decimalOperations', '🍯 مطبخ الحلوى', () => W.fort.ST4.kitchen, (d, r) => d.rounds[r].ans);
+// ٢٨. ميزانية الرحلة: أي k أصناف مجموعها = الميزانية
+const TRIP = [750, 1250, 500, 900, 650, 1100, 1350, 1600];
+S.decimalApplications = async () => {
+  await station(W.fort.ST4.trip, '🧺 دكان الرحلة');
+  await sheetBtn('#benchGo');   // خطأ: بلا أصناف
+  expect((await data('decimalApplications')).r === 0, 'شراء خاطئ قُبل');
+  for (let r = 0; r < 3; r++) {
+    const { k, budget } = (await data('decimalApplications')).rounds[r];
+    const pick = (from, left, sum) => {   // أول مجموعة من left صنفاً مجموعها الميزانية
+      if (left === 0) return sum === budget ? [] : null;
+      for (let i = from; i < TRIP.length; i++) { const rest = pick(i + 1, left - 1, sum + TRIP[i]); if (rest) return [i, ...rest]; }
+      return null;
+    };
+    const sel = pick(0, k, 0); expect(sel, 'لا توجد أصناف بهذه الميزانية');
+    for (const i of sel) await panelClick(`.pick[data-i="${i}"]`);
+    await sheetBtn('#benchGo');
+  }
+};
+// ٢٩. الأعداد الصحيحة: الدلو يبدأ من موضع البداية في كل جولة
+S.integers = async () => {
+  await station(W.fort.ST4.well, '🪣 دلو البئر');
+  await sheetBtn('#benchGo');   // خطأ: التثبيت في موضع البداية
+  expect((await data('integers')).r === 0, 'طابق خاطئ قُبل');
+  for (let r = 0; r < 3; r++) { const d = await data('integers'); await steps(d.rounds[r].ans - d.lvl, 1e9, 1, '', '', '#up', '#down'); await sheetBtn('#benchGo'); }
+};
+// ٣٠. المضاعفات المشتركة: المضاعف المشترك الأصغر
+const gcd = (x, y) => y ? gcd(y, x % y) : x;
+S.commonMultiples = async () => {
+  await station(W.fort.ST4.bells, '🔔 حبل الأجراس');
+  await sheetBtn('#benchGo');   // خطأ: الدقيقة ١
+  expect((await data('commonMultiples')).r === 0, 'دقيقة خاطئة قُبلت');
+  for (let r = 0; r < 3; r++) {
+    const d = await data('commonMultiples'), [a, b] = d.rounds[r];
+    await steps(a * b / gcd(a, b) - d.min, 5, 1, '[data-m="5"]', '[data-m="-5"]', '[data-m="1"]', '[data-m="-1"]');
+    await sheetBtn('#benchGo'); await until(async () => (await data('commonMultiples')).r > r, 'الأجراس');
+  }
+};
+// ٣١. الحساب السريع: الباقي = المدفوع − الثمن
+S.mentalAddSub = async () => {
+  await station(W.fort.ST4.change, '🪙 كشك مريم');
+  await panelClick('.money[data-v="50"]'); await sheetBtn('#benchGo');   // خطأ: ٥٠ بيسة فقط
+  expect((await data('mentalAddSub')).r === 0, 'باقٍ خاطئ قُبل');
+  for (let r = 0; r < 4; r++) { const q = (await data('mentalAddSub')).rounds[r]; for (const c of coinsFor(q.P - q.p)) await panelClick(`.money[data-v="${c}"]`); await sheetBtn('#benchGo'); }
+};
+// ٣٢. استراتيجيات الضرب (٢)
+S.multiplyStrategies2 = padLesson('multiplyStrategies2', '🌾 لوح المخزن', () => W.fort.ST4.grain, (d, r) => d.rounds[r].ans);
+// ٣٣. قابلية القسمة: أكياس تتحرك على السير، والنقر على الكيس يسحبه
+S.divisibility = async () => {
+  await station(W.fort.ST4.conveyor, '🌴 سير الأكياس');
+  const grab = async ok => {
+    for (let i = 0; i < 200; i++) {
+      const x = await G(ok => { const s = (document.getElementById('belt')?.__sacks || []).find(s => s.ok === ok && s.x > 40 && s.x < 280); return s ? s.x : null; }, ok);
+      if (x !== null) { const b = await page.locator('#belt').boundingBox(); await page.mouse.click(b.x + x - 4, b.y + 55); return; }
+      await sleep(100);
+    }
+    throw new Error('لم يظهر كيس مناسب على السير');
+  };
+  await grab(false); await sleep(100);   // خطأ: كيس لا يُقسم
+  expect((await data('divisibility')).got === 0, 'كيس خاطئ احتُسب');
+  for (let r = 0; r < 3; r++) { for (let k = 0; k < 3; k++) { await grab(true); await sleep(150); } await until(async () => (await data('divisibility')).r > r, 'جولة السير'); await sleep(300); }
+};
+// ٣٤. الضرب بنموذج المساحة: (عشرات + آحاد) × (عشرات + آحاد)
+S.multiplyT2 = async () => {
+  await station(W.fort.ST4.roof, '🧱 مخطط السطح');
+  await sheetBtn('#benchGo');   // خطأ: خانات فارغة
+  expect((await data('multiplyT2')).r === 0, 'بلاط خاطئ قُبل');
+  for (let r = 0; r < 2; r++) {
+    const [a, b] = (await data('multiplyT2')).rounds[r], A = [Math.floor(a / 10) * 10, a % 10], B = [Math.floor(b / 10) * 10, b % 10];
+    const parts = [A[0] * B[0], A[0] * B[1], A[1] * B[0], A[1] * B[1]];
+    for (let i = 0; i < 4; i++) await page.fill(`#panel [data-p="${i}"]`, String(parts[i]));
+    await page.fill('#panel #tot', String(a * b)); await sheetBtn('#benchGo');
+  }
+};
+// ٣٥. القسمة (٢): ناتج وباقٍ، أو تقريب للأعلى (حافلات)، أو قسمة تامة
+S.division2 = async () => {
+  await station(W.fort.ST4.pack, '🍬 آلة التعبئة');
+  await sheetBtn('#benchGo');   // خطأ: أصفار
+  expect((await data('division2')).r === 0, 'تعبئة خاطئة قُبلت');
+  for (let r = 0; r < 3; r++) { const q = (await data('division2')).rounds[r]; await setCounter('n', 0, q.q); if (q.t === 'qr') await setCounter('left', 0, q.rm); await sheetBtn('#benchGo'); }
+};
+// ٣٦. الأعداد الخاصة: ألغاز المربعات والمضاعفات
+const isSq = n => Number.isInteger(Math.sqrt(n));
+const RIDDLES = [isSq, n => n % 25 === 0, n => isSq(n) && n % 2 === 0, n => n % 5 === 0 && n % 10 !== 0];
+S.specialNumbers = async () => {
+  await station(W.fort.ST4.gate, '🛡️ حجارة البوابة');
+  await sheetBtn('#benchGo');   // خطأ: بلا حجارة
+  expect((await data('specialNumbers')).r === 0, 'لغز خاطئ قُبل');
+  for (let r = 0; r < 3; r++) { const q = (await data('specialNumbers')).rounds[r]; for (let i = 0; i < q.nums.length; i++) if (RIDDLES[q.k](q.nums[i])) await panelClick(`.stone[data-i="${i}"]`); await sheetBtn('#benchGo'); }
+};
+
 /* ── البوابات: لا طريق عبرها قبل وقتها ── */
 const GATES = [
   { after: 'sequences', name: 'بوابة السوق', a: { x: 1380, y: 640 }, b: { x: 1620, y: 640 } },
-  { after: 'areaPerimeterT1', name: 'بوابة الميناء', a: { x: 2200, y: 640 }, b: { x: 2400, y: 640 } }
+  { after: 'areaPerimeterT1', name: 'بوابة الميناء', a: { x: 2200, y: 640 }, b: { x: 2400, y: 640 } },
+  { after: 'coordinates', name: 'بوابة القلعة', a: { x: 1240, y: 1660 }, b: { x: 1240, y: 1780 } },
+  { after: 'specialNumbers', name: 'بوابة ساحة المهرجان', a: { x: 1240, y: 2540 }, b: { x: 1240, y: 2680 } }
 ];
 const pathLen = (a, b) => G(([a, b]) => window.__game.findPath(a, b).length, [a, b]);
 
@@ -269,6 +505,8 @@ try {
   const vil = await G(async () => { const v = await import('./world/village.js'), c = await import('./missions/convoy.js'); return { PILE: v.PILE, SIGNAL: v.SIGNAL, VAN: c.VAN }; });
   W.village = vil;
   W.market = await G(async () => { const m = await import('./world/market.js'); return { BENCH: m.BENCH, BOARD: m.BOARD, BAYS: m.BAYS, CAL: m.CAL, PEN: m.PEN }; });
+  W.harbor = await G(async () => { const h = await import('./world/harbor.js'); return { PIER_Y: h.PIER_Y, SEA_X: h.SEA_X, CRATES: h.CRATES, FRAME_TABLE: h.FRAME_TABLE, GIFT_TABLE: h.GIFT_TABLE, ROOF_TABLE: h.ROOF_TABLE, FISH_STAND: h.FISH_STAND, POOL_STAND: h.POOL_STAND, MILL_STAND: h.MILL_STAND, BEACH: h.BEACH }; });
+  W.fort = await G(async () => { const f = await import('./world/fort.js'); return { BW: f.BW, ST4: f.ST4 }; });
   const lessons = await G(async () => (await import('./content/lessons.js')).LESSONS.map(l => ({ id: l.id, title: l.title, giver: l.giver, u: l.u })));
   for (const g of GATES) expect(await pathLen(g.a, g.b) === 0, `${g.name} مفتوحة قبل وقتها`);
   let played = 0;
@@ -288,9 +526,11 @@ try {
       await page.screenshot({ path: join(ROOT, 'tests', `fail-${l.id}.png`) });
       break;   // الدروس مرتبة: لا معنى للمتابعة بعد درس فاشل
     }
-    for (const g of GATES.filter(g => g.after === l.id)) {
-      if (await pathLen(g.a, g.b) === 0) { failures++; console.log(`❌ ${g.name} لم تُفتح بعد «${l.title}»`); }
-      else console.log(`🚪 ${g.name} فُتحت في وقتها`);
+    for (const g of GATES) {
+      const due = await isDone(g.after), open = await pathLen(g.a, g.b) > 0;
+      if (due && !open) { failures++; console.log(`❌ ${g.name} لم تُفتح بعد «${l.title}»`); }
+      else if (!due && open) { failures++; console.log(`❌ ${g.name} فُتحت قبل وقتها (بعد «${l.title}»)`); }
+      else if (g.after === l.id) console.log(`🚪 ${g.name} فُتحت في وقتها`);
     }
   }
   console.log(`\nالنتيجة: نجح ${played} من ${lessons.length} درساً${failures ? ` — وفشل ${failures}` : ''}`);
