@@ -125,3 +125,59 @@ button:focus-visible,input:focus-visible{outline:3px solid var(--sun);outline-of
 .tt{width:100%;border-collapse:collapse;font-weight:800;text-align:center}
 .tt th{background:#2A1B66;color:#fff;padding:6px;font-size:13px}
 .tt td{padding:8px 4px;border-bottom:1px solid #E8D3A0;font-size:16px}
+.cnt{display:flex;align-items:center;gap:8px;background:#F4EBD6;border-radius:12px;padding:6px 10px;font-weight:800}
+.cnt span{flex:1}.cnt b{min-width:30px;text-align:center;font-size:20px}
+.cnt .act{min-height:38px;padding:2px 14px;font-size:20px}
+/* ── طاولات القلعة ── */
+.lockscr2{direction:ltr;min-height:52px;border-radius:12px;background:#1E1A30;display:flex;align-items:center;justify-content:center;font:900 28px 'Cairo',monospace;color:#6EF5DE;letter-spacing:2px}
+.keys2{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin-top:8px;direction:ltr}
+.keys2 .act{min-height:46px;padding:4px;font-size:20px}
+.keys2 .go{grid-column:span 3}
+.hiero{min-height:64px;background:#F3E4C0;border:3px solid #C9A46B;border-radius:12px;display:flex;flex-wrap:wrap;gap:2px;align-items:flex-end;justify-content:center;padding:8px;color:#6B4520;direction:ltr}
+.hiero svg{width:20px;height:34px}
+.glyb{color:#6B4520}.glyb svg{width:20px;height:30px}
+.stones{display:grid;grid-template-columns:repeat(4,1fr);gap:6px}
+.stone{min-height:52px;border-radius:12px;background:#B8A88A;font-weight:900;font-size:18px;color:#3A2E1E;box-shadow:0 4px 0 #8A7A5E}
+.stone.on{background:#FFC23D;box-shadow:0 0 0 3px #fff,0 4px 0 #C98A0E}
+.tag.pick{border:3px solid transparent}.tag.pick.on{border-color:#1FA05A;background:#EFFFF4}
+.amodel{display:grid;grid-template-columns:44px 1fr 1fr;gap:6px;align-items:center;text-align:center;font-weight:900}
+.amodel input,.totin{font:900 18px 'Cairo',sans-serif;text-align:center;padding:10px 4px;border-radius:10px;border:2px solid #C9A46B;background:#FFFDF6;width:100%;min-width:0}
+.totin{max-width:140px}
+.factb{background:#2A1B66;color:#fff;border-radius:12px;padding:8px 12px;font-weight:800;text-align:center}
+.recipe{background:#FFF1C9;border-radius:12px;padding:8px 12px;font-weight:700;line-height:1.8;font-size:14px}
+.dclock{background:#1E1A30;border-radius:14px;padding:10px;text-align:center;color:#6EF5DE}
+.dclock small{display:block;color:#A99FD6;font-weight:800}
+.dclock b{font:900 40px 'Cairo',monospace;direction:ltr;display:block}
+.clip{background:#FFF1C9;border-radius:12px;padding:8px 12px;display:flex;flex-direction:column;gap:4px}
+.clip>div{display:flex;justify-content:space-between;font-weight:800}
+.tl{font:900 18px monospace;letter-spacing:2px;color:#2A1B66;direction:ltr}
+.tl s{text-decoration-thickness:2px}
+/* ── سوق الجمعية ── */
+.dials{display:flex;justify-content:center;align-items:center;gap:4px;direction:ltr}
+.dials>span{font:900 34px 'Cairo';color:#2A1B66}
+.wheel{display:flex;flex-direction:column;align-items:center;background:#1E1A30;border-radius:12px;padding:4px}
+.wheel b{font:900 30px 'Cairo';color:#6EF5DE;min-width:38px;text-align:center}
+.wheel .act{min-height:34px;padding:0 10px;font-size:14px}
+.roman{font:900 34px Georgia,'Times New Roman',serif;letter-spacing:3px;text-align:center;background:#EDE3CC;border:3px solid #B79F74;border-radius:12px;padding:8px;color:#5B3A1E;direction:ltr;min-height:56px}
+.rb{font:900 20px Georgia,serif;min-width:40px}
+.scaleq{display:flex;justify-content:space-around;align-items:center;background:#F4EBD6;border-radius:12px;padding:10px;font-weight:900;font-size:20px}
+.tiles{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.tile{min-height:60px;border-radius:14px;background:#FFF1C9;font:900 22px 'Cairo';box-shadow:0 4px 0 #E3C27A}
+.tile.on{background:#FFC23D}.tile.gone{visibility:hidden}
+.expr{display:flex;flex-wrap:wrap;gap:6px;justify-content:center;align-items:center;direction:rtl;background:#1E1A30;border-radius:14px;padding:12px;min-height:70px}
+.expr .num{font:900 26px 'Cairo';color:#fff}.expr .par{font:900 30px 'Cairo';color:#FFC23D}
+.tok{min-width:46px;min-height:46px;border-radius:12px;background:#7B3F98;color:#fff;font:900 24px 'Cairo';box-shadow:0 4px 0 #4A2160}
+.frac{display:inline-flex;flex-direction:column;align-items:center;vertical-align:middle;line-height:1;margin:0 3px;font-weight:900}
+.frac b{border-bottom:2px solid currentColor;padding:0 3px}.frac i{font-style:normal;padding:0 3px}
+.choco{display:grid;gap:4px;background:#4A2C14;border-radius:10px;padding:6px}
+.piece{min-height:44px;border-radius:6px;background:#8B5A2B;box-shadow:inset 0 -4px 0 #6B4520}
+.piece.on{background:#E3B04B;box-shadow:inset 0 -4px 0 #B98A2A}
+.apples{text-align:center;font-size:26px;line-height:1.4}
+.match{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.match>div{display:flex;flex-direction:column;gap:8px}
+.mt{min-height:58px;border-radius:12px;background:#F4EBD6;font:900 18px 'Cairo';display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;padding:6px}
+.mt small{font-size:12px;color:#5B4636}
+.mt.on{outline:3px solid #FFC23D;background:#FFF1C9}.mt.gone{visibility:hidden}.mt.val{background:#E3F5EA}
+.tile sup{color:#C2304A;font-size:13px}
+.quads .stone{min-height:62px;display:flex;align-items:center;justify-content:center}
+.facebtn svg{vertical-align:middle}
