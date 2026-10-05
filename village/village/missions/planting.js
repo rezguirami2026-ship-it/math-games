@@ -15,6 +15,6 @@ export async function plant(W, i) {
   W.player.act = null; s.world.trees[i] = Date.now(); sfx('plant');
   floatUp(sp.x, sp.y - 70, 'نخلة جديدة 🌴', '#1FA05A');
   bus.emit('mission'); bus.emit('save');
-  unlock('tree1'); if (s.world.trees.filter(Boolean).length === 3) unlock('grove');
+  unlock('tree1'); if (s.world.trees.filter(Boolean).length === 3) { unlock('grove'); s.gear.owned.gold = Date.now(); bus.emit('save'); W.toast && W.toast('⭐ فُتح التطريز الذهبي في خزانة البطل'); }
   game.busy = false;
 }

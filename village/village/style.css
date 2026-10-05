@@ -78,3 +78,50 @@ button:focus-visible,input:focus-visible{outline:3px solid var(--sun);outline-of
 .chapter .ch h1{margin:4px 0;font-size:44px;font-weight:900;color:#fff;text-shadow:0 5px 0 #A9642A}
 .chapter .ch p{color:#7A4A1E;font-weight:700;animation:nudge 1.2s infinite}
 @media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+/* ── الدكان ── */
+.shop{background:#FFF6E3}
+.shop-head{display:flex;align-items:center;gap:10px}
+.keeper{font-size:46px}
+.speech{flex:1;background:#fff;border:2px solid #E8D3A0;border-radius:16px;padding:8px 12px;font-weight:800;font-size:15px;line-height:1.6}
+.speech.ok{border-color:#1FA05A;background:#EFFFF4}
+.speech.bad{border-color:#E2475C;background:#FFF0F2}
+.board{display:grid;grid-template-columns:repeat(auto-fill,minmax(96px,1fr));gap:6px;background:#6B4520;border-radius:14px;padding:8px}
+.tag{background:#FFFDF6;border-radius:10px;padding:6px;text-align:center;line-height:1.3}
+.tag span{font-size:22px;display:block}.tag b{display:block;font-size:13px}.tag small{font-weight:900;color:#C2304A;font-size:12.5px;direction:rtl}
+.order{background:#F4EBD6;border-radius:12px;padding:8px 12px;font-weight:700;line-height:1.8}
+.order small{color:#7A6A4A;font-weight:800}
+.tray{min-height:62px;border:3px dashed #C9A46B;border-radius:14px;padding:6px;display:flex;flex-wrap:wrap;gap:6px;align-items:center;justify-content:center;background:#FFFDF6}
+.tray .empty{color:#B0A080;font-weight:700}
+.wallet{display:flex;flex-wrap:wrap;gap:6px;justify-content:center}
+.money,.chip{font-weight:900;font-size:14px;border-radius:10px;padding:10px 10px;color:#fff;min-width:70px}
+.money.coin,.chip.coin{background:radial-gradient(circle at 35% 30%,#F5E7B0,#C9A24A);color:#4A3200;border-radius:50px;min-width:62px}
+.chip{padding:7px 8px;font-size:12.5px;min-width:56px}
+.shop-acts{display:flex;gap:8px;justify-content:space-between}
+/* ── خزانة البطل ── */
+.wardrobe canvas{width:220px;height:200px;margin:0 auto;display:block;background:radial-gradient(circle,#FFF3D6,#F3E4C0);border-radius:18px}
+.gear{display:flex;flex-direction:column;gap:8px}
+.gitem{display:flex;align-items:center;gap:10px;background:#F4EBD6;border-radius:14px;padding:8px 10px}
+.gitem>span{font-size:28px}.gitem>div{flex:1}.gitem b{display:block}.gitem small{color:#7A6A4A;font-weight:700}
+.gitem.locked{opacity:.6}
+.gitem .act{min-height:42px;padding:6px 14px;font-size:15px}
+/* ── رحلة الدروس ── */
+.qunit{background:#F4EBD6;border-radius:16px;padding:10px;display:flex;flex-direction:column;gap:6px}
+.qunit>b{font-size:15px}
+.qunit>small{color:#7A6A4A;font-weight:800;margin-top:-4px}
+.qrow{display:flex;gap:8px;align-items:center;background:#FFFDF6;border-radius:10px;padding:6px 8px;opacity:.6}
+.qrow b{display:block;font-size:14px}.qrow small{color:#7A6A4A;font-weight:700;font-size:12px}
+.qrow.done{opacity:1}.qrow.now{opacity:1;outline:3px solid #FFC23D}
+/* ── طاولات العمل: المسطرة واللوح والتقويم والجدول ── */
+.bench canvas{display:block;margin:0 auto;max-width:100%;background:#FFFDF6;border-radius:12px}
+.row2{display:flex;gap:6px;justify-content:center;flex-wrap:wrap}
+.row2 .act{min-height:46px;padding:8px 12px;font-size:15px;flex:1}
+.calhead{display:flex;align-items:center;justify-content:space-between;gap:8px}
+.calhead .act{min-height:40px;padding:4px 14px}
+.cal{display:grid;grid-template-columns:repeat(7,1fr);gap:4px;direction:rtl}
+.cal i{font-style:normal;font-size:11px;font-weight:800;color:#7A6A4A;text-align:center}
+.cal .day{min-height:38px;border-radius:9px;background:#F4EBD6;font-weight:900;font-size:15px}
+.cal .day:active{background:#FFE7A0}
+.cal .day.bad{background:#FFC7CE;animation:shk .4s}
+.tt{width:100%;border-collapse:collapse;font-weight:800;text-align:center}
+.tt th{background:#2A1B66;color:#fff;padding:6px;font-size:13px}
+.tt td{padding:8px 4px;border-bottom:1px solid #E8D3A0;font-size:16px}

@@ -5,6 +5,7 @@ import { drawHuman } from '../character/human.js';
 import { ACH } from '../achievements/achievements.js';
 import { sound, sfx } from '../core/sound.js';
 const $ = id => document.getElementById(id);
+window.addEventListener('pointerup', () => clearInterval(hud._hold));
 export const hud = {
   init(api) {
     this.api = api;
@@ -20,7 +21,11 @@ export const hud = {
     const box = $('actions'); box.innerHTML = '';
     list.forEach(a => {
       const b = document.createElement('button'); b.className = 'act ' + (a.kind || ''); b.innerHTML = a.label; b.disabled = !!a.disabled;
-      b.onclick = e => { e.stopPropagation(); if (!game.busy) { a.run(); this._ak = null; } };
+      if (a.hold) {   // ضغط مطوّل: يتكرر الفعل ما دام الإصبع على الزر
+        const start = e => { e.preventDefault(); e.stopPropagation(); if (game.busy) return; a.run(); clearInterval(hud._hold); hud._hold = setInterval(() => { if (!game.busy) a.run(); }, 260); };
+        b.addEventListener('pointerdown', start);
+        ['pointerup', 'pointerleave', 'pointercancel'].forEach(ev => b.addEventListener(ev, () => clearInterval(hud._hold)));
+      } else b.onclick = e => { e.stopPropagation(); if (!game.busy) { a.run(); this._ak = null; } };
       box.append(b);
     });
   },
@@ -52,13 +57,14 @@ export const hud = {
       body = `<h3>🎒 حقيبة ${s.hero.name}</h3>
         <div class="bagrow"><span>📦 صناديق بين يديك</span><b>${ar(s.carry)}</b></div>
         <div class="bagrow"><span>💚 نقاط الخير</span><b>${ar(s.good)}</b></div>
-        <div class="bagrow muted"><span>🧰 أدوات المغامرة</span><b>تُفتح في الفصل الثاني</b></div>
+        ${(() => { const c = {}; (s.inventory || []).forEach(k => c[k] = (c[k] || 0) + 1); const I = { seeds: '🌱 بذور', bucket: '🪣 دلو', shovel: '⛏️ مجرفة', fert: '🧴 سماد', pot: '🪴 أصيص' };
+          return Object.keys(c).length ? Object.keys(c).map(k => `<div class="bagrow"><span>${I[k] || k}</span><b>${ar(c[k])}</b></div>`).join('') : '<div class="bagrow muted"><span>🧰 الأدوات</span><b>تشتريها من دكان العم ناصر</b></div>'; })()}
         <button class="act ghost" id="sndBtn">${sound.on ? '🔊 الصوت يعمل' : '🔇 الصوت متوقف'}</button>`;
     }
-    if (kind === 'map') body = `<h3>🗺️ قرية الخير</h3><canvas id="mini" width="320" height="246"></canvas><p class="muted">أنت ●  الأصفر: أهل القرية</p>`;
+    if (kind === 'map') body = `<h3>🗺️ قرية الخير</h3><canvas id="mini" width="320" height="363"></canvas><p class="muted">الأحمر: أنت — الأخضر: مهمتك — الأصفر: أهل القرية</p><h3>📜 رحلة الدروس</h3><div id="qlog"></div>`;
     el.innerHTML = `<div class="sheet">${body}<button class="act" data-close>رجوع إلى العالم</button></div>`;
     el.classList.add('on');
     if (kind === 'bag') $('sndBtn').onclick = e => { e.stopPropagation(); sound.on = !sound.on; this.panel('bag'); };
-    if (kind === 'map') this.api.drawMini($('mini'));
+    if (kind === 'map') { this.api.drawMini($('mini')); $('qlog').innerHTML = this.api.questLog(); const now = $('qlog').querySelector('.now'); if (now) setTimeout(() => now.scrollIntoView({ block: 'center' }), 50); }
   }
 };

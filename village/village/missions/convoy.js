@@ -1,7 +1,8 @@
 // مهمة «قافلة المزرعة»: القسمة هنا ليست سؤالاً، بل توزيع صناديق حقيقي على شاحنات
 import { game, BOXES, CARRY_MAX } from '../core/state.js';
 import { bus } from '../core/events.js';
-import { inspectLoads } from '../math/distribution.js';
+import { inspectRemainder } from '../math/distribution.js';
+import { complete } from './quests.js';
 import { ar, wait } from '../core/util.js';
 import { say, puff } from '../world/entities.js';
 import { FARM_PARK, SIGNAL, FARM } from '../world/village.js';
@@ -20,6 +21,9 @@ export function pick(W) {
 }
 export function putBack(W) { const s = game.state, m = M(); if (!s.carry) return; s.carry--; m.pile++; sfx('drop'); changed(); }
 export function load(W, i) { const s = game.state, m = M(); if (!s.carry) return; s.carry--; m.loads[i]++; sfx('drop'); puff(W.trucks[i].x - 10, W.trucks[i].y - 30, '#E8D2A6', 3); changed(); }
+export const VAN = { x: 690, y: 880 };
+export function loadVan(W) { const s = game.state, m = M(); if (!s.carry) return; s.carry--; m.van = (m.van || 0) + 1; sfx('drop'); changed(); }
+export function unloadVan(W) { const s = game.state, m = M(); if (!m.van || s.carry >= CARRY_MAX) return; m.van--; s.carry++; sfx('pick'); changed(); }
 export function unload(W, i) { const s = game.state, m = M(); if (!m.loads[i] || s.carry >= CARRY_MAX) return; m.loads[i]--; s.carry++; sfx('pick'); changed(); }
 
 export async function launch(W) {
@@ -29,11 +33,17 @@ export async function launch(W) {
     say(SIGNAL.x, SIGNAL.y - 108, m.pile > 0 ? 'صناديق ما زالت في المستودع!' : 'ما زلت تحمل صناديق!', '#C2304A', 2400);
     sfx('cough'); return;
   }
-  const r = inspectLoads(m.loads, BOXES);
+  const r = inspectRemainder(m.loads, m.van || 0, BOXES);
   m.attempts++; changed();
   game.busy = true; sfx('engine');
   W.trucks.forEach(t => puff(t.x - 42, t.y - 6, '#9a9a9a', 3));
   await wait(700);
+  if (r.equal && r.vanTooMuch) {   // الشاحنات متساوية لكن العربة تحمل ما يكفي لجولة إضافية
+    sfx('cough'); say(VAN.x, VAN.y - 70, 'العربة مثقلة!', '#C2304A', 2600);
+    await wait(1200); game.busy = false;
+    await W.talk('salem', [{ who: 'salem', text: 'العربة الصغيرة تحمل صناديق تكفي لوضع صندوق إضافي في كل شاحنة… الباقي يجب أن يكون أقل من عدد الشاحنات.' }]);
+    return;
+  }
   if (!r.equal) {   // العالم يتفاعل مع الخطأ: الثقيلة تهبط وتسعل، والخفيفة تتأرجح
     sfx('cough');
     r.heavy.forEach(i => { const t = W.trucks[i]; t.sag = 4; t.flash = 1; t.shake = 1; say(t.x, t.y - 80, 'ثقيلة!', '#C2304A', 2800); puff(t.x - 42, t.y - 6, '#444', 10); });
@@ -63,7 +73,7 @@ export async function launch(W) {
     await wait(200);
   }
   W.trucks.forEach(t => { t.path = null; });
-  s.world.delivered = Date.now(); m.status = 'done'; changed();
+  s.world.delivered = Date.now(); m.status = 'done'; complete('division1'); changed();
   W.camFollow({ x: FARM.x + FARM.w / 2, y: FARM.y + FARM.h / 2 });
   sfx('win');
   await wait(2600);
@@ -73,7 +83,9 @@ export async function launch(W) {
   W.camFollow(null);
   game.busy = false;
   await W.talk('salem', [
-    { who: 'salem', text: `أحسنتَ التوزيع! حملت كل شاحنة ${ar(r.share)} صناديق، فوصلت القافلة بسلام.` },
+    { who: 'salem', text: `أحسنتَ التوزيع! ${ar(BOXES)} صندوقاً على ${ar(6)} شاحنات: لكل شاحنة ${ar(r.share)}، والباقي ${ar(r.rem)} في العربة الصغيرة.` },
     { who: 'narrator', text: 'عاد الماء يجري في الفلج، وبدأت المزرعة تخضرّ.' }
   ]);
+  s.gear.owned.bag = Date.now(); changed();
+  W.toast('🎒 حصلت على حقيبة المغامر، تجدها في خزانة البطل');
 }

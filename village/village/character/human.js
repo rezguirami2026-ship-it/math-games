@@ -29,6 +29,9 @@ export function drawHuman(ctx, h) {
     ctx.fillStyle = h.shoe || '#4A3426'; ctx.beginPath(); ctx.ellipse(sx + (side ? 1.6 : 0), -1.6 + sy, side ? 4.3 : 3.2, 2.4, 0, 0, 7); ctx.fill();
   });
 
+  const G = h.gear || {};
+  if (G.shovel && !back) shovel(ctx);                       // المجرفة خلف الظهر
+  if (G.bag && side) { ctx.fillStyle = '#8B5E34'; rr(ctx, -15, -35, 9, 19, 3); ctx.fill(); }
   if (back && h.carry) boxes(ctx, h.carry, -26);
   const top = -37, hem = -7, wt = side ? 9 : 11, wb = side ? 11 : 13.5, armSw = mv ? -sw * 4 : 0;
   // الذراع البعيدة في الوضع الجانبي
@@ -55,6 +58,13 @@ export function drawHuman(ctx, h) {
   else if (side) arm(ctx, 2, top + 5, 3 + armSw, top + 21, skin, robe);
   else { arm(ctx, -wt + .5, top + 5, -wt - 1.6, top + 20 + armSw * .6, skin, robe); arm(ctx, wt - .5, top + 5, wt + 1.6, top + 20 - armSw * .6, skin, robe); }
 
+  // العتاد فوق الثوب
+  if (G.bag) {
+    if (back) { ctx.fillStyle = '#8B5E34'; rr(ctx, -9, top + 4, 18, 20, 4); ctx.fill(); ctx.fillStyle = '#A9743F'; rr(ctx, -9, top + 4, 18, 7, 3); ctx.fill(); ctx.fillStyle = '#E3B04B'; ctx.fillRect(-1.5, top + 9, 3, 3); }
+    else if (!side) { ctx.strokeStyle = '#7A4F2A'; ctx.lineWidth = 2.2; ctx.beginPath(); ctx.moveTo(-6, top + 3); ctx.lineTo(-7, top + 17); ctx.moveTo(6, top + 3); ctx.lineTo(7, top + 17); ctx.stroke(); }
+  }
+  if (G.shovel && back) shovel(ctx);
+  if (G.flask) { ctx.strokeStyle = '#6B4A2A'; ctx.lineWidth = 1.2; ctx.beginPath(); ctx.moveTo(-wt + 2, top + 4); ctx.lineTo(wb - 4, top + 20); ctx.stroke(); ctx.fillStyle = '#2D9CDB'; rr(ctx, wb - 7, top + 18, 7, 10, 3); ctx.fill(); ctx.fillStyle = '#BFE7FB'; ctx.fillRect(wb - 5.5, top + 20, 1.6, 5); }
   // الرأس
   const hx = side ? 1.5 : 0, hy = top - 8.6;
   if (female) hijab(ctx, h, hx, hy, side, back);
@@ -71,6 +81,10 @@ export function drawHuman(ctx, h) {
   }
 }
 
+function shovel(ctx) {
+  ctx.strokeStyle = '#8B5A2B'; ctx.lineWidth = 2.6; ctx.lineCap = 'round'; ctx.beginPath(); ctx.moveTo(-11, -12); ctx.lineTo(10, -52); ctx.stroke();
+  ctx.fillStyle = '#9AA5B1'; ctx.beginPath(); ctx.moveTo(8, -50); ctx.lineTo(16, -60); ctx.lineTo(13, -46); ctx.closePath(); ctx.fill();
+}
 function arm(ctx, x1, y1, x2, y2, skin, robe) {
   const mx = x1 + (x2 - x1) * .55, my = y1 + (y2 - y1) * .55;
   ctx.lineCap = 'round';

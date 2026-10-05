@@ -1,8 +1,8 @@
 // قرية الخير: تخطيط العالم ورسمه. المزرعة والنخيل تتغير حسب حالة العالم.
 import { rng, shade, mix, rr, lerp, clamp } from '../core/util.js';
 
-export const WORLD = { w: 1500, h: 1150 };
-export const ROADS = [{ x: 0, y: 600, w: 1500, h: 80 }, { x: 700, y: 0, w: 70, h: 600 }];
+export const WORLD = { w: 2300, h: 1700 };   // شرقاً: السوق الأسبوعي (الوحدة ٢)   // امتدّ جنوباً: البستان والبريد والفوانيس والورشة والبركة
+export const ROADS = [{ x: 0, y: 600, w: 2300, h: 80 }, { x: 700, y: 0, w: 70, h: 600 }];
 export const HOUSES = [
   { x: 830, y: 150, w: 170, h: 120, wall: '#F1E3C6', door: '#8B5A2B' },
   { x: 1060, y: 110, w: 190, h: 140, wall: '#EED8B8', door: '#2F6FB2' },
@@ -20,14 +20,18 @@ export const SIGNAL = { x: 690, y: 770 };
 export const FARM = { x: 880, y: 760, w: 570, h: 330 };
 export const FARM_PARK = Array.from({ length: 6 }, (_, i) => ({ x: 930 + i * 86, y: 722 }));
 export const TREE_SPOTS = [{ x: 860, y: 548 }, { x: 990, y: 552 }, { x: 1190, y: 548 }];
-const PALMS = [{ x: 55, y: 560 }, { x: 610, y: 515 }, { x: 1470, y: 560 }, { x: 40, y: 1010 }, { x: 640, y: 1090 }, { x: 590, y: 300 }, { x: 640, y: 420 }, { x: 1470, y: 110 }];
+export const SOUTH = [
+  { x: 420, y: 1180, w: 180, h: 100, wall: '#EADBC0', door: '#C0392B', sign: 'مكتب البريد' },
+  { x: 1120, y: 1180, w: 180, h: 100, wall: '#E3D3B5', door: '#5E6B78', sign: 'ورشة راشد' }
+];
+const PALMS = [{ x: 55, y: 560 }, { x: 610, y: 515 }, { x: 1470, y: 560 }, { x: 40, y: 1010 }, { x: 640, y: 1090 }, { x: 590, y: 300 }, { x: 640, y: 420 }, { x: 1470, y: 110 }, { x: 40, y: 1500 }, { x: 1460, y: 1450 }, { x: 380, y: 1600 }, { x: 1180, y: 1620 }];
 const FARM_PALMS = [{ x: 905, y: 1080 }, { x: 1440, y: 1080 }, { x: 1440, y: 800 }, { x: 1170, y: 1085 }];
 
 /* المصادمات: مستطيلات لا يعبرها البطل */
 export function staticColliders() {
   const pad = 2;
   return [
-    ...HOUSES.map(b => ({ x: b.x - pad, y: b.y + 10, w: b.w + pad * 2, h: b.h - 6 })),
+    ...HOUSES.concat(SOUTH).map(b => ({ x: b.x - pad, y: b.y + 10, w: b.w + pad * 2, h: b.h - 6 })),
     { x: WAREHOUSE.x, y: WAREHOUSE.y + 10, w: WAREHOUSE.w, h: WAREHOUSE.h - 6 },
     { x: WELL.x - WELL.r, y: WELL.y - WELL.r, w: WELL.r * 2, h: WELL.r * 2 },
     { x: SIGNAL.x - 5, y: SIGNAL.y - 6, w: 10, h: 10 }
@@ -114,6 +118,7 @@ export function drawPalm(ctx, x, y, sc, dry, t) {
 export function staticDrawables(state, t) {
   const out = [];
   HOUSES.forEach(b => out.push({ y: b.y + b.h, draw: c => drawHouse(c, b) }));
+  SOUTH.forEach(b => out.push({ y: b.y + b.h, draw: c => { drawHouse(c, b); c.fillStyle = '#FFFDF6'; rr(c, b.x + b.w / 2 - 46, b.y + 18, 92, 24, 6); c.fill(); c.fillStyle = '#5B4636'; c.font = '900 14px Cairo, sans-serif'; c.textAlign = 'center'; c.fillText(b.sign, b.x + b.w / 2, b.y + 35); } }));
   out.push({ y: WAREHOUSE.y + WAREHOUSE.h, draw: c => drawWarehouse(c) });
   out.push({ y: WELL.y + WELL.r, draw: c => drawWell(c, state.world.delivered) });
   const green = state.world.delivered ? 1 : 0;
