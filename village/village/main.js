@@ -311,7 +311,7 @@ function render(ctx, view, t) {
   if (!mods.includes(UNIT1.factorsMultiples)) UNIT1.factorsMultiples.ground(ctx, {}, false, false, t);
   mods.forEach(md => { const d = quests.data(md.id), done = quests.isDone(md.id); try { if (md.ground) md.ground(ctx, d, !done, done, t); } catch (e) { report('رسم الأرض', md.id, e); } });
   const g = gateState();
-  const list = staticDrawables(s, t).concat(...REGIONS.map((r, i) => r.draw(g[i], t))).filter(d => d.y > view.y - 60 && d.y < view.y + view.h + 200);
+  const list = staticDrawables(s, t, W.player).concat(...REGIONS.map((r, i) => r.draw(g[i], t))).filter(d => d.y > view.y - 60 && d.y < view.y + view.h + 200);
   mods.forEach(md => { const d = quests.data(md.id), done = quests.isDone(md.id); try { if (md.draw) list.push(...md.draw(d, t, !done, done)); } catch (e) { report('الرسم', md.id, e); } });
   TREE_SPOTS.forEach((sp, i) => { const pt = s.world.trees[i]; if (pt) { const k = clamp((now - pt) / 2200, .05, 1); list.push({ y: sp.y, draw: cc => drawPalm(cc, sp.x, sp.y, .2 + .8 * easeOut(k), false, t) }); } });
   W.trucks.forEach(tr => list.push({ y: tr.y + 4, draw: cc => drawTruck(cc, tr, m.loads[tr.i], convoyActive()) }));

@@ -1,5 +1,6 @@
 // «السوق الأسبوعي»: منطقة الوحدة الثانية (القياس) شرق القرية، تُفتح بوابتها بعد إنهاء الوحدة الأولى
 import { rr, shade } from '../core/util.js';
+import { INK, stoneBox, boxShadow, signboard } from './art.js';
 export const GATE_X = 1500;
 export const CARP = { x: 1580, y: 140, w: 200, h: 120 }, BENCH = { x: 1700, y: 332 };
 export const FIELD = { x: 1880, y: 140, w: 380, h: 300 }, BOARD = { x: 1990, y: 478 };
@@ -23,6 +24,7 @@ export function marketColliders(open) {
 }
 /* الأرضيات: الملعب والساحة وأرض الحظيرة */
 export function drawMarketGround(ctx) {
+  marketShadows(ctx);
   const F = FIELD;
   ctx.fillStyle = '#6DBF5B'; rr(ctx, F.x, F.y, F.w, F.h, 10); ctx.fill();
   ctx.fillStyle = 'rgba(255,255,255,.06)'; for (let i = 0; i < 8; i++) if (i % 2) ctx.fillRect(F.x + i * F.w / 8, F.y, F.w / 8, F.h);
@@ -67,13 +69,35 @@ function stall(c, x, y, col) {
   for (let k = 0; k < 5; k++) { c.fillStyle = k % 2 ? '#F4E3B8' : col; c.fillRect(x - 42 + k * 16.8, y - 66, 16.8, 16); }
   c.fillStyle = '#B07A3B'; rr(c, x - 38, y - 22, 76, 22, 3); c.fill();
 }
+/* سور السوق: سور حجري بارتفاع وشُرَف على طوله، وبرجان عند البوابة، وعارضة خشبية تُرفع حين تُفتح البوابة */
+// السور والبرجان منخفضان بما يكفي ليبقى ممر البوابة ظاهراً (في منظور ثلاثة أرباع، ما جنوب الطريق يحجب الطريق خلفه)
+const WALLC = '#CDB58C', WALL_H = 40, TOWER_H = 58;
+const TOWERS = [{ x: GATE_X - 8, y: 556, w: 28, d: 40 }, { x: GATE_X - 8, y: 690, w: 28, d: 32 }];
+function nsWall(c, x, a, b) {   // سور يمتد شمالاً وجنوباً: سطحه العلوي بشُرَف، ووجهه الجنوبي عند نهايته
+  const H = WALL_H;
+  c.fillStyle = shade(WALLC, 8); c.fillRect(x, a - H, 12, b - a);
+  c.fillStyle = 'rgba(80,50,20,.18)'; c.fillRect(x + 8, a - H, 4, b - a);
+  for (let y = a + 4; y < b - 10; y += 16) { c.fillStyle = shade(WALLC, 16); c.fillRect(x, y - H - 7, 12, 8); c.fillStyle = shade(WALLC, -14); c.fillRect(x, y - H + 1, 12, 6); c.strokeStyle = INK; c.lineWidth = .6; c.strokeRect(x, y - H - 7, 12, 14); }
+  c.fillStyle = shade(WALLC, -10); c.fillRect(x, b - H, 12, H);
+  c.strokeStyle = 'rgba(80,55,30,.3)'; c.lineWidth = .8; for (let y = b - H + 8; y < b; y += 8) { c.beginPath(); c.moveTo(x, y); c.lineTo(x + 12, y); c.stroke(); }
+  c.strokeStyle = INK; c.lineWidth = 1; c.strokeRect(x, a - H, 12, b - a + H);
+}
 function drawWall(c, open) {
-  c.fillStyle = '#C9B48E';
-  [[0, 594], [686, 1700]].forEach(([a, b]) => { c.fillRect(GATE_X, a, 12, b - a); for (let y = a; y < b; y += 18) c.fillRect(GATE_X - 3, y, 18, 8); });
-  // القوس والحاجز
-  c.fillStyle = '#B79F74'; c.fillRect(GATE_X - 6, 560, 24, 40); c.fillRect(GATE_X - 6, 680, 24, 40);
-  c.fillStyle = '#FFFDF6'; rr(c, GATE_X - 70, 520, 152, 26, 7); c.fill();
-  c.fillStyle = '#5B4636'; c.font = '900 14px Cairo, sans-serif'; c.textAlign = 'center'; c.fillText(open ? 'السوق الأسبوعي ←' : 'السوق الأسبوعي 🔒', GATE_X + 6, 538);
-  if (!open) { for (let i = 0; i < 6; i++) { c.fillStyle = i % 2 ? '#fff' : '#E2475C'; c.fillRect(GATE_X - 2, 600 + i * 14, 16, 14); } }
-  else { c.save(); c.translate(GATE_X + 6, 600); c.rotate(-1.2); for (let i = 0; i < 6; i++) { c.fillStyle = i % 2 ? '#fff' : '#E2475C'; c.fillRect(-4, -i * 14, 8, 14); } c.restore(); }
+  nsWall(c, GATE_X, 0, 556); nsWall(c, GATE_X, 722, 1700);
+  TOWERS.forEach(t => stoneBox(c, t.x, t.y, t.w, t.d, TOWER_H, WALLC));
+  // العارضة فوق كل شيء ليبقى حال البوابة واضحاً: خشب بأطواق نحاسية، تعترض الطريق أو ترتفع بجانب البرج
+  c.save(); c.translate(GATE_X + 6, 600);
+  if (open) c.rotate(-1.35);
+  c.fillStyle = 'rgba(70,42,20,.22)'; if (!open) c.fillRect(6, 4, 8, 82);
+  c.fillStyle = '#8A5A30'; rr(c, -4, 0, 8, 84, 3); c.fill(); c.fillStyle = '#A9743F'; c.fillRect(-4, 0, 3, 84);
+  c.fillStyle = '#D9A23A'; [10, 40, 70].forEach(y => c.fillRect(-4.5, y, 9, 4));
+  c.strokeStyle = INK; c.lineWidth = .9; rr(c, -4, 0, 8, 84, 3); c.stroke();
+  c.restore();
+  // لافتة البوابة مثبتة على وجه البرج الشمالي
+  signboard(c, GATE_X + 6, TOWERS[0].y + TOWERS[0].d - TOWER_H + 22, open ? 'السوق الأسبوعي ←' : 'السوق الأسبوعي 🔒');
+}
+/* ظلال السور والبرجين على الأرض */
+export function marketShadows(ctx) {
+  boxShadow(ctx, GATE_X, 0, 12, 556, WALL_H); boxShadow(ctx, GATE_X, 722, 12, 978, WALL_H);
+  TOWERS.forEach(t => boxShadow(ctx, t.x, t.y, t.w, t.d, TOWER_H));
 }
