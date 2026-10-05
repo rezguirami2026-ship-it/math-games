@@ -1,7 +1,7 @@
 // قرية الخير: تخطيط العالم ورسمه. المزرعة والبئر والنخيل تتغير حسب حالة العالم.
 // الرسم بأسلوب 2.5D مشترك (world/art.js): مبانٍ بجدران وأسطح، ظلال نحو الأسفل يميناً، أرصفة بحواف، وأنسجة مواد.
 import { rng, shade, mix, rr, clamp } from '../core/util.js';
-import { PAL, SUN, INK, pattern, sprite, boxShadow, blobShadow, building, palm, palmCached, shrub, streetLamp, bench, signboard } from './art.js';
+import { PAL, SUN, INK, pattern, sprite, boxShadow, blobShadow, building3d, box3d, palm, palmCached, shrub, streetLamp, bench, signboard } from './art.js';
 
 export const WORLD = { w: 3200, h: 6500 };   // القرية في الشمال، ثم السوق والميناء شرقاً، والقلعة والمهرجان والجمعية والقافلة والورشة جنوباً
 export const ROADS = [{ x: 0, y: 600, w: 2930, h: 80 }, { x: 700, y: 0, w: 70, h: 600 }];
@@ -185,29 +185,33 @@ export function drawPalm(ctx, x, y, sc, dry, t) { palm(ctx, x, y, sc, dry, t); }
 const behind = (pl, b, H) => pl && pl.x > b.x - 8 && pl.x < b.x + b.w + 8 && pl.y < b.y + b.h - 4 && pl.y > b.y - H - 10;
 export function staticDrawables(state, t, pl) {
   const out = [];
-  // المباني من الذاكرة: صورة واحدة لكل مبنى، وشفافة إن وقف البطل خلفها
-  const cachedBox = (key, b, H, paint) => c => { const f = behind(pl, b, H); if (f) c.globalAlpha = .42; sprite(c, key, b.x - 14, b.y - H - 26, b.w + 28, b.h + H + 36, paint); c.globalAlpha = 1; };
-  HOUSES.forEach((b, i) => out.push({ y: b.y + b.h, draw: cachedBox('house' + i, b, H_HOUSE, c => building(c, Object.assign({}, b, { H: H_HOUSE }), 0)) }));
-  SOUTH.forEach((b, i) => out.push({ y: b.y + b.h, draw: cachedBox('south' + i, b, H_SOUTH, c => building(c, Object.assign({}, b, { H: H_SOUTH, style: 'shop' }), 0)) }));
-  out.push({ y: WAREHOUSE.y + WAREHOUSE.h, draw: cachedBox('warehouse', WAREHOUSE, H_WARE, c => drawWarehouse(c, false)) });
-  out.push({ y: WELL.y + WELL.r, draw: c => drawWell(c, state.world.delivered, t) });
+  // المباني مجسّمة حسب موضعها من الكاميرا (أوجهها من ذاكرة الصور)، وشفافة إن وقف البطل خلفها
+  const solid = (b, H, draw) => c => { if (behind(pl, b, H)) c.globalAlpha = .42; draw(c); c.globalAlpha = 1; };
+  HOUSES.forEach((b, i) => { const B = Object.assign({}, b, { H: H_HOUSE }); out.push({ y: b.y + b.h, draw: solid(b, H_HOUSE, c => building3d(c, 'house' + i, B)) }); });
+  SOUTH.forEach((b, i) => { const B = Object.assign({}, b, { H: H_SOUTH, style: 'shop' }); out.push({ y: b.y + b.h, draw: solid(b, H_SOUTH, c => building3d(c, 'south' + i, B)) }); });
+  const WB = Object.assign({}, WAREHOUSE, { H: H_WARE });
+  out.push({ y: WAREHOUSE.y + WAREHOUSE.h, draw: solid(WAREHOUSE, H_WARE, c => box3d(c, 'warehouse', WB, '#C9C0AE', warehouseRoof, warehouseFront)) });
+  out.push({ y: WELL.y + WELL.r, x: WELL.x, draw: c => drawWell(c, state.world.delivered, t) });
   PALMS.forEach(p => out.push({ y: p.y, draw: c => palmCached(c, p.x, p.y, 1, false, t) }));
   FARM_PALMS.forEach(p => out.push({ y: p.y, draw: c => palmCached(c, p.x, p.y, .95, !state.world.delivered, t) }));
-  LAMPS.forEach(p => out.push({ y: p.y, draw: c => streetLamp(c, p.x, p.y, t, false) }));
-  SHRUBS.forEach(p => out.push({ y: p.y, draw: c => shrub(c, p.x, p.y, 9, p.f) }));
-  out.push({ y: 548, draw: c => bench(c, 1196, 548) });
-  out.push({ y: FI.y + 226, draw: c => farmShed(c, t, !!state.world.delivered) });
-  out.push({ y: 586, draw: c => wayfinding(c, 784, 586) });
+  LAMPS.forEach(p => out.push({ y: p.y, x: p.x, draw: c => streetLamp(c, p.x, p.y, t, false) }));
+  SHRUBS.forEach(p => out.push({ y: p.y, x: p.x, draw: c => shrub(c, p.x, p.y, 9, p.f) }));
+  out.push({ y: 548, x: 1196, draw: c => bench(c, 1196, 548) });
+  out.push({ y: FI.y + 226, x: FI.x + 480, draw: c => farmShed(c, t, !!state.world.delivered) });
+  out.push({ y: 586, x: 784, draw: c => wayfinding(c, 784, 586) });
   return out;
 }
-function drawWarehouse(ctx, faded) {   // مستودع: سقف معدني مضلّع، جدار خرساني، باب لفّاف كبير، ورصيف تحميل
-  const b = WAREHOUSE, H = H_WARE, x = b.x, w = b.w, yb = b.y + b.h, yt = yb - H, ry = b.y - H;
-  if (faded) ctx.globalAlpha = .42;
+/* المستودع: سقف معدني مضلّع، جدار خرساني، باب لفّاف كبير، ورصيف تحميل */
+function warehouseRoof(ctx) {
+  const b = WAREHOUSE, H = H_WARE, x = b.x, w = b.w, ry = b.y - H;
   const g = ctx.createLinearGradient(x, 0, x + w, 0); g.addColorStop(0, '#B9C2CC'); g.addColorStop(1, '#7E8996');
   ctx.fillStyle = g; ctx.fillRect(x, ry, w, b.h);
   for (let xx = x + 6; xx < x + w; xx += 12) { ctx.fillStyle = 'rgba(255,255,255,.28)'; ctx.fillRect(xx, ry + 2, 2, b.h - 4); ctx.fillStyle = 'rgba(40,50,60,.22)'; ctx.fillRect(xx + 5, ry + 2, 2, b.h - 4); }
   ctx.fillStyle = '#E7ECEF'; ctx.fillRect(x + w - 70, ry + 30, 40, 26); ctx.fillStyle = '#9AA5B1'; ctx.fillRect(x + w - 66, ry + 34, 32, 3);   // وحدة تهوية
   ctx.strokeStyle = INK; ctx.lineWidth = 1.2; ctx.strokeRect(x, ry, w, b.h);
+}
+function warehouseFront(ctx) {
+  const b = WAREHOUSE, H = H_WARE, x = b.x, w = b.w, yb = b.y + b.h, yt = yb - H;
   const wg = ctx.createLinearGradient(x, 0, x + w, 0); wg.addColorStop(0, '#D9D2C4'); wg.addColorStop(1, '#B5AC9C');
   ctx.fillStyle = wg; ctx.fillRect(x, yt, w, H);
   ctx.strokeStyle = 'rgba(110,100,85,.35)'; ctx.lineWidth = 1; for (let xx = x + 50; xx < x + w; xx += 50) { ctx.beginPath(); ctx.moveTo(xx, yt); ctx.lineTo(xx, yb - 8); ctx.stroke(); }
@@ -225,7 +229,6 @@ function drawWarehouse(ctx, faded) {   // مستودع: سقف معدني مضل
   ctx.strokeStyle = INK; ctx.lineWidth = 1.2; ctx.strokeRect(x, yt, w, H);
   ctx.fillStyle = '#8F8676'; ctx.fillRect(x - 4, yb - 3, w + 8, 6);   // رصيف التحميل
   signboard(ctx, dx + dw / 2, yt + 26, 'المستودع');
-  ctx.globalAlpha = 1;
 }
 function drawWell(ctx, full, t) {   // بئر حجرية بإطار خشبي وبكرة ودلو؛ تمتلئ وتخضرّ حولها حين يعود الماء
   const w = WELL, r = w.r + 4;

@@ -72,19 +72,57 @@ export function blobShadow(ctx, x, y, r, H) {   // ظل جسم مستدير (ش�
   ctx.fillStyle = SUN.color; ctx.beginPath(); ctx.ellipse(x + SUN.dx * H * .45, y + SUN.dy * H * .32, r, r * .38, .35, 0, 7); ctx.fill();
 }
 
-/* ── المبنى: صندوق بجدار أمامي بارتفاع حقيقي وسطح بحاجز (منظور ثلاثة أرباع) ──
-   b = { x, y, w, h (عمق الأرضية), H (ارتفاع الجدار), wall, door, roof?, style, sign?, ac?, tank?, dish?, faded? } */
-export function building(ctx, b, t) {
-  const { x, w, H } = b, yb = b.y + b.h, yt = yb - H, ry = b.y - H;   // yb قاعدة الجدار الأمامي، yt أعلاه، ry أعلى السطح
-  const wall = b.wall || PAL.plaster;
-  if (b.faded) ctx.globalAlpha = .42;
+/* ── منظور الكاميرا: الكاميرا فوق مركز الشاشة، فما ارتفع عن الأرض يبتعد عن المركز قليلاً ──
+   الجسم على يمين الشاشة يُظهر جانبه الأيسر، وعلى يسارها جانبه الأيمن؛ ويتغير ذلك مع حركة الكاميرا (Parallax).
+   CAM يُحدَّث في كل إطار. lean لكل وحدة ارتفاع: lx إزاحة أفقية، ly نسبة قِصَر الارتفاع (جنوب الكاميرا أقصر) */
+export const CAM = { x: 0, y: 0 };
+const PK = .00065, PKY = .0005;
+export const leanAt = (x, y) => ({ lx: (x - CAM.x) * PK, ly: (y - CAM.y) * PKY });
+/* يرسم جسماً قائماً (شخصية، نخلة، عمود، شاحنة) مائلاً حول قاعدته حسب موضعه من الكاميرا.
+   k يخفّف الميل: الشخصيات بنصفه لأن العين حساسة لوقفة الإنسان */
+export function upright(ctx, bx, by, draw, k = 1) {
+  const L = leanAt(bx, by), lx = L.lx * k, ly = L.ly * k;
+  ctx.save(); ctx.translate(bx, by); ctx.transform(1, 0, -lx, 1 - ly, 0, 0); ctx.translate(-bx, -by); draw(ctx); ctx.restore();
+}
+/* صندوق مجسّم: جدار جانبي ظاهر حسب الكاميرا، ثم السطح، ثم الواجهة. الواجهة والسطح من ذاكرة الصور، والجانب يُرسم حياً.
+   b = { x, y, w, h (عمق الأرضية), H }، side: لون الجدار الجانبي، paintRoof/paintFront ترسمان بالإحداثيات القديمة (السطح عند y−H) */
+export function box3d(ctx, key, b, side, paintRoof, paintFront, roofPad = 34) {
+  const { x, w, H } = b, yb = b.y + b.h, { lx, ly } = leanAt(x + w / 2, yb), dx = lx * H, hE = H * (1 - ly);
+  // الجدار الجانبي: الأيسر مضاء إن كان المبنى يمين الكاميرا، والأيمن في الظل إن كان يسارها
+  if (Math.abs(dx) > .6) {
+    const ex = dx > 0 ? x : x + w, lit = dx > 0;
+    ctx.beginPath(); ctx.moveTo(ex, yb); ctx.lineTo(ex, b.y); ctx.lineTo(ex + dx, b.y - hE); ctx.lineTo(ex + dx, yb - hE); ctx.closePath();
+    const g = ctx.createLinearGradient(0, yb - hE, 0, yb); g.addColorStop(0, shade(side, lit ? 6 : -26)); g.addColorStop(1, shade(side, lit ? -8 : -40));
+    ctx.fillStyle = g; ctx.fill();
+    ctx.fillStyle = pattern(ctx, 'plaster'); ctx.fill();
+    ctx.fillStyle = shade(PAL.stone, lit ? -6 : -34); ctx.beginPath(); ctx.moveTo(ex, yb); ctx.lineTo(ex, b.y); ctx.lineTo(ex + dx * .1, b.y - hE * .1); ctx.lineTo(ex + dx * .1, yb - hE * .1); ctx.closePath(); ctx.fill();   // القاعدة الحجرية
+    ctx.strokeStyle = INK; ctx.lineWidth = 1.1; ctx.beginPath(); ctx.moveTo(ex, yb); ctx.lineTo(ex, b.y); ctx.lineTo(ex + dx, b.y - hE); ctx.lineTo(ex + dx, yb - hE); ctx.stroke();
+  }
+  // السطح: منزاح بقدر الارتفاع
+  ctx.save(); ctx.translate(dx, H - hE); sprite(ctx, key + '|roof', x - 6, b.y - H - roofPad, w + 12, b.h + roofPad + 4, paintRoof); ctx.restore();
+  // الواجهة: مائلة حول قاعدتها
+  ctx.save(); ctx.translate(x, yb); ctx.transform(1, 0, -lx, 1 - ly, 0, 0); ctx.translate(-x, -yb);
+  sprite(ctx, key + '|front', x - 16, yb - H - 18, w + 32, H + 26, paintFront); ctx.restore();
+}
+
+/* ── المبنى: صندوق بجدار أمامي بارتفاع حقيقي وسطح بحاجز ──
+   b = { x, y, w, h (عمق الأرضية), H (ارتفاع الجدار), wall, door, style, sign?, ac?, tank?, dish?, stair? } */
+export function building3d(ctx, key, b) {
+  box3d(ctx, key, b, b.wall || PAL.plaster, c => buildingRoof(c, b), c => buildingFront(c, b));
+}
+export function building(ctx, b, t) { buildingRoof(ctx, b); buildingFront(ctx, b, t); }
+function buildingRoof(ctx, b) {
+  const { x, w, H } = b, ry = b.y - H, wall = b.wall || PAL.plaster;
   // السطح: أرضية مرتفعة يحيطها حاجز
   ctx.fillStyle = shade(wall, 6); ctx.fillRect(x, ry, w, b.h);
   ctx.fillStyle = shade(wall, -8); ctx.fillRect(x + 7, ry + 7, w - 14, b.h - 14);
   ctx.fillStyle = 'rgba(80,50,20,.10)'; ctx.fillRect(x + 7, ry + 7, w - 14, 5); ctx.fillRect(x + 7, ry + 7, 5, b.h - 14);   // ظل الحاجز الداخلي
   ctx.fillStyle = pattern(ctx, 'plaster'); ctx.fillRect(x, ry, w, b.h);
-  roofProps(ctx, b, ry, t);
+  roofProps(ctx, b, ry);
   ctx.strokeStyle = INK; ctx.lineWidth = 1.2; ctx.strokeRect(x, ry, w, b.h);
+}
+function buildingFront(ctx, b, t) {
+  const { x, w, H } = b, yb = b.y + b.h, yt = yb - H, wall = b.wall || PAL.plaster;
   // الجدار الأمامي: تدرج ضوء من اليسار، قاعدة حجرية، وجص بملمس
   const g = ctx.createLinearGradient(x, 0, x + w, 0); g.addColorStop(0, shade(wall, 4)); g.addColorStop(1, shade(wall, -16));
   ctx.fillStyle = g; ctx.fillRect(x, yt, w, H);
@@ -103,7 +141,6 @@ export function building(ctx, b, t) {
   if (b.lamp !== false) wallLamp(ctx, x + w / 2, yb - dh - 9, t);
   ctx.strokeStyle = INK; ctx.lineWidth = 1.2; ctx.strokeRect(x, yt, w, H);
   if (b.sign) signboard(ctx, x + w / 2, yt + 14, b.sign);
-  ctx.globalAlpha = 1;
 }
 /* كتلة حجرية (سور، برج): أرضية (x,y,w,d) بارتفاع H — سطح علوي بشُرَف، ووجه أمامي بمداميك حجر */
 export function stoneBox(ctx, x, y, w, d, H, col, crenel = true) {
@@ -117,6 +154,21 @@ export function stoneBox(ctx, x, y, w, d, H, col, crenel = true) {
   ctx.fillStyle = 'rgba(70,40,15,.16)'; ctx.fillRect(x, yb - 6, w, 6);
   ctx.strokeStyle = INK; ctx.lineWidth = 1.1; ctx.strokeRect(x, ry, w, d); ctx.strokeRect(x, yt, w, H);
   if (crenel) crenels(ctx, x, yt, w, col, true);
+}
+/* كتلة حجرية مجسّمة حسب الكاميرا (برج، بوابة) */
+export function stoneBox3d(ctx, key, x, y, w, d, H, col) {
+  const roof = c => { c.fillStyle = shade(col, 12); c.fillRect(x, y - H, w, d); c.fillStyle = 'rgba(80,50,20,.12)'; c.fillRect(x + 3, y - H + 3, w - 6, d - 6); c.strokeStyle = INK; c.lineWidth = 1.1; c.strokeRect(x, y - H, w, d); };
+  const front = c => {
+    const yb = y + d, yt = yb - H;
+    const g = c.createLinearGradient(x, 0, x + w, 0); g.addColorStop(0, shade(col, 2)); g.addColorStop(1, shade(col, -18));
+    c.fillStyle = g; c.fillRect(x, yt, w, H);
+    c.strokeStyle = 'rgba(80,55,30,.28)'; c.lineWidth = .8;
+    for (let yy = yt + 8, r = 0; yy < yb; yy += 8, r++) { c.beginPath(); c.moveTo(x, yy); c.lineTo(x + w, yy); c.stroke(); for (let xx = x + (r % 2 ? 6 : 12); xx < x + w; xx += 14) { c.beginPath(); c.moveTo(xx, yy - 8); c.lineTo(xx, yy); c.stroke(); } }
+    c.fillStyle = 'rgba(70,40,15,.16)'; c.fillRect(x, yb - 6, w, 6);
+    c.strokeStyle = INK; c.lineWidth = 1.1; c.strokeRect(x, yt, w, H);
+    crenels(c, x, yt, w, col, true);
+  };
+  box3d(ctx, key, { x, y, w, h: d, H }, col, roof, front, 8);
 }
 function crenels(ctx, x, yt, w, wall, noSpout) {   // شُرَف مسنّنة بخطوات، مع ميزاب خشبي
   const n = Math.max(4, Math.round(w / 15)), cw = w / n;
@@ -173,7 +225,7 @@ export function signboard(ctx, x, y, text) {   // لافتة مثبتة على �
   ctx.fillStyle = PAL.teal; rr(ctx, x - w / 2, y - 9, w, 19, 4); ctx.fill(); ctx.strokeStyle = '#E3B04B'; ctx.lineWidth = 1.2; ctx.stroke();
   ctx.fillStyle = '#FFF6E2'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.fillText(text, x, y + 1); ctx.textBaseline = 'alphabetic';
 }
-function roofProps(ctx, b, ry, t) {   // ما على السطح: خزان ماء، صحن لاقط، درج السطح
+function roofProps(ctx, b, ry) {   // ما على السطح: خزان ماء، صحن لاقط، درج السطح
   if (b.tank) {
     const tx = b.x + b.w - 34, ty = ry + 20;
     ctx.fillStyle = 'rgba(70,42,20,.22)'; ctx.beginPath(); ctx.ellipse(tx + 9, ty + 18, 13, 5, 0, 0, 7); ctx.fill();
@@ -198,7 +250,8 @@ function roofProps(ctx, b, ry, t) {   // ما على السطح: خزان ماء
 /* نخلة ثابتة من الذاكرة، تتمايل بإمالة الصورة حول قاعدتها (لا إعادة رسم في كل إطار) */
 export function palmCached(ctx, x, y, sc, dry, t) {
   const sway = Math.sin((t || 0) * 1.1 + x * .01) * .035, v = Math.round(Math.abs(Math.sin(x * .07)) * 3);
-  ctx.save(); ctx.translate(x, y); ctx.transform(1, 0, -sway, 1, 0, 0);
+  const { lx, ly } = leanAt(x, y);   // التمايل ومنظور الكاميرا معاً
+  ctx.save(); ctx.translate(x, y); ctx.transform(1, 0, -sway - lx, 1 - ly, 0, 0);
   sprite(ctx, `palm|${dry ? 1 : 0}|${sc}|${v}`, -64 * sc, -140 * sc, 128 * sc, 150 * sc, c => palm(c, 0, 0, sc, dry, 0, v));
   ctx.restore();
 }

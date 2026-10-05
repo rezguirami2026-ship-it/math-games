@@ -25,7 +25,7 @@ import { T2U3 } from './missions/t2u3.js';
 import { T2U4 } from './missions/t2u4.js';
 import { T2U5 } from './missions/t2u5.js';
 import { workshopColliders, drawWorkshopGround, workshopDrawables, STAGE } from './world/workshop.js';
-import { signboard } from './world/art.js';
+import { signboard, upright, CAM } from './world/art.js';
 import { caravanColliders, drawCaravanGround, caravanDrawables } from './world/caravan.js';
 import { coopColliders, drawCoopGround, coopDrawables } from './world/coop.js';
 import { festivalColliders, drawFestivalGround, festivalDrawables } from './world/festival.js';
@@ -295,6 +295,7 @@ function update(dt) {
 
 /* ── الرسم ── */
 function render(ctx, view, t) {
+  CAM.x = view.x + view.w / 2; CAM.y = view.y + view.h / 2;   // منظور الكاميرا: ما ارتفع يبتعد عن مركز الشاشة
   const s = game.state, m = s.missions.convoy, now = Date.now(), c = cur();
   drawGround(ctx, view);
   drawMarketGround(ctx);
@@ -314,23 +315,23 @@ function render(ctx, view, t) {
   const g = gateState();
   const list = staticDrawables(s, t, W.player).concat(...REGIONS.map((r, i) => r.draw(g[i], t))).filter(d => d.y > view.y - 60 && d.y < view.y + view.h + 200);
   mods.forEach(md => { const d = quests.data(md.id), done = quests.isDone(md.id); try { if (md.draw) list.push(...md.draw(d, t, !done, done)); } catch (e) { report('الرسم', md.id, e); } });
-  TREE_SPOTS.forEach((sp, i) => { const pt = s.world.trees[i]; if (pt) { const k = clamp((now - pt) / 2200, .05, 1); list.push({ y: sp.y, draw: cc => drawPalm(cc, sp.x, sp.y, .2 + .8 * easeOut(k), false, t) }); } });
-  W.trucks.forEach(tr => list.push({ y: tr.y + 4, draw: cc => drawTruck(cc, tr, m.loads[tr.i], convoyActive()) }));
-  if (convoyActive()) list.push({ y: PILE.y, draw: cc => drawPile(cc, m.pile) });
-  if (quests.isStarted('division1') || quests.isDone('division1')) list.push({ y: convoy.VAN.y + 4, draw: cc => drawVan(cc, m.van || 0) });
-  list.push({ y: SIGNAL.y, draw: cc => drawSignal(cc, W.signalGreen) });
+  TREE_SPOTS.forEach((sp, i) => { const pt = s.world.trees[i]; if (pt) { const k = clamp((now - pt) / 2200, .05, 1); list.push({ y: sp.y, x: sp.x, draw: cc => drawPalm(cc, sp.x, sp.y, .2 + .8 * easeOut(k), false, t) }); } });
+  W.trucks.forEach(tr => list.push({ y: tr.y + 4, x: tr.x, draw: cc => drawTruck(cc, tr, m.loads[tr.i], convoyActive()) }));
+  if (convoyActive()) list.push({ y: PILE.y, x: PILE.x, draw: cc => drawPile(cc, m.pile) });
+  if (quests.isStarted('division1') || quests.isDone('division1')) list.push({ y: convoy.VAN.y + 4, x: convoy.VAN.x, draw: cc => drawVan(cc, m.van || 0) });
+  list.push({ y: SIGNAL.y, x: SIGNAL.x, draw: cc => drawSignal(cc, W.signalGreen) });
   const T = s.missions.tanks, tanksOn = quests.isStarted('decimalFractions') || quests.isDone('decimalFractions');
-  if (tanksOn) tanks.TANKS.forEach((tk, i) => list.push({ y: tk.y, draw: cc => tanks.drawTank(cc, i, T.levels[i], T.targets ? T.targets[i] : { t: 'd', s: '؟' }, T.done[i], t) }));
+  if (tanksOn) tanks.TANKS.forEach((tk, i) => list.push({ y: tk.y, x: tk.x, draw: cc => tanks.drawTank(cc, i, T.levels[i], T.targets ? T.targets[i] : { t: 'd', s: '؟' }, T.done[i], t) }));
   tanks.TANKS.forEach((tk, i) => { if (T.done[i]) { const hs = HOUSES[tk.house]; list.push({ y: hs.y + hs.h + 9, draw: cc => tanks.drawFlowers(cc, hs) }); } });
-  list.push({ y: SHOP.y - 42, draw: cc => drawShopBack(cc) }, { y: SHOP.y, draw: cc => drawShop(cc) });
+  list.push({ y: SHOP.y - 42, x: SHOP.x, draw: cc => drawShopBack(cc) }, { y: SHOP.y, x: SHOP.x, draw: cc => drawShop(cc) });
   list.push({ y: HERO_DOOR.y - 13, draw: cc => signboard(cc, HERO_DOOR.x + 52, HERO_DOOR.y - 66, '🚪 خزانة البطل') });   // لافتة على جدار بيت البطل
   const giverMark = n => c && c.ready && MODS[c.id] && c.giver === n.id && !quests.isStarted(c.id) ? '!' : null;
   // الشخصيات خارج الشاشة لا تُرسم (كانت كلها تُرسم في كل إطار)
-  W.npcs.filter(n => npcVisible(n, s) && n.x > view.x - 60 && n.x < view.x + view.w + 60 && n.y > view.y - 20 && n.y < view.y + view.h + 110).forEach(n => list.push({ y: n.y, draw: cc => drawNpc(cc, n, giverMark(n)) }));
+  W.npcs.filter(n => npcVisible(n, s) && n.x > view.x - 60 && n.x < view.x + view.w + 60 && n.y > view.y - 20 && n.y < view.y + view.h + 110).forEach(n => list.push({ y: n.y, x: n.x, lean: .5, draw: cc => drawNpc(cc, n, giverMark(n)) }));
   const pl = W.player, mod = curMod(), hand = mod && mod.hand && c && quests.isStarted(c.id) ? mod.hand(quests.data(c.id)) : null;
   const pa = pl.anim ? pl.anim.name : pl.moving ? (pl.speed > 160 ? 'run' : 'walk') : 'idle';
-  list.push({ y: pl.y, draw: cc => drawHuman(cc, Object.assign(hero(), { x: pl.x, y: pl.y, dir: pl.dir, phase: pl.phase, moving: pl.moving, carry: hand ? Math.min(hand.n, 6) : s.carry, bend: pl.act === 'plant', anim: pa, animT: pl.anim ? pl.anim.t : 0 })) });
-  list.sort((a, b) => a.y - b.y).forEach(d => d.draw(ctx));
+  list.push({ y: pl.y, x: pl.x, lean: .5, draw: cc => drawHuman(cc, Object.assign(hero(), { x: pl.x, y: pl.y, dir: pl.dir, phase: pl.phase, moving: pl.moving, carry: hand ? Math.min(hand.n, 6) : s.carry, bend: pl.act === 'plant', anim: pa, animT: pl.anim ? pl.anim.t : 0 })) });
+  list.sort((a, b) => a.y - b.y).forEach(d => d.x !== undefined ? upright(ctx, d.x, d.y, d.draw, d.lean) : d.draw(ctx));   // القائم يميل مع منظور الكاميرا
   if (hand && hand.label && hand.label.trim()) bubble(ctx, pl.x, pl.y - 78 - Math.min(hand.n, 6) * 8, hand.label, '#2A1B66');
   if (mod && mod.handDraw && c && quests.isStarted(c.id)) try { mod.handDraw(ctx, pl.x, pl.y - 112, quests.data(c.id)); } catch (e) { report('ما في اليد', c.id, e); }
   if (W.tapMark) { const k = W.tapMark.t / .6; ctx.strokeStyle = `rgba(255,255,255,${1 - k})`; ctx.lineWidth = 3; ctx.beginPath(); ctx.ellipse(W.tapMark.x, W.tapMark.y, 8 + k * 16, 4 + k * 7, 0, 0, 7); ctx.stroke(); }

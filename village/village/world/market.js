@@ -1,6 +1,6 @@
 // «السوق الأسبوعي»: منطقة الوحدة الثانية (القياس) شرق القرية، تُفتح بوابتها بعد إنهاء الوحدة الأولى
 import { rr, shade } from '../core/util.js';
-import { INK, stoneBox, boxShadow, signboard } from './art.js';
+import { INK, stoneBox3d, boxShadow, signboard } from './art.js';
 export const GATE_X = 1500;
 export const CARP = { x: 1580, y: 140, w: 200, h: 120 }, BENCH = { x: 1700, y: 332 };
 export const FIELD = { x: 1880, y: 140, w: 380, h: 300 }, BOARD = { x: 1990, y: 478 };
@@ -84,7 +84,7 @@ function nsWall(c, x, a, b) {   // سور يمتد شمالاً وجنوباً: 
 }
 function drawWall(c, open) {
   nsWall(c, GATE_X, 0, 556); nsWall(c, GATE_X, 722, 1700);
-  TOWERS.forEach(t => stoneBox(c, t.x, t.y, t.w, t.d, TOWER_H, WALLC));
+  TOWERS.forEach((t, i) => stoneBox3d(c, 'tower' + i, t.x, t.y, t.w, t.d, TOWER_H, WALLC));
   // العارضة فوق كل شيء ليبقى حال البوابة واضحاً: خشب بأطواق نحاسية، تعترض الطريق أو ترتفع بجانب البرج
   c.save(); c.translate(GATE_X + 6, 600);
   if (open) c.rotate(-1.35);
