@@ -40,14 +40,16 @@ async function until(cond, what, ms = 15000) {
   while (Date.now() - t0 < ms) { if (await cond()) return; await sleep(50); }
   throw new Error('انتهت المهلة: ' + what);
 }
-// يغلق الحوارات وبطاقات الفصول حتى تعود اللعبة حرة
-async function settle(ms = 20000) {
-  const t0 = Date.now();
+// يغلق الحوارات وبطاقات الفصول حتى تعود اللعبة حرة.
+// quiet: مدة الهدوء المطلوبة، لأن بعض الدروس تفتح حوار الختام بعد انتظار قصير
+async function settle(ms = 20000, quiet = 0) {
+  const t0 = Date.now(); let idle = 0;
   while (Date.now() - t0 < ms) {
     const st = await G(() => ({ dialog: document.getElementById('dialog').classList.contains('on'), chapter: document.getElementById('screen').classList.contains('chapter'), busy: window.__game.game.busy, panel: document.getElementById('panel').classList.contains('on') }));
     if (st.dialog) await G(() => document.getElementById('dialog').click());
     else if (st.chapter) await G(() => { const s = document.getElementById('screen'); if (s.onclick) s.onclick(); });
-    else if (!st.busy || st.panel) return;
+    else if (!st.busy || st.panel) { if (!idle) idle = Date.now(); if (Date.now() - idle >= quiet) return; await sleep(120); continue; }
+    idle = 0;
     await sleep(120);
   }
   throw new Error('اللعبة بقيت مشغولة');
@@ -590,7 +592,9 @@ S.usingStats = async () => {
 const RED = [4, 2, 6, 8, 0];   // متساوٍ، غير مرجّح، مرجّح، مؤكد، مستحيل
 S.probabilityLang = async () => {
   await station(ST6().spinner, '🎡 دوّار المهرجان');
-  const spin = async r => { await sheetBtn('#benchGo'); await until(async () => (await data('probabilityLang')).r > r || await G(() => document.getElementById('benchMsg')?.classList.contains('bad')), 'الدوّار'); await sleep(200); };
+  // ننتظر توقف الدوّار: إما تتقدم الجولة أو تظهر رسالة خطأ جديدة (رسالة الخطأ السابقة قد تبقى ظاهرة)
+  const msg = () => G(() => document.getElementById('benchMsg')?.textContent);
+  const spin = async r => { const before = await msg(); await sheetBtn('#benchGo'); await until(async () => (await data('probabilityLang')).r > r || (await msg()) !== before, 'الدوّار'); await sleep(200); };
   await spin(0);   // خطأ: لا أحمر (لا تطلبه الجولة الأولى أبداً)
   expect((await data('probabilityLang')).r === 0, 'تلوين خاطئ قُبل');
   for (let r = 0; r < 3; r++) {
@@ -728,6 +732,101 @@ S.decimalFractions = async () => {
   }
 };
 
+/* ═══ الوحدة ٤: القياس (٢) (طريق القافلة) ═══ */
+const ST8 = () => W.caravan.ST8, ST9 = () => W.workshop.ST9;
+// مطابقة: اضغط العنصر i ثم بطاقته (البطاقة تحمل رقم عنصرها في data-v)
+const matchAll = async n => { for (let i = 0; i < n; i++) { await sheetBtn(`[data-r="${i}"]`); await sheetBtn(`.mt.val[data-v="${i}"]`); } };
+const matchWrong = async (id) => { await sheetBtn('[data-r="0"]'); await sheetBtn('.mt.val[data-v="1"]'); expect((await data(id)).gone.length === 0, 'مطابقة خاطئة قُبلت'); };
+// ٥٩. السعة والكتلة: غالون = ٤ كوارت، ١٠ لترات ≈ ٢٫٢ غالون، ١ كغ ≈ ٢٫٢ رطل
+S.capacityMass = async () => {
+  await station(ST8().fuel, '⛽ مضخة الوقود');
+  await sheetBtn('#benchGo');   // خطأ: صفر كوارت
+  expect((await data('capacityMass')).r === 0, 'كمية خاطئة قُبلت');
+  const q = (await data('capacityMass')).rounds;
+  await setCounter('q', 0, q[0].ans); await sheetBtn('#benchGo');
+  await typePad(q[1].ans); await typePad(q[2].ans);
+};
+// ٦٠. المسافة: تحويلات، ثم ترتيب الأطوال من الأقصر
+S.distance = async () => {
+  await station(ST8().signs, '🧭 خرائط الدليل');
+  const q = (await data('distance')).rounds;
+  await typePad(q[0].ans + 1);   // خطأ
+  expect((await data('distance')).r === 0, 'تحويل خاطئ قُبل');
+  await typePad(q[0].ans); await typePad(q[1].ans);
+  for (const i of q[2].items.map((it, i) => i).sort((a, b) => q[2].items[a].mm - q[2].items[b].mm)) await sheetBtn(`.tile[data-i="${i}"]`);
+  await sheetBtn('#benchGo');
+};
+// ٦١. المناطق الزمنية (٢): الوصول = الإقلاع + المدة + فرق التوقيت
+S.timeZones2 = async () => {
+  await station(ST8().flights, '✈️ لوحة الوصول');
+  const d0 = await data('timeZones2'); if (mod(d0.rounds[0].ans - d0.tm, 1440) === 0) await sheetBtn('[data-m="60"]');
+  await sheetBtn('#benchGo');   // خطأ: وقت الإقلاع
+  expect((await data('timeZones2')).r === 0, 'وقت خاطئ قُبل');
+  for (let r = 0; r < 3; r++) { const d = await data('timeZones2'); await steps(mod(d.rounds[r].ans - d.tm, 1440), 60, 15, '[data-m="60"]', '', '[data-m="15"]', ''); await sheetBtn('#benchGo'); }
+};
+// ٦٢. السنوات الكبيسة: تُقسم على ٤ إلا سنوات القرن التي لا تُقسم على ٤٠٠
+const leap = y => (y % 4 === 0 && y % 100 !== 0) || y % 400 === 0;
+S.leapYears = async () => {
+  await station(ST8().century, '📜 جدار القرن');
+  const y0 = (await data('leapYears')).rounds[0].years;
+  await panelClick(`.stone[data-i="${y0.findIndex(y => !leap(y))}"]`); await sheetBtn('#benchGo');   // خطأ: سنة ليست كبيسة
+  expect((await data('leapYears')).r === 0, 'سنة غير كبيسة قُبلت');
+  await panelClick(`.stone[data-i="${y0.findIndex(y => !leap(y))}"]`);   // إلغاء اختيارها
+  for (let r = 0; r < 2; r++) { const ys = (await data('leapYears')).rounds[r].years; for (let i = 0; i < ys.length; i++) if (leap(ys[i])) await panelClick(`.stone[data-i="${i}"]`); await sheetBtn('#benchGo'); }
+  await typePad((await data('leapYears')).rounds[2].ans);
+};
+// ٦٣. المستطيلات: مطابقة المساحات ثم المحيطات، ثم الطول = المساحة ÷ العرض
+S.rectangles = async () => {
+  await station(ST8().rects, '🌿 بطاقات الأحواض');
+  await matchWrong('rectangles');
+  await matchAll(3); await matchAll(3);
+  await typePad((await data('rectangles')).rounds[2].ans);
+};
+// ٦٤. الأشكال غير المنتظمة: المربعات الكاملة + نصف عدد الأنصاف، ومتوازي الأضلاع = القاعدة × الارتفاع
+S.irregularShapes = padLesson('irregularShapes', '🌱 مخطط الواحة', () => ST8().oasis, (d, r) => d.rounds[r].ans);
+
+/* ═══ الوحدة ٥: الهندسة (ورشة البنّاء) ═══ */
+// ٦٥. تصنيف الرباعيات: أضلاع متساوية، زوايا قائمة، زوج واحد متوازٍ، زوجان متوازيان
+const QUADS = { sq: [1, 1, 0, 1], rect: [0, 1, 0, 1], rh: [1, 0, 0, 1], para: [0, 0, 0, 1], trap: [0, 0, 1, 0], kite: [0, 0, 0, 0], irr: [0, 0, 0, 0] };
+S.classifyShapes = async () => {
+  await station(ST9().tiles, '🕌 لوح البلاط');
+  await sheetBtn('#benchGo');   // خطأ: صف بلا بلاط
+  expect((await data('classifyShapes')).r === 0, 'تصنيف خاطئ قُبل');
+  for (let r = 0; r < 3; r++) { const q = (await data('classifyShapes')).rounds[r]; for (let i = 0; i < q.tiles.length; i++) if (QUADS[q.tiles[i]][q.k]) await panelClick(`.stone[data-i="${i}"]`); await sheetBtn('#benchGo'); }
+};
+// ٦٦. تحويل المضلعات: نقاط على المستوى الإحداثي (الأصل عند ١٥٠، ١١٦ وكل وحدة ٢٤ بكسل)
+S.transformPolygons = async () => {
+  await station(ST9().flag, '🚩 قماش العلم');
+  await sheetBtn('#benchGo');   // خطأ: بلا نقاط
+  expect((await data('transformPolygons')).r === 0, 'صورة خاطئة قُبلت');
+  for (let r = 0; r < 3; r++) { for (const [x, y] of (await data('transformPolygons')).rounds[r].image) await canvasClick('cp', 150 + x * 24, 116 - y * 24); await sheetBtn('#benchGo'); }
+};
+// ٦٧. الزوايا: على مستقيم ١٨٠°، حول نقطة ٣٦٠°، القائمة ٩٠° (المنقلة تبدأ عند ٣٠°)
+S.measureAngles = async () => {
+  await station(ST9().protractor, '📐 المنقلة');
+  if ((await data('measureAngles')).rounds[0].ans === 30) await sheetBtn('[data-a="1"]');
+  await sheetBtn('#benchGo');   // خطأ: الزاوية الابتدائية
+  expect((await data('measureAngles')).r === 0, 'زاوية خاطئة قُبلت');
+  for (let r = 0; r < 3; r++) { const d = await data('measureAngles'); await steps(d.rounds[r].ans - d.set, 10, 1, '[data-a="10"]', '[data-a="-10"]', '[data-a="1"]', '[data-a="-1"]'); await sheetBtn('#benchGo'); }
+};
+// ٦٨. المنشورات والأهرامات: مطابقة الرؤوس ثم الأوجه، ثم عدد الحواف
+const SOL = [['prism', 4], ['prism', 3], ['prism', 5], ['pyr', 4], ['pyr', 3], ['pyr', 5]];
+S.prisms = async () => {
+  await station(ST9().crates, '📦 بطاقات الصناديق');
+  await matchWrong('prisms');
+  await matchAll(3); await matchAll(3);
+  const [t, k] = SOL[(await data('prisms')).rounds[2].s]; await typePad(t === 'prism' ? 3 * k : 2 * k);
+};
+// ٦٩. المجسمات المنتظمة: شكل الوجه وعدد الأوجه، ثم أويلر: الحواف = الأوجه + الرؤوس − ٢
+const PLAT = [[3, 4, 4], [4, 6, 8], [3, 8, 6], [5, 12, 20], [3, 20, 12]];   // [أضلاع الوجه، الأوجه، الرؤوس]
+S.regularPolyhedra = async () => {
+  await station(ST9().crystals, '💎 فرن الكريستال');
+  await sheetBtn('#benchGo');   // خطأ: بلا وجه
+  expect((await data('regularPolyhedra')).r === 0, 'كريستالة خاطئة قُبلت');
+  for (let r = 0; r < 2; r++) { const [f, F] = PLAT[(await data('regularPolyhedra')).rounds[r].s]; await sheetBtn(`.facebtn[data-f="${f}"]`); await setCounter('nf', 0, F); await sheetBtn('#benchGo'); }
+  const [, F, V] = PLAT[(await data('regularPolyhedra')).rounds[2].s]; await typePad(F + V - 2);
+};
+
 /* ── البوابات: لا طريق عبرها قبل وقتها ── */
 const GATES = [
   { after: 'sequences', name: 'بوابة السوق', a: { x: 1380, y: 640 }, b: { x: 1620, y: 640 } },
@@ -735,7 +834,8 @@ const GATES = [
   { after: 'coordinates', name: 'بوابة القلعة', a: { x: 1240, y: 1660 }, b: { x: 1240, y: 1780 } },
   { after: 'specialNumbers', name: 'بوابة ساحة المهرجان', a: { x: 1240, y: 2540 }, b: { x: 1240, y: 2680 } },
   { after: 'probabilityLang', name: 'بوابة سوق الجمعية', a: { x: 1240, y: 3440 }, b: { x: 1240, y: 3580 } },
-  { after: 'decimalFractions', name: 'بوابة طريق القافلة', a: { x: 1240, y: 4440 }, b: { x: 1240, y: 4580 } }
+  { after: 'decimalFractions', name: 'بوابة طريق القافلة', a: { x: 1240, y: 4440 }, b: { x: 1240, y: 4580 } },
+  { after: 'irregularShapes', name: 'بوابة ورشة البنّاء', a: { x: 1240, y: 5440 }, b: { x: 1240, y: 5580 } }
 ];
 const pathLen = (a, b) => G(([a, b]) => window.__game.findPath(a, b).length, [a, b]);
 
@@ -755,6 +855,8 @@ try {
   W.fort = await G(async () => { const f = await import('./world/fort.js'); return { BW: f.BW, ST4: f.ST4 }; });
   W.festival = await G(async () => { const f = await import('./world/festival.js'); return { ST5: f.ST5, ST6: f.ST6, VISITORS: f.VISITORS }; });
   W.coop = await G(async () => { const c = await import('./world/coop.js'); return { ST7: c.ST7 }; });
+  W.caravan = await G(async () => { const c = await import('./world/caravan.js'); return { ST8: c.ST8 }; });
+  W.workshop = await G(async () => { const w = await import('./world/workshop.js'); return { ST9: w.ST9 }; });
   const lessons = await G(async () => (await import('./content/lessons.js')).LESSONS.map(l => ({ id: l.id, title: l.title, giver: l.giver, u: l.u })));
   for (const g of GATES) expect(await pathLen(g.a, g.b) === 0, `${g.name} مفتوحة قبل وقتها`);
   let played = 0;
@@ -765,7 +867,7 @@ try {
       await talk(l.giver);
       await S[l.id]();
       await until(() => isDone(l.id), 'إنهاء الدرس', 60000);
-      await settle(60000);
+      await settle(60000, 2000);
       if (errors.length > e0) throw new Error('أخطاء في الكونسول: ' + errors.slice(e0).join(' / '));
       console.log(`✅ ${l.title} (${((Date.now() - t0) / 1000).toFixed(1)} ث)`);
       played++;
@@ -780,6 +882,10 @@ try {
       else if (!due && open) { failures++; console.log(`❌ ${g.name} فُتحت قبل وقتها (بعد «${l.title}»)`); }
       else if (g.after === l.id) console.log(`🚪 ${g.name} فُتحت في وقتها`);
     }
+  }
+  if (played === lessons.length) {   // النهاية: الهدف يشير إلى منصة التخرّج
+    const obj = await G(() => document.getElementById('objective').textContent);
+    if (obj.includes('التخرّج')) console.log('🎓 ظهر هدف منصة التخرّج'); else { failures++; console.log(`❌ الهدف بعد آخر درس: «${obj}»`); }
   }
   console.log(`\nالنتيجة: نجح ${played} من ${lessons.length} درساً${failures ? ` — وفشل ${failures}` : ''}`);
 } catch (e) { failures++; console.log('❌ ' + e.message); }
