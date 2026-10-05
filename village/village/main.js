@@ -89,6 +89,17 @@ const gate4Open = () => LESSONS.filter(l => l.u <= 3).every(l => quests.isDone(l
 const gate3Open = () => LESSONS.filter(l => l.u === 2).every(l => quests.isDone(l.id));   // بوابة القلعة تُفتح بإنهاء الوحدة الثالثة
 const gate2Open = () => LESSONS.filter(l => l.u === 1).every(l => quests.isDone(l.id));   // بوابة الميناء تُفتح بإنهاء الوحدة الثانية
 const curMod = () => { const c = cur(); return c && c.ready && MODS[c.id] ? MODS[c.id] : null; };
+/* حالة البوابات والجدران تُحسب عند إنهاء درس فقط، لا في كل إطار ولا في كل خطوة من إيجاد الطريق */
+let gates = null, walls = null;
+const gateState = () => gates || (gates = { g1: gateOpen(), g2: gate2Open(), g3: gate3Open(), g4: gate4Open(), g5: gate5Open(), g6: gate6Open(), g7: gate7Open(), all: allDone() });
+const resetGates = () => { gates = null; walls = null; };
+function wallRects() {   // كل العوائق الثابتة؛ البركة عائق إلا أثناء القفز على حجارتها
+  if (walls && walls.stones === W.stones) return walls.list;
+  const g = gateState();
+  const list = W.statics.concat(marketColliders(g.g1), harborColliders(g.g2), fortColliders(g.g3), festivalColliders(g.g4), coopColliders(g.g5), caravanColliders(g.g6), workshopColliders(g.g7), W.stones ? [] : [{ x: POND.x, y: POND.y, w: POND.w, h: POND.h }]);
+  walls = { stones: W.stones, list };
+  return list;
+}
 
 function boot() {
   const saved = loadSave();
@@ -96,7 +107,7 @@ function boot() {
 }
 async function start(state) {
   game.state = upgrade(state);
-  W = buildWorld(state);
+  W = buildWorld(state); resetGates();
   hud.init({ drawMini, questLog });
   hud.show(true); hud.good(); hud.objective(objective());
   eng.snap(W.player); eng.follow = W.player; eng.onTap = onTap;
@@ -128,8 +139,8 @@ function people() { const P = { narrator: { name: 'الراوي' }, pax: W.paxIn
 /* ── التصادم: البركة لا تُعبر إلا على الحجارة ── */
 function blocked(x, y) {
   if (x < 12 || y < 30 || x > WORLD.w - 12 || y > WORLD.h - 8) return true;
-  const r = 9, rects = W.statics.concat(truckColliders(W.trucks), marketColliders(gateOpen()), harborColliders(gate2Open()), fortColliders(gate3Open()), festivalColliders(gate4Open()), coopColliders(gate5Open()), caravanColliders(gate6Open()), workshopColliders(gate7Open()), W.stones ? [] : [{ x: POND.x, y: POND.y, w: POND.w, h: POND.h }]);
-  return rects.some(b => x > b.x - r && x < b.x + b.w + r && y > b.y - r && y < b.y + b.h + r);
+  const r = 9, hit = b => x > b.x - r && x < b.x + b.w + r && y > b.y - r && y < b.y + b.h + r;
+  return wallRects().some(hit) || truckColliders(W.trucks).some(hit);   // الشاحنات تتحرك فتُفحص كل مرة
 }
 
 /* ── ما يمكن النقر عليه ── */
@@ -282,7 +293,8 @@ function render(ctx, view, t) {
   if (!mods.includes(UNIT1.sequences)) UNIT1.sequences.ground(ctx, {}, false, false, t);   // البركة والبستان جزء من العالم دائماً
   if (!mods.includes(UNIT1.factorsMultiples)) UNIT1.factorsMultiples.ground(ctx, {}, false, false, t);
   mods.forEach(md => { const d = quests.data(md.id), done = quests.isDone(md.id); try { if (md.ground) md.ground(ctx, d, !done, done, t); } catch (e) {} });
-  const list = staticDrawables(s, t).concat(marketDrawables(gateOpen()), harborDrawables(gate2Open(), t), fortDrawables(gate3Open(), t), festivalDrawables(gate4Open(), t), coopDrawables(gate5Open()), caravanDrawables(gate6Open(), t), workshopDrawables(gate7Open(), t, allDone())).filter(d => d.y > view.y - 60 && d.y < view.y + view.h + 200);
+  const g = gateState();
+  const list = staticDrawables(s, t).concat(marketDrawables(g.g1), harborDrawables(g.g2, t), fortDrawables(g.g3, t), festivalDrawables(g.g4, t), coopDrawables(g.g5), caravanDrawables(g.g6, t), workshopDrawables(g.g7, t, g.all)).filter(d => d.y > view.y - 60 && d.y < view.y + view.h + 200);
   mods.forEach(md => { const d = quests.data(md.id), done = quests.isDone(md.id); try { if (md.draw) list.push(...md.draw(d, t, !done, done)); } catch (e) {} });
   TREE_SPOTS.forEach((sp, i) => { const pt = s.world.trees[i]; if (pt) { const k = clamp((now - pt) / 2200, .05, 1); list.push({ y: sp.y, draw: cc => drawPalm(cc, sp.x, sp.y, .2 + .8 * easeOut(k), false, t) }); } });
   W.trucks.forEach(tr => list.push({ y: tr.y + 4, draw: cc => drawTruck(cc, tr, m.loads[tr.i], convoyActive()) }));
@@ -354,6 +366,7 @@ bus.on('good', () => hud.good());
 bus.on('mission', () => hud.objective(objective()));
 bus.on('achievement', a => setTimeout(() => hud.toast(`${a.icon} إنجاز جديد: ${a.name}`), 400));
 bus.on('lessonDone', id => {
+  resetGates();   // قد تُفتح بوابة الآن
   const l = LESSONS.find(x => x.id === id); setTimeout(() => hud.toast(`✅ أنجزت درس «${l.title}»`), 1200);
   if (LESSONS.filter(x => x.u === 0).every(x => quests.isDone(x.id))) unlock('unit1');
   if (LESSONS.filter(x => x.u === 1).every(x => quests.isDone(x.id))) unlock('unit2');

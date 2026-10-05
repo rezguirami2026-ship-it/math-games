@@ -10,7 +10,8 @@ function heap() {
   };
 }
 export function findPath(sx, sy, tx, ty, blocked) {
-  const free = (c, r) => c >= 0 && r >= 0 && c < COLS && r < ROWS && !blocked(c * C + C / 2, r * C + C / 2);
+  const seen = new Uint8Array(COLS * ROWS);   // كل خانة تُفحص مرة واحدة: ١ حرة، ٢ مسدودة
+  const free = (c, r) => { if (c < 0 || r < 0 || c >= COLS || r >= ROWS) return false; const i = r * COLS + c; if (!seen[i]) seen[i] = blocked(c * C + C / 2, r * C + C / 2) ? 2 : 1; return seen[i] === 1; };
   const clear = (a, b) => { const d = Math.hypot(b.x - a.x, b.y - a.y), n = Math.ceil(d / 6); for (let i = 1; i <= n; i++) { const t = i / n; if (blocked(a.x + (b.x - a.x) * t, a.y + (b.y - a.y) * t)) return false; } return true; };
   const start = { x: sx, y: sy }, goal = { x: tx, y: ty };
   if (!blocked(tx, ty) && clear(start, goal)) return [goal];
