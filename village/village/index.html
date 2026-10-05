@@ -1,0 +1,32 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,user-scalable=no">
+<meta name="theme-color" content="#2A1B66">
+<title>قرية الخير — مغامرة رامي ماث</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<canvas id="game" aria-label="عالم اللعبة"></canvas>
+
+<div id="hud">
+  <div class="top">
+    <div class="pill" id="goodPill">💚 <b id="goodN">٠</b></div>
+    <div class="tools"><button id="bBag" aria-label="الحقيبة">🎒</button><button id="bMap" aria-label="الخريطة">🗺️</button><button id="bAch" aria-label="الإنجازات">🏆</button></div>
+  </div>
+  <div class="obj" id="objective"></div>
+  <div class="actions" id="actions"></div>
+</div>
+
+<div id="dialog" class="dialog" role="dialog">
+  <canvas id="portrait" width="96" height="96"></canvas>
+  <div class="dbody"><b id="dName"></b><p id="dText"></p></div>
+  <span class="dnext">▸</span>
+</div>
+<div id="panel" class="panel"></div>
+<div id="toast" class="toast"></div>
+<div id="screen" class="screen"></div>
+<script type="module" src="main.js"></script>
+</body>
+</html>

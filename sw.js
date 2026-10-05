@@ -7,7 +7,7 @@
    عند كل تحديث: غيّر رقم CACHE_VERSION فقط، وسيُحذف الكاش القديم تلقائياً.
    ════════════════════════════════════════════════════════════ */
 
-const CACHE_VERSION = 'mathgame-v260-daily-variety';   // ← غيّر هذا الرقم عند كل تحديث للتطبيق
+const CACHE_VERSION = 'mathgame-v235-games-bypass';   // ← غيّر هذا الرقم عند كل تحديث للتطبيق
 const CACHE_NAME = CACHE_VERSION;
 
 /* ── الملفات الأساسية التي تُخزَّن مسبقاً عند التثبيت ── */
@@ -16,11 +16,7 @@ const PRECACHE_URLS = [
   './index.html',
   './manifest.json',
   './icon-192.png',
-  './questions.js',
   './icon-512.png',
-  './apple-touch-icon.png',
-  './favicon-32.png',
-  './games-map.html',
   // مكتبات خارجية أساسية
   'https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js',
   'https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js',
@@ -135,6 +131,9 @@ self.addEventListener('fetch', (event) => {
   if (req.method !== 'GET') return;
 
   const url = new URL(req.url);
+
+  // ألعاب مستقلة في المستودع نفسه: لا يعترضها عامل خدمة المنصة حتى تصلها تحديثاتها فوراً
+  if (url.pathname.includes('/village/') || url.pathname.includes('/world/')) return;
 
   // لا تعترض البيانات اللحظية (Firebase DB، المصادقة، التحليلات...)
   if (isLiveRequest(url)) return;
