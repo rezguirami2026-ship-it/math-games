@@ -271,9 +271,16 @@ function objectiveTarget() {
   return s.world.delivered && i >= 0 ? { x: TREE_SPOTS[i].x, y: TREE_SPOTS[i].y } : null;
 }
 
+/* ── حركات البطل: كل مؤثر صوتي يحرّك البطل حركته (التقاط، وضع، احتفال، انحناء) ── */
+const ANIMS = { pick: ['pickup', .35], drop: ['place', .35], win: ['celebrate', 1.1], plant: ['pickup', .6], good: ['interact', .4] };
+bus.on('sfx', k => { const a = ANIMS[k]; if (a && W) W.player.anim = { name: a[0], t: 0, dur: a[1] }; });
+const routeLeft = pl => { if (!pl.target) return 0; let d = Math.hypot(pl.target.x - pl.x, pl.target.y - pl.y); (pl.route || []).forEach((p, i, r) => { if (i) d += Math.hypot(p.x - r[i - 1].x, p.y - r[i - 1].y); }); return d; };
+
 /* ── التحديث ── */
 function update(dt) {
   const s = game.state, pl = W.player;
+  pl.speed = routeLeft(pl) > 280 ? 215 : 150;   // يجري في الطرق الطويلة ويمشي قرب الهدف
+  if (pl.anim && (pl.anim.t += dt / pl.anim.dur) >= 1) pl.anim = null;
   if (!W.stones && (!game.busy || pl.target)) updatePlayer(pl, dt, game.busy ? {} : eng.keys, blocked);
   W.npcs.forEach(n => { if (npcVisible(n, s)) updateNpc(n, dt, pl, blocked); });
   W.trucks.forEach(t => moveAlong(t, dt, 230));
@@ -319,7 +326,8 @@ function render(ctx, view, t) {
   const giverMark = n => c && c.ready && MODS[c.id] && c.giver === n.id && !quests.isStarted(c.id) ? '!' : null;
   W.npcs.filter(n => npcVisible(n, s)).forEach(n => list.push({ y: n.y, draw: cc => drawNpc(cc, n, giverMark(n)) }));
   const pl = W.player, mod = curMod(), hand = mod && mod.hand && c && quests.isStarted(c.id) ? mod.hand(quests.data(c.id)) : null;
-  list.push({ y: pl.y, draw: cc => drawHuman(cc, Object.assign(hero(), { x: pl.x, y: pl.y, dir: pl.dir, phase: pl.phase, moving: pl.moving, carry: hand ? Math.min(hand.n, 6) : s.carry, bend: pl.act === 'plant' })) });
+  const pa = pl.anim ? pl.anim.name : pl.moving ? (pl.speed > 160 ? 'run' : 'walk') : 'idle';
+  list.push({ y: pl.y, draw: cc => drawHuman(cc, Object.assign(hero(), { x: pl.x, y: pl.y, dir: pl.dir, phase: pl.phase, moving: pl.moving, carry: hand ? Math.min(hand.n, 6) : s.carry, bend: pl.act === 'plant', anim: pa, animT: pl.anim ? pl.anim.t : 0 })) });
   list.sort((a, b) => a.y - b.y).forEach(d => d.draw(ctx));
   if (hand && hand.label && hand.label.trim()) bubble(ctx, pl.x, pl.y - 78 - Math.min(hand.n, 6) * 8, hand.label, '#2A1B66');
   if (mod && mod.handDraw && c && quests.isStarted(c.id)) try { mod.handDraw(ctx, pl.x, pl.y - 112, quests.data(c.id)); } catch (e) { report('ما في اليد', c.id, e); }

@@ -1,4 +1,5 @@
-// مؤثرات صوتية مولّدة بلا ملفات
+// مؤثرات صوتية مولّدة بلا ملفات. كل مؤثر يُعلَن أيضاً على bus ليتحرك البطل معه (التقاط، وضع، احتفال)
+import { bus } from './events.js';
 let AC = null; export const sound = { on: true };
 function tone(f, d, type, vol, when) {
   if (!sound.on) return;
@@ -10,6 +11,7 @@ function tone(f, d, type, vol, when) {
   } catch (e) {}
 }
 export function sfx(k) {
+  bus.emit('sfx', k);
   if (k === 'pick') tone(520, .07, 'triangle', .1);
   if (k === 'drop') tone(330, .09, 'triangle', .12);
   if (k === 'cough') { tone(90, .25, 'sawtooth', .07); tone(70, .3, 'sawtooth', .06, .25); }
