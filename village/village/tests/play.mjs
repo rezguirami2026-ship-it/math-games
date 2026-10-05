@@ -911,6 +911,8 @@ try {
   if (played === lessons.length) {   // النهاية: الهدف يشير إلى منصة التخرّج
     const obj = await G(() => document.getElementById('objective').textContent);
     if (obj.includes('التخرّج')) console.log('🎓 ظهر هدف منصة التخرّج'); else { failures++; console.log(`❌ الهدف بعد آخر درس: «${obj}»`); }
+    const ach = await G(() => window.__game.state.achievements), want = ['unit1', 'unit2', 'unit3', 'unit4', 'term1', 't2u1', 't2u2', 't2u3', 't2u4', 't2u5', 'all69'], miss = want.filter(a => !ach[a]);
+    if (miss.length) { failures++; console.log('❌ إنجازات الوحدات الناقصة: ' + miss.join('، ')); } else console.log('🏆 إنجازات الوحدات كلها مفتوحة');
   }
   if (!failures) {   // رمز التقدّم: نسخ من الحقيبة، مسح الجهاز، رفض رمز تالف، ثم استعادة كاملة
     try { await checkProgressCode(played); console.log('🔑 رمز التقدّم: نُسخ، ورُفض الرمز التالف، واستُعيدت المغامرة كاملة'); }

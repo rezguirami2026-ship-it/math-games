@@ -79,26 +79,36 @@ const MODS = Object.assign({}, UNIT1, UNIT2, UNIT3, UNIT4, T2U1, T2U2, T2U3, T2U
   }
 });
 const cur = () => quests.current();
-const gateOpen = () => LESSONS.filter(l => l.u === 0).every(l => quests.isDone(l.id));   // بوابة السوق تُفتح بإنهاء الوحدة الأولى
 const ALLMODS = () => Object.values(UNIT1).concat(Object.values(UNIT2), Object.values(UNIT3), Object.values(UNIT4), Object.values(T2U1), Object.values(T2U2), Object.values(T2U3), Object.values(T2U4), Object.values(T2U5));
-const gate7Open = () => LESSONS.filter(l => l.u <= 7).every(l => quests.isDone(l.id));   // ورشة البنّاء تُفتح بإنهاء القياس (٢)
 const allDone = () => LESSONS.every(l => quests.isDone(l.id));
-const gate6Open = () => LESSONS.filter(l => l.u <= 6).every(l => quests.isDone(l.id));   // طريق القافلة يُفتح بإنهاء وحدة العدد
-const gate5Open = () => LESSONS.filter(l => l.u <= 5).every(l => quests.isDone(l.id));   // سوق الجمعية يُفتح بإنهاء وحدة البيانات
-const gate4Open = () => LESSONS.filter(l => l.u <= 3).every(l => quests.isDone(l.id));   // ساحة المهرجان تُفتح بإنهاء الفصل الأول
-const gate3Open = () => LESSONS.filter(l => l.u === 2).every(l => quests.isDone(l.id));   // بوابة القلعة تُفتح بإنهاء الوحدة الثالثة
-const gate2Open = () => LESSONS.filter(l => l.u === 1).every(l => quests.isDone(l.id));   // بوابة الميناء تُفتح بإنهاء الوحدة الثانية
+const unitDone = u => LESSONS.filter(l => l.u <= u).every(l => quests.isDone(l.id));   // الوحدة وكل ما قبلها
 const curMod = () => { const c = cur(); return c && c.ready && MODS[c.id] ? MODS[c.id] : null; };
+/* المناطق المسوّرة: بوابة كل منطقة تُفتح بإنهاء الوحدة u (رقمها في UNITS)، ورسالة الفتح في UNITS[u].opens */
+const REGIONS = [
+  { u: 0, walls: marketColliders, draw: open => marketDrawables(open) },        // السوق الأسبوعي
+  { u: 1, walls: harborColliders, draw: harborDrawables },                      // الميناء
+  { u: 2, walls: fortColliders, draw: fortDrawables },                          // القلعة
+  { u: 3, walls: festivalColliders, draw: festivalDrawables },                  // ساحة المهرجان (نهاية الفصل الأول)
+  { u: 5, walls: coopColliders, draw: open => coopDrawables(open) },            // سوق الجمعية
+  { u: 6, walls: caravanColliders, draw: caravanDrawables },                    // طريق القافلة
+  { u: 7, walls: workshopColliders, draw: (open, t) => workshopDrawables(open, t, allDone()) }   // ورشة البنّاء
+];
 /* حالة البوابات والجدران تُحسب عند إنهاء درس فقط، لا في كل إطار ولا في كل خطوة من إيجاد الطريق */
 let gates = null, walls = null;
-const gateState = () => gates || (gates = { g1: gateOpen(), g2: gate2Open(), g3: gate3Open(), g4: gate4Open(), g5: gate5Open(), g6: gate6Open(), g7: gate7Open(), all: allDone() });
+const gateState = () => gates || (gates = REGIONS.map(r => unitDone(r.u)));
 const resetGates = () => { gates = null; walls = null; };
 function wallRects() {   // كل العوائق الثابتة؛ البركة عائق إلا أثناء القفز على حجارتها
   if (walls && walls.stones === W.stones) return walls.list;
   const g = gateState();
-  const list = W.statics.concat(marketColliders(g.g1), harborColliders(g.g2), fortColliders(g.g3), festivalColliders(g.g4), coopColliders(g.g5), caravanColliders(g.g6), workshopColliders(g.g7), W.stones ? [] : [{ x: POND.x, y: POND.y, w: POND.w, h: POND.h }]);
+  const list = W.statics.concat(...REGIONS.map((r, i) => r.walls(g[i])), W.stones ? [] : [{ x: POND.x, y: POND.y, w: POND.w, h: POND.h }]);
   walls = { stones: W.stones, list };
   return list;
+}
+/* الأخطاء لا تُخفى: كل خطأ يُسجَّل في الكونسول مرة واحدة لكل موضع ودرس، واللعبة تكمل */
+const reported = new Set();
+function report(where, id, err) {
+  const k = where + ':' + id; if (reported.has(k)) return; reported.add(k);
+  console.error(`[قرية الخير] ${where} — ${id}`, err);
 }
 
 function boot() {
@@ -251,11 +261,11 @@ function objective() {
   if (!c) return '🎓 أكملتَ الدروس الـ٦٩ كلها! منصة التخرّج تنتظرك جنوب الورشة';
   if (!mod) return `✨ الوحدة ${ar(UNITS[c.u].n)} (${UNITS[c.u].title}) قريباً — ${c.mission}`;
   if (!quests.isStarted(c.id)) { const n = W.npcs.find(x => x.id === c.giver); return `💬 ${n ? n.name : ''} ينتظرك: «${c.mission}»`; }
-  try { return mod.goal(quests.data(c.id)); } catch (e) { return '🎯 ' + c.mission; }   // نص الهدف لا يُوقف اللعبة أبداً
+  try { return mod.goal(quests.data(c.id)); } catch (e) { report('الهدف', c.id, e); return '🎯 ' + c.mission; }   // نص الهدف لا يُوقف اللعبة أبداً
 }
 function objectiveTarget() {
   const c = cur(), mod = curMod();
-  if (mod) { try { return quests.isStarted(c.id) ? mod.target(quests.data(c.id), W) : npcPos(c.giver); } catch (e) { return null; } }
+  if (mod) { try { return quests.isStarted(c.id) ? mod.target(quests.data(c.id), W) : npcPos(c.giver); } catch (e) { report('سهم الهدف', c.id, e); return null; } }
   if (!c) return { x: STAGE.x, y: STAGE.y - 40 };   // بعد الدروس كلها: السهم إلى منصة التخرّج
   const s = game.state, i = s.world.trees.findIndex(v => !v);
   return s.world.delivered && i >= 0 ? { x: TREE_SPOTS[i].x, y: TREE_SPOTS[i].y } : null;
@@ -267,7 +277,7 @@ function update(dt) {
   if (!W.stones && (!game.busy || pl.target)) updatePlayer(pl, dt, game.busy ? {} : eng.keys, blocked);
   W.npcs.forEach(n => { if (npcVisible(n, s)) updateNpc(n, dt, pl, blocked); });
   W.trucks.forEach(t => moveAlong(t, dt, 230));
-  { const c = cur(), md = curMod(); if (md && md.update && quests.isStarted(c.id)) try { md.update(dt, W, quests.data(c.id)); } catch (e) {} }
+  { const c = cur(), md = curMod(); if (md && md.update && quests.isStarted(c.id)) try { md.update(dt, W, quests.data(c.id)); } catch (e) { report('التحديث', c.id, e); } }
   updateFx(dt);
   if (W.tapMark) { W.tapMark.t += dt; if (W.tapMark.t > .6) W.tapMark = null; }
   hud.actions(currentActions());
@@ -292,10 +302,10 @@ function render(ctx, view, t) {
   const mods = ALLMODS().filter(md => quests.isStarted(md.id) || quests.isDone(md.id));
   if (!mods.includes(UNIT1.sequences)) UNIT1.sequences.ground(ctx, {}, false, false, t);   // البركة والبستان جزء من العالم دائماً
   if (!mods.includes(UNIT1.factorsMultiples)) UNIT1.factorsMultiples.ground(ctx, {}, false, false, t);
-  mods.forEach(md => { const d = quests.data(md.id), done = quests.isDone(md.id); try { if (md.ground) md.ground(ctx, d, !done, done, t); } catch (e) {} });
+  mods.forEach(md => { const d = quests.data(md.id), done = quests.isDone(md.id); try { if (md.ground) md.ground(ctx, d, !done, done, t); } catch (e) { report('رسم الأرض', md.id, e); } });
   const g = gateState();
-  const list = staticDrawables(s, t).concat(marketDrawables(g.g1), harborDrawables(g.g2, t), fortDrawables(g.g3, t), festivalDrawables(g.g4, t), coopDrawables(g.g5), caravanDrawables(g.g6, t), workshopDrawables(g.g7, t, g.all)).filter(d => d.y > view.y - 60 && d.y < view.y + view.h + 200);
-  mods.forEach(md => { const d = quests.data(md.id), done = quests.isDone(md.id); try { if (md.draw) list.push(...md.draw(d, t, !done, done)); } catch (e) {} });
+  const list = staticDrawables(s, t).concat(...REGIONS.map((r, i) => r.draw(g[i], t))).filter(d => d.y > view.y - 60 && d.y < view.y + view.h + 200);
+  mods.forEach(md => { const d = quests.data(md.id), done = quests.isDone(md.id); try { if (md.draw) list.push(...md.draw(d, t, !done, done)); } catch (e) { report('الرسم', md.id, e); } });
   TREE_SPOTS.forEach((sp, i) => { const pt = s.world.trees[i]; if (pt) { const k = clamp((now - pt) / 2200, .05, 1); list.push({ y: sp.y, draw: cc => drawPalm(cc, sp.x, sp.y, .2 + .8 * easeOut(k), false, t) }); } });
   W.trucks.forEach(tr => list.push({ y: tr.y + 4, draw: cc => drawTruck(cc, tr, m.loads[tr.i], convoyActive()) }));
   if (convoyActive()) list.push({ y: PILE.y, draw: cc => drawPile(cc, m.pile) });
@@ -312,7 +322,7 @@ function render(ctx, view, t) {
   list.push({ y: pl.y, draw: cc => drawHuman(cc, Object.assign(hero(), { x: pl.x, y: pl.y, dir: pl.dir, phase: pl.phase, moving: pl.moving, carry: hand ? Math.min(hand.n, 6) : s.carry, bend: pl.act === 'plant' })) });
   list.sort((a, b) => a.y - b.y).forEach(d => d.draw(ctx));
   if (hand && hand.label && hand.label.trim()) bubble(ctx, pl.x, pl.y - 78 - Math.min(hand.n, 6) * 8, hand.label, '#2A1B66');
-  if (mod && mod.handDraw && c && quests.isStarted(c.id)) try { mod.handDraw(ctx, pl.x, pl.y - 112, quests.data(c.id)); } catch (e) {}
+  if (mod && mod.handDraw && c && quests.isStarted(c.id)) try { mod.handDraw(ctx, pl.x, pl.y - 112, quests.data(c.id)); } catch (e) { report('ما في اليد', c.id, e); }
   if (W.tapMark) { const k = W.tapMark.t / .6; ctx.strokeStyle = `rgba(255,255,255,${1 - k})`; ctx.lineWidth = 3; ctx.beginPath(); ctx.ellipse(W.tapMark.x, W.tapMark.y, 8 + k * 16, 4 + k * 7, 0, 0, 7); ctx.stroke(); }
   drawFx(ctx);
   drawGuide(ctx, view, t);
@@ -368,24 +378,13 @@ bus.on('achievement', a => setTimeout(() => hud.toast(`${a.icon} إنجاز جد
 bus.on('lessonDone', id => {
   resetGates();   // قد تُفتح بوابة الآن
   const l = LESSONS.find(x => x.id === id); setTimeout(() => hud.toast(`✅ أنجزت درس «${l.title}»`), 1200);
-  if (LESSONS.filter(x => x.u === 0).every(x => quests.isDone(x.id))) unlock('unit1');
-  if (LESSONS.filter(x => x.u === 1).every(x => quests.isDone(x.id))) unlock('unit2');
-  if (LESSONS.filter(x => x.u === 2).every(x => quests.isDone(x.id))) unlock('unit3');
-  if (LESSONS.filter(x => x.u === 3).every(x => quests.isDone(x.id))) { unlock('unit4'); unlock('term1'); }
-  if (id === 'coordinates') setTimeout(() => hud.toast('🏰 فُتحت بوابة القلعة جنوب القرية!'), 3500);
-  if (id === 'specialNumbers') { setTimeout(() => hud.toast('🎓 أكملتَ الفصل الدراسي الأول كله!'), 4200); setTimeout(() => hud.toast('🎪 فُتحت بوابة ساحة المهرجان جنوب القلعة!'), 7400); }
-  if (LESSONS.filter(x => x.u === 4).every(x => quests.isDone(x.id))) unlock('t2u1');
-  if (LESSONS.filter(x => x.u === 5).every(x => quests.isDone(x.id))) unlock('t2u2');
-  if (LESSONS.filter(x => x.u === 6).every(x => quests.isDone(x.id))) unlock('t2u3');
-  if (LESSONS.filter(x => x.u === 7).every(x => quests.isDone(x.id))) unlock('t2u4');
-  if (LESSONS.filter(x => x.u === 8).every(x => quests.isDone(x.id))) unlock('t2u5');
-  if (id === 'irregularShapes') setTimeout(() => hud.toast('🛠️ فُتحت بوابة ورشة البنّاء: آخر وحدة!'), 3500);
+  if (LESSONS.filter(x => x.u === l.u).every(x => quests.isDone(x.id))) {   // اكتملت الوحدة: إنجازاتها ورسائل فتح البوابة
+    const u = UNITS[l.u];
+    u.ach.forEach(a => unlock(a));
+    u.opens.forEach(([ms, msg]) => setTimeout(() => hud.toast(msg), ms));
+  }
   if (allDone()) { unlock('all69'); setTimeout(() => hud.toast('🎓 أكملتَ الدروس الـ٦٩ كلها! اذهب إلى منصة التخرّج'), 4500); }
-  if (id === 'decimalFractions') setTimeout(() => hud.toast('🐪 فُتحت بوابة طريق القافلة جنوب سوق الجمعية!'), 4500);
-  if (id === 'probabilityLang') setTimeout(() => hud.toast('🏪 فُتحت بوابة سوق الجمعية جنوب الساحة!'), 3500);
-  if (id === 'mixedNumbers') setTimeout(() => hud.toast('💧 أم خالد تنتظرك في القرية: خزانات البيوت عطشى!'), 3500);
-  if (id === 'areaPerimeterT1') setTimeout(() => hud.toast('⚓ فُتحت بوابة الميناء شرق السوق!'), 3500);
-  if (id === 'sequences') setTimeout(() => hud.toast('🚧 فُتحت بوابة السوق الأسبوعي شرق القرية!'), 3500);
+  if (id === 'mixedNumbers') setTimeout(() => hud.toast('💧 أم خالد تنتظرك في القرية: خزانات البيوت عطشى!'), 3500);   // الدرس التالي في القرية لا في السوق
 });
 window.__game = { get state() { return game.state; }, get W() { return W; }, eng, game, quests, MODS, findPath: (a, b) => findPath(a.x, a.y, b.x, b.y, blocked) };
 boot();
