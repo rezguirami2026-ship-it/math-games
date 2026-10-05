@@ -4,6 +4,8 @@ import { ar } from '../core/util.js';
 import { drawHuman } from '../character/human.js';
 import { ACH } from '../achievements/achievements.js';
 import { sound, sfx } from '../core/sound.js';
+import { exportCode } from '../save/save.js';
+import { progress } from '../missions/quests.js';
 const $ = id => document.getElementById(id);
 window.addEventListener('pointerup', () => clearInterval(hud._hold));
 export const hud = {
@@ -59,12 +61,32 @@ export const hud = {
         <div class="bagrow"><span>💚 نقاط الخير</span><b>${ar(s.good)}</b></div>
         ${(() => { const c = {}; (s.inventory || []).forEach(k => c[k] = (c[k] || 0) + 1); const I = { seeds: '🌱 بذور', bucket: '🪣 دلو', shovel: '⛏️ مجرفة', fert: '🧴 سماد', pot: '🪴 أصيص' };
           return Object.keys(c).length ? Object.keys(c).map(k => `<div class="bagrow"><span>${I[k] || k}</span><b>${ar(c[k])}</b></div>`).join('') : '<div class="bagrow muted"><span>🧰 الأدوات</span><b>تشتريها من دكان العم ناصر</b></div>'; })()}
-        <button class="act ghost" id="sndBtn">${sound.on ? '🔊 الصوت يعمل' : '🔇 الصوت متوقف'}</button>`;
+        <button class="act ghost" id="sndBtn">${sound.on ? '🔊 الصوت يعمل' : '🔇 الصوت متوقف'}</button>
+        <button class="act ghost" id="codeBtn">🔑 رمز حفظ التقدّم</button>`;
+    }
+    if (kind === 'code') {
+      const p = progress();
+      body = `<h3>🔑 رمز تقدّمك</h3>
+        <p class="muted">أنجزتَ ${ar(p.done)} من ${ar(p.total)} درساً. انسخ هذا الرمز واحتفظ به أو أرسله لمعلمك، وتستطيع استعادة مغامرتك به على أي جهاز من شاشة البداية.</p>
+        <textarea id="codeBox" class="codebox" readonly dir="ltr">…</textarea>
+        <button class="act go" id="copyBtn">📋 انسخ الرمز</button>`;
     }
     if (kind === 'map') body = `<h3>🗺️ قرية الخير</h3><canvas id="mini" width="320" height="363"></canvas><p class="muted">الأحمر: أنت — الأخضر: مهمتك — الأصفر: أهل القرية</p><h3>📜 رحلة الدروس</h3><div id="qlog"></div>`;
     el.innerHTML = `<div class="sheet">${body}<button class="act" data-close>رجوع إلى العالم</button></div>`;
     el.classList.add('on');
-    if (kind === 'bag') $('sndBtn').onclick = e => { e.stopPropagation(); sound.on = !sound.on; this.panel('bag'); };
+    if (kind === 'bag') {
+      $('sndBtn').onclick = e => { e.stopPropagation(); sound.on = !sound.on; this.panel('bag'); };
+      $('codeBtn').onclick = e => { e.stopPropagation(); this.panel('code'); };
+    }
+    if (kind === 'code') {
+      const box = $('codeBox');
+      exportCode(s).then(code => { box.value = code; });
+      $('copyBtn').onclick = async e => {
+        e.stopPropagation(); box.focus(); box.select();
+        let ok = false; try { await navigator.clipboard.writeText(box.value); ok = true; } catch (err) { try { ok = document.execCommand('copy'); } catch (err2) {} }
+        $('copyBtn').textContent = ok ? '✓ نُسخ الرمز' : 'حدّد الرمز وانسخه يدوياً';
+      };
+    }
     if (kind === 'map') { this.api.drawMini($('mini')); $('qlog').innerHTML = this.api.questLog(); const now = $('qlog').querySelector('.now'); if (now) setTimeout(() => now.scrollIntoView({ block: 'center' }), 50); }
   }
 };

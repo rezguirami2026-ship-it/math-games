@@ -1,5 +1,8 @@
 // شاشات البداية: العنوان، اختيار البطل، بطاقة الفصل. لا قوائم دروس ولا لوحات.
 import { drawHuman, SKINS, ACCENTS } from '../character/human.js';
+import { importCode } from '../save/save.js';
+import { LESSONS } from '../content/lessons.js';
+import { ar } from '../core/util.js';
 const $ = id => document.getElementById(id);
 let anim = 0;
 function animate(canvases) {
@@ -12,14 +15,34 @@ function animate(canvases) {
   loop();
 }
 export const screens = {
-  title(saved, { onContinue, onNew }) {
+  title(saved, { onContinue, onNew, onRestore }) {
     const el = $('screen'); el.className = 'screen on title';
     el.innerHTML = `<div class="sky"></div><div class="logo">قرية الخير</div><div class="tag">مغامرة رامي ماث</div>
       <canvas id="tHero" width="200" height="190"></canvas>
-      <div class="btns">${saved ? `<button class="act big" id="bCont">تابع مغامرتك</button><button class="act ghost" id="bNew">مغامرة جديدة</button>` : `<button class="act big" id="bNew">ابدأ المغامرة</button>`}</div>`;
+      <div class="btns">${saved ? `<button class="act big" id="bCont">تابع مغامرتك</button><button class="act ghost" id="bNew">مغامرة جديدة</button>` : `<button class="act big" id="bNew">ابدأ المغامرة</button>`}<button class="act ghost" id="bCode">🔑 لديّ رمز تقدّم</button></div>`;
     animate([{ c: $('tHero'), h: () => saved ? heroLook(saved.hero) : { kind: 'boy', accent: ACCENTS[0], skin: SKINS[1] } }]);
     if (saved) $('bCont').onclick = () => { cancelAnimationFrame(anim); el.className = 'screen'; onContinue(); };
     $('bNew').onclick = () => { if (saved && !confirm('ستبدأ مغامرة جديدة ويُمسح عالمك الحالي. هل أنت متأكد؟')) return; this.hero(onNew); };
+    $('bCode').onclick = () => { cancelAnimationFrame(anim); this.restore(saved, { onContinue, onNew, onRestore }); };
+  },
+  /* استعادة المغامرة برمز التقدّم: يُعرض اسم البطل وتقدّمه قبل التأكيد */
+  restore(saved, cb) {
+    const el = $('screen'); el.className = 'screen on hero';
+    el.innerHTML = `<h2>🔑 استعادة المغامرة</h2>
+      <p class="restore-note">الصق رمز التقدّم الذي نسخته من الحقيبة 🎒</p>
+      <textarea id="codeIn" class="codebox" dir="ltr" placeholder="RM1.…" autocomplete="off" spellcheck="false"></textarea>
+      <p class="restore-note" id="codeMsg"></p>
+      <div class="btns"><button class="act big" id="bCheck">تحقّق من الرمز</button><button class="act ghost" id="bBack">رجوع</button></div>`;
+    $('bBack').onclick = () => this.title(saved, cb);
+    $('bCheck').onclick = async () => {
+      const s = await importCode($('codeIn').value);
+      if (!s) { $('codeMsg').textContent = 'هذا الرمز غير صالح. تأكد أنك نسخته كاملاً.'; $('codeIn').classList.add('shake'); setTimeout(() => $('codeIn').classList.remove('shake'), 500); return; }
+      const done = LESSONS.filter(l => s.quests && s.quests.done && s.quests.done[l.id]).length;
+      $('codeMsg').innerHTML = `مغامرة <b>${s.hero.name}</b>: أنجز ${ar(done)} من ${ar(LESSONS.length)} درساً.${saved ? '<br>ستحلّ محلّ المغامرة المحفوظة على هذا الجهاز.' : ''}`;
+      el.querySelector('.btns').innerHTML = `<button class="act big" id="bYes">✓ نعم، استعدها</button><button class="act ghost" id="bBack">رجوع</button>`;
+      $('bBack').onclick = () => this.title(saved, cb);
+      $('bYes').onclick = () => { el.className = 'screen'; cb.onRestore(s); };
+    };
   },
   hero(done) {
     const el = $('screen'); el.className = 'screen on hero';

@@ -71,6 +71,9 @@ button:focus-visible,input:focus-visible{outline:3px solid var(--sun);outline-of
 .sw{display:flex;gap:10px}
 .sw button{width:40px;height:40px;border-radius:50%;border:3px solid #ffffff99}
 .sw button.on{border-color:#2A1B66;transform:scale(1.12)}
+.codebox{font:700 12px ui-monospace,Consolas,monospace;padding:10px;border-radius:14px;border:2px solid #E3D6B5;background:#fff;width:100%;max-width:340px;height:96px;resize:none;word-break:break-all;color:var(--ink)}
+.sheet .codebox{max-width:none}
+.restore-note{margin:0;max-width:320px;text-align:center;font-weight:800;color:var(--ink);line-height:1.6}
 #hname{font:900 22px 'Cairo',sans-serif;text-align:center;padding:12px;border-radius:16px;border:3px solid #fff;background:#ffffffcc;width:100%;max-width:300px;color:var(--ink)}
 .shake{animation:shk .4s}
 @keyframes shk{25%,75%{transform:translateX(-8px)}50%{transform:translateX(8px)}}

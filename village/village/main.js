@@ -92,7 +92,7 @@ const curMod = () => { const c = cur(); return c && c.ready && MODS[c.id] ? MODS
 
 function boot() {
   const saved = loadSave();
-  screens.title(saved, { onContinue: () => start(saved), onNew: hero => { wipeSave(); start(fresh(hero)); } });
+  screens.title(saved, { onContinue: () => start(saved), onNew: hero => { wipeSave(); start(fresh(hero)); }, onRestore: s => { saveNow(s); start(s); } });
 }
 async function start(state) {
   game.state = upgrade(state);

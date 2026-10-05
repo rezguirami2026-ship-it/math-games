@@ -10,6 +10,7 @@ import { chromium } from 'playwright-core';
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..');
 const SHOW = process.argv.includes('--show');
+const UPTO = +((process.argv.find(a => a.startsWith('--upto=')) || '').split('=')[1] || Infinity);   // للتجربة السريعة: أول N درساً فقط
 const ar = n => String(n).replace(/\d/g, d => '٠١٢٣٤٥٦٧٨٩'[d]);
 const sleep = ms => new Promise(r => setTimeout(r, ms));
 
@@ -839,6 +840,29 @@ const GATES = [
 ];
 const pathLen = (a, b) => G(([a, b]) => window.__game.findPath(a, b).length, [a, b]);
 
+/* ── رمز التقدّم ── */
+async function checkProgressCode(played) {
+  const before = await G(() => JSON.stringify(window.__game.state.quests.done));
+  await G(() => document.getElementById('bBag').click()); await sleep(150);
+  await panelClick('#codeBtn');
+  await until(() => G(() => document.getElementById('codeBox')?.value.startsWith('RM')), 'ظهور الرمز');
+  const code = await G(() => document.getElementById('codeBox').value);
+  console.log(`   طول الرمز: ${code.length} حرفاً`);
+  await G(() => localStorage.clear()); await page.reload();
+  await page.click('#bCode');
+  await page.fill('#codeIn', code.slice(0, -12)); await page.click('#bCheck'); await sleep(300);   // رمز مقطوع
+  expect(await G(() => !!document.getElementById('bCheck') && !document.getElementById('bYes')), 'رمز مقطوع قُبل');
+  await page.fill('#codeIn', '  ' + code + '\n'); await page.click('#bCheck');   // مسافات حول الرمز كما يحدث عند اللصق
+  await until(() => G(() => !!document.getElementById('bYes')), 'قبول الرمز');
+  const msg = await G(() => document.getElementById('codeMsg').textContent);
+  expect(msg.includes('مختبر') && msg.includes(ar(played)), 'معاينة خاطئة: ' + msg);
+  await page.click('#bYes');
+  await until(() => G(() => !!window.__game.W), 'دخول القرية بعد الاستعادة');
+  await settle();
+  expect(await G(() => JSON.stringify(window.__game.state.quests.done)) === before, 'الدروس المستعادة لا تطابق الأصل');
+  expect(await G(() => localStorage.getItem('ramimath_village_v1') !== null), 'المغامرة المستعادة لم تُحفظ على الجهاز');
+}
+
 /* ── التشغيل ── */
 let failures = 0;
 function expect(ok, msg) { if (!ok) throw new Error(msg); }
@@ -861,6 +885,7 @@ try {
   for (const g of GATES) expect(await pathLen(g.a, g.b) === 0, `${g.name} مفتوحة قبل وقتها`);
   let played = 0;
   for (const l of lessons) {
+    if (played >= UPTO) break;
     if (!S[l.id]) { console.log(`⏸  توقف عند «${l.title}» (${l.id}): لم يُكتب حله في الاختبار بعد`); break; }
     const t0 = Date.now(), e0 = errors.length;
     try {
@@ -886,6 +911,10 @@ try {
   if (played === lessons.length) {   // النهاية: الهدف يشير إلى منصة التخرّج
     const obj = await G(() => document.getElementById('objective').textContent);
     if (obj.includes('التخرّج')) console.log('🎓 ظهر هدف منصة التخرّج'); else { failures++; console.log(`❌ الهدف بعد آخر درس: «${obj}»`); }
+  }
+  if (!failures) {   // رمز التقدّم: نسخ من الحقيبة، مسح الجهاز، رفض رمز تالف، ثم استعادة كاملة
+    try { await checkProgressCode(played); console.log('🔑 رمز التقدّم: نُسخ، ورُفض الرمز التالف، واستُعيدت المغامرة كاملة'); }
+    catch (e) { failures++; console.log('❌ رمز التقدّم: ' + e.message); }
   }
   console.log(`\nالنتيجة: نجح ${played} من ${lessons.length} درساً${failures ? ` — وفشل ${failures}` : ''}`);
 } catch (e) { failures++; console.log('❌ ' + e.message); }
