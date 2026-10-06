@@ -133,7 +133,7 @@ self.addEventListener('fetch', (event) => {
   const url = new URL(req.url);
 
   // ألعاب مستقلة في المستودع نفسه: لا يعترضها عامل خدمة المنصة حتى تصلها تحديثاتها فوراً
-  if (url.pathname.includes('/village/') || url.pathname.includes('/world/')) return;
+  if (url.pathname.includes('/village/') || url.pathname.includes('/rami-math/') || url.pathname.includes('/world/')) return;
 
   // لا تعترض البيانات اللحظية (Firebase DB، المصادقة، التحليلات...)
   if (isLiveRequest(url)) return;

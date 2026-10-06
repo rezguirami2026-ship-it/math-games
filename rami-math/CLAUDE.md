@@ -7,8 +7,9 @@
 - لا يوجد بناء ولا مكتبات: HTML + CSS + JavaScript (ES modules) + Canvas 2D فقط.
 - يجب تشغيلها من خادم ويب (الوحدات لا تعمل من `file://`):
   `python -m http.server 8000` ثم افتح `http://localhost:8000`
-- النشر: GitHub Pages في المستودع `rezguirami2026-ship-it/math-games` على المسار `village/village/`
-  (المجلد مكرر في المستودع). ملف `sw.js` في جذر المستودع يتجاهل `/village/` عمداً.
+- النشر: GitHub Pages في المستودع `rezguirami2026-ship-it/math-games` على المسار `rami-math/`
+  (الرابط: rezguirami2026-ship-it.github.io/math-games/rami-math/). العنوان القديم `village/village/` صار صفحة تحويل
+  وخدمة تزيل التطبيق المثبّت هناك سابقاً. ملف `sw.js` في جذر المستودع يتجاهل `/rami-math/` و`/village/` عمداً.
 
 ## البنية
 - `main.js` — الربط: `MODS` (كل الدروس)، البوابات بين المناطق، التصادم، الرسم، الهدف والسهم.
