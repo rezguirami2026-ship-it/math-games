@@ -64,6 +64,13 @@ export const hud = {
       showLine(); place();
     });
   },
+  /* اسم المنطقة بخط كبير أعلى الشاشة عند دخولها (لا يعترض اللمس) */
+  region(icon, name, sub, isNew) {
+    let el = $('region'); if (!el) { el = document.createElement('div'); el.id = 'region'; el.className = 'region'; document.body.appendChild(el); }
+    el.innerHTML = `${isNew ? '<em>✨ منطقة جديدة!</em>' : ''}<b>${icon} ${name}</b><small>${sub}</small>`;
+    el.classList.remove('on', 'new'); void el.offsetWidth; el.classList.add('on'); if (isNew) el.classList.add('new');
+    clearTimeout(this._r); this._r = setTimeout(() => el.classList.remove('on'), isNew ? 3600 : 2600);
+  },
   toast(msg) { const t = $('toast'); t.textContent = msg; t.classList.remove('on'); void t.offsetWidth; t.classList.add('on'); clearTimeout(this._t); this._t = setTimeout(() => t.classList.remove('on'), 3000); },
   closePanel() { $('panel').classList.remove('on'); },
   panel(kind) {

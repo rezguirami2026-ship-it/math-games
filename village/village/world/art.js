@@ -216,9 +216,10 @@ export function wallNSItems(key, X, bottom = 1700) {
 }
 export function gateNS(c, key, X, open, label) {   // البرجان والعارضة واللافتة (السور نفسه عبر wallNSItems)
   gateTowers(X).forEach((t, i) => stoneBox3d(c, key + i, t.x, t.y, t.w, t.d, GW.TH, GW.col));
+  const k = open === true ? 1 : +open || 0;   // open: true، أو رقم بين ٠ و١ أثناء حركة الفتح
   c.save(); c.translate(X + 6, 600);   // العارضة فوق كل شيء ليبقى حال البوابة واضحاً
-  if (open) c.rotate(-1.35);
-  c.fillStyle = 'rgba(70,42,20,.22)'; if (!open) c.fillRect(6, 4, 8, 82);
+  c.rotate(-1.35 * k);
+  c.fillStyle = 'rgba(70,42,20,.22)'; if (!k) c.fillRect(6, 4, 8, 82);
   c.fillStyle = '#8A5A30'; rr(c, -4, 0, 8, 84, 3); c.fill(); c.fillStyle = '#A9743F'; c.fillRect(-4, 0, 3, 84);
   c.fillStyle = '#D9A23A'; [10, 40, 70].forEach(y => c.fillRect(-4.5, y, 9, 4));
   c.strokeStyle = INK; c.lineWidth = .9; rr(c, -4, 0, 8, 84, 3); c.stroke();
@@ -251,7 +252,9 @@ export function gateEW(c, key, Y, x0, x1, open, label) {
   // المصراعان: مغلقان يسدّان الممر، أو مفتوحان إلى الجانبين
   const dh = 48, yb = Y + 12, half = (x1 - x0) / 2;
   const leaf = (x, w) => { const g = c.createLinearGradient(x, 0, x + w, 0); g.addColorStop(0, '#9C6438'); g.addColorStop(1, '#6E4524'); c.fillStyle = g; c.fillRect(x, yb - dh, w, dh); c.strokeStyle = 'rgba(40,20,10,.4)'; c.lineWidth = 1; for (let xx = x + 8; xx < x + w; xx += 8) { c.beginPath(); c.moveTo(xx, yb - dh); c.lineTo(xx, yb); c.stroke(); } c.fillStyle = '#E3B04B'; for (let r = 0; r < 3; r++) for (let k = 0; k < 2; k++) { c.beginPath(); c.arc(x + 4 + k * (w - 8), yb - dh + 10 + r * 14, 1.3, 0, 7); c.fill(); } c.strokeStyle = INK; c.lineWidth = 1; c.strokeRect(x, yb - dh, w, dh); };
-  if (open) { leaf(x0 - 4, 10); leaf(x1 - 6, 10); } else { leaf(x0, half); leaf(x0 + half, half); c.fillStyle = '#3D3A3A'; c.fillRect(x0 + half - 3, yb - 26, 6, 10); }
+  const k = open === true ? 1 : +open || 0;   // المصراعان يدوران على مفصليهما: يضيق عرضهما الظاهر حتى ينفتحا
+  if (!k) { leaf(x0, half); leaf(x0 + half, half); c.fillStyle = '#3D3A3A'; c.fillRect(x0 + half - 3, yb - 26, 6, 10); }
+  else { const lw = Math.max(10, half * Math.cos(k * Math.PI / 2)); leaf(x0 - 4 * k, lw); leaf(x1 + 4 * k - lw, lw); }
   // العتبة فوق الممر واللافتة
   c.fillStyle = shade(EW.col, 6); c.fillRect(x0 - 6, yb - dh - 14, x1 - x0 + 12, 14); c.strokeStyle = INK; c.lineWidth = 1; c.strokeRect(x0 - 6, yb - dh - 14, x1 - x0 + 12, 14);
   signboard(c, (x0 + x1) / 2, yb - dh - 7, open ? label + ' ↓' : label + ' 🔒');

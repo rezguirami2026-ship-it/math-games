@@ -22,5 +22,8 @@ export function sfx(k) {
   if (k === 'good') { tone(880, .15, 'sine', .1); tone(1320, .2, 'sine', .08, .1); }
   if (k === 'talk') tone(700, .05, 'square', .04);
   if (k === 'plant') [392, 523, 659].forEach((f, i) => tone(f, .2, 'sine', .09, i * .1));
+  if (k === 'gate') { tone(140, .5, 'sawtooth', .04); tone(180, .4, 'sawtooth', .03, .25); tone(70, .35, 'triangle', .14, .8); }   // صرير خشب ثم ارتطام
+  if (k === 'region') [587, 784, 988].forEach((f, i) => tone(f, .5, 'sine', .06, i * .16));   // نغمة دخول منطقة
+  if (k === 'newRegion') [523, 659, 784, 1046, 1318].forEach((f, i) => tone(f, .45, 'triangle', .08, i * .13));   // أول زيارة
   if (k === 'bird') { const b = 2200 + Math.random() * 900; [0, .09, .2].forEach((w, i) => tone(b + i * 160, .07, 'sine', .022, w)); }   // تغريد خافت في الخلفية
 }

@@ -1,7 +1,7 @@
 // نقطة الدخول: تربط الأنظمة ببعضها، واللعبة كلها تسير على ترتيب دروس المنهج
 import { game, fresh, upgrade, CARRY_MAX, TREE_COST } from './core/state.js';
 import { bus } from './core/events.js';
-import { ambient } from './core/sound.js';
+import { ambient, sfx } from './core/sound.js';
 import { ar, clamp } from './core/util.js';
 import { createEngine } from './core/engine.js';
 import { loadSave, saveSoon, saveNow, wipeSave } from './save/save.js';
@@ -100,6 +100,39 @@ const REGIONS = [
 let gates = null, walls = null;
 const gateState = () => gates || (gates = REGIONS.map(r => unitDone(r.u)));
 const resetGates = () => { gates = null; walls = null; };
+/* لحظة فتح البوابة: تنتظر حتى تظهر البوابة على الشاشة، ثم ينفتح المصراعان في ١٫٤ ثانية مع شرر وصوت */
+const GATE_PTS = [{ x: 1506, y: 640 }, { x: 2306, y: 640 }, { x: 1240, y: 1712 }, { x: 1240, y: 2600 }, { x: 1240, y: 3500 }, { x: 1240, y: 4500 }, { x: 1240, y: 5500 }];
+const gateAnim = { pending: {}, at: {} };
+function gateOpenness(i, open, view) {
+  if (!open) return 0;
+  const p = GATE_PTS[i], seen = p.x > view.x + 20 && p.x < view.x + view.w - 20 && p.y > view.y + 60 && p.y < view.y + view.h - 40;
+  if (gateAnim.pending[i]) { if (!seen) return 0; delete gateAnim.pending[i]; gateAnim.at[i] = performance.now(); sfx('gate'); sparkle(p.x, p.y - 50, 16, '#FFC23D'); eng.shake(.4); }
+  if (gateAnim.at[i]) { const k = (performance.now() - gateAnim.at[i]) / 1400; if (k < 1) return Math.max(.001, 1 - Math.pow(1 - k, 3)); delete gateAnim.at[i]; dust(p.x - 30, p.y + 14); dust(p.x + 30, p.y + 14); }
+  return 1;
+}
+/* المناطق للافتة الاسم: الحدود بالأسوار، والاسم يطابق place في UNITS */
+const AREAS = [
+  { id: 'village', icon: '🏡', name: 'قرية الخير', in: (x, y) => y < 1712 && x < 1500 },
+  { id: 'market', icon: '🛒', name: 'السوق الأسبوعي', in: (x, y) => y < 1712 && x < 2300 },
+  { id: 'harbor', icon: '⚓', name: 'الميناء', in: (x, y) => y < 1712 },
+  { id: 'fort', icon: '🏰', name: 'القلعة', in: (x, y) => y < 2600 },
+  { id: 'festival', icon: '🎪', name: 'ساحة المهرجان', in: (x, y) => y < 3500 },
+  { id: 'coop', icon: '🏪', name: 'سوق الجمعية', in: (x, y) => y < 4500 },
+  { id: 'caravan', icon: '🐪', name: 'طريق القافلة', in: (x, y) => y < 5500 },
+  { id: 'workshop', icon: '🛠️', name: 'ورشة البنّاء', in: () => true }
+];
+const areaSub = a => { const us = UNITS.filter(u => u.place === a.name); return us.length ? `الفصل ${us[0].term === 1 ? 'الأول' : 'الثاني'} · ` + us.map(u => `الوحدة ${ar(u.n)}: ${u.title}`).join(' · ') : ''; };
+function areaCheck(dt) {   // يتغير الاسم بعد ثبات اللاعب في المنطقة الجديدة نصف ثانية (لا وميض عند الحدود)
+  const pl = W.player, a = AREAS.find(r => r.in(pl.x, pl.y)), s = game.state;
+  if (a === W.area) { W.areaT = 0; return; }
+  if (a !== W.areaCand) { W.areaCand = a; W.areaT = 0; return; }
+  if ((W.areaT += dt) < .5) return;
+  W.area = a; W.areaT = 0;
+  const v = s.world.visited = s.world.visited || {}, isNew = !v[a.id] && a.id !== 'village';
+  v[a.id] = 1; bus.emit('save');
+  hud.region(a.icon, a.name, areaSub(a), isNew); sfx(isNew ? 'newRegion' : 'region');
+  if (isNew) sparkle(pl.x, pl.y - 50, 20);
+}
 function wallRects() {   // كل العوائق الثابتة؛ البركة عائق إلا أثناء القفز على حجارتها
   if (walls && walls.stones === W.stones) return walls.list;
   const g = gateState();
@@ -306,6 +339,7 @@ function update(dt) {
   W.trucks.forEach(t => moveAlong(t, dt, 230));
   { const c = cur(), md = curMod(); if (md && md.update && quests.isStarted(c.id)) try { md.update(dt, W, quests.data(c.id)); } catch (e) { report('التحديث', c.id, e); } }
   updateFx(dt);
+  if (!W.stones) areaCheck(dt);
   // شبكة أمان: انشغال بلا حوار ولا لوحة ولا شاشة لأكثر من ١٥ ثانية يعني خللاً؛ نحرّر اللاعب ونسجّل الخطأ
   const uiOpen = ['dialog', 'panel', 'screen'].some(id => document.getElementById(id).classList.contains('on'));
   if (game.busy && !uiOpen && !W.stones) { if ((W.busyT = (W.busyT || 0) + dt) > 15) { game.busy = false; W.busyT = 0; report('انشغال عالق', cur() ? cur().id : '-', new Error('game.busy بقي true بلا نافذة مفتوحة')); } } else W.busyT = 0;
@@ -339,7 +373,7 @@ function render(ctx, view, t) {
   if (!mods.includes(UNIT1.factorsMultiples)) UNIT1.factorsMultiples.ground(ctx, {}, false, false, t);
   mods.forEach(md => { const d = quests.data(md.id), done = quests.isDone(md.id); try { if (md.ground) md.ground(ctx, d, !done, done, t); } catch (e) { report('رسم الأرض', md.id, e); } });
   const g = gateState();
-  const list = staticDrawables(s, t, W.player).concat(...REGIONS.map((r, i) => r.draw(g[i], t))).filter(d => d.y > view.y - 60 && d.y < view.y + view.h + 200);
+  const list = staticDrawables(s, t, W.player).concat(...REGIONS.map((r, i) => r.draw(gateOpenness(i, g[i], view), t))).filter(d => d.y > view.y - 60 && d.y < view.y + view.h + 200);
   mods.forEach(md => { const d = quests.data(md.id), done = quests.isDone(md.id); try { if (md.draw) list.push(...md.draw(d, t, !done, done)); } catch (e) { report('الرسم', md.id, e); } });
   TREE_SPOTS.forEach((sp, i) => { const pt = s.world.trees[i]; if (pt) { const k = clamp((now - pt) / 2200, .05, 1); list.push({ y: sp.y, x: sp.x, draw: cc => drawPalm(cc, sp.x, sp.y, .2 + .8 * easeOut(k), false, t) }); } });
   W.trucks.forEach(tr => list.push({ y: tr.y + 4, x: tr.x, draw: cc => drawTruck(cc, tr, m.loads[tr.i], convoyActive()) }));
@@ -414,7 +448,8 @@ bus.on('good', () => hud.good());
 bus.on('mission', () => hud.objective(objective()));
 bus.on('achievement', a => setTimeout(() => hud.toast(`${a.icon} إنجاز جديد: ${a.name}`), 400));
 bus.on('lessonDone', id => {
-  resetGates();   // قد تُفتح بوابة الآن
+  const before = gateState().slice(); resetGates();   // قد تُفتح بوابة الآن: حركتها تبدأ حين تظهر على الشاشة
+  gateState().forEach((o, i) => { if (o && !before[i]) gateAnim.pending[i] = true; });
   const l = LESSONS.find(x => x.id === id); setTimeout(() => hud.toast(`✅ أنجزت درس «${l.title}»`), 1200);
   if (LESSONS.filter(x => x.u === l.u).every(x => quests.isDone(x.id))) {   // اكتملت الوحدة: إنجازاتها ورسائل فتح البوابة
     const u = UNITS[l.u];
