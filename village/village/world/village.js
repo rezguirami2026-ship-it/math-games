@@ -1,17 +1,17 @@
 // قرية الخير: تخطيط العالم ورسمه. المزرعة والبئر والنخيل تتغير حسب حالة العالم.
 // الرسم بأسلوب 2.5D مشترك (world/art.js): مبانٍ بجدران وأسطح، ظلال نحو الأسفل يميناً، أرصفة بحواف، وأنسجة مواد.
 import { rng, shade, mix, rr, clamp } from '../core/util.js';
-import { PAL, SUN, INK, pattern, sprite, boxShadow, blobShadow, building3d, box3d, palm, palmCached, shrub, streetLamp, bench, signboard } from './art.js';
+import { PAL, SUN, INK, CAM, leanAt, pattern, sprite, boxShadow, blobShadow, building3d, box3d, minaret, sidrCached, palm, palmCached, shrub, streetLamp, bench, signboard } from './art.js';
 
 export const WORLD = { w: 3200, h: 6500 };   // القرية في الشمال، ثم السوق والميناء شرقاً، والقلعة والمهرجان والجمعية والقافلة والورشة جنوباً
 export const ROADS = [{ x: 0, y: 600, w: 2930, h: 80 }, { x: 700, y: 0, w: 70, h: 600 }];
 export const HOUSES = [
   { x: 830, y: 150, w: 170, h: 120, wall: '#EFE3CC', door: '#7A4A2A', tank: 1, ac: 1 },
-  { x: 1060, y: 110, w: 190, h: 140, wall: '#EAD6B6', door: '#2F6B73', dish: 1, stair: 1 },
+  { x: 1060, y: 110, w: 190, h: 140, wall: '#F3EEE3', door: '#7A4A2A', mosque: 1, H: 84, style: 'mosque', doorW: 46, doorH: 72, lamp: false },   // مسجد القرية: قاعة بقبة ومئذنة
   { x: 1300, y: 170, w: 150, h: 120, wall: '#F0E6D4', door: '#7A4A2A', tank: 1 },
   { x: 860, y: 330, w: 150, h: 110, wall: '#ECDABF', door: '#3F7A55', ac: 1 },
-  { x: 1240, y: 340, w: 180, h: 120, wall: '#EFE0C6', door: '#7A4A2A', tank: 1, dish: 1 },
-  { x: 110, y: 80, w: 200, h: 130, wall: '#EBD9C2', door: '#7A4A2A', stair: 1, ac: 1 },
+  { x: 1240, y: 340, w: 180, h: 120, wall: '#EFE0C6', door: '#7A4A2A', tank: 1, dish: 1, H: 116 },
+  { x: 110, y: 80, w: 200, h: 130, wall: '#EBD9C2', door: '#7A4A2A', stair: 1, ac: 1, H: 150 },   // بيت من طابقين
   { x: 400, y: 110, w: 170, h: 120, wall: '#F0E6D4', door: '#2F6B73', tank: 1 }
 ];
 export const WAREHOUSE = { x: 110, y: 300, w: 300, h: 170 };
@@ -27,6 +27,8 @@ export const SOUTH = [
   { x: 1120, y: 1180, w: 180, h: 100, wall: '#E2D2B6', door: '#4E5A66', sign: 'ورشة راشد', tank: 1 }
 ];
 const PALMS = [{ x: 55, y: 560 }, { x: 610, y: 515 }, { x: 1470, y: 560 }, { x: 40, y: 1010 }, { x: 640, y: 1090 }, { x: 590, y: 300 }, { x: 640, y: 420 }, { x: 1470, y: 110 }, { x: 40, y: 1500 }, { x: 1460, y: 1450 }, { x: 380, y: 1600 }, { x: 1180, y: 1620 }];
+const SIDRS = [{ x: 60, y: 330 }, { x: 1462, y: 440 }, { x: 800, y: 1010 }, { x: 90, y: 1150 }];   // أشجار سدر بتيجان مستديرة
+const MINARET = { x: 1060 + 190 - 34, y: 110 + 140 - 34, s: 30, H: 116 };   // المئذنة على ركن السطح الأمامي الأيمن (المسجد عند حافة العالم الشمالية)
 const FARM_PALMS = [{ x: 905, y: 1080 }, { x: 1440, y: 1080 }, { x: 1440, y: 800 }, { x: 1170, y: 1085 }];
 const H_HOUSE = 96, H_WARE = 104, H_SOUTH = 90;
 // تفاصيل الشارع: إنارة على الرصيف الشمالي، شجيرات جهنمية أمام البيوت، مقعد في ساحة البئر، ولافتة إرشاد عند التقاطع
@@ -62,6 +64,8 @@ function paintGround(ctx, view) {
   ctx.strokeStyle = 'rgba(200,170,120,.55)'; ctx.lineWidth = 26; ctx.lineCap = 'round';
   [[[510, 700], [510, 1180]], [[1210, 700], [1210, 760]], [[1210, 1090], [1210, 1180]], [[300, 700], [230, 1000]]].forEach(([a, b]) => { ctx.beginPath(); ctx.moveTo(a[0], a[1]); ctx.lineTo(b[0], b[1]); ctx.stroke(); });
   // ساحة البئر: بلاط دائري يربط البيوت
+  ctx.fillStyle = shade(PAL.stone, -30); ctx.beginPath(); ctx.ellipse(WELL.x, WELL.y + 16, 118, 72, 0, 0, 7); ctx.fill();   // الساحة مرتفعة: حافتها الأمامية ظاهرة
+  ctx.fillStyle = 'rgba(60,35,15,.2)'; ctx.beginPath(); ctx.ellipse(WELL.x + 8, WELL.y + 22, 118, 72, 0, 0, Math.PI); ctx.fill();
   ctx.fillStyle = pattern(ctx, 'pavers'); ctx.beginPath(); ctx.ellipse(WELL.x, WELL.y + 10, 118, 72, 0, 0, 7); ctx.fill();
   ctx.strokeStyle = shade(PAL.stone, -10); ctx.lineWidth = 3; ctx.stroke();
   ctx.fillStyle = pattern(ctx, 'pavers'); ctx.fillRect(1040, 270, 26, 140); ctx.fillRect(1230, 300, 30, 100);
@@ -88,7 +92,9 @@ function paintGround(ctx, view) {
   for (let k = 0; k < 7; k++) ctx.fillRect(784 + k * 11, H.y + 6, 6, H.h - 12);       // ممر مشاة نحو المزرعة
   for (let k = 0; k < 6; k++) ctx.fillRect(V.x + 6 + k * 10.5, H.y - 52, 6, 40);     // ممر مشاة عند التقاطع
   // ظلال الأجسام على الأرض (كلها من الشمس نفسها)
-  HOUSES.forEach(b => { if (boxInView(v, b.x, b.y - H_HOUSE, b.w + 80, b.h + H_HOUSE + 40, 40)) boxShadow(ctx, b.x, b.y, b.w, b.h, H_HOUSE); });
+  HOUSES.forEach(b => { const H = b.H || H_HOUSE; if (boxInView(v, b.x, b.y - H, b.w + 90, b.h + H + 50, 40)) boxShadow(ctx, b.x, b.y, b.w, b.h, H); });
+  boxShadow(ctx, MINARET.x, MINARET.y, MINARET.s, MINARET.s, HOUSES[1].H + MINARET.H);
+  SIDRS.forEach(p => { if (inView(v, p.x, p.y, 120)) blobShadow(ctx, p.x, p.y, 40, 100); });
   SOUTH.forEach(b => { if (boxInView(v, b.x, b.y - H_SOUTH, b.w + 80, b.h + H_SOUTH + 40, 40)) boxShadow(ctx, b.x, b.y, b.w, b.h, H_SOUTH); });
   boxShadow(ctx, WAREHOUSE.x, WAREHOUSE.y, WAREHOUSE.w, WAREHOUSE.h, H_WARE);
   PALMS.concat(FARM_PALMS).forEach(p => { if (inView(v, p.x, p.y, 90)) blobShadow(ctx, p.x, p.y, 26, 80); });
@@ -187,12 +193,13 @@ export function staticDrawables(state, t, pl) {
   const out = [];
   // المباني مجسّمة حسب موضعها من الكاميرا (أوجهها من ذاكرة الصور)، وشفافة إن وقف البطل خلفها
   const solid = (b, H, draw) => c => { if (behind(pl, b, H)) c.globalAlpha = .42; draw(c); c.globalAlpha = 1; };
-  HOUSES.forEach((b, i) => { const B = Object.assign({}, b, { H: H_HOUSE }); out.push({ y: b.y + b.h, draw: solid(b, H_HOUSE, c => building3d(c, 'house' + i, B)) }); });
+  HOUSES.forEach((b, i) => { const H = b.H || H_HOUSE, B = Object.assign({}, b, { H }); out.push({ y: b.y + b.h, draw: solid(b, H, c => { building3d(c, 'house' + i, B); if (b.mosque) mosqueTop(c, b); }) }); });
   SOUTH.forEach((b, i) => { const B = Object.assign({}, b, { H: H_SOUTH, style: 'shop' }); out.push({ y: b.y + b.h, draw: solid(b, H_SOUTH, c => building3d(c, 'south' + i, B)) }); });
   const WB = Object.assign({}, WAREHOUSE, { H: H_WARE });
   out.push({ y: WAREHOUSE.y + WAREHOUSE.h, draw: solid(WAREHOUSE, H_WARE, c => box3d(c, 'warehouse', WB, '#C9C0AE', warehouseRoof, warehouseFront)) });
   out.push({ y: WELL.y + WELL.r, x: WELL.x, draw: c => drawWell(c, state.world.delivered, t) });
   PALMS.forEach(p => out.push({ y: p.y, draw: c => palmCached(c, p.x, p.y, 1, false, t) }));
+  SIDRS.forEach(p => out.push({ y: p.y, draw: c => sidrCached(c, p.x, p.y, 1, t) }));
   FARM_PALMS.forEach(p => out.push({ y: p.y, draw: c => palmCached(c, p.x, p.y, .95, !state.world.delivered, t) }));
   LAMPS.forEach(p => out.push({ y: p.y, x: p.x, draw: c => streetLamp(c, p.x, p.y, t, false) }));
   SHRUBS.forEach(p => out.push({ y: p.y, x: p.x, draw: c => shrub(c, p.x, p.y, 9, p.f) }));
@@ -200,6 +207,11 @@ export function staticDrawables(state, t, pl) {
   out.push({ y: FI.y + 226, x: FI.x + 480, draw: c => farmShed(c, t, !!state.world.delivered) });
   out.push({ y: 586, x: 784, draw: c => wayfinding(c, 784, 586) });
   return out;
+}
+/* المئذنة قائمة على سطح المسجد: ترتفع من مستوى السطح لا من الأرض */
+function mosqueTop(ctx, b) {
+  const { lx, ly } = leanAt(b.x + b.w / 2, b.y + b.h), H = b.H;
+  ctx.save(); ctx.translate(lx * H, -H * (1 - ly)); minaret(ctx, 'minaret', MINARET.x, MINARET.y, MINARET.s, MINARET.H); ctx.restore();
 }
 /* المستودع: سقف معدني مضلّع، جدار خرساني، باب لفّاف كبير، ورصيف تحميل */
 function warehouseRoof(ctx) {

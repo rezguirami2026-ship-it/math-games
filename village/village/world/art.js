@@ -135,8 +135,16 @@ function buildingFront(ctx, b, t) {
   // الفتحات: باب في الوسط ونوافذ على الجانبين
   const dw = b.doorW || 38, dh = b.doorH || 70, dx = x + w / 2 - dw / 2;
   const win = b.style === 'shop' ? [] : (w > 160 ? [x + 18, x + w - 18 - 26] : [x + 14, x + w - 14 - 24]);
-  win.forEach((wx, i) => windowArch(ctx, wx, yt + 26, w > 160 ? 26 : 24, 32, b.style, i));
+  win.forEach((wx, i) => windowArch(ctx, wx, yb - 70, w > 160 ? 26 : 24, b.style === 'mosque' ? 40 : 32, b.style, i));
+  if (H >= 130) {   // طابق ثانٍ: إفريز فاصل، ونوافذ علوية، وشرفة مشربية فوق الباب
+    const fy = yb - 92;
+    ctx.fillStyle = shade(wall, 12); ctx.fillRect(x, fy - 4, w, 5); ctx.fillStyle = 'rgba(70,40,15,.18)'; ctx.fillRect(x, fy + 1, w, 3);
+    const n = w > 180 ? 3 : 2;
+    for (let i = 0; i < n; i++) { const wx = x + (i + .5) * w / n - 11; windowArch(ctx, wx, yt + 18, 22, 26, 'plain', 1); }
+    mashrabiya(ctx, x + w / 2 - 22, fy - 40, 44, 34);
+  }
   door(ctx, dx, yb - dh, dw, dh, b.door || PAL.wood, b.style);
+  ctx.fillStyle = shade(PAL.stone, 4); ctx.fillRect(dx - 10, yb, dw + 20, 5); ctx.fillStyle = shade(PAL.stone, -22); ctx.fillRect(dx - 10, yb + 5, dw + 20, 3);   // درجة أمام الباب
   if (b.ac) acUnit(ctx, x + w - 34, yt + 10);
   if (b.lamp !== false) wallLamp(ctx, x + w / 2, yb - dh - 9, t);
   ctx.strokeStyle = INK; ctx.lineWidth = 1.2; ctx.strokeRect(x, yt, w, H);
@@ -208,6 +216,74 @@ function windowArch(ctx, x, y, w, h, style, i) {   // نافذة مقوّسة ب
   ctx.fillStyle = shade(PAL.stone, -6); ctx.fillRect(x - 4, y + h + 1, w + 8, 4);   // عتبة النافذة
   if (i === 0 && style !== 'plain') { ctx.fillStyle = '#C2564F'; for (let k = 0; k < 5; k++) { ctx.beginPath(); ctx.arc(x + 2 + k * (w - 4) / 4, y + h - .5, 1.8, 0, 7); ctx.fill(); } ctx.fillStyle = PAL.leaf; ctx.fillRect(x - 2, y + h + .5, w + 4, 2); }   // أصيص زهور
 }
+function mashrabiya(ctx, x, y, w, h) {   // شرفة خشبية بارزة بشبك (مشربية) ودعامتين
+  ctx.fillStyle = 'rgba(70,40,15,.25)'; ctx.fillRect(x + 4, y + h, w, 6);
+  ctx.fillStyle = PAL.wood; ctx.fillRect(x - 3, y - 4, w + 6, 5); ctx.fillRect(x - 3, y + h - 2, w + 6, 6);
+  ctx.fillStyle = PAL.woodLight; ctx.fillRect(x, y, w, h - 2);
+  ctx.strokeStyle = shade(PAL.wood, -20); ctx.lineWidth = 1.2;
+  for (let k = 1; k < 6; k++) { ctx.beginPath(); ctx.moveTo(x + k * w / 6, y); ctx.lineTo(x + k * w / 6, y + h - 2); ctx.stroke(); }
+  for (let k = 1; k < 4; k++) { ctx.beginPath(); ctx.moveTo(x, y + k * (h - 2) / 4); ctx.lineTo(x + w, y + k * (h - 2) / 4); ctx.stroke(); }
+  ctx.fillStyle = PAL.wood; [x + 4, x + w - 8].forEach(px => { ctx.beginPath(); ctx.moveTo(px, y + h + 4); ctx.lineTo(px + 4, y + h + 4); ctx.lineTo(px + 2, y + h + 14); ctx.closePath(); ctx.fill(); });
+  ctx.strokeStyle = INK; ctx.lineWidth = .9; ctx.strokeRect(x - 3, y - 4, w + 6, h + 8);
+}
+/* القبة: أسطوانة قاعدة ثم نصف كرة مضاءة من أعلى اليسار، وهلال ذهبي */
+export function dome(ctx, cx, by, r) {
+  ctx.fillStyle = 'rgba(70,42,20,.22)'; ctx.beginPath(); ctx.ellipse(cx + r * .5, by + 4, r * 1.15, r * .38, 0, 0, 7); ctx.fill();
+  ctx.fillStyle = '#E4DACA'; ctx.fillRect(cx - r, by - r * .5, r * 2, r * .5); ctx.fillStyle = shade('#E4DACA', -24); ctx.fillRect(cx + r * .4, by - r * .5, r * .6, r * .5);
+  ctx.strokeStyle = INK; ctx.lineWidth = 1; ctx.strokeRect(cx - r, by - r * .5, r * 2, r * .5);
+  const g = ctx.createRadialGradient(cx - r * .4, by - r * 1.2, r * .1, cx, by - r * .6, r * 1.2); g.addColorStop(0, '#FFFFFF'); g.addColorStop(.5, '#EDE6DA'); g.addColorStop(1, '#AFA593');
+  ctx.fillStyle = g; ctx.beginPath(); ctx.ellipse(cx, by - r * .5, r, r * 1.05, 0, Math.PI, 0); ctx.closePath(); ctx.fill(); ctx.stroke();
+  ctx.strokeStyle = 'rgba(120,105,80,.35)'; ctx.lineWidth = .8; for (let k = -2; k <= 2; k++) { ctx.beginPath(); ctx.ellipse(cx, by - r * .5, Math.abs(k) * r * .3 + .1, r * 1.05, 0, Math.PI, 0); ctx.stroke(); }
+  crescent(ctx, cx, by - r * 1.55 - 6, 5);
+}
+function crescent(ctx, x, y, r) {
+  ctx.strokeStyle = '#B48A2C'; ctx.lineWidth = 1.4; ctx.beginPath(); ctx.moveTo(x, y + r * 2.2); ctx.lineTo(x, y + r * .9); ctx.stroke();
+  ctx.strokeStyle = '#E3B04B'; ctx.lineWidth = r * .5; ctx.lineCap = 'round'; ctx.beginPath(); ctx.arc(x, y, r * .72, .75, Math.PI * 2 - .75); ctx.stroke();   // هلال: قوس سميك مفتوح لليمين
+}
+/* المئذنة: برج مربع مجسّم، بشرفة مؤذن وقبة صغيرة وهلال */
+export function minaret(ctx, key, x, y, s, H) {
+  const roof = c => {   // أعلى البرج: شرفة بارزة، ثم جوسق صغير بقبة
+    const ry = y - H;
+    c.fillStyle = shade(PAL.plaster, 10); c.fillRect(x - 5, ry - 5, s + 10, s + 10); c.strokeStyle = INK; c.lineWidth = 1; c.strokeRect(x - 5, ry - 5, s + 10, s + 10);
+    c.fillStyle = shade(PAL.plaster, -6); c.fillRect(x - 5, ry + s + 1, s + 10, 5);
+    for (let k = 0; k < 5; k++) { c.fillStyle = shade(PAL.plaster, 14); c.fillRect(x - 5 + k * (s + 6) / 4, ry - 10, 3, 6); }
+    const kx = x + s / 2, ky = ry + s / 2;
+    c.fillStyle = '#EEE6D6'; c.fillRect(kx - 7, ky - 22, 14, 18); c.fillStyle = shade('#EEE6D6', -26); c.fillRect(kx + 2, ky - 22, 5, 18);
+    c.fillStyle = PAL.teal; c.beginPath(); c.moveTo(kx - 3, ky - 6); c.lineTo(kx - 3, ky - 15); c.arc(kx, ky - 15, 3, Math.PI, 0); c.lineTo(kx + 3, ky - 6); c.fill();
+    c.strokeStyle = INK; c.lineWidth = .9; c.strokeRect(kx - 7, ky - 22, 14, 18);
+    dome(c, kx, ky - 22, 8);
+  };
+  const front = c => {
+    const yb = y + s, yt = yb - H;
+    const g = c.createLinearGradient(x, 0, x + s, 0); g.addColorStop(0, '#F6F1E7'); g.addColorStop(1, '#CFC6B4');
+    c.fillStyle = g; c.fillRect(x, yt, s, H); c.fillStyle = pattern(c, 'plaster'); c.fillRect(x, yt, s, H);
+    [yt + 30, yt + H * .45, yt + H * .72].forEach(wy => { c.fillStyle = '#3E5A66'; c.beginPath(); c.moveTo(x + s / 2 - 4, wy + 12); c.lineTo(x + s / 2 - 4, wy + 4); c.arc(x + s / 2, wy + 4, 4, Math.PI, 0); c.lineTo(x + s / 2 + 4, wy + 12); c.fill(); });
+    c.fillStyle = PAL.teal; c.fillRect(x, yt + 12, s, 3); c.fillRect(x, yt + H * .35, s, 2);
+    c.fillStyle = shade(PAL.stone, -4); c.fillRect(x, yb - 8, s, 8);
+    c.strokeStyle = INK; c.lineWidth = 1.1; c.strokeRect(x, yt, s, H);
+  };
+  box3d(ctx, key, { x, y, w: s, h: s, H }, '#E8E0D0', roof, front, 70);
+}
+/* شجرة سدر: جذع ملتوٍ وتاج من كتل مستديرة مظللة (ضوء من أعلى اليسار) */
+export function sidr(ctx, x, y, sc) {
+  ctx.save(); ctx.translate(x, y); ctx.scale(sc, sc);
+  ctx.strokeStyle = INK; ctx.lineWidth = 7.5; ctx.lineCap = 'round'; ctx.beginPath(); ctx.moveTo(0, 0); ctx.quadraticCurveTo(-4, -18, 2, -34); ctx.stroke();
+  ctx.strokeStyle = '#6E4A2E'; ctx.lineWidth = 6; ctx.stroke();
+  ctx.strokeStyle = '#8A6040'; ctx.lineWidth = 2; ctx.beginPath(); ctx.moveTo(-2, -2); ctx.quadraticCurveTo(-5, -18, 0, -32); ctx.stroke();
+  ctx.strokeStyle = '#6E4A2E'; ctx.lineWidth = 3; ctx.beginPath(); ctx.moveTo(1, -26); ctx.lineTo(-12, -40); ctx.moveTo(2, -30); ctx.lineTo(14, -42); ctx.stroke();
+  const blobs = [[-16, -46, 17], [14, -48, 18], [0, -60, 20], [-6, -40, 15], [12, -36, 14], [-20, -58, 13], [20, -62, 13], [2, -74, 14]];
+  ctx.fillStyle = INK; blobs.forEach(([bx, by, r]) => { ctx.beginPath(); ctx.arc(bx, by, r + 1.2, 0, 7); ctx.fill(); });
+  blobs.forEach(([bx, by, r]) => { const g = ctx.createRadialGradient(bx - r * .4, by - r * .45, r * .1, bx, by, r); g.addColorStop(0, '#8DB45A'); g.addColorStop(.55, '#5E8A3A'); g.addColorStop(1, '#3E6428'); ctx.fillStyle = g; ctx.beginPath(); ctx.arc(bx, by, r, 0, 7); ctx.fill(); });
+  ctx.fillStyle = 'rgba(255,255,255,.12)'; [[-12, -66], [6, -80], [-24, -54]].forEach(([bx, by]) => { ctx.beginPath(); ctx.ellipse(bx, by, 6, 3, -.4, 0, 7); ctx.fill(); });
+  ctx.fillStyle = '#C9862E'; [[-8, -50], [10, -56], [18, -44], [-18, -44], [4, -68]].forEach(([bx, by]) => { ctx.beginPath(); ctx.arc(bx, by, 1.6, 0, 7); ctx.fill(); });   // ثمر النبق
+  ctx.restore();
+}
+export function sidrCached(ctx, x, y, sc, t) {   // من الذاكرة، يتمايل قليلاً ويميل مع منظور الكاميرا
+  const sway = Math.sin((t || 0) * .9 + x * .02) * .02, { lx, ly } = leanAt(x, y);
+  ctx.save(); ctx.translate(x, y); ctx.transform(1, 0, -sway - lx, 1 - ly, 0, 0);
+  sprite(ctx, 'sidr|' + sc, -48 * sc, -100 * sc, 96 * sc, 108 * sc, c => sidr(c, 0, 0, sc));
+  ctx.restore();
+}
 function acUnit(ctx, x, y) {   // مكيّف حديث على الجدار
   ctx.fillStyle = '#E8ECEF'; rr(ctx, x, y, 24, 15, 2); ctx.fill(); ctx.strokeStyle = INK; ctx.lineWidth = .8; ctx.stroke();
   ctx.strokeStyle = '#9AA5B1'; ctx.lineWidth = .7; for (let k = 0; k < 4; k++) { ctx.beginPath(); ctx.moveTo(x + 3, y + 4 + k * 2.6); ctx.lineTo(x + 21, y + 4 + k * 2.6); ctx.stroke(); }
@@ -225,7 +301,8 @@ export function signboard(ctx, x, y, text) {   // لافتة مثبتة على �
   ctx.fillStyle = PAL.teal; rr(ctx, x - w / 2, y - 9, w, 19, 4); ctx.fill(); ctx.strokeStyle = '#E3B04B'; ctx.lineWidth = 1.2; ctx.stroke();
   ctx.fillStyle = '#FFF6E2'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.fillText(text, x, y + 1); ctx.textBaseline = 'alphabetic';
 }
-function roofProps(ctx, b, ry) {   // ما على السطح: خزان ماء، صحن لاقط، درج السطح
+function roofProps(ctx, b, ry) {   // ما على السطح: قبة المسجد، خزان ماء، صحن لاقط، درج السطح
+  if (b.mosque) dome(ctx, b.x + b.w / 2 - 16, ry + b.h / 2 + 26, 36);
   if (b.tank) {
     const tx = b.x + b.w - 34, ty = ry + 20;
     ctx.fillStyle = 'rgba(70,42,20,.22)'; ctx.beginPath(); ctx.ellipse(tx + 9, ty + 18, 13, 5, 0, 0, 7); ctx.fill();
