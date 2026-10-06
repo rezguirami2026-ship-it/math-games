@@ -70,3 +70,9 @@
 .region small{background:linear-gradient(135deg,rgba(255,251,240,.94),rgba(255,236,190,.92));border:1px solid rgba(227,176,75,.6)}
 /* لا تتزاحم لافتة المنطقة مع فقاعة الحوار */
 body:has(.dialog.on) .region{opacity:0!important;animation:none!important}
+
+/* عصا التحكم باللمس: تظهر حيث يضع الطالب إصبعه ويسحب */
+.stick{position:fixed;width:112px;height:112px;margin:-56px 0 0 -56px;border-radius:50%;pointer-events:none;z-index:15;opacity:0;transition:opacity .15s;
+  background:radial-gradient(circle,rgba(255,255,255,.18),rgba(42,27,102,.18));border:2.5px solid rgba(255,255,255,.75);box-shadow:0 0 0 2px rgba(227,176,75,.6),0 8px 22px rgba(30,20,60,.3)}
+.stick.on{opacity:1}
+.stick i{position:absolute;left:50%;top:50%;width:46px;height:46px;margin:-23px 0 0 -23px;border-radius:50%;background:linear-gradient(160deg,#FFE08A,#F2A922);box-shadow:0 4px 10px rgba(60,35,0,.35),inset 0 2px 0 rgba(255,255,255,.6)}

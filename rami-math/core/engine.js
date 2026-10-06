@@ -29,7 +29,28 @@ export function createEngine(canvas, world) {
   // E.l3: طبقة العرض ثلاثية الأبعاد إن وُجدت (renderer3d)؛ عندها يمر النقر والإسقاط عبر كاميرتها
   E.toWorld = (sx, sy) => E.l3 ? E.l3.pick(sx, sy) : ({ x: (sx - E.w / 2) / z() + E.cam.x, y: (sy - E.h / 2) / z() + E.cam.y });
   E.toScreen = (x, y, h) => { const r = canvas.getBoundingClientRect(); if (E.l3) { const p = E.l3.project(x, y, h || 0); return { x: r.left + p.x, y: r.top + p.y }; } return { x: r.left + (x - E.cam.x) * z() + E.w / 2, y: r.top + (y - (h || 0) - E.cam.y) * z() + E.h / 2 }; };   // لفقاعات الكلام فوق الرؤوس
-  canvas.addEventListener('pointerdown', e => { if (!E.onTap) return; const r = canvas.getBoundingClientRect(); E.onTap(E.toWorld(e.clientX - r.left, e.clientY - r.top)); });
+  /* اللمس: نقرة = امشِ إلى هناك (كما بالفأرة)، وسحب الإصبع = عصا تحكم افتراضية يمشي البطل باتجاهها ما دام الإصبع على الشاشة */
+  const tapAt = (cx, cy) => { if (!E.onTap) return; const r = canvas.getBoundingClientRect(); E.onTap(E.toWorld(cx - r.left, cy - r.top)); };
+  const stick = { id: null, x: 0, y: 0, drag: false, n: 0 }, ui = document.createElement('div'); ui.className = 'stick'; ui.innerHTML = '<i></i>'; document.body.appendChild(ui);
+  const knob = ui.firstChild, R = 56;
+  const stickOff = () => { stick.id = null; stick.drag = false; E.keys.vx = E.keys.vy = 0; ui.classList.remove('on'); };
+  canvas.addEventListener('pointerdown', e => {
+    if (e.pointerType === 'mouse') return tapAt(e.clientX, e.clientY);
+    stick.n++; if (stick.id !== null || stick.n > 1) { stickOff(); return; }   // إصبعان = تقريب الكاميرا، لا حركة
+    stick.id = e.pointerId; stick.x = e.clientX; stick.y = e.clientY; stick.drag = false;
+    try { canvas.setPointerCapture(e.pointerId); } catch (er) {}
+  });
+  canvas.addEventListener('pointermove', e => {
+    if (e.pointerId !== stick.id) return;
+    let dx = e.clientX - stick.x, dy = e.clientY - stick.y; const d = Math.hypot(dx, dy);
+    if (!stick.drag && d > 14) { stick.drag = true; ui.style.left = stick.x + 'px'; ui.style.top = stick.y + 'px'; ui.classList.add('on'); }
+    if (!stick.drag) return;
+    const k = Math.min(1, d / R); dx /= d || 1; dy /= d || 1;
+    E.keys.vx = dx * Math.max(.35, k); E.keys.vy = dy * Math.max(.35, k);
+    knob.style.transform = `translate(${dx * k * R}px, ${dy * k * R}px)`;
+  });
+  const up = e => { if (e.pointerType !== 'mouse') stick.n = Math.max(0, stick.n - 1); if (e.pointerId !== stick.id) return; const wasDrag = stick.drag; stickOff(); if (!wasDrag && e.type === 'pointerup') tapAt(e.clientX, e.clientY); };
+  canvas.addEventListener('pointerup', up); canvas.addEventListener('pointercancel', up);
   const KEYS = { ArrowLeft: 'left', a: 'left', ArrowRight: 'right', d: 'right', ArrowUp: 'up', w: 'up', ArrowDown: 'down', s: 'down' };
   window.addEventListener('keydown', e => { const k = KEYS[e.key]; if (k && !(e.target && e.target.tagName === 'INPUT')) { E.keys[k] = true; e.preventDefault(); } });
   window.addEventListener('keyup', e => { const k = KEYS[e.key]; if (k) E.keys[k] = false; });

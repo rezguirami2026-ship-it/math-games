@@ -3,7 +3,7 @@ export function createPlayer(st) {
   return { x: st.player.x, y: st.player.y, dir: st.player.dir || 'left', phase: 0, moving: false, target: null, onArrive: null, speed: 150, act: null };
 }
 export function updatePlayer(p, dt, keys, blocked) {
-  let vx = (keys.right ? 1 : 0) - (keys.left ? 1 : 0), vy = (keys.down ? 1 : 0) - (keys.up ? 1 : 0);
+  let vx = keys.vx || (keys.right ? 1 : 0) - (keys.left ? 1 : 0), vy = keys.vy || (keys.down ? 1 : 0) - (keys.up ? 1 : 0);   // vx/vy: عصا اللمس (تماثلية)
   if (vx || vy) { p.target = null; p.route = null; p.onArrive = null; }
   else if (p.target) {
     const dx = p.target.x - p.x, dy = p.target.y - p.y, d = Math.hypot(dx, dy);
