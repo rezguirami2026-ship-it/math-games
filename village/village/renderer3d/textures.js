@@ -160,3 +160,41 @@ export function latticeTexture() {
   x.strokeStyle = '#4a2c14'; x.lineWidth = 8; x.strokeRect(0, 0, 128, 128);
   const t = tex(c, true); cache.set('lattice', t); return t;
 }
+
+/* ── الطين المكشوف (لِبن): مداميك طوب طيني غير منتظمة بلون مغرة، وطين يملأ الفواصل ── */
+function adobeSet(tint, seed) {
+  const S = 256, n = noiseField(S, seed, 4, 6), h = new Float32Array(S * S), R = rng(seed);
+  const rows = 18, rh = S / rows, offs = Array.from({ length: rows }, () => R() * 30), bwid = Array.from({ length: rows }, () => 26 + R() * 18);
+  for (let y = 0; y < S; y++) for (let x = 0; x < S; x++) {
+    const r = Math.floor(y / rh), bw = bwid[r], bx = (x + offs[r]) % bw, by = y % rh;
+    const edge = Math.min(bx, bw - bx, by, rh - by), joint = edge < 1.2 ? .84 : 1;   // فواصل طينية ناعمة: الطوب مغطى بطبقة طين
+    h[y * S + x] = joint * (.55 + n[y * S + x] * .45);
+  }
+  const col = colorCanvas(S, (x, s) => { x.fillStyle = '#fff'; x.fillRect(0, 0, s, s); shadeImage(x, s, h, new THREE.Color(tint).offsetHSL(0, -.08, -.08).getStyle(), new THREE.Color(tint).offsetHSL(0, -.06, .07).getStyle(), 1.25);
+    x.globalAlpha = .18; for (let i = 0; i < 120; i++) { x.fillStyle = R() < .5 ? '#5a3a1e' : '#f0d6a8'; x.fillRect(R() * s, R() * s, 1 + R() * 2, 1); } x.globalAlpha = 1; });
+  return { map: tex(col, true), normalMap: tex(normalCanvas(h, S, 3)), roughness: .97 };
+}
+export function adobe(tint = '#B98B5A') {
+  const key = 'adobe|' + tint; if (cache.has(key)) return cache.get(key);
+  const s = adobeSet(tint, [...key].reduce((a, c) => a * 31 + c.charCodeAt(0) >>> 0, 3));
+  const m = new THREE.MeshStandardMaterial({ map: s.map, normalMap: s.normalMap, normalScale: new THREE.Vector2(.55, .55), roughness: s.roughness });
+  cache.set(key, m); return m;
+}
+/* سجادة منسوجة: أشرطة ومعيّنات بألوان دافئة */
+export function rugMaterial(c1 = '#9E2B25', c2 = '#E3B04B', c3 = '#1F4E79') {
+  const key = 'rug|' + c1 + c2 + c3; if (cache.has(key)) return cache.get(key);
+  const c = document.createElement('canvas'); c.width = 128; c.height = 192; const x = c.getContext('2d');
+  x.fillStyle = c1; x.fillRect(0, 0, 128, 192); x.fillStyle = c2; x.fillRect(6, 6, 116, 180); x.fillStyle = c1; x.fillRect(12, 12, 104, 168);
+  for (let i = 0; i < 4; i++) { const cy = 36 + i * 40; x.fillStyle = i % 2 ? c3 : c2; x.beginPath(); x.moveTo(64, cy - 16); x.lineTo(92, cy); x.lineTo(64, cy + 16); x.lineTo(36, cy); x.closePath(); x.fill(); x.fillStyle = '#F2E6C9'; x.fillRect(61, cy - 3, 6, 6); }
+  x.fillStyle = c3; for (let i = 0; i < 12; i++) { x.fillRect(16 + i * 8.6, 16, 4, 4); x.fillRect(16 + i * 8.6, 172, 4, 4); }
+  const t = tex(c, true); t.wrapS = t.wrapT = THREE.ClampToEdgeWrapping;
+  const m = new THREE.MeshStandardMaterial({ map: t, roughness: 1, side: THREE.DoubleSide }); cache.set(key, m); return m;
+}
+/* سعف العريش: ألياف متوازية بلون قش */
+export function thatchMaterial() {
+  if (cache.has('thatch')) return cache.get('thatch');
+  const S = 128, c = document.createElement('canvas'); c.width = c.height = S; const x = c.getContext('2d'), R = rng(77);
+  x.fillStyle = '#B8935A'; x.fillRect(0, 0, S, S);
+  for (let i = 0; i < 260; i++) { const y = R() * S; x.strokeStyle = ['#D8B77A', '#9C7A44', '#C9A465', '#7E6236'][Math.floor(R() * 4)]; x.lineWidth = .8 + R() * 1.4; x.beginPath(); x.moveTo(0, y); x.lineTo(S, y + (R() - .5) * 6); x.stroke(); }
+  const m = new THREE.MeshStandardMaterial({ map: tex(c, true), roughness: 1, side: THREE.DoubleSide }); cache.set('thatch', m); return m;
+}

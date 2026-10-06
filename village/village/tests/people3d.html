@@ -26,9 +26,9 @@ const looks = [
   { kind: 'man', skin: '#8B5A38', accent: '#1F4E79', robe: '#EFE6D2', beard: '#D8D2C8', elder: true, tool: 'cane' },
   { kind: 'man', skin: '#C98E5F', accent: '#2F6FB2', robe: '#E3D8C2', hat: 'straw', tool: 'hoe' },
   { kind: 'man', skin: '#DDA779', accent: '#2A3F5F', robe: '#F4F1E8', vest: '#F28C28', hat: 'cap' },
-  { kind: 'woman', skin: '#DDA779', accent: '#7B3F98', robe: '#2E6E8E', apron: '#F4F1E8', glasses: true }
+  { kind: 'woman', skin: '#DDA779', accent: '#7B3F98', robe: '#2E6E8E', elder: true, tool: 'cane' }
 ];
-const anims = [null, null, 'wave', 'talk', null, 'interact', 'celebrate', 'pickup'];
+const anims = [null, null, 'wave', 'talk', null, 'interact', 'celebrate', null];
 const P = looks.map((l, i) => { const p = buildPerson(l); sc.add(p.root); return p; });
 let t = 0, last = performance.now();
 function loop(now) {
@@ -40,7 +40,7 @@ function loop(now) {
     p.root.rotation.y = p.yaw;
   });
   const close = mode === 'face';
-  cam.position.set(close ? -51 : 0, close ? 62 : 70, close ? 60 : 330); cam.lookAt(close ? -51 : 0, close ? 58 : 34, 0);
+  const fx = +(q.get('fx') || -51); cam.position.set(close ? fx : 0, close ? 62 : 70, close ? 72 : 330); cam.lookAt(close ? fx : 0, close ? 56 : 34, 0);
   r.render(sc, cam); requestAnimationFrame(loop);
 }
 requestAnimationFrame(loop);

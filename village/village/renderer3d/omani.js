@@ -3,7 +3,7 @@
 // الإحداثيات: نقطة اللعبة (x, y) هي (x, ارتفاع, y) في المشهد؛ الواجهة الأمامية نحو +z (جنوباً، نحو الكاميرا).
 import * as THREE from '../lib/three/three.module.min.js';
 import { Parts, box, cyl, sphere, archShape, archPath, extrude, merlon, taper } from './geom.js';
-import { material, bandTexture, latticeTexture } from './textures.js';
+import { material, bandTexture, latticeTexture, adobe, rugMaterial, thatchMaterial } from './textures.js';
 
 export const SCALE_H = 1.38;   // المباني في الرسم ثنائي الأبعاد منخفضة؛ في المجسّم نرفعها لتناسب طول الشخصيات
 
@@ -105,6 +105,30 @@ function upperRoom(P, x0, z0, w, d, H, wallM, trimM, key) {
   windowArch(P, rx + rw / 2, H + 12, rz + rd, 16, 22, trimM, '#2F6B73');
   beamEnds(P, rx, rz, rw, rd, H + rh - 5, 0);
 }
+/* جرّة فخارية (خرس/جحلة) */
+function jar(P, x, y, z, s = 1, col = '#B5653A') {
+  const g = new THREE.LatheGeometry([[0, 0], [3.2, .3], [5.4, 4], [5.8, 7.5], [4.4, 11], [2.2, 12.6], [2.6, 14], [0, 14]].map(([a, b]) => new THREE.Vector2(a * s, b * s)), 16);
+  g.translate(x, y, z); P.add(material('flat', col, { rough: .85 }), g, { uv: false });
+}
+/* أصيص بنبتة خضراء */
+function pot(P, x, z, s = 1) {
+  const g = new THREE.LatheGeometry([[0, 0], [3.6, 0], [4.4, 7], [5, 8], [0, 8]].map(([a, b]) => new THREE.Vector2(a * s, b * s)), 14); g.translate(x, 0, z);
+  P.add(material('flat', '#A8552F', { rough: .9 }), g, { uv: false });
+  for (let i = 0; i < 5; i++) { const a = i / 5 * Math.PI * 2, b = new THREE.IcosahedronGeometry(3.2 * s, 1); b.translate(x + Math.cos(a) * 2.6 * s, 10.5 * s + (i % 2) * 2, z + Math.sin(a) * 2.2 * s); P.add(material('flat', i % 2 ? '#4E7A34' : '#5E9040', { rough: .85 }), b, { uv: false }); }
+}
+/* فانوس جداري نحاسي بجانب الباب */
+function wallLantern(P, x, y, zf) {
+  const br = material('metal', '#B8862E', { rough: .35, metal: .9 });
+  P.add(br, box(1.4, 1.4, 6, x, y + 8, zf + 3)); P.add(br, cyl(3.6, 1.4, 3, x, y + 9, zf + 6, 6)); P.add(br, cyl(.6, 3.2, 3, x, y - 1, zf + 6, 6));
+  P.add(material('flat', '#FFE3A0', { emissive: '#FFB64A', ei: .9 }), cyl(2.8, 2.4, 7, x, y + 4, zf + 6, 6));
+}
+/* عريش من سعف النخيل على السطح: أربعة قوائم وسقف مائل */
+function arish(P, x, z, w, d, H) {
+  const wd = material('wood', '#7A5230');
+  [[0, 0], [w, 0], [0, d], [w, d]].forEach(([a, c]) => P.add(wd, box(2.6, 24, 2.6, x + a, H + 12, z + c)));
+  P.add(thatchMaterial(), box(w + 10, 2.4, d + 10, x + w / 2, H + 25, z + d / 2), { scale: 1 / 40 });
+  P.add(wd, box(w + 6, 1.6, 2, x + w / 2, H + 24, z)); P.add(wd, box(w + 6, 1.6, 2, x + w / 2, H + 24, z + d));
+}
 /* فتحات تهوية مثلثة (ثلاث فتحات صغيرة) — لمسة عُمانية على الجدار */
 function vents(P, cx, y, zf) { [[0, 7], [-5, 0], [5, 0]].forEach(([dx, dy]) => P.add(M.dark(), box(3, 5, 1, cx + dx, y + dy, zf + .3))); }
 
@@ -123,9 +147,10 @@ function roofProps(P, b, x0, z0, w, d, H) {
 /* ── البيت العُماني ── b = { x, y, w, h, H, wall, door, mosque?, tank?, ac?, dish?, stair?, sign?, style? } */
 export function omaniHouse(b, opts = {}) {
   const P = new Parts(), x0 = b.x, z0 = b.y, w = b.w, d = b.h, H = Math.round((b.H || 96) * SCALE_H), zf = z0 + d;
-  const wallM = material('plaster', b.wall || '#EFE3CC'), trimM = material('plaster', '#F6EEDD');
-  P.add(M.stoneDark(), box(w + 5, 12, d + 5, x0 + w / 2, 6, z0 + d / 2, 1.5));   // قاعدة حجرية
   const key = Math.round(x0 * 7 + z0 * 3) % 97, rectWin = !b.mosque && key % 3 === 1;   // بذرة ثابتة لكل بيت: نوع النوافذ والغرفة العلوية
+  const mud = b.mud ?? (!b.mosque && b.style !== 'shop' && key % 2 === 0);   // بيوت من اللِّبن المكشوف بين البيوت المجصّصة: تباين لوني عُماني أصيل
+  const wallM = mud ? adobe(['#D4B78E', '#CBAA80', '#DCC29C'][key % 3]) : material('plaster', b.wall || '#EFE3CC'), trimM = material('plaster', mud ? '#E9D6B4' : '#F6EEDD');
+  P.add(M.stoneDark(), box(w + 5, 12, d + 5, x0 + w / 2, 6, z0 + d / 2, 1.5));   // قاعدة حجرية
   P.add(wallM, taper(box(w, H, d, x0 + w / 2, H / 2, z0 + d / 2, 3), x0 + w / 2, z0 + d / 2, 0, H, .025));   // الجسم: يضيق قليلاً نحو الأعلى
   P.add(trimM, box(w * .975 + 2, 3.2, d * .975 + 2, x0 + w / 2, H - 2, z0 + d / 2));                   // إفريز تحت الحاجز
   beamEnds(P, x0, z0, w, d, H - 9, w * .0125);
@@ -135,6 +160,8 @@ export function omaniHouse(b, opts = {}) {
   const shop = b.style === 'shop', mosque = b.style === 'mosque';
   const dw = shop ? 40 : (b.doorW || 34), dh = Math.round((b.doorH || 66) * 1.18);
   door(P, x0 + w / 2, zf, dw, dh, b.door || '#7A4A2A', trimM);
+  if (!b.mosque) { wallLantern(P, x0 + w / 2 - dw / 2 - 13, dh - 16, zf); if (w > 150) wallLantern(P, x0 + w / 2 + dw / 2 + 13, dh - 16, zf); }
+  if (!shop && !mosque) { pot(P, x0 + w / 2 - dw / 2 - 16, zf + 3.5, .8); pot(P, x0 + w / 2 + dw / 2 + 16, zf + 3.5, .8); }
   const wy = mosque ? 30 : 38, ww = mosque ? 24 : 22, wh = mosque ? 52 : 36;
   const wx = w > 160 ? [x0 + 30, x0 + w - 30] : [x0 + 24, x0 + w - 24];
   if (!shop) wx.forEach(x => rectWin ? windowRect(P, x, wy + 2, zf, 20, 28, trimM, '#7A4A2A') : windowArch(P, x, wy, zf, ww, wh, trimM, mosque ? null : '#2F6B73'));
@@ -158,6 +185,11 @@ export function omaniHouse(b, opts = {}) {
   }
   if (!mosque && !shop && H < 180 && w >= 165 && !b.stair) upperRoom(P, x0, z0, w, d, H, wallM, trimM, key);
   roofProps(P, b, x0, z0, w, d, H);
+  if (!mosque && !shop) {   // حياة السطح: عريش أو سجادة مفروشة، وجرار ماء
+    if (key % 3 === 0 && !b.tank) arish(P, x0 + w - 62, z0 + d - 56, 44, 34, H);
+    else { const rg = new THREE.PlaneGeometry(30, 44).rotateX(-Math.PI / 2); rg.rotateY(.25); rg.translate(x0 + w * .35, H + 1.6, z0 + d * .55); P.add(rugMaterial(['#9E2B25', '#1F4E79', '#2E6B4A'][key % 3]), rg, { uv: false }); }
+    jar(P, x0 + 16, H + 1, z0 + d - 18, .9); jar(P, x0 + 27, H + 1, z0 + d - 15, .7, '#C27A48');
+  }
   const g = P.build();
   if (b.sign) { const s = signMesh(b.sign, 15); s.position.set(x0 + w / 2, dh + 31, zf + 2.2); g.add(s); }
   g.userData = { H, foot: { x: x0, z: z0, w, d } };

@@ -154,3 +154,46 @@ export function sea(x0, z0, z1) {
   m.userData.tick = t => { n.offset.set(t * .01, t * .006); };
   return m;
 }
+
+/* ── بستان نخيل كثيف خارج حدود اللعب (شمالاً وغرباً): يعطي القرية إطاراً أخضر وعمقاً، ولا يمس المسارات ── */
+export function palmGrove(bounds) {
+  const R = (a => () => (a = (a * 9301 + 49297) % 233280) / 233280)(7), list = [];
+  const band = (x0, z0, x1, z1, n) => { for (let i = 0; i < n; i++) list.push({ x: x0 + R() * (x1 - x0), y: z0 + R() * (z1 - z0), s: .95 + R() * .45 }); };
+  band(bounds.x0 - 520, bounds.z0 - 300, bounds.x1 + 400, bounds.z0 - 40, 120);      // شمال القرية
+  band(bounds.x0 - 360, bounds.z0 - 40, bounds.x0 - 40, bounds.z1, 150);           // غرب العالم كله
+  const g = palms(list);
+  // أرض البستان: عشب داكن متقطع تحت النخيل
+  const gm = new THREE.MeshStandardMaterial({ color: '#7D8A44', roughness: 1 });
+  const blobs = []; for (let i = 0; i < 70; i++) { const p = list[i * 3 % list.length], c = new THREE.CircleGeometry(40 + R() * 50, 12); c.rotateX(-Math.PI / 2); c.translate(p.x, .25 + i * .002, p.y); blobs.push(c); }
+  const gr = new THREE.Mesh(mergeGeometries(blobs), gm); gr.receiveShadow = true; g.add(gr);
+  return g;
+}
+
+/* ── غيوم ناعمة عالية تنساب ببطء ── */
+export function clouds(bounds) {
+  const c = document.createElement('canvas'); c.width = 256; c.height = 128; const x = c.getContext('2d');
+  for (let i = 0; i < 14; i++) { const cx = 40 + i * 13 + Math.sin(i * 1.7) * 10, cy = 74 + Math.sin(i * 2.3) * 14, r = 26 + Math.sin(i * 3.1) * 12; const g = x.createRadialGradient(cx, cy, 0, cx, cy, r); g.addColorStop(0, 'rgba(255,255,255,.95)'); g.addColorStop(1, 'rgba(255,255,255,0)'); x.fillStyle = g; x.fillRect(0, 0, 256, 128); }
+  const t = new THREE.CanvasTexture(c); t.colorSpace = THREE.SRGBColorSpace;
+  const m = new THREE.MeshBasicMaterial({ map: t, transparent: true, depthWrite: false, fog: false, opacity: .85 });
+  const g = new THREE.Group(), R = (a => () => (a = (a * 9301 + 49297) % 233280) / 233280)(11);
+  for (let i = 0; i < 26; i++) { const s = new THREE.Mesh(new THREE.PlaneGeometry(1, 1), m); const w = 700 + R() * 900; s.scale.set(w, w * .42, 1); s.position.set(bounds.x0 - 1500 + R() * (bounds.x1 - bounds.x0 + 3500), 900 + R() * 500, bounds.z0 - 2400 + R() * (bounds.z1 - bounds.z0 + 2000)); s.userData.v = 6 + R() * 8; g.add(s); }
+  g.userData.tick = (t2, cam) => g.children.forEach(s => { s.quaternion.copy(cam.quaternion); s.position.x += s.userData.v * .016; if (s.position.x > bounds.x1 + 2500) s.position.x = bounds.x0 - 2000; });
+  return g;
+}
+
+/* ── تفاصيل الأرض: حصى وأحجار صغيرة وخصلات عشب يابس مبعثرة (instancing)، بعيداً عن الطرق والمباني ── */
+export function groundScatter(area, avoid, n = 900) {
+  const R = (a => () => (a = (a * 9301 + 49297) % 233280) / 233280)(23), pts = [];
+  const free = (x, y) => !avoid.some(r => x > r.x - 6 && x < r.x + r.w + 6 && y > r.y - 6 && y < r.y + r.h + 6);
+  for (let i = 0; pts.length < n && i < n * 6; i++) { const x = area.x + R() * area.w, y = area.y + R() * area.h; if (free(x, y)) pts.push({ x, y, r: R(), k: R() }); }
+  const g = new THREE.Group(), M4 = new THREE.Matrix4(), Q = new THREE.Quaternion(), E = new THREE.Euler();
+  const rock = smooth(new THREE.DodecahedronGeometry(1, 0)), tuft = (() => { const parts = []; for (let i = 0; i < 7; i++) { const b = new THREE.ConeGeometry(.35, 1, 3); b.translate(0, .5, 0); b.rotateZ((i - 3) * .22); b.rotateY(i * .9); parts.push(b); } return mergeGeometries(parts); })();
+  const rocks = pts.filter(p => p.k < .55), tufts = pts.filter(p => p.k >= .55);
+  const rm = new THREE.InstancedMesh(rock, new THREE.MeshStandardMaterial({ color: '#B8A07E', roughness: 1 }), rocks.length);
+  rocks.forEach((p, i) => { const s = 1.2 + p.r * 3.4; E.set(p.r * 3, p.r * 6, p.r * 2); Q.setFromEuler(E); M4.compose(new THREE.Vector3(p.x, s * .25, p.y), Q, new THREE.Vector3(s, s * .55, s * .9)); rm.setMatrixAt(i, M4); rm.setColorAt(i, new THREE.Color().setHSL(.09, .25 + p.r * .15, .5 + p.r * .2)); });
+  rm.castShadow = true; rm.receiveShadow = true; g.add(rm);
+  const tm = new THREE.InstancedMesh(tuft, windy(new THREE.MeshStandardMaterial({ color: '#B5AE6A', roughness: 1 }), 0, 1.4), tufts.length);
+  tufts.forEach((p, i) => { const s = 3.2 + p.r * 4; E.set(0, p.r * 6, 0); Q.setFromEuler(E); M4.compose(new THREE.Vector3(p.x, 0, p.y), Q, new THREE.Vector3(s, s * (.8 + p.r * .6), s)); tm.setMatrixAt(i, M4); tm.setColorAt(i, new THREE.Color().setHSL(.16 + p.r * .06, .28, .45 + p.r * .1)); });
+  tm.castShadow = true; g.add(tm);
+  return g;
+}

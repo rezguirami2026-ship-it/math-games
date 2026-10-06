@@ -167,7 +167,7 @@ async function start(state) {
   }
 }
 /* ── العرض ثلاثي الأبعاد (renderer3d): يُحمَّل فقط عند طلبه، ويرجع إلى الرسم الحالي إن لم يدعم الجهاز WebGL أو فشل التحميل ── */
-const V3D = 'نسخة 3D · ٢';   // تُعرض في شاشة التحميل وفي الزاوية: للتأكد أن المتصفح حمّل آخر نسخة
+const V3D = 'نسخة 3D · ٣';   // تُعرض في شاشة التحميل وفي الزاوية: للتأكد أن المتصفح حمّل آخر نسخة
 function want3d() { try { const q = new URLSearchParams(location.search); if (q.has('2d')) return false; return q.has('3d') || localStorage.getItem('ramimath_3d') === '1'; } catch (e) { return false; } }
 function loadingScreen() {
   const el = document.createElement('div'); el.className = 'load3d';
@@ -474,7 +474,7 @@ function worldItems(view, t, three) {
 /* الشخصيات للعرض ثلاثي الأبعاد: البطل وأهل القرية القريبون من الرؤية، بمظهرهم وحالتهم (قراءة فقط) */
 function people3d() {
   const s = game.state, v = eng.l3.view, pl = W.player, c = cur(), mod = curMod(), hand = mod && mod.hand && c && quests.isStarted(c.id) ? mod.hand(quests.data(c.id)) : null;
-  const H = hero(), out = [{ id: 'hero', look: H, lookKey: JSON.stringify(H), x: pl.x, y: pl.y, moving: pl.moving, phase: pl.phase, run: pl.speed > 160, dir: pl.dir,
+  const H = Object.assign({ id: 'hero' }, hero()), out = [{ id: 'hero', look: H, lookKey: JSON.stringify(H), faceCam: true, x: pl.x, y: pl.y, moving: pl.moving, phase: pl.phase, run: pl.speed > 160, dir: pl.dir,
     anim: pl.act === 'plant' ? 'pickup' : pl.anim ? pl.anim.name : null, animT: pl.act === 'plant' ? .5 : pl.anim ? pl.anim.t : 0, carry: hand ? Math.min(hand.n, 6) : s.carry }];
   W.npcs.forEach(n => { if (npcVisible(n, s) && n.x > v.x - 80 && n.x < v.x + v.w + 80 && n.y > v.y - 60 && n.y < v.y + v.h + 80)
     out.push({ id: n.id, look: n, lookKey: n.id, x: n.x, y: n.y, moving: n.moving, phase: n.phase, dir: n.dir, anim: n.anim && !n.moving ? n.anim.name : null, animT: n.anim ? n.anim.t : 0, carry: 0, face: Math.hypot(n.x - pl.x, n.y - pl.y) < 150 ? pl : null }); });
