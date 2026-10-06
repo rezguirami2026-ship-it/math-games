@@ -21,6 +21,7 @@ export function createEngine(canvas, world) {
   window.addEventListener('resize', resize); resize();
   const z = () => E.zoom * (1 + E.punch * .06);
   E.toWorld = (sx, sy) => ({ x: (sx - E.w / 2) / z() + E.cam.x, y: (sy - E.h / 2) / z() + E.cam.y });
+  E.toScreen = (x, y) => { const r = canvas.getBoundingClientRect(); return { x: r.left + (x - E.cam.x) * z() + E.w / 2, y: r.top + (y - E.cam.y) * z() + E.h / 2 }; };   // لفقاعات الكلام فوق الرؤوس
   canvas.addEventListener('pointerdown', e => { if (!E.onTap) return; const r = canvas.getBoundingClientRect(); E.onTap(E.toWorld(e.clientX - r.left, e.clientY - r.top)); });
   const KEYS = { ArrowLeft: 'left', a: 'left', ArrowRight: 'right', d: 'right', ArrowUp: 'up', w: 'up', ArrowDown: 'down', s: 'down' };
   window.addEventListener('keydown', e => { const k = KEYS[e.key]; if (k && !(e.target && e.target.tagName === 'INPUT')) { E.keys[k] = true; e.preventDefault(); } });

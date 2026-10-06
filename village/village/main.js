@@ -6,7 +6,7 @@ import { createEngine } from './core/engine.js';
 import { loadSave, saveSoon, saveNow, wipeSave } from './save/save.js';
 import { createPlayer, updatePlayer } from './player/player.js';
 import { findPath } from './world/nav.js';
-import { drawHuman } from './character/human.js';
+import { drawHuman, heightOf } from './character/human.js';
 import { WORLD, PILE, SIGNAL, TREE_SPOTS, FARM, HOUSES, WAREHOUSE, ROADS, SOUTH, staticColliders, drawGround, drawFarm, drawPalm, staticDrawables } from './world/village.js';
 import { makeTrucks, truckColliders, drawTruck, drawPile, drawSignal, drawSpot, updateFx, drawFx, moveAlong, say, bubble } from './world/entities.js';
 import { makeNpcs, npcVisible, updateNpc, drawNpc } from './npc/npc.js';
@@ -119,7 +119,7 @@ function boot() {
 async function start(state) {
   game.state = upgrade(state);
   W = buildWorld(state); resetGates();
-  hud.init({ drawMini, questLog });
+  hud.init({ drawMini, questLog, anchor: speakerAnchor });
   hud.show(true); hud.good(); hud.objective(objective());
   eng.snap(W.player); eng.follow = W.player; eng.onTap = onTap;
   eng.run(update, render);
@@ -145,6 +145,14 @@ function buildWorld(st) {
 }
 const hero = () => Object.assign(heroLookWorn(game.state), { name: game.state.hero.name });
 const HERO_DOOR = { x: HOUSES[2].x + HOUSES[2].w / 2, y: HOUSES[2].y + HOUSES[2].h + 14 };
+/* موضع فقاعة الكلام على الشاشة: فوق رأس المتكلم. الراوي ومن هو خارج الشاشة: لا موضع (سطر أسفل الشاشة) */
+function speakerAnchor(who, person) {
+  if (who === 'narrator' || !W) return null;
+  const p = who === 'hero' ? Object.assign({}, hero(), { x: W.player.x, y: W.player.y }) : person;
+  if (!p || p.x === undefined) return null;
+  const s = eng.toScreen(p.x, p.y - heightOf(p) - 6);
+  return s.x < 0 || s.x > innerWidth || s.y < 40 || s.y > innerHeight ? null : s;
+}
 function people() { const P = { narrator: { name: 'الراوي' }, pax: W.paxInfo || { name: 'مسافر', kind: 'man' } }; W.npcs.forEach(n => { P[n.id] = n; }); P.hero = hero(); return P; }
 
 /* ── التصادم: البركة لا تُعبر إلا على الحجارة ── */

@@ -16,7 +16,12 @@ export const hud = {
   },
   show(on) { $('hud').classList.toggle('on', on); },
   good() { $('goodN').textContent = ar(game.state.good); const p = $('goodPill'); p.classList.remove('pulse'); void p.offsetWidth; p.classList.add('pulse'); },
-  objective(t) { if (this._o !== t) { this._o = t; $('objective').textContent = t; } },
+  objective(t) {   // مؤشر المهمة: يظهر واضحاً حين يتغير ثم يخفت بعد خمس ثوانٍ
+    if (this._o === t) return;
+    this._o = t; const el = $('objective'); el.textContent = t;
+    el.classList.remove('fresh'); void el.offsetWidth; el.classList.add('fresh');
+    clearTimeout(this._of); this._of = setTimeout(() => el.classList.remove('fresh'), 5000);
+  },
   actions(list) {
     const key = list.map(a => (a.key || '') + ':' + a.label + (a.disabled ? '0' : '1')).join('|');   // الهدف جزء من المفتاح
     if (key === this._ak) return; this._ak = key;
@@ -31,19 +36,30 @@ export const hud = {
       box.append(b);
     });
   },
-  /* حوار: يعيد وعداً يُحلّ عند آخر سطر */
+  /* حوار داخل العالم: فقاعة كلام صغيرة فوق رأس المتكلم تتبعه، أو سطر صغير أسفل الشاشة للراوي.
+     الضغط في أي مكان ينتقل للسطر التالي. يعيد وعداً يُحلّ عند آخر سطر */
   dialog(lines, people) {
     return new Promise(res => {
-      const box = $('dialog'); let i = 0; game.busy = true; box.classList.add('on');
+      const box = $('dialog'); let i = 0, opened = performance.now(), raf = 0; game.busy = true; box.classList.add('on');
+      const place = () => {   // تتبّع المتكلم: الفقاعة فوق رأسه، ولا تخرج عن الشاشة
+        const L = lines[i], a = this.api.anchor && this.api.anchor(L.who, people[L.who]);
+        box.classList.toggle('caption', !a);
+        if (a) {
+          const w = box.offsetWidth, h = box.offsetHeight, x = Math.max(8, Math.min(innerWidth - w - 8, a.x - w / 2)), y = Math.max(70, a.y - h - 16);
+          box.style.left = x + 'px'; box.style.top = y + 'px'; box.style.setProperty('--tail', Math.max(16, Math.min(w - 16, a.x - x)) + 'px');
+        } else { box.style.left = ''; box.style.top = ''; }
+        raf = requestAnimationFrame(place);
+      };
       const showLine = () => {
         const L = lines[i], who = people[L.who] || { name: 'الراوي' };
-        $('dName').textContent = who.name; $('dText').textContent = L.text; sfx('talk');
-        const c = $('portrait'), x = c.getContext('2d'); x.setTransform(1, 0, 0, 1, 0, 0); x.clearRect(0, 0, c.width, c.height);
-        if (L.who === 'narrator') { x.font = '56px sans-serif'; x.textAlign = 'center'; x.textBaseline = 'middle'; x.fillText('🌴', 48, 52); }
-        else drawHuman(x, Object.assign({}, who, { x: 48, y: 150, s: 1.75, dir: 'down', moving: false, carry: 0, mark: null }));
+        $('dName').textContent = L.who === 'narrator' ? '' : who.name; $('dText').textContent = L.text; sfx('talk');
+        box.classList.remove('pop'); void box.offsetWidth; box.classList.add('pop');
       };
-      const next = e => { if (e) e.stopPropagation(); i++; if (i >= lines.length) { box.classList.remove('on'); box.onclick = null; game.busy = false; res(); } else showLine(); };
-      box.onclick = next; showLine();
+      const close = () => { cancelAnimationFrame(raf); box.classList.remove('on', 'caption'); box.onclick = null; removeEventListener('pointerdown', anywhere, true); game.busy = false; res(); };
+      const next = e => { if (e) e.stopPropagation(); i++; if (i >= lines.length) close(); else showLine(); };
+      const anywhere = e => { if (box.contains(e.target) || performance.now() - opened < 250 || $('panel').classList.contains('on')) return; e.stopPropagation(); e.preventDefault(); next(); };
+      box.onclick = next; addEventListener('pointerdown', anywhere, true);
+      showLine(); place();
     });
   },
   toast(msg) { const t = $('toast'); t.textContent = msg; t.classList.remove('on'); void t.offsetWidth; t.classList.add('on'); clearTimeout(this._t); this._t = setTimeout(() => t.classList.remove('on'), 3000); },

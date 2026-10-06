@@ -12,31 +12,44 @@ button:focus-visible,input:focus-visible{outline:3px solid var(--sun);outline-of
 #hud{position:fixed;inset:0;pointer-events:none;display:none}
 #hud.on{display:block}
 #hud .top{position:absolute;top:calc(var(--safeT) + 10px);left:10px;right:10px;display:flex;justify-content:space-between;align-items:center}
-.pill{pointer-events:auto;background:#ffffffE6;border-radius:18px;padding:6px 14px;font-weight:900;font-size:18px;box-shadow:0 4px 0 #0000001f}
+/* الواجهة: العالم أولاً. أدوات صغيرة شبه شفافة، ومؤشر مهمة يخفت بعد ظهوره */
+.pill{pointer-events:auto;background:#FFFDF6CC;backdrop-filter:blur(6px);border-radius:14px;padding:4px 11px;font-weight:900;font-size:15px;box-shadow:0 2px 8px #0000002a;border:1px solid #ffffff99}
 .pill.pulse{animation:pulse .5s}
 @keyframes pulse{50%{transform:scale(1.18)}}
 .tools{display:flex;gap:8px;pointer-events:auto}
-.tools button{width:46px;height:46px;border-radius:15px;background:#ffffffE6;font-size:22px;box-shadow:0 4px 0 #0000001f}
-.tools button:active{transform:translateY(3px);box-shadow:none}
-.obj{position:absolute;top:calc(var(--safeT) + 64px);left:50%;transform:translateX(-50%);max-width:92%;background:#2A1B66D9;color:#fff;border-radius:14px;padding:5px 14px;font-weight:800;font-size:14px;text-align:center;line-height:1.5}
+.tools button{width:38px;height:38px;border-radius:12px;background:#FFFDF6B3;backdrop-filter:blur(6px);font-size:18px;box-shadow:0 2px 8px #00000026;border:1px solid #ffffff99}
+.tools button:active{transform:scale(.92)}
+.obj{position:absolute;top:calc(var(--safeT) + 56px);right:10px;max-width:min(300px,70%);background:#1E163ACC;backdrop-filter:blur(6px);color:#fff;border-radius:12px;padding:4px 11px;font-weight:800;font-size:12.5px;line-height:1.5;border-right:3px solid var(--sun);transition:opacity .8s;opacity:.55;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.obj.fresh{opacity:1;animation:pop .3s ease-out}
 .obj:empty{display:none}
-.actions{position:absolute;left:10px;right:10px;bottom:calc(var(--safeB) + 14px);display:flex;flex-wrap:wrap;gap:8px;justify-content:center;pointer-events:auto}
-.act{font-weight:900;font-size:18px;padding:12px 20px;min-height:54px;border-radius:18px;background:var(--sun);color:#3A2400;box-shadow:0 6px 0 var(--sunE);transition:transform .08s}
-.act:active{transform:translateY(4px);box-shadow:0 2px 0 var(--sunE)}
+.actions{position:absolute;left:10px;right:10px;bottom:calc(var(--safeB) + 12px);display:flex;flex-wrap:wrap;gap:6px;justify-content:center;pointer-events:auto}
+.act{font-weight:900;font-size:16px;padding:9px 16px;min-height:46px;border-radius:15px;background:var(--sun);color:#3A2400;box-shadow:0 4px 0 var(--sunE),0 6px 14px #0000002a;transition:transform .08s}
+.act:active{transform:translateY(3px);box-shadow:0 1px 0 var(--sunE)}
+#actions .act.ghost{background:#FFFDF6E6;backdrop-filter:blur(6px)}
 .act[disabled]{opacity:.5;pointer-events:none}
 .act.ghost{background:#ffffffE6;box-shadow:0 6px 0 #0000002a;color:var(--ink)}
 .act.go{background:var(--sea);box-shadow:0 6px 0 var(--seaE);color:#06302B}
 .act.green{background:var(--green);box-shadow:0 6px 0 var(--greenE);color:#fff}
 .act.big{font-size:22px;padding:14px 34px}
 /* ── الحوار ── */
-.dialog{position:fixed;left:10px;right:10px;bottom:calc(var(--safeB) + 12px);display:none;align-items:center;gap:12px;background:#FFFDF6;border-radius:22px;padding:12px 14px;box-shadow:0 8px 0 #0000002a,0 10px 30px #0004;border:3px solid #E8D3A0;z-index:10;max-width:620px;margin:0 auto}
-.dialog.on{display:flex;animation:rise .25s ease-out}
+/* فقاعة كلام فوق رأس المتكلم (موضعها يُحسب في hud.dialog)، وسطر صغير أسفل الشاشة للراوي */
+.dialog{position:fixed;display:none;align-items:flex-start;gap:6px;background:#FFFDF6;border-radius:16px;padding:7px 12px 8px;box-shadow:0 4px 0 #00000026,0 8px 22px #0003;border:2px solid #E8D3A0;z-index:10;width:max-content;max-width:min(280px,78vw);--tail:50%}
+.dialog.on{display:flex}
+.dialog.pop{animation:pop .2s ease-out}
+.dialog::after{content:'';position:absolute;bottom:-9px;left:var(--tail);transform:translateX(-50%);border:9px solid transparent;border-top-color:#FFFDF6;border-bottom:0}
+.dialog::before{content:'';position:absolute;bottom:-12px;left:var(--tail);transform:translateX(-50%);border:10px solid transparent;border-top-color:#E8D3A0;border-bottom:0}
+.dialog.caption{left:50%;top:auto;bottom:calc(var(--safeB) + 86px);transform:translateX(-50%);max-width:min(420px,90vw);background:#2A1B66E6;border-color:#2A1B66;color:#fff}
+.dialog.caption::after,.dialog.caption::before{display:none}
+.dialog.caption .dbody p{color:#fff;font-size:15px}
+@keyframes pop{0%{opacity:0;transform:translateY(6px) scale(.94)}100%{opacity:1;transform:none}}
+.dialog.caption.pop{animation:none}
 @keyframes rise{from{transform:translateY(40px);opacity:0}}
-.dialog canvas{width:76px;height:76px;border-radius:18px;background:#F3E4C0;flex:none}
+.dialog canvas{display:none}
 .dbody{flex:1}
-.dbody b{font-size:15px;color:#8A5A16}
-.dbody p{margin:2px 0 0;font-weight:700;font-size:17px;line-height:1.65}
-.dnext{font-size:22px;color:#C98A0E;animation:nudge 1s infinite}
+.dbody b{font-size:12px;color:#8A5A16;display:block}
+.dbody b:empty{display:none}
+.dbody p{margin:1px 0 0;font-weight:700;font-size:15px;line-height:1.55;color:var(--ink)}
+.dnext{font-size:13px;color:#C98A0E;animation:nudge 1s infinite;align-self:flex-end}
 @keyframes nudge{50%{transform:translateX(-5px)}}
 /* ── اللوحات ── */
 .panel{position:fixed;inset:0;background:#1a103dAA;display:none;align-items:flex-end;justify-content:center;z-index:20}
