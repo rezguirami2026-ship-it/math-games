@@ -4,6 +4,7 @@ import { bubble } from '../world/entities.js';
 import { sfx } from '../core/sound.js';
 import { R, shuffle, near, changed, dec, finish, panel, sheetOpen, sheetClose, hiDPI, msgBox, setMsg, btn, numPad, counters } from './bench.js';
 import { ST5, GUEST } from '../world/festival.js';
+import { building3d, boxShadow } from '../world/art.js';
 
 const at = (st, key, label) => ({
   target: () => st,
@@ -182,7 +183,9 @@ export const areaPerimeter = Object.assign({
     }
     btn('benchOut', () => { sheetClose(); changed(); });
   },
-  draw(d, t, active, done) { const n = done ? 3 : (d.r || 0); if (!n) return []; return [{ y: GUEST.y + GUEST.h - 30, draw: c => { const cols = ['#F3D9C6', '#DCEFE3', '#E3D8F5']; for (let i = 0; i < n; i++) { const x = GUEST.x + 20 + i * 128, y = GUEST.y + 60; c.fillStyle = cols[i]; c.fillRect(x, y, 112, 90); c.fillStyle = '#C0392B'; c.beginPath(); c.moveTo(x - 6, y); c.lineTo(x + 56, y - 40); c.lineTo(x + 118, y); c.fill(); c.fillStyle = '#7A4F2A'; rr(c, x + 46, y + 56, 20, 34, 6); c.fill(); } } }]; }
+  draw(d, t, active, done) { const n = done ? 3 : (d.r || 0); const cols = ['#F3D9C6', '#DCEFE3', '#E3D8F5'], doors = ['#B8613E', '#2F6B73', '#6B4FA8'];   // بيوت ضيافة مجسّمة تُبنى واحداً بعد آخر
+    return Array.from({ length: n }, (_, i) => { const b = { x: GUEST.x + 20 + i * 128, y: GUEST.y + 70, w: 112, h: 60, H: 74, wall: cols[i], door: doors[i], doorW: 30, doorH: 52, lamp: false };
+      return { y: b.y + b.h, draw: c => { boxShadow(c, b.x, b.y, b.w, b.h, b.H); building3d(c, 'guesthouse' + i, b); } }; }); }
 }, (() => { const s = at(ST5.guest, 'guest', '🏠 مخططات البيت'); delete s.draw; return s; })());
 
 export const T2U1 = { massCapacity1, massCapacity2, timeConvert, timeZones1, areaPerimeter };

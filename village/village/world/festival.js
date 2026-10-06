@@ -1,5 +1,7 @@
 // «ساحة المهرجان»: منطقة الفصل الدراسي الثاني جنوب القلعة، تُفتح بإنهاء الفصل الأول
+// الرسم بأسلوب القرية (world/art.js): بوابة مشتركة، مبانٍ مجسّمة، برج ساعة، ألواح، كشك الدوّار، وحبال زينة معلّقة
 import { rr, shade, ar } from '../core/util.js';
+import { INK, PAL, SUN, pattern, sprite, boxShadow, blobShadow, building3d, box3d, palmCached, gateEW, gateEWShadows, workTable, signboard, leanAt, elev, stall, bench, shrub } from './art.js';
 export const WALL4_Y = 2600, GATE4 = { x0: 1190, x1: 1290 };
 export const KITCHEN = { x: 360, y: 2680, w: 440, h: 150 };
 export const ST5 = { scale: { x: 480, y: 2876 }, recipe: { x: 680, y: 2876 }, clock: { x: 1100, y: 2904 }, calls: { x: 1550, y: 2856 }, guest: { x: 2200, y: 2944 } };
@@ -23,51 +25,121 @@ export function festivalColliders(open) {
   if (!open) c.push({ x: GATE4.x0, y: WALL4_Y - 4, w: GATE4.x1 - GATE4.x0, h: 20 });
   return c;
 }
+const H_K = 88, H_C = 84, TW = { s: 64, H: 190 };
+const PALMS_X = [{ x: 150, y: 2960 }, { x: 1320, y: 2700 }, { x: 2600, y: 2760 }, { x: 2700, y: 3150 }, { x: 260, y: 3420 }, { x: 1050, y: 3420 }];
+// حبال الرايات: [x1, x2, y، ارتفاع الطرفين]
+const BUNTING = [[200, 760, 2900, 70], [870, 1360, 2980, 70], [1420, 2280, 2960, 70], [460, 1300, 3330, 60]];
+// زينة بلا تصادم في أطراف الساحة: بسطات المهرجان ومقاعد وشجيرات
+const STALLS = [[2560, 3000, '#E85D75'], [2600, 3400, '#2F6FB2'], [620, 3460, '#2E8B57'], [1700, 3470, '#9C6BFF']];
+const BENCHES = [[960, 3010], [1240, 3010], [1500, 3500], [2450, 3500]];
+const SHRUBS = [[300, 3000], [2480, 2950], [1380, 3460], [2200, 3480], [900, 3500]];
+
 export function drawFestivalGround(ctx, t) {
-  ctx.fillStyle = '#F0DFB6'; ctx.fillRect(0, WALL4_Y, 2930, 900);
-  ctx.fillStyle = '#E6D09C'; for (let x = 40; x < 2900; x += 120) for (let y = WALL4_Y + 40; y < 3480; y += 120) { ctx.beginPath(); ctx.arc(x + ((y / 120) % 2) * 60, y, 3, 0, 7); ctx.fill(); }
-  ctx.fillStyle = '#C9B48E'; rr(ctx, GATE4.x0 - 30, WALL4_Y + 12, GATE4.x1 - GATE4.x0 + 60, 60, 8); ctx.fill();
-  // حبال الزينة
-  for (let k = 0; k < 4; k++) { const y0 = 2640 + k * 0, x0 = 120 + k * 720; ctx.strokeStyle = '#8B5A2B'; ctx.lineWidth = 1.5; ctx.beginPath(); ctx.moveTo(x0, y0); ctx.quadraticCurveTo(x0 + 300, y0 + 40, x0 + 600, y0); ctx.stroke();
-    for (let i = 1; i < 10; i++) { const x = x0 + i * 60, y = y0 + 40 * (1 - Math.pow((i - 5) / 5, 2)) * .9; ctx.fillStyle = ['#E85D75', '#FFC23D', '#1FC8B5', '#9C6BFF'][i % 4]; ctx.beginPath(); ctx.moveTo(x - 7, y); ctx.lineTo(x + 7, y); ctx.lineTo(x, y + 12); ctx.fill(); } }
-  // الحقل الدائري (المخطط الدائري)
-  ctx.fillStyle = '#B98B5E'; ctx.beginPath(); ctx.arc(PIEFIELD.x, PIEFIELD.y, PIEFIELD.r, 0, 7); ctx.fill(); ctx.strokeStyle = '#8B6A43'; ctx.lineWidth = 3; ctx.stroke();
-  // أرض بيت الضيافة: شبكة أمتار
-  const G = GUEST; ctx.fillStyle = '#D9C49A'; rr(ctx, G.x, G.y, G.w, G.h, 10); ctx.fill();
-  ctx.strokeStyle = 'rgba(90,60,30,.18)'; ctx.lineWidth = 1; for (let x = G.x; x <= G.x + G.w; x += 20) { ctx.beginPath(); ctx.moveTo(x, G.y); ctx.lineTo(x, G.y + G.h); ctx.stroke(); } for (let y = G.y; y <= G.y + G.h; y += 20) { ctx.beginPath(); ctx.moveTo(G.x, y); ctx.lineTo(G.x + G.w, y); ctx.stroke(); }
+  gateEWShadows(ctx, WALL4_Y, GATE4.x0, GATE4.x1);
+  // أرض الساحة: بلاط واسع حول برج الساعة، وممر من البوابة
+  sprite(ctx, 'fest-plaza', 860, WALL4_Y + 10, 520, 360, c => {
+    c.fillStyle = shade(PAL.stone, -14); rr(c, 870, WALL4_Y + 20, 500, 340, 26); c.fill();
+    c.fillStyle = pattern(c, 'pavers'); rr(c, 874, WALL4_Y + 14, 492, 336, 24); c.fill();
+    const cx = TOWER.x, cy = TOWER.y + 30; c.fillStyle = 'rgba(184,97,62,.5)'; c.beginPath(); for (let k = 0; k < 16; k++) { const r = k % 2 ? 40 : 70, a = k * Math.PI / 8; c.lineTo(cx + Math.cos(a) * r, cy + Math.sin(a) * r * .6); } c.closePath(); c.fill();
+    c.strokeStyle = INK; c.lineWidth = 1; rr(c, 874, WALL4_Y + 14, 492, 336, 24); c.stroke();
+  });
+  // الحقل الدائري (المخطط الدائري): تربة بحافة حجرية، والدرس يرسم قطاعاته
+  sprite(ctx, 'piefield', PIEFIELD.x - 84, PIEFIELD.y - 84, 168, 176, c => {
+    const P = PIEFIELD; c.fillStyle = shade(PAL.stone, -30); c.beginPath(); c.ellipse(P.x, P.y + 6, P.r + 8, P.r + 8, 0, 0, 7); c.fill();
+    c.fillStyle = PAL.stone; c.beginPath(); c.arc(P.x, P.y, P.r + 8, 0, 7); c.fill();
+    c.fillStyle = pattern(c, 'soil'); c.beginPath(); c.arc(P.x, P.y, P.r, 0, 7); c.fill();
+    c.strokeStyle = INK; c.lineWidth = 1; c.beginPath(); c.arc(P.x, P.y, P.r + 8, 0, 7); c.stroke();
+  });
+  // أرض بيت الضيافة: بلاطة إسمنتية بشبكة أمتار (جزء من رياضيات الدرس)
+  const G = GUEST;
+  sprite(ctx, 'guestlot', G.x - 8, G.y - 8, G.w + 16, G.h + 16, c => {
+    c.fillStyle = '#CFC3AC'; rr(c, G.x - 4, G.y - 4, G.w + 8, G.h + 8, 10); c.fill();
+    c.strokeStyle = 'rgba(90,70,40,.22)'; c.lineWidth = 1; for (let x = G.x; x <= G.x + G.w; x += 20) { c.beginPath(); c.moveTo(x, G.y); c.lineTo(x, G.y + G.h); c.stroke(); } for (let y = G.y; y <= G.y + G.h; y += 20) { c.beginPath(); c.moveTo(G.x, y); c.lineTo(G.x + G.w, y); c.stroke(); }
+    c.strokeStyle = INK; rr(c, G.x - 4, G.y - 4, G.w + 8, G.h + 8, 10); c.stroke();
+  });
+  boxShadow(ctx, KITCHEN.x, KITCHEN.y, KITCHEN.w, KITCHEN.h, H_K); boxShadow(ctx, CALLS.x, CALLS.y, CALLS.w, CALLS.h, H_C);
+  boxShadow(ctx, TOWER.x - TW.s / 2, TOWER.y - TW.s, TW.s, TW.s, TW.H);
+  PALMS_X.concat(PALMS6).forEach(p => blobShadow(ctx, p.x, p.y, 22, 70));
+  BUNTING.forEach(([x1, x2, y, h]) => [x1, x2].forEach(x => blobShadow(ctx, x, y, 5, h)));
+}
+/* الرسم على واجهة مبنى مجسّم بالميل نفسه (ساعات المدن، ساعة البرج) */
+function onFacade(c, x, yb, draw) { const { lx, ly } = leanAt(x, yb); c.save(); c.translate(x, yb); c.transform(1, 0, -lx, 1 - ly, 0, 0); c.translate(-x, -yb); draw(c); c.restore(); }
+function clockFace(c, x, y, r, a1, a2) {
+  c.fillStyle = '#FFFDF6'; c.beginPath(); c.arc(x, y, r, 0, 7); c.fill(); c.strokeStyle = '#2A1B66'; c.lineWidth = 2; c.stroke();
+  c.fillStyle = '#2A1B66'; for (let k = 0; k < 12; k++) { const a = k * Math.PI / 6; c.fillRect(x + Math.cos(a) * (r - 4) - .8, y + Math.sin(a) * (r - 4) - .8, 1.6, 1.6); }
+  c.lineCap = 'round'; c.lineWidth = 2.2; c.beginPath(); c.moveTo(x, y); c.lineTo(x + Math.cos(a1) * r * .5, y + Math.sin(a1) * r * .5); c.stroke();
+  c.strokeStyle = '#C0392B'; c.lineWidth = 1.4; c.beginPath(); c.moveTo(x, y); c.lineTo(x + Math.cos(a2) * r * .78, y + Math.sin(a2) * r * .78); c.stroke();
 }
 export function festivalDrawables(open, t) {
-  const out = [{ y: WALL4_Y + 12, draw: c => wall(c, open) }];
-  out.push({ y: KITCHEN.y + KITCHEN.h, draw: c => building(c, KITCHEN, '#F3D9C6', 'مطبخ المهرجان', t) });
-  out.push({ y: CALLS.y + CALLS.h, draw: c => { building(c, CALLS, '#DCE6F0', 'مركز الاتصالات', t); for (let i = 0; i < 4; i++) { const x = CALLS.x + 50 + i * 66, y = CALLS.y + 62; c.fillStyle = '#FFFDF6'; c.beginPath(); c.arc(x, y, 13, 0, 7); c.fill(); c.strokeStyle = '#2A1B66'; c.lineWidth = 2; c.stroke(); c.beginPath(); c.moveTo(x, y); c.lineTo(x + 7 * Math.cos(t / 3 + i * 2), y + 7 * Math.sin(t / 3 + i * 2)); c.moveTo(x, y); c.lineTo(x, y - 9); c.stroke(); } } });
-  out.push({ y: TOWER.y, draw: c => { const x = TOWER.x, y = TOWER.y; c.fillStyle = '#D2B47E'; c.fillRect(x - 32, y - 200, 64, 200); c.fillStyle = shade('#D2B47E', 12); c.beginPath(); c.moveTo(x - 40, y - 200); c.lineTo(x, y - 250); c.lineTo(x + 40, y - 200); c.fill();
-    c.fillStyle = '#FFFDF6'; c.beginPath(); c.arc(x, y - 160, 24, 0, 7); c.fill(); c.strokeStyle = '#2A1B66'; c.lineWidth = 3; c.stroke(); c.beginPath(); c.moveTo(x, y - 160); c.lineTo(x + 14 * Math.cos(t / 2), y - 160 + 14 * Math.sin(t / 2)); c.moveTo(x, y - 160); c.lineTo(x, y - 176); c.stroke();
-    c.fillStyle = '#7A4F2A'; rr(c, x - 14, y - 44, 28, 44, 10); c.fill(); } });
-  [[ST6.graph, 'لوح الرحلة'], [ST6.survey, 'لوح الاستبيان']].forEach(([s, t2]) => out.push({ y: s.y - 50, draw: c => { c.fillStyle = '#7D5A36'; c.fillRect(s.x - 44, s.y - 52, 5, 36); c.fillRect(s.x + 39, s.y - 52, 5, 36); c.fillStyle = '#2F4F3F'; rr(c, s.x - 50, s.y - 104, 100, 56, 6); c.fill();
-    c.strokeStyle = '#fff'; c.lineWidth = 1.5; c.beginPath(); c.moveTo(s.x - 38, s.y - 58); c.lineTo(s.x - 38, s.y - 96); c.moveTo(s.x - 38, s.y - 58); c.lineTo(s.x + 40, s.y - 58); c.stroke();
-    if (t2 === 'لوح الرحلة') { c.strokeStyle = '#FFC23D'; c.beginPath(); c.moveTo(s.x - 38, s.y - 58); c.lineTo(s.x + 34, s.y - 92); c.stroke(); } else { c.fillStyle = '#FFC23D'; [16, 28, 10].forEach((h, i) => c.fillRect(s.x - 28 + i * 22, s.y - 58 - h, 14, h)); }
-    c.fillStyle = '#FFFDF6'; rr(c, s.x - 42, s.y - 128, 84, 20, 5); c.fill(); c.fillStyle = '#5B4636'; c.font = '900 11px Cairo, sans-serif'; c.textAlign = 'center'; c.fillText(t2, s.x, s.y - 114); } }));
-  out.push({ y: ST6.spinner.y - 50, draw: c => { const s = ST6.spinner; c.fillStyle = '#9B6B3D'; c.fillRect(s.x - 56, s.y - 120, 6, 70); c.fillRect(s.x + 50, s.y - 120, 6, 70);
-    for (let k = 0; k < 7; k++) { c.fillStyle = k % 2 ? '#F4E3B8' : '#E85D75'; c.fillRect(s.x - 62 + k * 17.7, s.y - 136, 17.7, 18); }
-    c.save(); c.translate(s.x, s.y - 86); c.rotate(t * .8); for (let i = 0; i < 8; i++) { c.fillStyle = i % 2 ? '#2F6FB2' : '#E2475C'; c.beginPath(); c.moveTo(0, 0); c.arc(0, 0, 26, i * Math.PI / 4, (i + 1) * Math.PI / 4); c.fill(); } c.restore();
-    c.fillStyle = '#2A1B66'; c.beginPath(); c.moveTo(s.x, s.y - 112); c.lineTo(s.x - 5, s.y - 122); c.lineTo(s.x + 5, s.y - 122); c.fill(); c.fillStyle = '#B07A3B'; rr(c, s.x - 50, s.y - 56, 100, 16, 3); c.fill(); } });
-  PALMS6.forEach(p => out.push({ y: p.y, draw: c => { c.fillStyle = '#8D6238'; for (let i = 0; i < 6; i++) { c.beginPath(); c.ellipse(p.x, p.y - 4 - i * 7, 4.5, 4, 0, 0, 7); c.fill(); } c.strokeStyle = '#2E8B47'; c.lineWidth = 5; c.lineCap = 'round'; for (let i = 0; i < 6; i++) { const a = -Math.PI / 2 + (i - 2.5) * .55; c.beginPath(); c.moveTo(p.x, p.y - 44); c.quadraticCurveTo(p.x + Math.cos(a) * 14, p.y - 50 + Math.sin(a) * 14, p.x + Math.cos(a) * 24, p.y - 40 + Math.sin(a) * 16); c.stroke(); } c.fillStyle = '#C46A1E'; c.beginPath(); c.arc(p.x - 3, p.y - 42, 2.5, 0, 7); c.arc(p.x + 3, p.y - 41, 2.5, 0, 7); c.fill(); } }));
-  [ST5.scale, ST5.recipe].forEach(s => out.push({ y: s.y - 20, draw: c => { c.fillStyle = '#8B5A2B'; rr(c, s.x - 30, s.y - 40, 60, 16, 3); c.fill(); c.fillStyle = '#6B4520'; c.fillRect(s.x - 26, s.y - 24, 5, 8); c.fillRect(s.x + 21, s.y - 24, 5, 8); } }));
+  const out = [{ y: WALL4_Y + 12, draw: c => gateEW(c, 'festgate', WALL4_Y, GATE4.x0, GATE4.x1, open, 'ساحة المهرجان') }];
+  out.push({ y: KITCHEN.y + KITCHEN.h, draw: c => {
+    building3d(c, 'fest-kitchen', Object.assign({}, KITCHEN, { H: H_K, wall: '#F1DCC8', door: '#B8613E', sign: 'مطبخ المهرجان', ac: 1, tank: 1 }));
+    const { lx, ly } = leanAt(KITCHEN.x + KITCHEN.w / 2, KITCHEN.y + KITCHEN.h), cx = KITCHEN.x + KITCHEN.w - 50 + lx * (H_K + 30), cy = KITCHEN.y + 30 - (H_K + 30) * (1 - ly);
+    c.fillStyle = '#B5A58A'; c.fillRect(cx - 8, cy, 16, 30); c.strokeStyle = INK; c.lineWidth = 1; c.strokeRect(cx - 8, cy, 16, 30);   // مدخنة
+    c.fillStyle = 'rgba(255,255,255,.6)'; for (let i = 0; i < 4; i++) { const k = ((t * .5 + i * .25) % 1); c.globalAlpha = .7 * (1 - k); c.beginPath(); c.arc(cx + Math.sin(t + i) * 6 + k * 10, cy - 6 - k * 50, 5 + k * 9, 0, 7); c.fill(); } c.globalAlpha = 1;
+  } });
+  out.push({ y: CALLS.y + CALLS.h, draw: c => {
+    building3d(c, 'fest-calls', Object.assign({}, CALLS, { H: H_C, wall: '#DCE4EA', door: '#2F6B73', sign: 'مركز الاتصالات', style: 'shop', dish: 1 }));
+    onFacade(c, CALLS.x, CALLS.y + CALLS.h, f => { for (let i = 0; i < 4; i++) { if (i === 1 || i === 2) continue; clockFace(f, CALLS.x + 46 + i * 70, CALLS.y + CALLS.h - 52, 13, i * 1.7 - 1.2, t / 3 + i * 2); } });
+  } });
+  out.push({ y: TOWER.y, draw: c => clockTower(c, t) });
+  [[ST6.graph, 'لوح الرحلة', 'line'], [ST6.survey, 'لوح الاستبيان', 'bars']].forEach(([s, label, kind]) => out.push({ y: s.y - 50, x: s.x, draw: c => board(c, s, label, kind) }));
+  out.push({ y: ST6.spinner.y - 50, x: ST6.spinner.x, draw: c => spinnerStall(c, ST6.spinner, t) });
+  PALMS6.forEach(p => out.push({ y: p.y, draw: c => palmCached(c, p.x, p.y, .85, false, t) }));
+  PALMS_X.forEach(p => out.push({ y: p.y, draw: c => palmCached(c, p.x, p.y, 1, false, t) }));
+  [[ST5.scale, 'scale'], [ST5.recipe, 'recipe']].forEach(([s, k]) => out.push({ y: s.y - 20, x: s.x, draw: c => { workTable(c, s.x, s.y - 18); kitchenProp(c, s.x, s.y - 50, k); } }));
+  STALLS.forEach(([x, y, col]) => out.push({ y, draw: c => stall(c, x, y, col) }));
+  BENCHES.forEach(([x, y]) => out.push({ y, draw: c => bench(c, x, y) }));
+  SHRUBS.forEach(([x, y]) => out.push({ y, draw: c => shrub(c, x, y, 14, true) }));
+  BUNTING.forEach(([x1, x2, y, h]) => [x1, x2].forEach(x => out.push({ y, x, draw: c => { c.fillStyle = PAL.wood; c.fillRect(x - 2, y - h, 4, h); c.strokeStyle = INK; c.lineWidth = .7; c.strokeRect(x - 2, y - h, 4, h); } })));   // أعمدة الحبال
+  out.push({ y: 3500, draw: c => BUNTING.forEach(([x1, x2, y, h]) => bunting(c, elev(x1, y, h), elev(x2, y, h), t)) });   // فوق كل شيء: معلّقة في الهواء
   return out;
 }
-function building(c, b, wall, sign, t) {
-  const fh = 36, rh = b.h - fh;
-  c.fillStyle = 'rgba(60,35,10,.16)'; c.fillRect(b.x + 6, b.y + b.h - 2, b.w, 8);
-  c.fillStyle = shade(wall, -22); c.fillRect(b.x, b.y + rh, b.w, fh); c.fillStyle = shade(wall, 12); c.fillRect(b.x, b.y, b.w, rh);
-  c.fillStyle = '#7A4F2A'; rr(c, b.x + b.w / 2 - 16, b.y + rh + 6, 32, fh - 6, 8); c.fill();
-  c.fillStyle = '#FFFDF6'; rr(c, b.x + b.w / 2 - 60, b.y + 14, 120, 24, 6); c.fill(); c.fillStyle = '#5B4636'; c.font = '900 13px Cairo, sans-serif'; c.textAlign = 'center'; c.fillText(sign, b.x + b.w / 2, b.y + 31);
-  if (sign === 'مطبخ المهرجان') { c.fillStyle = 'rgba(255,255,255,.55)'; for (let i = 0; i < 3; i++) { c.beginPath(); c.arc(b.x + b.w - 40 + Math.sin(t + i) * 4, b.y - 10 - ((t * 20 + i * 14) % 40), 6 + i * 2, 0, 7); c.fill(); } }
+function clockTower(c, t) {   // برج الساعة: مجسّم بسقف هرمي، وساعة حية على وجهه
+  const x = TOWER.x - TW.s / 2, y = TOWER.y - TW.s;
+  box3d(c, 'clocktower', { x, y, w: TW.s, h: TW.s, H: TW.H }, '#D2B47E', r => {
+    const ry = y - TW.H; r.fillStyle = '#B8613E'; r.beginPath(); r.moveTo(x - 6, ry + TW.s + 4); r.lineTo(x + TW.s / 2, ry - 40); r.lineTo(x + TW.s + 6, ry + TW.s + 4); r.closePath(); r.fill(); r.strokeStyle = INK; r.lineWidth = 1; r.stroke();
+    r.fillStyle = 'rgba(0,0,0,.18)'; r.beginPath(); r.moveTo(x + TW.s / 2, ry - 40); r.lineTo(x + TW.s + 6, ry + TW.s + 4); r.lineTo(x + TW.s / 2, ry + TW.s + 4); r.closePath(); r.fill();
+    r.fillStyle = '#E3B04B'; r.beginPath(); r.arc(x + TW.s / 2, ry - 44, 4, 0, 7); r.fill();
+  }, f => {
+    const yb = TOWER.y, yt = yb - TW.H;
+    const g = f.createLinearGradient(x, 0, x + TW.s, 0); g.addColorStop(0, '#DCC08C'); g.addColorStop(1, '#B89A66'); f.fillStyle = g; f.fillRect(x, yt, TW.s, TW.H);
+    f.strokeStyle = 'rgba(80,55,30,.22)'; f.lineWidth = .8; for (let yy = yt + 10; yy < yb; yy += 10) { f.beginPath(); f.moveTo(x, yy); f.lineTo(x + TW.s, yy); f.stroke(); }
+    f.fillStyle = '#6E4524'; f.beginPath(); f.moveTo(x + 18, yb); f.lineTo(x + 18, yb - 30); f.arc(x + 32, yb - 30, 14, Math.PI, 0); f.lineTo(x + 46, yb); f.closePath(); f.fill();
+    f.fillStyle = '#3E5A66'; [yt + 90, yt + 120].forEach(wy => { f.beginPath(); f.moveTo(x + 27, wy + 14); f.lineTo(x + 27, wy + 5); f.arc(x + 32, wy + 5, 5, Math.PI, 0); f.lineTo(x + 37, wy + 14); f.fill(); });
+    f.strokeStyle = INK; f.lineWidth = 1.1; f.strokeRect(x, yt, TW.s, TW.H);
+  }, 60);
+  onFacade(c, x, TOWER.y, f => clockFace(f, TOWER.x, TOWER.y - TW.H + 40, 22, t / 24, t / 2));
 }
-function wall(c, open) {
-  c.fillStyle = '#C9B48E';
-  [[0, GATE4.x0], [GATE4.x1, 2930]].forEach(([a, b]) => { c.fillRect(a, WALL4_Y, b - a, 12); for (let x = a; x < b; x += 18) c.fillRect(x, WALL4_Y - 4, 8, 18); });
-  c.fillStyle = '#B79F74'; c.fillRect(GATE4.x0 - 20, WALL4_Y - 30, 24, 44); c.fillRect(GATE4.x1 - 4, WALL4_Y - 30, 24, 44);
-  c.fillStyle = '#FFFDF6'; rr(c, (GATE4.x0 + GATE4.x1) / 2 - 70, WALL4_Y - 64, 140, 26, 7); c.fill();
-  c.fillStyle = '#5B4636'; c.font = '900 14px Cairo, sans-serif'; c.textAlign = 'center'; c.fillText(open ? 'ساحة المهرجان ↓' : 'ساحة المهرجان 🔒', (GATE4.x0 + GATE4.x1) / 2, WALL4_Y - 46);
-  if (!open) for (let i = 0; i < 7; i++) { c.fillStyle = i % 2 ? '#fff' : '#E2475C'; c.fillRect(GATE4.x0 + i * 14.3, WALL4_Y - 2, 14.3, 14); }
+function board(c, s, label, kind) {   // لوح بيانات خشبي على قائمين
+  c.fillStyle = PAL.wood; c.fillRect(s.x - 44, s.y - 52, 5, 36); c.fillRect(s.x + 39, s.y - 52, 5, 36);
+  c.fillStyle = PAL.woodLight; rr(c, s.x - 54, s.y - 108, 108, 64, 5); c.fill(); c.fillStyle = '#2F4F3F'; c.fillRect(s.x - 50, s.y - 104, 100, 56);
+  c.strokeStyle = '#fff'; c.lineWidth = 1.5; c.beginPath(); c.moveTo(s.x - 38, s.y - 58); c.lineTo(s.x - 38, s.y - 96); c.moveTo(s.x - 38, s.y - 58); c.lineTo(s.x + 40, s.y - 58); c.stroke();
+  if (kind === 'line') { c.strokeStyle = '#FFC23D'; c.beginPath(); c.moveTo(s.x - 38, s.y - 58); c.lineTo(s.x + 34, s.y - 92); c.stroke(); }
+  else { c.fillStyle = '#FFC23D'; [16, 28, 10].forEach((h, i) => c.fillRect(s.x - 28 + i * 22, s.y - 58 - h, 14, h)); }
+  c.strokeStyle = INK; c.lineWidth = 1; rr(c, s.x - 54, s.y - 108, 108, 64, 5); c.stroke();
+  signboard(c, s.x, s.y - 120, label);
+}
+function spinnerStall(c, s, t) {   // كشك الدوّار: قائمان، مظلة مخططة، ودولاب يدور
+  c.fillStyle = 'rgba(70,42,20,.22)'; c.fillRect(s.x - 54, s.y - 48, 116, 8);
+  [s.x - 56, s.x + 50].forEach(px => { c.fillStyle = PAL.wood; c.fillRect(px, s.y - 124, 6, 76); });
+  for (let k = 0; k < 7; k++) { c.fillStyle = k % 2 ? '#F2E6C9' : '#E85D75'; c.beginPath(); c.moveTo(s.x - 64 + k * 18.3, s.y - 140); c.lineTo(s.x - 64 + (k + 1) * 18.3, s.y - 140); c.lineTo(s.x - 64 + (k + 1) * 18.3, s.y - 122); c.quadraticCurveTo(s.x - 64 + (k + .5) * 18.3, s.y - 116, s.x - 64 + k * 18.3, s.y - 122); c.closePath(); c.fill(); }
+  c.strokeStyle = INK; c.lineWidth = 1; c.beginPath(); c.moveTo(s.x - 64, s.y - 140); c.lineTo(s.x + 64, s.y - 140); c.stroke();
+  c.save(); c.translate(s.x, s.y - 86); c.rotate(t * .8); for (let i = 0; i < 8; i++) { c.fillStyle = i % 2 ? '#2F6FB2' : '#E2475C'; c.beginPath(); c.moveTo(0, 0); c.arc(0, 0, 27, i * Math.PI / 4, (i + 1) * Math.PI / 4); c.fill(); } c.strokeStyle = '#fff'; c.lineWidth = 2; c.beginPath(); c.arc(0, 0, 27, 0, 7); c.stroke(); c.restore();
+  c.fillStyle = '#E3B04B'; c.beginPath(); c.arc(s.x, s.y - 86, 4, 0, 7); c.fill();
+  c.fillStyle = '#2A1B66'; c.beginPath(); c.moveTo(s.x, s.y - 112); c.lineTo(s.x - 5, s.y - 122); c.lineTo(s.x + 5, s.y - 122); c.fill();
+  c.fillStyle = PAL.woodLight; c.fillRect(s.x - 52, s.y - 58, 104, 8); c.fillStyle = '#7A4A2A'; c.fillRect(s.x - 52, s.y - 50, 104, 10); c.strokeStyle = INK; c.strokeRect(s.x - 52, s.y - 58, 104, 18);
+}
+function kitchenProp(c, x, y, k) {   // ميزان بكفتين، أو دفتر وصفات مفتوح
+  if (k === 'scale') { c.strokeStyle = '#5E6874'; c.lineWidth = 2; c.beginPath(); c.moveTo(x, y + 6); c.lineTo(x, y - 12); c.moveTo(x - 16, y - 10); c.lineTo(x + 16, y - 10); c.stroke(); c.fillStyle = '#A9B4BF'; [-16, 16].forEach(d => { c.beginPath(); c.ellipse(x + d, y - 2, 8, 3, 0, 0, 7); c.fill(); }); return; }
+  c.fillStyle = '#F2E6C9'; c.beginPath(); c.moveTo(x - 16, y); c.lineTo(x, y + 3); c.lineTo(x + 16, y); c.lineTo(x + 16, y - 10); c.lineTo(x, y - 7); c.lineTo(x - 16, y - 10); c.closePath(); c.fill(); c.strokeStyle = INK; c.lineWidth = .8; c.stroke();
+  c.strokeStyle = 'rgba(80,60,40,.5)'; c.beginPath(); c.moveTo(x - 12, y - 6); c.lineTo(x - 3, y - 4); c.moveTo(x + 3, y - 4); c.lineTo(x + 12, y - 6); c.stroke();
+}
+function bunting(c, a, b, t) {   // حبل رايات مثلثة ملوّنة يتأرجح قليلاً
+  const sag = 26 + Math.sin(t * 1.2 + a[0]) * 2, n = Math.max(6, Math.round((b[0] - a[0]) / 34));
+  const pt = u => [a[0] + (b[0] - a[0]) * u, a[1] + (b[1] - a[1]) * u + Math.sin(Math.PI * u) * sag];
+  c.strokeStyle = 'rgba(70,45,25,.8)'; c.lineWidth = 1.1; c.beginPath(); for (let k = 0; k <= 24; k++) { const [x, y] = pt(k / 24); k ? c.lineTo(x, y) : c.moveTo(x, y); } c.stroke();
+  const cols = ['#E85D75', '#FFC23D', '#1FC8B5', '#9C6BFF', '#2F6FB2'];
+  for (let k = 1; k < n; k++) { const [x, y] = pt(k / n); c.fillStyle = cols[k % 5]; c.beginPath(); c.moveTo(x - 7, y); c.lineTo(x + 7, y); c.lineTo(x, y + 13); c.closePath(); c.fill(); c.strokeStyle = 'rgba(0,0,0,.15)'; c.lineWidth = .6; c.stroke(); }
+  [a, b].forEach(([x, y]) => { c.fillStyle = PAL.wood; c.fillRect(x - 2, y, 4, 4); });
 }
