@@ -104,3 +104,42 @@ body:has(.dialog.on) .region{opacity:0!important;animation:none!important}
 @media (max-width:400px){.chOpts.multi{grid-template-columns:repeat(3,1fr)}.chQ{font-size:16px}}
 .sheet.shake{animation:chShake .4s}
 @keyframes chShake{20%{transform:translateX(-7px)}40%{transform:translateX(6px)}60%{transform:translateX(-4px)}80%{transform:translateX(2px)}}
+/* رحلة التحدي: مسار الجولات، الجواهر، والألعاب الجديدة (build/sort/match) */
+.chHead small{display:block;font-size:12px}
+.chGems,.chStreak{font-weight:900;font-size:15px;padding:4px 10px;border-radius:14px;background:#EAF6FF;color:#1E4FBF;white-space:nowrap}
+.chStreak{background:#FFF1D6;color:#C2410C;animation:chPop .4s}
+.chTrail{display:flex;align-items:center;gap:4px;padding:2px 2px 6px}
+.chTrail i{flex:1;height:26px;border-radius:13px;background:#EFE7D6;display:grid;place-items:center;font-style:normal;font-size:13px;position:relative}
+.chTrail i.ok{background:linear-gradient(180deg,#DDF6E8,#BDECD2)}
+.chTrail i.now{background:linear-gradient(180deg,#FFE7A8,#FFC23D);box-shadow:0 0 0 3px rgba(255,194,61,.3)}
+.chTrail i.now span{font-size:20px;animation:chHop 1.2s ease-in-out infinite}
+.chChest{font-size:24px;filter:drop-shadow(0 3px 3px rgba(0,0,0,.2))}
+@keyframes chHop{50%{transform:translateY(-4px)}}
+.ltr{direction:ltr;unicode-bidi:isolate;display:inline-block}
+.chOpts.tiles{display:flex;flex-wrap:wrap;justify-content:center}
+.chOpts.tiles .chOpt{width:56px;min-height:62px;font-size:28px;background:linear-gradient(180deg,#FFF7E0,#FFE3A3);border-color:#E9C46A;box-shadow:0 4px 0 #C9A04A}
+.chOrder.build{direction:ltr;font-size:34px;letter-spacing:4px;min-height:64px;background:#fff}
+.chBins{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.chBin{border-radius:16px;padding:6px;min-height:96px;border:2px dashed;cursor:pointer;display:flex;flex-direction:column;gap:4px}
+.chBin.b0{background:#EAF6FF;border-color:#7BB4F0}.chBin.b1{background:#FFF1E6;border-color:#F0B07B}
+.chBin h4{margin:0;text-align:center;font:900 14px Cairo,sans-serif;color:#2A1B66}
+.chBinIn,.chPool{display:flex;flex-wrap:wrap;gap:6px;justify-content:center}
+.chPool{min-height:48px;padding:4px}
+.chCard{min-width:64px;min-height:44px;padding:4px 10px;border-radius:12px;background:#fff;border:2px solid #E6D6B4;font:900 16px Cairo,sans-serif;color:#2A1B66;box-shadow:0 3px 0 #D9C59C}
+.chCard.sel{border-color:#FFC23D;background:#FFF5D6;transform:translateY(-3px);box-shadow:0 6px 0 #E0A21E}
+.chMatch{display:grid;grid-template-columns:1fr 1fr;gap:10px}.chMatch>div{display:flex;flex-direction:column;gap:8px}
+.chL,.chR{min-height:46px;border-radius:12px;background:#fff;border:2px solid #E6D6B4;font:900 15px Cairo,sans-serif;color:#2A1B66;padding:4px 8px;box-shadow:0 3px 0 #D9C59C}
+.chL.sel{border-color:#FFC23D;background:#FFF5D6}
+.chL.p0,.chR.p0{background:#DDF0FF;border-color:#3B82F6}.chL.p1,.chR.p1{background:#E6F8EC;border-color:#2E9E5B}
+.chL.p2,.chR.p2{background:#F3E8FF;border-color:#8E6CF6}.chL.p3,.chR.p3{background:#FFEBD9;border-color:#F08A24}
+.chSheet{position:relative;overflow:hidden}
+.chBurst{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;pointer-events:none;background:rgba(255,253,246,.55);animation:chFade .75s ease-out forwards}
+.chBurst b{font-size:54px;animation:chPop .5s}.chBurst span{font:900 26px Cairo,sans-serif;color:#2E9E5B;text-shadow:0 2px 0 #fff}
+.chBurst i{position:absolute;width:10px;height:10px;border-radius:3px;top:50%;left:50%;animation:chConf .75s ease-out forwards}
+.chBurst i:nth-child(odd){background:#FFC23D}.chBurst i:nth-child(even){background:#3FA3F5}.chBurst i:nth-child(3n){background:#E2475C}
+.chBurst i:nth-of-type(1){--x:-120px;--y:-90px}.chBurst i:nth-of-type(2){--x:110px;--y:-100px}.chBurst i:nth-of-type(3){--x:-150px;--y:20px}.chBurst i:nth-of-type(4){--x:140px;--y:30px}
+.chBurst i:nth-of-type(5){--x:-60px;--y:-140px}.chBurst i:nth-of-type(6){--x:70px;--y:-150px}.chBurst i:nth-of-type(7){--x:-100px;--y:110px}.chBurst i:nth-of-type(8){--x:100px;--y:120px}
+.chBurst i:nth-of-type(9){--x:0px;--y:-170px}.chBurst i:nth-of-type(10){--x:20px;--y:150px}
+@keyframes chConf{to{transform:translate(var(--x),var(--y)) rotate(300deg);opacity:0}}
+@keyframes chFade{70%{opacity:1}to{opacity:0}}
+.chTreasure{font-size:64px;animation:chPop .6s}.chGot{margin:0;font-weight:900;font-size:18px;color:#1E4FBF}

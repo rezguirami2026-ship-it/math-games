@@ -107,16 +107,19 @@ async function solveChallenge(id) {
     // محاولة خاطئة: يجب أن تعطي تلميحاً ولا تتقدم
     if (it.type === 'choice' || it.type === 'tf') await chClick('.chOpt', it.ans === 0 ? 1 : 0);
     else if (it.type === 'multi') { await chClick('.chOpt', it.opts.findIndex((_, k) => !it.ans.includes(k))); await panelClick('#chGo'); await chClick('.chOpt', it.opts.findIndex((_, k) => !it.ans.includes(k))); }
-    else if (it.type === 'order') { for (const k of it.ans.slice().reverse()) await chClick('.chOpt', k); await panelClick('#chGo'); for (const _ of it.ans) await panelClick('#chUndo'); }
+    else if (it.type === 'order' || it.type === 'build') { for (const k of it.ans.slice().reverse()) await chClick('.chOpt', k); await panelClick('#chGo'); for (const _ of it.ans) await panelClick('#chUndo'); }
+    else if (it.type === 'sort' || it.type === 'match') await panelClick('#chGo');   // قبل التوزيع: تلميح «ضع كل البطاقات»
     else if (it.type === 'num') await chPad(it.ans + 1);
     await until(() => G(() => document.getElementById('benchMsg')?.classList.contains('bad')), `تلميح الخطأ في الجولة ${i + 1}`, 5000);
     expect((await data(id)).ch.i === i, `الخطأ قدّم الجولة ${i + 1}`);
     // الحل
     if (it.type === 'choice' || it.type === 'tf') await chClick('.chOpt', it.ans);
     else if (it.type === 'multi') { for (const k of it.ans) await chClick('.chOpt', k); await panelClick('#chGo'); }
-    else if (it.type === 'order') { for (const k of it.ans) await chClick('.chOpt', k); await panelClick('#chGo'); }
+    else if (it.type === 'order' || it.type === 'build') { for (const k of it.ans) await chClick('.chOpt', k); await panelClick('#chGo'); }
+    else if (it.type === 'sort') { for (let k = 0; k < it.ans.length; k++) { await G(k => document.querySelector(`#panel .chCard[data-k="${k}"]`).click(), k); await G(b => document.querySelector(`#panel .chBin[data-b="${b}"]`).click(), it.ans[k]); } await panelClick('#chGo'); }
+    else if (it.type === 'match') { for (let k = 0; k < it.ans.length; k++) { await chClick('.chL', k); await chClick('.chR', it.ans[k]); } await panelClick('#chGo'); }
     else if (it.type === 'num') await chPad(it.ans);
-    await until(async () => (await data(id)).ch.i === i + 1, `حل الجولة ${i + 1} (${it.type}: ${it.q.replace(/<[^>]+>/g, '').slice(0, 50)})`, 5000);
+    await until(async () => (await data(id)).ch.i === i + 1 && await G(n => { const s = document.querySelector('#panel .chSheet'); return !s || !s.querySelector('.chBurst') && (+s.dataset.i === n || !!s.querySelector('#chFin')); }, i + 1), `حل الجولة ${i + 1} (${it.type}: ${it.q.replace(/<[^>]+>/g, '').slice(0, 50)})`, 5000);
   }
   await until(() => G(() => !!document.querySelector('#panel #chFin')), 'شاشة النجوم', 5000);
   expect((await data(id)).stars === 1, 'النجوم مع خطأ في كل جولة يجب أن تكون نجمة واحدة');
