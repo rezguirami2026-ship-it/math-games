@@ -8,7 +8,7 @@ import { sfx } from '../core/sound.js';
 import { OUT } from '../content/outcomes.js';
 import { changed, finish, sheetOpen, sheetClose, msgBox, setMsg, numPad, btn } from './bench.js';
 
-const PEOPLE_ICON = { salem: '🧔🏽', yousef: '👦🏽', hamad: '👨🏽‍🌾', saeed: '📮', umkhalid: '👩🏽', rashed: '👨🏽‍🔧', naser: '🧔🏽' };
+const PEOPLE_ICON = { salem: '🧔🏽', yousef: '👦🏽', hamad: '👨🏽‍🌾', saeed: '📮', umkhalid: '👩🏽', rashed: '👨🏽‍🔧', naser: '🧔🏽', mubarak: '🪚', khalid: '🧑🏽‍🏫', abdullah: '👨🏽‍✈️', shaikha: '👵🏽', juma: '🐑' };
 const PRAISE = ['أحسنت!', 'رائع!', 'ممتاز!', 'عبقري!', 'بطل!', 'إجابة ذكية!', 'هكذا تماماً!', 'تفكير جميل!'];
 
 /* يبدأ التحدي (أو يستأنفه) بعد مهمة العالم. d: بيانات الدرس (يُحفظ فيها التقدّم d.ch) */

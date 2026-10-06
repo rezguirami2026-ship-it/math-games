@@ -143,3 +143,9 @@ body:has(.dialog.on) .region{opacity:0!important;animation:none!important}
 @keyframes chConf{to{transform:translate(var(--x),var(--y)) rotate(300deg);opacity:0}}
 @keyframes chFade{70%{opacity:1}to{opacity:0}}
 .chTreasure{font-size:64px;animation:chPop .6s}.chGot{margin:0;font-weight:900;font-size:18px;color:#1E4FBF}
+/* رسوم تحديات القياس (content/chArt.js) */
+.chClock{width:150px;height:150px}.chJug{width:190px}
+.chTable,.chCal{border-collapse:separate;border-spacing:0;background:#fff;border-radius:12px;overflow:hidden;box-shadow:0 3px 10px rgba(60,40,10,.1);font-weight:900;color:#2A1B66;font-size:14px}
+.chTable th,.chTable td{padding:5px 9px;border-bottom:1px solid #EFE6D6;text-align:center}.chTable tr:first-child th{background:#2F6FB2;color:#fff}.chTable th{background:#EAF2FB}
+.chCal caption{font-weight:900;color:#8E3B5E;padding:4px}.chCal th{background:#8E3B5E;color:#fff;font-size:10.5px;padding:4px 2px}.chCal td{width:34px;height:26px;text-align:center;border:1px solid #F1E6EC;font-size:13px}
+.chCal td.mk{background:#FFD866;color:#2A1B66}

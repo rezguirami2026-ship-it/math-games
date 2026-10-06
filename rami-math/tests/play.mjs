@@ -119,7 +119,9 @@ async function solveChallenge(id) {
     else if (it.type === 'sort') { for (let k = 0; k < it.ans.length; k++) { await G(k => document.querySelector(`#panel .chCard[data-k="${k}"]`).click(), k); await G(b => document.querySelector(`#panel .chBin[data-b="${b}"]`).click(), it.ans[k]); } await panelClick('#chGo'); }
     else if (it.type === 'match') { for (let k = 0; k < it.ans.length; k++) { await chClick('.chL', k); await chClick('.chR', it.ans[k]); } await panelClick('#chGo'); }
     else if (it.type === 'num') await chPad(it.ans);
-    await until(async () => (await data(id)).ch.i === i + 1 && await G(n => { const s = document.querySelector('#panel .chSheet'); return !s || !s.querySelector('.chBurst') && (+s.dataset.i === n || !!s.querySelector('#chFin')); }, i + 1), `حل الجولة ${i + 1} (${it.type}: ${it.q.replace(/<[^>]+>/g, '').slice(0, 50)})`, 5000);
+    try {
+      await until(async () => (await data(id)).ch.i === i + 1 && await G(n => { const s = document.querySelector('#panel .chSheet'); return !s || !s.querySelector('.chBurst') && (+s.dataset.i === n || !!s.querySelector('#chFin')); }, i + 1), `حل الجولة ${i + 1} (${it.type}: ${it.q.replace(/<[^>]+>/g, '').slice(0, 50)})`, 5000);
+    } catch (e) { throw new Error(e.message + ' — الحالة: ' + JSON.stringify(await G(() => ({ busy: window.__game.game.busy, dialog: document.getElementById('dialog').className + ':' + document.getElementById('dialog').textContent.slice(0, 80), screen: document.getElementById('screen').className, panel: document.getElementById('panel').className, msg: document.getElementById('benchMsg')?.textContent, pad: document.getElementById('npd')?.textContent })))); }
   }
   await until(() => G(() => !!document.querySelector('#panel #chFin')), 'شاشة النجوم', 5000);
   expect((await data(id)).stars === 1, 'النجوم مع خطأ في كل جولة يجب أن تكون نجمة واحدة');
