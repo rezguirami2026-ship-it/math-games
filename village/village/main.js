@@ -171,7 +171,7 @@ async function start(state) {
   }
 }
 /* ── العرض ثلاثي الأبعاد (renderer3d): يُحمَّل فقط عند طلبه، ويرجع إلى الرسم الحالي إن لم يدعم الجهاز WebGL أو فشل التحميل ── */
-const V3D = 'نسخة 3D · ٥';   // تُعرض في شاشة التحميل وفي الزاوية: للتأكد أن المتصفح حمّل آخر نسخة
+const V3D = 'نسخة 3D · ٦';   // تُعرض في شاشة التحميل وفي الزاوية: للتأكد أن المتصفح حمّل آخر نسخة
 function want3d() { try { const q = new URLSearchParams(location.search); if (q.has('2d')) return false; return q.has('3d') || localStorage.getItem('ramimath_3d') === '1'; } catch (e) { return false; } }
 function loadingScreen() {
   const el = document.createElement('div'); el.className = 'load3d';
@@ -187,7 +187,7 @@ async function init3D() {
     load = loadingScreen(); FLAGS.three = true;
     let q = 'high'; try { q = localStorage.getItem('ramimath_q') || 'high'; } catch (e) {}
     eng.l3 = await R.create3D({ quality: q, world: WORLD, paintGround: paintStaticGround, onProgress: k => load.set(k) });
-    eng.l3.ground = paintDynamicGround; eng.l3.people = people3d;
+    eng.l3.ground = paintDynamicGround; eng.l3.people = people3d; eng.l3.gates = () => W.gateK;
     const tag = document.createElement('div'); tag.className = 'ver3d'; tag.textContent = V3D; document.body.appendChild(tag);
   } catch (e) { console.error('[قرية الخير] تعذّر العرض ثلاثي الأبعاد، نكمل بالرسم الحالي', e); setTimeout(() => hud.toast('⚠️ تعذّر تشغيل العرض ثلاثي الأبعاد على هذا الجهاز: ' + (e && e.message || e).toString().slice(0, 60)), 800); FLAGS.three = false; eng.l3 = null; const c = document.getElementById('game3d'); if (c) c.remove(); }
   if (load) load.done();
@@ -455,7 +455,8 @@ function worldItems(view, t, three) {
   const s = game.state, m = s.missions.convoy, now = Date.now(), c = cur();
   const mods = ALLMODS().filter(md => quests.isStarted(md.id) || quests.isDone(md.id));
   const g = gateState();
-  const list = staticDrawables(s, t, W.player, { three }).concat(...REGIONS.map((r, i) => r.draw(gateOpenness(i, g[i], view), t))).filter(d => d.y > view.y - 60 && d.y < view.y + view.h + 200);
+  const gk = REGIONS.map((r, i) => gateOpenness(i, g[i], view)); W.gateK = gk;   // انفتاح البوابات (يقرؤه العرض ثلاثي الأبعاد أيضاً)
+  const list = staticDrawables(s, t, W.player, { three }).concat(...REGIONS.map((r, i) => r.draw(gk[i], t))).filter(d => d.y > view.y - 60 && d.y < view.y + view.h + 200);
   mods.forEach(md => { const d = quests.data(md.id), done = quests.isDone(md.id); try { if (md.draw) list.push(...md.draw(d, t, !done, done)); } catch (e) { report('الرسم', md.id, e); } });
   TREE_SPOTS.forEach((sp, i) => { const pt = s.world.trees[i]; if (pt) { const k = clamp((now - pt) / 2200, .05, 1); list.push({ y: sp.y, x: sp.x, draw: cc => drawPalm(cc, sp.x, sp.y, .2 + .8 * easeOut(k), false, t) }); } });
   W.trucks.forEach(tr => list.push({ y: tr.y + 4, x: tr.x, draw: cc => drawTruck(cc, tr, m.loads[tr.i], convoyActive()) }));

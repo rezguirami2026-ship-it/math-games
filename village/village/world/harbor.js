@@ -1,7 +1,7 @@
 // «الميناء»: منطقة الوحدة الثالثة (الهندسة) على البحر شرق السوق، تُفتح بإنهاء الوحدة الثانية
 // الرسم بأسلوب القرية (world/art.js): بحر بعمق وأمواج، أرصفة خشبية، سفن داو عُمانية، مبانٍ مجسّمة، وشاطئ الإحداثيات
 import { rr, shade, ar } from '../core/util.js';
-import { INK, PAL, SUN, pattern, sprite, boxShadow, blobShadow, building3d, palmCached, gateNS, wallNSItems, gateNSShadows, workTable, signboard, box3d, solid } from './art.js';
+import { FLAGS, INK, PAL, SUN, pattern, sprite, boxShadow, blobShadow, building3d, palmCached, gateNS, wallNSItems, gateNSShadows, workTable, signboard, box3d, solid } from './art.js';
 import { crate3d } from './entities.js';
 export const GATE2_X = 2300, SEA_X = 2930;
 export const PIER_Y = [305, 605, 905];
@@ -91,14 +91,14 @@ function pier(c, x, y, w, h) {   // رصيف خشبي: أعمدة في الما�
 }
 export function harborDrawables(open, t) {
   const out = [];
-  out.push({ y: 700, draw: c => gateNS(c, 'htower', GATE2_X, open, 'الميناء') }, ...wallNSItems('htower', GATE2_X));
-  out.push({ y: FRAMES.y + FRAMES.h, draw: c => building3d(c, 'frames', Object.assign({}, FRAMES, { H: H_B, wall: '#DCE4EA', door: '#2F6B73', sign: 'ورشة الهياكل', ac: 1 })) });
-  out.push({ y: GIFTS.y + GIFTS.h, draw: c => building3d(c, 'gifts', Object.assign({}, GIFTS, { H: H_B, wall: '#F1DCE0', door: '#9E3B5F', sign: 'دكان الهدايا', tank: 1 })) });
+  if (!FLAGS.three) out.push({ y: 700, draw: c => gateNS(c, 'htower', GATE2_X, open, 'الميناء') }, ...wallNSItems('htower', GATE2_X));
+  if (!FLAGS.three) out.push({ y: FRAMES.y + FRAMES.h, draw: c => building3d(c, 'frames', Object.assign({}, FRAMES, { H: H_B, wall: '#DCE4EA', door: '#2F6B73', sign: 'ورشة الهياكل', ac: 1 })) });
+  if (!FLAGS.three) out.push({ y: GIFTS.y + GIFTS.h, draw: c => building3d(c, 'gifts', Object.assign({}, GIFTS, { H: H_B, wall: '#F1DCE0', door: '#9E3B5F', sign: 'دكان الهدايا', tank: 1 })) });
   [[FRAME_TABLE, 'frames'], [GIFT_TABLE, 'gifts'], [ROOF_TABLE, 'roof']].forEach(([tb, k]) => out.push({ y: tb.y, x: tb.x, draw: c => workTable(c, tb.x, tb.y, k) }));
   PIER_Y.forEach((y, i) => out.push({ y: y + 40, x: SEA_X + 120, draw: c => dhow(c, SEA_X + 118, y + 12 + Math.sin(t * 1.4 + i * 2) * 1.6, SHIP_COLS[i], t + i) }));
   out.push({ y: CRATES.y + 10, x: CRATES.x, draw: c => { [[-46, 0], [-30, 0], [-38, -10], [36, 0], [50, 0]].forEach(([dx, dy]) => crate3d(c, CRATES.x + dx, CRATES.y + 10 + dy, 14, 10)); c.fillStyle = '#2F6B73'; rr(c, CRATES.x + 14, CRATES.y - 14, 16, 22, 3); c.fill(); c.strokeStyle = INK; c.lineWidth = .8; c.stroke(); } });
-  out.push({ y: LIGHTHOUSE.y + LIGHTHOUSE.s, draw: c => lighthouse(c, t) });
-  PALMS_H.forEach(p => out.push({ y: p.y, draw: c => palmCached(c, p.x, p.y, 1, false, t) }));
+  if (!FLAGS.three) out.push({ y: LIGHTHOUSE.y + LIGHTHOUSE.s, draw: c => lighthouse(c, t) });
+  if (!FLAGS.three) PALMS_H.forEach(p => out.push({ y: p.y, draw: c => palmCached(c, p.x, p.y, 1, false, t) }));
   out.push({ y: 1400, x: 2820, draw: c => umbrella(c, 2820, 1400) });
   return out;
 }
@@ -144,3 +144,6 @@ function umbrella(c, x, y) {   // مظلة شاطئ وكرسيان
   for (let k = 0; k < 6; k++) { c.fillStyle = k % 2 ? '#F2E6C9' : '#E85D45'; c.beginPath(); c.moveTo(x - 2, y - 58); c.arc(x - 2, y - 52, 30, Math.PI + k * Math.PI / 6, Math.PI + (k + 1) * Math.PI / 6); c.closePath(); c.fill(); }
   c.strokeStyle = INK; c.lineWidth = 1; c.beginPath(); c.arc(x - 2, y - 52, 30, Math.PI, 0); c.stroke();
 }
+
+export const R3D = { buildings: [Object.assign({}, FRAMES, { H: H_B, wall: '#DCE4EA', door: '#2F6B73', sign: 'ورشة الهياكل', ac: 1 }), Object.assign({}, GIFTS, { H: H_B, wall: '#F1DCE0', door: '#9E3B5F', sign: 'دكان الهدايا', tank: 1 })],
+  palms: PALMS_H, lighthouse: LIGHTHOUSE, gateNS: GATE2_X };

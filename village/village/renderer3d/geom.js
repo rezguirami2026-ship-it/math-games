@@ -46,7 +46,7 @@ export function groundAO(mat) {
     sh.vertexShader = sh.vertexShader.replace('#include <common>', '#include <common>\nvarying float vWY;').replace('#include <worldpos_vertex>', '#include <worldpos_vertex>\nvWY = (modelMatrix * vec4(transformed, 1.0)).y;');
     sh.fragmentShader = sh.fragmentShader.replace('#include <common>', '#include <common>\nvarying float vWY;').replace('#include <map_fragment>', '#include <map_fragment>\ndiffuseColor.rgb *= mix(0.62, 1.0, smoothstep(0.0, 26.0, vWY)) * mix(0.93, 1.0, smoothstep(26.0, 60.0, vWY));');
   };
-  mat.customProgramCacheKey = () => 'ao' + (mat.uuid);
+  mat.customProgramCacheKey = () => 'ao';   // برنامج واحد مشترك لكل المواد (لا تجميع shader لكل مادة)
   mat.needsUpdate = true;
 }
 /* يضيّق الجدار نحو الأعلى قليلاً (كبيوت الطين العُمانية) */

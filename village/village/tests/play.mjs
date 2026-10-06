@@ -262,7 +262,12 @@ S.areaPerimeterT1 = async () => {
 };
 
 /* ═══ الوحدة ٣: الهندسة (الميناء) ═══ */
-const canvasClick = async (id, x, y) => { const b = await page.locator('#' + id).boundingBox(); await page.mouse.click(b.x + x, b.y + y); await sleep(60); };
+// ينتظر ثبات موضع اللوحة (حركة ظهورها) قبل النقر، وإلا وقعت النقرة في غير مكانها على الأجهزة البطيئة
+const canvasClick = async (id, x, y) => {
+  let b = await page.locator('#' + id).boundingBox();
+  for (let i = 0; i < 30; i++) { await sleep(40); const b2 = await page.locator('#' + id).boundingBox(); if (Math.abs(b2.x - b.x) < .5 && Math.abs(b2.y - b.y) < .5) break; b = b2; }
+  await page.mouse.click(b.x + x, b.y + y); await sleep(60);
+};
 // ١٦. تمييز الأشكال: مثلثات، رباعيات، مجسمات
 S.shapesIdentify = async () => {
   const { PIER_Y, SEA_X, CRATES } = W.harbor, NAMES = ['المثلثات', 'الرباعيات', 'المجسمات'];

@@ -1,7 +1,7 @@
 // «السوق الأسبوعي»: منطقة الوحدة الثانية (القياس) شرق القرية، تُفتح بوابتها بعد إنهاء الوحدة الأولى
 // الرسم بأسلوب القرية نفسه (world/art.js): مبنى مجسّم، ملعب بعشب، محطة حافلات بمظلة، ساحة مرصوفة، وأرض حظيرة
 import { rr, shade } from '../core/util.js';
-import { INK, PAL, SUN, boxShadow, blobShadow, signboard, pattern, sprite, building3d, leanAt, palmCached, shrub, gateNS, wallNSItems, gateNSShadows, stall, solid } from './art.js';
+import { FLAGS, INK, PAL, SUN, boxShadow, blobShadow, signboard, pattern, sprite, building3d, leanAt, palmCached, shrub, gateNS, wallNSItems, gateNSShadows, stall, solid } from './art.js';
 export const GATE_X = 1500;
 export const CARP = { x: 1580, y: 140, w: 200, h: 120 }, BENCH = { x: 1700, y: 332 };
 export const FIELD = { x: 1880, y: 140, w: 380, h: 300 }, BOARD = { x: 1990, y: 478 };
@@ -79,8 +79,8 @@ export function drawMarketGround(ctx) {
 /* ── المباني والأشياء القائمة (لها عمق؛ ما له x يميل مع منظور الكاميرا) ── */
 export function marketDrawables(open, t) {
   const out = [];
-  out.push({ y: 700, draw: c => drawWall(c, open) }, ...wallNSItems('tower', GATE_X));
-  out.push({ y: CARP.y + CARP.h, draw: c => building3d(c, 'carp', { x: CARP.x, y: CARP.y, w: CARP.w, h: CARP.h, H: H_CARP, wall: '#E6D3B0', door: '#6E4524', sign: 'ورشة النجار مبارك', tank: 1, doorW: 46, doorH: 66 }) });
+  if (!FLAGS.three) out.push({ y: 700, draw: c => drawWall(c, open) }, ...wallNSItems('tower', GATE_X));   // في 3D: السور والبوابة مجسّمان
+  if (!FLAGS.three) out.push({ y: CARP.y + CARP.h, draw: c => building3d(c, 'carp', { x: CARP.x, y: CARP.y, w: CARP.w, h: CARP.h, H: H_CARP, wall: '#E6D3B0', door: '#6E4524', sign: 'ورشة النجار مبارك', tank: 1, doorW: 46, doorH: 66 }) });
   out.push({ y: BENCH.y, x: BENCH.x, draw: c => workbench(c, BENCH.x, BENCH.y) });
   out.push({ y: BOARD.y, x: BOARD.x, draw: c => chalkboard(c, BOARD.x, BOARD.y) });
   FLOOD.forEach(([x, y]) => out.push({ y, x, draw: c => floodlight(c, x, y) }));
@@ -89,8 +89,8 @@ export function marketDrawables(open, t) {
   out.push({ y: TIMETABLE.y, x: TIMETABLE.x, draw: c => timetable(c, TIMETABLE.x, TIMETABLE.y) });
   out.push({ y: CAL.y, x: CAL.x, draw: c => calendarBoard(c, CAL.x, CAL.y) });
   [[SQUARE.x + 50, '#2F6B73'], [SQUARE.x + 220, '#B8613E']].forEach(([x, col]) => out.push({ y: SQUARE.y + 174, x, draw: c => stall(c, x, SQUARE.y + 174, col) }));
-  PALMS_M.forEach(p => out.push({ y: p.y, draw: c => palmCached(c, p.x, p.y, 1, false, t) }));
-  [[1600, 470, '#D9478C'], [2270, 470, null], [1990, 1185, '#E8A33D']].forEach(([x, y, f]) => out.push({ y, x, draw: c => shrub(c, x, y, 9, f) }));
+  if (!FLAGS.three) PALMS_M.forEach(p => out.push({ y: p.y, draw: c => palmCached(c, p.x, p.y, 1, false, t) }));
+  if (!FLAGS.three) [[1600, 470, '#D9478C'], [2270, 470, null], [1990, 1185, '#E8A33D']].forEach(([x, y, f]) => out.push({ y, x, draw: c => shrub(c, x, y, 9, f) }));
   return out;
 }
 function workbench(c, x, y) {   // طاولة نجار: سطح خشبي سميك، أرجل، منجلة، منشار، ونشارة على الأرض
@@ -151,3 +151,7 @@ function calendarBoard(c, x, y) {   // لوحة إعلانات خشبية بسق
 /* سور السوق وبوابته: المكوّن المشترك في art.js */
 function drawWall(c, open) { gateNS(c, 'tower', GATE_X, open, 'السوق الأسبوعي'); }
 export function marketShadows(ctx) { gateNSShadows(ctx, GATE_X); }
+
+/* ما يُبنى مجسّماً في العرض ثلاثي الأبعاد (renderer3d/regions.js) */
+export const R3D = { buildings: [{ x: CARP.x, y: CARP.y, w: CARP.w, h: CARP.h, H: H_CARP, wall: '#E6D3B0', door: '#6E4524', sign: 'ورشة النجار مبارك', tank: 1, doorW: 46, doorH: 66 }],
+  palms: PALMS_M, shrubs: [[1600, 470, '#D9478C'], [2270, 470, null], [1990, 1185, '#E8A33D']], gateNS: GATE_X };

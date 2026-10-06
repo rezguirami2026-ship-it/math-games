@@ -102,26 +102,26 @@ function clockFace(c, x, y, r, a1, a2) {
   c.strokeStyle = '#C0392B'; c.lineWidth = 1.4; c.beginPath(); c.moveTo(x, y); c.lineTo(x + Math.cos(a2) * r * .78, y + Math.sin(a2) * r * .78); c.stroke();
 }
 export function festivalDrawables(open, t) {
-  const out = [{ y: WALL4_Y + 12, draw: c => gateEW(c, 'festgate', WALL4_Y, GATE4.x0, GATE4.x1, open, 'ساحة المهرجان') }];
-  out.push({ y: KITCHEN.y + KITCHEN.h, draw: c => {
+  const out = FLAGS.three ? [] : [{ y: WALL4_Y + 12, draw: c => gateEW(c, 'festgate', WALL4_Y, GATE4.x0, GATE4.x1, open, 'ساحة المهرجان') }];   // في 3D: البوابة مجسّمة
+  if (!FLAGS.three) out.push({ y: KITCHEN.y + KITCHEN.h, draw: c => {
     building3d(c, 'fest-kitchen', Object.assign({}, KITCHEN, { H: H_K, wall: '#F1DCC8', door: '#B8613E', sign: 'مطبخ المهرجان', ac: 1, tank: 1 }));
     const { lx, ly } = leanAt(KITCHEN.x + KITCHEN.w / 2, KITCHEN.y + KITCHEN.h), cx = KITCHEN.x + KITCHEN.w - 50 + lx * (H_K + 30), cy = KITCHEN.y + 30 - (H_K + 30) * (1 - ly);
     c.fillStyle = '#B5A58A'; c.fillRect(cx - 8, cy, 16, 30); c.strokeStyle = INK; c.lineWidth = 1; c.strokeRect(cx - 8, cy, 16, 30);   // مدخنة
     c.fillStyle = 'rgba(255,255,255,.6)'; for (let i = 0; i < 4; i++) { const k = ((t * .5 + i * .25) % 1); c.globalAlpha = .7 * (1 - k); c.beginPath(); c.arc(cx + Math.sin(t + i) * 6 + k * 10, cy - 6 - k * 50, 5 + k * 9, 0, 7); c.fill(); } c.globalAlpha = 1;
   } });
-  out.push({ y: CALLS.y + CALLS.h, draw: c => {
+  if (!FLAGS.three) out.push({ y: CALLS.y + CALLS.h, draw: c => {
     building3d(c, 'fest-calls', Object.assign({}, CALLS, { H: H_C, wall: '#DCE4EA', door: '#2F6B73', sign: 'مركز الاتصالات', style: 'shop', dish: 1 }));
     onFacade(c, CALLS.x, CALLS.y + CALLS.h, f => { for (let i = 0; i < 4; i++) { if (i === 1 || i === 2) continue; clockFace(f, CALLS.x + 46 + i * 70, CALLS.y + CALLS.h - 52, 13, i * 1.7 - 1.2, t / 3 + i * 2); } });
   } });
-  out.push({ y: TOWER.y, draw: c => clockTower(c, t) });
+  if (!FLAGS.three) out.push({ y: TOWER.y, draw: c => clockTower(c, t) });
   [[ST6.graph, 'لوح الرحلة', 'line'], [ST6.survey, 'لوح الاستبيان', 'bars']].forEach(([s, label, kind]) => out.push({ y: s.y - 50, x: s.x, draw: c => board(c, s, label, kind) }));
   out.push({ y: ST6.spinner.y - 50, x: ST6.spinner.x, draw: c => spinnerStall(c, ST6.spinner, t) });
-  PALMS6.forEach(p => out.push({ y: p.y, draw: c => palmCached(c, p.x, p.y, .85, false, t) }));
-  PALMS_X.forEach(p => out.push({ y: p.y, draw: c => palmCached(c, p.x, p.y, 1, false, t) }));
+  if (!FLAGS.three) PALMS6.forEach(p => out.push({ y: p.y, draw: c => palmCached(c, p.x, p.y, .85, false, t) }));
+  if (!FLAGS.three) PALMS_X.forEach(p => out.push({ y: p.y, draw: c => palmCached(c, p.x, p.y, 1, false, t) }));
   [[ST5.scale, 'scale'], [ST5.recipe, 'recipe']].forEach(([s, k]) => out.push({ y: s.y - 20, x: s.x, draw: c => { workTable(c, s.x, s.y - 18); kitchenProp(c, s.x, s.y - 50, k); } }));
   STALLS.forEach(([x, y, col]) => out.push({ y, draw: c => stall(c, x, y, col) }));
-  BENCHES.forEach(([x, y]) => out.push({ y, draw: c => bench(c, x, y) }));
-  SHRUBS.forEach(([x, y]) => out.push({ y, draw: c => shrub(c, x, y, 14, true) }));
+  if (!FLAGS.three) BENCHES.forEach(([x, y]) => out.push({ y, draw: c => bench(c, x, y) }));
+  if (!FLAGS.three) SHRUBS.forEach(([x, y]) => out.push({ y, draw: c => shrub(c, x, y, 14, true) }));
   BUNTING.forEach(([x1, x2, y, h]) => [x1, x2].forEach(x => out.push({ y, x, draw: c => { c.fillStyle = PAL.wood; c.fillRect(x - 2, y - h, 4, h); c.strokeStyle = INK; c.lineWidth = .7; c.strokeRect(x - 2, y - h, 4, h); } })));   // أعمدة الحبال
   if (!FLAGS.three) {   // البديل ثنائي الأبعاد لمدينة الألعاب (في 3D تُبنى مجسّمة)
     const W = RIDES.wheel, C = RIDES.carousel;
@@ -181,3 +181,6 @@ function bunting(c, a, b, t) {   // حبل رايات مثلثة ملوّنة ي
   for (let k = 1; k < n; k++) { const [x, y] = pt(k / n); c.fillStyle = cols[k % 5]; c.beginPath(); c.moveTo(x - 7, y); c.lineTo(x + 7, y); c.lineTo(x, y + 13); c.closePath(); c.fill(); c.strokeStyle = 'rgba(0,0,0,.15)'; c.lineWidth = .6; c.stroke(); }
   [a, b].forEach(([x, y]) => { c.fillStyle = PAL.wood; c.fillRect(x - 2, y, 4, 4); });
 }
+
+export const R3D = { buildings: [Object.assign({}, KITCHEN, { H: H_K, wall: '#F1DCC8', door: '#B8613E', sign: 'مطبخ المهرجان', ac: 1, tank: 1, chimney: 1 }), Object.assign({}, CALLS, { H: H_C, wall: '#DCE4EA', door: '#2F6B73', sign: 'مركز الاتصالات', style: 'shop', dish: 1, clocks: 1 })],
+  palms: PALMS_X.concat(PALMS6.map(p => ({ x: p.x, y: p.y, s: .85 }))), benches: BENCHES, shrubs: SHRUBS.map(([x, y]) => [x, y, '#D9478C', 14]), clockTower: { x: TOWER.x, y: TOWER.y, s: TW.s, H: TW.H }, gateEW: [WALL4_Y, GATE4.x0, GATE4.x1, 'ساحة المهرجان'] };

@@ -62,13 +62,13 @@ export function drawCoopGround(ctx) {
   LANTERNS.forEach(([a, b, y]) => [a, b].forEach(x => blobShadow(ctx, x, y, 5, 80)));
 }
 export function coopDrawables(open, t) {
-  const out = [{ y: WALL5_Y + 12, draw: c => gateEW(c, 'coopgate', WALL5_Y, GATE5.x0, GATE5.x1, open, 'سوق الجمعية') }];
-  Object.entries(ST7).forEach(([k, s]) => out.push({ y: s.y - 32, draw: c => kiosk3d(c, k, s, GOODS[k]) }));
-  PALMS.forEach(p => out.push({ y: p.y, draw: c => palmCached(c, p.x, p.y, 1, false, t) }));
+  const out = FLAGS.three ? [] : [{ y: WALL5_Y + 12, draw: c => gateEW(c, 'coopgate', WALL5_Y, GATE5.x0, GATE5.x1, open, 'سوق الجمعية') }];   // في 3D: البوابة مجسّمة
+  if (!FLAGS.three) Object.entries(ST7).forEach(([k, s]) => out.push({ y: s.y - 32, draw: c => kiosk3d(c, k, s, GOODS[k]) }));
+  if (!FLAGS.three) PALMS.forEach(p => out.push({ y: p.y, draw: c => palmCached(c, p.x, p.y, 1, false, t) }));
   LANTERNS.forEach(([a, b, y]) => [a, b].forEach(x => out.push({ y, x, draw: c => { c.fillStyle = PAL.wood; c.fillRect(x - 2, y - 80, 4, 80); c.strokeStyle = INK; c.lineWidth = .7; c.strokeRect(x - 2, y - 80, 4, 80); } })));
-  BENCHES.forEach(([x, y]) => out.push({ y, draw: c => bench(c, x, y) }));
-  SHRUBS.forEach(([x, y]) => out.push({ y, draw: c => shrub(c, x, y, 14, true) }));
-  out.push({ y: WELL.y, x: WELL.x, draw: c => stoneWell(c, WELL.x, WELL.y, 22, t) });
+  if (!FLAGS.three) BENCHES.forEach(([x, y]) => out.push({ y, draw: c => bench(c, x, y) }));
+  if (!FLAGS.three) SHRUBS.forEach(([x, y]) => out.push({ y, draw: c => shrub(c, x, y, 14, true) }));
+  if (!FLAGS.three) out.push({ y: WELL.y, x: WELL.x, draw: c => stoneWell(c, WELL.x, WELL.y, 22, t) });
   if (!FLAGS.three) {   // البديل ثنائي الأبعاد للعمارات والسيارات
     BLOCKS.forEach((b, i) => out.push({ y: b.y + b.h, draw: c => building3d(c, 'block' + i, Object.assign({}, b, { H: 60 + b.f * 9, style: 'shop', door: '#2F3A42', sign: 'عمارة ' + ['النخيل', 'الوادي', 'الريم', 'السلام', 'الأمل', 'الخير'][i] })) }));
     CARS.forEach(([x, y, col]) => out.push({ y: y + 10, x, draw: c => { c.fillStyle = col; c.fillRect(x - 22, y - 16, 44, 16); c.fillStyle = '#9EC5DA'; c.fillRect(x - 12, y - 24, 24, 9); c.fillStyle = '#222'; c.beginPath(); c.arc(x - 13, y, 5, 0, 7); c.arc(x + 13, y, 5, 0, 7); c.fill(); } }));
@@ -76,3 +76,5 @@ export function coopDrawables(open, t) {
   LANTERNS.forEach(([a, b, y]) => out.push({ y: y + 40, draw: c => lanternString(c, elev(a, y, 80), elev(b, y, 80), 30, 14, t) }));   // معلّقة: تُرسم بعد ما تحتها
   return out;
 }
+
+export const R3D = { kiosks: Object.entries(ST7).map(([k, s]) => Object.assign({ goods: GOODS[k] }, s)), palms: PALMS, benches: BENCHES, shrubs: SHRUBS.map(([x, y]) => [x, y, '#D9478C', 14]), wells: [[WELL.x, WELL.y, 22]], gateEW: [WALL5_Y, GATE5.x0, GATE5.x1, 'سوق الجمعية'] };

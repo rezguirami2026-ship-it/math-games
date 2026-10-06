@@ -7,6 +7,7 @@ import { material, setAniso } from './textures.js';
 import { wind, sky, mountains, sea, palmGrove, clouds } from './nature.js';
 import { makeComposer } from './post.js';
 import { residential, funpark, port } from './city.js';
+import { buildRegions } from './regions.js';
 import { buildVillage } from './world.js';
 import { buildPerson, animatePerson } from './people.js';
 
@@ -52,6 +53,7 @@ export async function create3D(opts) {
   const cl = clouds(bounds); scene.add(cl);
   // الأحياء الحديثة داخل العالم: حيّ العمارات (سوق الجمعية)، مدينة الألعاب (ساحة المهرجان)، ميناء الحاويات (طريق القافلة)
   const resi = residential(), prt = port(); scene.add(resi, prt);
+  const regions = buildRegions({ quality: q }); scene.add(regions.group);
   const park = funpark(); scene.add(park);
   const seaM = sea(2930, -2000, W.h + 2000); scene.add(seaM);
   // رمل خارج العالم حتى الجبال
@@ -141,6 +143,8 @@ export async function create3D(opts) {
     canvas, renderer, scene, camera, zoom: 1.22,
     /* مصدر الشخصيات: () => [{ id, look, lookKey, x, y, moving, phase, run, anim, animT, carry, dir }] */
     people: null,
+    /* انفتاح البوابات [٠..١] بترتيب REGIONS (من main.js) */
+    gates: null,
     /* الرسم على الأرض المتغيرة: paint(ctx, rect) بإحداثيات اللعبة */
     ground: null,
     /* يُستدعى في كل إطار من المحرك */
@@ -171,7 +175,7 @@ export async function create3D(opts) {
         }
       dropFar(q === 'high' ? 30 : 18);
       wind.value = t; seaM.userData.tick(t);
-      village.update(state, t, E.follow); if (E.follow) { resi.userData.fade(E.follow); prt.userData.fade(E.follow); }
+      village.update(state, t, E.follow); regions.update(t, E.follow, L.gates && L.gates()); if (E.follow) { resi.userData.fade(E.follow); prt.userData.fade(E.follow); }
       if (L.people) try { syncPeople(L.people(), t); } catch (e) { if (!L._pErr) { L._pErr = 1; console.error('people', e); } }
       if (L.ground) try { paintDecal(t, L.ground); } catch (e) { if (!L._gErr) { L._gErr = 1; console.error('ground layer', e); } }
       cl.userData.tick(t, camera); park.userData.tick(t);
@@ -196,6 +200,10 @@ export async function create3D(opts) {
       return [a[0], a[1], b[0], b[1], p0.x - a[0] * cx - b[0] * cy, p0.y - a[1] * cx - b[1] * cy];
     }
   };
+  // تجميع كل الـshaders أثناء شاشة التحميل (بالتوازي حيث يدعم المتصفح) بدل التقطيع في أول اللعب
+  try { await step(.85); camera.position.set(1100, 900, 1400); camera.lookAt(1100, 0, 600); camera.updateMatrixWorld(); if (post) renderer.setRenderTarget(post.rt); await renderer.compileAsync(scene, camera); renderer.setRenderTarget(null);
+    renderer.shadowMap.needsUpdate = true; if (post) post.render(); else renderer.render(scene, camera);   // إطار أول خلف شاشة التحميل: يجمّع ظلال الشمس أيضاً
+  } catch (e) { console.warn(e); }
   await step(1);
   return L;
 }

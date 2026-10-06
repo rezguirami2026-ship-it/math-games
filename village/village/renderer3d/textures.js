@@ -115,9 +115,11 @@ export function material(kind, tint = '#ffffff', opts = {}) {
   if (cache.has(key)) return cache.get(key);
   let m;
   const seed = [...key].reduce((a, c) => a * 31 + c.charCodeAt(0) >>> 0, 7);
-  if (kind === 'plaster') { const s = plasterSet(tint, seed); m = new THREE.MeshStandardMaterial({ map: s.map, normalMap: s.normalMap, normalScale: new THREE.Vector2(.6, .6), roughness: s.roughness, metalness: 0 }); }
-  else if (kind === 'stone') { const s = stoneSet(tint, seed); m = new THREE.MeshStandardMaterial({ map: s.map, normalMap: s.normalMap, normalScale: new THREE.Vector2(.9, .9), roughness: s.roughness }); }
-  else if (kind === 'wood') { const s = woodSet(tint, seed); m = new THREE.MeshStandardMaterial({ map: s.map, normalMap: s.normalMap, normalScale: new THREE.Vector2(.7, .7), roughness: s.roughness }); }
+  // خامة رمادية فاتحة واحدة لكل نوع، واللون يأتي من color: توليد أقل بكثير عند التحميل
+  const base = (k, f) => { if (!cache.has('set|' + k)) cache.set('set|' + k, f()); return cache.get('set|' + k); }, tinted = c => new THREE.Color(c).multiplyScalar(1.12);
+  if (kind === 'plaster') { const s = base('plaster', () => plasterSet('#E8E2D6', 11)); m = new THREE.MeshStandardMaterial({ color: tinted(tint), map: s.map, normalMap: s.normalMap, normalScale: new THREE.Vector2(.6, .6), roughness: s.roughness, metalness: 0 }); }
+  else if (kind === 'stone') { const s = base('stone', () => stoneSet('#E2DCD0', 12)); m = new THREE.MeshStandardMaterial({ color: tinted(tint), map: s.map, normalMap: s.normalMap, normalScale: new THREE.Vector2(.9, .9), roughness: s.roughness }); }
+  else if (kind === 'wood') { const s = base('wood', () => woodSet('#C9B8A2', 13)); m = new THREE.MeshStandardMaterial({ color: new THREE.Color(tint).multiplyScalar(1.45), map: s.map, normalMap: s.normalMap, normalScale: new THREE.Vector2(.7, .7), roughness: s.roughness }); }
   else if (kind === 'sand') { const s = sandSet(seed); m = new THREE.MeshStandardMaterial({ map: s.map, normalMap: s.normalMap, roughness: 1 }); }
   else if (kind === 'metal') m = new THREE.MeshStandardMaterial({ color: tint, roughness: opts.rough ?? .45, metalness: opts.metal ?? .75 });
   else m = new THREE.MeshStandardMaterial({ color: tint, roughness: opts.rough ?? .85, metalness: 0, ...(opts.emissive ? { emissive: opts.emissive, emissiveIntensity: opts.ei ?? 1 } : {}) });

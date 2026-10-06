@@ -30,5 +30,5 @@ export function makeComposer(renderer, scene, camera) {
   const bloom = new UnrealBloomPass(new THREE.Vector2(size.x / 2, size.y / 2), .22, .55, .9); comp.addPass(bloom);
   comp.addPass(new OutputPass());
   comp.addPass(new ShaderPass(Grade));
-  return { render: () => comp.render(), setSize: (w, h) => { comp.setSize(w, h); bloom.resolution.set(w / 2, h / 2); }, setPixelRatio: r => comp.setPixelRatio(r) };
+  return { rt, render: () => comp.render(), setSize: (w, h) => { comp.setSize(w, h); bloom.resolution.set(w / 2, h / 2); }, setPixelRatio: r => comp.setPixelRatio(r) };
 }
