@@ -4,7 +4,7 @@ import { bus } from './core/events.js';
 import { ambience, sfx } from './core/sound.js';
 import { ar, clamp } from './core/util.js';
 import { createEngine } from './core/engine.js';
-import { loadSave, saveSoon, saveNow, wipeSave } from './save/save.js';
+import { loadSave, saveSoon, saveNow, wipeSave, PREVIEW } from './save/save.js';
 import { createPlayer, updatePlayer } from './player/player.js';
 import { findPath } from './world/nav.js';
 import { drawHuman, heightOf } from './character/human.js';
@@ -148,6 +148,10 @@ function report(where, id, err) {
 }
 
 function boot() {
+  if (PREVIEW) {   // معاينة للمعلم: كل الدروس منتهية والبوابات مفتوحة، بحفظ منفصل
+    const s = loadSave() || (() => { const p = fresh({ name: 'زائر', kind: 'boy', skin: '#DDA779', color: '#2F6FB2' }); p.story.introDone = true; LESSONS.forEach(l => { p.quests.done[l.id] = Date.now(); }); p.missions.convoy.status = 'done'; p.world.delivered = Date.now(); return p; })();
+    start(s); setTimeout(() => hud.toast('👁️ وضع المعاينة: كل البوابات مفتوحة، ولا يتأثر تقدّم الطلاب'), 1500); return;
+  }
   const saved = loadSave();
   screens.title(saved, { onContinue: () => start(saved), onNew: hero => { wipeSave(); start(fresh(hero)); }, onRestore: s => { saveNow(s); start(s); } });
 }

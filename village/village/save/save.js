@@ -1,6 +1,8 @@
 // الحفظ: عالم الطالب يبقى كما تركه
 import { VERSION } from '../core/state.js';
-const KEY = 'ramimath_village_v1';
+/* وضع المعاينة (?preview): حفظ منفصل تماماً، فلا يمس تقدّم الطالب الحقيقي على الجهاز */
+export const PREVIEW = (() => { try { return new URLSearchParams(location.search).has('preview'); } catch (e) { return false; } })();
+const KEY = PREVIEW ? 'ramimath_village_preview' : 'ramimath_village_v1';
 let timer = 0;
 export function loadSave() {
   try { const s = JSON.parse(localStorage.getItem(KEY) || 'null'); return s && s.v === VERSION ? s : null; } catch (e) { return null; }
