@@ -6,6 +6,7 @@ import { RoomEnvironment } from '../lib/three/addons/RoomEnvironment.js';
 import { material, setAniso } from './textures.js';
 import { wind, sky, mountains, sea, palmGrove, clouds } from './nature.js';
 import { makeComposer } from './post.js';
+import { cityBlocks, containerPort, amusementPark } from './city.js';
 import { buildVillage } from './world.js';
 import { buildPerson, animatePerson } from './people.js';
 
@@ -13,7 +14,7 @@ export function webglOK() {
   try { const c = document.createElement('canvas'); return !!(window.WebGLRenderingContext && (c.getContext('webgl2') || c.getContext('webgl'))); } catch (e) { return false; }
 }
 
-const FOV = 36, PITCH = 36 * Math.PI / 180, TILE = 512;
+const FOV = 42, PITCH = 43 * Math.PI / 180, TILE = 512;   // زاوية أعلى: المباني العالية تظهر كاملة
 
 /* opts: { quality: 'high'|'low', paintGround(ctx, rect), world: {w, h}, onProgress(k) } */
 export async function create3D(opts) {
@@ -49,6 +50,10 @@ export async function create3D(opts) {
   scene.add(mountains(bounds));
   scene.add(palmGrove(bounds));
   const cl = clouds(bounds); scene.add(cl);
+  // المدينة الحديثة حول القرية (خارج منطقة اللعب): عمارات شمالاً، ميناء حاويات شمال شرق على البحر، ومدينة ألعاب شمال غرب
+  scene.add(cityBlocks(-150, -820, 1700, -200));
+  scene.add(containerPort(1720, -760, 2930, -140, 2930));
+  const park = amusementPark(-500, -380); scene.add(park);
   const seaM = sea(2930, -2000, W.h + 2000); scene.add(seaM);
   // رمل خارج العالم حتى الجبال
   const outer = new THREE.Mesh(new THREE.PlaneGeometry(14000, 14000), material('sand', '#fff', { repeat: [60, 60] }));
@@ -126,8 +131,15 @@ export async function create3D(opts) {
     people.forEach((P, id) => { if (!seen.has(id)) { P.root.visible = false; P.lastX = null; } });
   }
 
+  /* تقريب الكاميرا وإبعادها (مرئي فقط): عجلة الفأرة، أو قرص بإصبعين على الشاشة */
+  const zoomBy = k => { L.zoom = Math.min(1.9, Math.max(.6, L.zoom * k)); };
+  window.addEventListener('wheel', e => { if (e.target && e.target.closest && e.target.closest('#panel,#dialog,.sheet')) return; zoomBy(e.deltaY > 0 ? 1.08 : 1 / 1.08); }, { passive: true });
+  let pinch = null;
+  window.addEventListener('touchmove', e => { if (e.touches.length !== 2) { pinch = null; return; } const d = Math.hypot(e.touches[0].clientX - e.touches[1].clientX, e.touches[0].clientY - e.touches[1].clientY); if (pinch) zoomBy(pinch / d); pinch = d; }, { passive: true });
+  window.addEventListener('touchend', () => { pinch = null; });
+
   const L = {
-    canvas, renderer, scene, camera,
+    canvas, renderer, scene, camera, zoom: 1.22,
     /* مصدر الشخصيات: () => [{ id, look, lookKey, x, y, moving, phase, run, anim, animT, carry, dir }] */
     people: null,
     /* الرسم على الأرض المتغيرة: paint(ctx, rect) بإحداثيات اللعبة */
@@ -135,7 +147,7 @@ export async function create3D(opts) {
     /* يُستدعى في كل إطار من المحرك */
     frame(E, t, state) {
       frame++;
-      const zoom = E.zoom * (1 + E.punch * .06), viewW = E.w / zoom * .82;   // أقرب قليلاً من الرسم ثنائي الأبعاد: الشخصيات أوضح
+      const zoom = E.zoom * (1 + E.punch * .06), viewW = E.w / zoom * L.zoom;   // L.zoom: تقريب المستخدم بعجلة الفأرة أو إصبعين
       const dist = (viewW / 2) / (Math.tan(FOV * Math.PI / 360) * camera.aspect);
       target.set(E.cam.x, 0, E.cam.y + 46);
       const qx = E.quake ? (Math.random() - .5) * 6 * E.quake : 0, qy = E.quake ? (Math.random() - .5) * 6 * E.quake : 0;
@@ -163,7 +175,7 @@ export async function create3D(opts) {
       village.update(state, t, E.follow);
       if (L.people) try { syncPeople(L.people(), t); } catch (e) { if (!L._pErr) { L._pErr = 1; console.error('people', e); } }
       if (L.ground) try { paintDecal(t, L.ground); } catch (e) { if (!L._gErr) { L._gErr = 1; console.error('ground layer', e); } }
-      cl.userData.tick(t, camera);
+      cl.userData.tick(t, camera); park.userData.tick(t);
       if (post) post.render(); else renderer.render(scene, camera);
       return view;
     },

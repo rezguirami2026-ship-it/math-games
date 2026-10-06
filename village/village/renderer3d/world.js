@@ -46,10 +46,7 @@ export function buildVillage({ quality }) {
   SIDRS.forEach(p => group.add(sidrTree(p.x, p.y)));
   group.add(shrubs(SHRUBS.map(s => ({ x: s.x, y: s.y, f: s.f, r: 11 }))));
   const lamps = streetLamps(LAMPS); group.add(lamps.group);
-  // حصى وعشب يابس على الرمل، بعيداً عن الطرق والأرصفة والساحات والمباني والمزرعة والبركة
-  const avoid = [...ROADS.map(r => ({ x: r.x - 22, y: r.y - 22, w: r.w + 44, h: r.h + 44 })), ...HOUSES, ...SOUTH, WAREHOUSE, FARM, POND,
-    { x: 100, y: 468, w: 320, h: 120 }, { x: 100, y: 722, w: 600, h: 102 }, { x: WELL.x - 125, y: WELL.y - 70, w: 250, h: 160 }, { x: 1030, y: 260, w: 240, h: 160 }];
-  group.add(groundScatter({ x: 10, y: 10, w: 1480, h: 1680 }, avoid, quality === 'high' ? 1100 : 500));
+  // (أُزيلت الحصى والعشب المبعثر بطلب المستخدم: الأرض أنظف)
   const P = new Parts(); bench(P, 1196, 548); group.add(P.build());
   return {
     group,

@@ -121,11 +121,11 @@ export function mountains(bounds) {
       const m = new THREE.Mesh(c, hill); m.receiveShadow = true; g.add(m);
     }
   };
-  hillRow(x0 - 200, z0 - 330, x1 + 300, z0 - 330, 90, 210, 120, 200);
-  hillRow(x0 - 330, z0 - 200, x0 - 330, z1 + 200, 90, 200, 120, 190);
-  ridge(x0 - 700, z0 - 700, x1 + 900, z0 - 700, 0, mat, 260, 520);      // الشمال
-  ridge(x0 - 700, z0 - 600, x0 - 700, z1 + 600, 0, mat, 240, 480);      // الغرب
-  ridge(x0 - 1300, z0 - 1200, x1 + 1500, z0 - 1300, 0, far, 420, 760);   // سلسلة أبعد خلفها
+  hillRow(x0 - 900, z0 - 1250, x1 + 300, z0 - 1250, 120, 240, 140, 220);   // تلال خلف المدينة
+  hillRow(x0 - 950, z0 + 400, x0 - 950, z1 + 200, 90, 200, 120, 190);
+  ridge(x0 - 1300, z0 - 1600, x1 + 900, z0 - 1600, 0, mat, 300, 560);      // الشمال (خلف المدينة)
+  ridge(x0 - 1300, z0 - 1200, x0 - 1300, z1 + 600, 0, mat, 240, 480);      // الغرب
+  ridge(x0 - 1900, z0 - 2300, x1 + 1500, z0 - 2300, 0, far, 460, 800);   // سلسلة أبعد خلفها
   ridge(x0 - 700, z1 + 700, x1 + 300, z1 + 700, 0, mat, 220, 420);      // الجنوب
   return g;
 }
@@ -159,7 +159,7 @@ export function sea(x0, z0, z1) {
 export function palmGrove(bounds) {
   const R = (a => () => (a = (a * 9301 + 49297) % 233280) / 233280)(7), list = [];
   const band = (x0, z0, x1, z1, n) => { for (let i = 0; i < n; i++) list.push({ x: x0 + R() * (x1 - x0), y: z0 + R() * (z1 - z0), s: .95 + R() * .45 }); };
-  band(bounds.x0 - 520, bounds.z0 - 300, bounds.x1 + 400, bounds.z0 - 40, 120);      // شمال القرية
+  band(bounds.x0 - 120, bounds.z0 - 150, bounds.x0 + 1650, bounds.z0 - 40, 26);      // صف نخيل خفيف شمال القرية (أمام حيّ العمارات)
   band(bounds.x0 - 360, bounds.z0 - 40, bounds.x0 - 40, bounds.z1, 150);           // غرب العالم كله
   const g = palms(list);
   // أرض البستان: عشب داكن متقطع تحت النخيل
