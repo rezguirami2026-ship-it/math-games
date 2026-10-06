@@ -27,6 +27,8 @@ const URL_ = `http://localhost:${server.address().port}/`;
 
 const browser = await chromium.launch({ channel: 'chrome', headless: !SHOW });
 const page = await browser.newPage({ viewport: { width: 1000, height: 700 } });
+// تشخيص: كل مهمة طويلة (>200ms) في الصفحة تُسجَّل، وتُطبع عند التعليق
+await page.addInitScript(() => { window.__long = []; try { new PerformanceObserver(l => l.getEntries().forEach(e => { if (e.duration > 200) window.__long.push([Math.round(e.startTime), Math.round(e.duration)]); })).observe({ type: 'longtask', buffered: true }); } catch (e) {} });
 const errors = [];
 page.on('pageerror', e => errors.push(e.message));
 page.on('console', m => { if (m.type() === 'error') errors.push(m.text()); });
@@ -46,7 +48,8 @@ async function until(cond, what, ms = 15000) {
 async function settle(ms = 20000, quiet = 0) {
   const t0 = Date.now(); let idle = 0; const trail = [];   // سجل التحولات لتشخيص التعليق
   while (Date.now() - t0 < ms) {
-    const tx = await G(() => { const d = document.getElementById('dialog'); return `${d.className}|${window.__game.game.busy ? 'B' : '-'}|${(d.textContent || '').trim().slice(0, 40)}`; });
+    const q0 = Date.now(), tx = await G(() => { const d = document.getElementById('dialog'); return `${d.className}|${window.__game.game.busy ? 'B' : '-'}|${(d.textContent || '').trim().slice(0, 40)}`; });
+    if (Date.now() - q0 > 1000) trail.push({ t: Date.now() - t0, s: `فحص بطيء ${Date.now() - q0}ms` });
     if (trail[trail.length - 1]?.s !== tx) trail.push({ t: Date.now() - t0, s: tx });
     const st = await G(() => ({ dialog: document.getElementById('dialog').classList.contains('on'), chapter: document.getElementById('screen').classList.contains('chapter'), busy: window.__game.game.busy, panel: document.getElementById('panel').classList.contains('on') }));
     if (st.dialog) await G(() => document.getElementById('dialog').click());
@@ -56,7 +59,8 @@ async function settle(ms = 20000, quiet = 0) {
     await sleep(120);
   }
   const why = await G(() => ({ busy: window.__game.game.busy, dialog: document.getElementById('dialog').className, panel: document.getElementById('panel').className, screen: document.getElementById('screen').className, stones: !!window.__game.W.stones }));
-  throw new Error('اللعبة بقيت مشغولة ' + JSON.stringify(why) + ' — آخر التحولات: ' + trail.slice(-12).map(e => `${e.t}ms ${e.s}`).join(' ‖ '));
+  const long = await G(() => { const n = performance.now(); return window.__long.filter(([st]) => n - st < 90000).map(([st, d]) => `${Math.round((n - st) / 1000)}ث مضت: ${d}ms`); });
+  throw new Error('اللعبة بقيت مشغولة ' + JSON.stringify(why) + ' — آخر التحولات: ' + trail.slice(-12).map(e => `${e.t}ms ${e.s}`).join(' ‖ ') + ' — مهام طويلة: ' + (long.join('، ') || 'لا شيء'));
 }
 // ينقل البطل مباشرة إلى نقطة (بدل المشي) ثم ينتظر أن تُرسم الأزرار
 async function goTo(x, y) {
