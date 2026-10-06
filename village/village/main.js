@@ -92,7 +92,7 @@ const REGIONS = [
   { u: 1, walls: harborColliders, draw: harborDrawables },                      // الميناء
   { u: 2, walls: fortColliders, draw: fortDrawables },                          // القلعة
   { u: 3, walls: festivalColliders, draw: festivalDrawables },                  // ساحة المهرجان (نهاية الفصل الأول)
-  { u: 5, walls: coopColliders, draw: open => coopDrawables(open) },            // سوق الجمعية
+  { u: 5, walls: coopColliders, draw: coopDrawables },                        // سوق الجمعية
   { u: 6, walls: caravanColliders, draw: caravanDrawables },                    // طريق القافلة
   { u: 7, walls: workshopColliders, draw: (open, t) => workshopDrawables(open, t, allDone()) }   // ورشة البنّاء
 ];

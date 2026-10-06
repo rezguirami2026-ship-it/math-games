@@ -32,7 +32,7 @@ const BUNTING = [[200, 760, 2900, 70], [870, 1360, 2980, 70], [1420, 2280, 2960,
 // زينة بلا تصادم في أطراف الساحة: بسطات المهرجان ومقاعد وشجيرات
 const STALLS = [[2560, 3000, '#E85D75'], [2600, 3380, '#2F6FB2'], [620, 3420, '#2E8B57'], [1700, 3420, '#9C6BFF']];
 const BENCHES = [[960, 3010], [1240, 3010], [1500, 3430], [2450, 3430]];
-const SHRUBS = [[300, 3000], [2480, 2950], [1380, 3460], [2200, 3430], [900, 3430]];
+const SHRUBS = [[300, 3000], [2480, 2950], [1380, 3420], [2200, 3430], [900, 3430]];
 
 export function drawFestivalGround(ctx, t) {
   gateEWShadows(ctx, WALL4_Y, GATE4.x0, GATE4.x1);
@@ -92,7 +92,7 @@ export function festivalDrawables(open, t) {
   BENCHES.forEach(([x, y]) => out.push({ y, draw: c => bench(c, x, y) }));
   SHRUBS.forEach(([x, y]) => out.push({ y, draw: c => shrub(c, x, y, 14, true) }));
   BUNTING.forEach(([x1, x2, y, h]) => [x1, x2].forEach(x => out.push({ y, x, draw: c => { c.fillStyle = PAL.wood; c.fillRect(x - 2, y - h, 4, h); c.strokeStyle = INK; c.lineWidth = .7; c.strokeRect(x - 2, y - h, 4, h); } })));   // أعمدة الحبال
-  out.push({ y: 3500, draw: c => BUNTING.forEach(([x1, x2, y, h]) => bunting(c, elev(x1, y, h), elev(x2, y, h), t)) });   // فوق كل شيء: معلّقة في الهواء
+  BUNTING.forEach(([x1, x2, y, h]) => out.push({ y: y + 40, draw: c => bunting(c, elev(x1, y, h), elev(x2, y, h), t) }));   // معلّقة في الهواء: تُرسم بعد ما تحتها
   return out;
 }
 function clockTower(c, t) {   // برج الساعة: مجسّم بسقف هرمي، وساعة حية على وجهه

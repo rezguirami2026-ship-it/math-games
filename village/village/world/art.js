@@ -528,3 +528,31 @@ export function bench(ctx, x, y) {   // مقعد خشبي بقوائم معدن�
   ctx.fillStyle = '#3D3A3A'; ctx.fillRect(x - 15, y - 17, 2, 5); ctx.fillRect(x + 13, y - 17, 2, 5);
 }
 export { shade, mix, rr };
+/* ── كشك مجسّم لمحطات الدروس (الجمعية والقافلة والورشة): جدار خلفي وسقف خشبي، لوحة اسم، مظلة مخططة، رفوف بضاعة، ومنضدة ──
+   s = { x, y, sign, col }: الأرضية بين y−56 وy−32 (مطابقة لتصادم المحطة). goods: ألوان البضاعة على الرفوف */
+export function kiosk3d(c, key, s, goods) {
+  const b = { x: s.x - 52, y: s.y - 56, w: 104, h: 24, H: 70 }, { x, w, H } = b, yb = b.y + b.h, yt = yb - H, col = s.col;
+  const G = goods || ['#C46A1E', '#4E7A34', '#E3B04B', '#B8413A'];
+  box3d(c, 'kiosk|' + key, b, shade(col, 40), r => {
+    const ry = b.y - H; r.fillStyle = shade(PAL.woodLight, -6); r.fillRect(x - 3, ry - 2, w + 6, b.h + 4);
+    r.strokeStyle = 'rgba(70,40,15,.35)'; r.lineWidth = .8; for (let xx = x + 10; xx < x + w; xx += 12) { r.beginPath(); r.moveTo(xx, ry - 2); r.lineTo(xx, ry + b.h + 2); r.stroke(); }
+    r.strokeStyle = INK; r.lineWidth = 1; r.strokeRect(x - 3, ry - 2, w + 6, b.h + 4);
+  }, f => {
+    const wall = shade(col, 52), g = f.createLinearGradient(x, 0, x + w, 0); g.addColorStop(0, shade(wall, 4)); g.addColorStop(1, shade(wall, -14));
+    f.fillStyle = g; f.fillRect(x, yt, w, H); f.fillStyle = pattern(f, 'plaster'); f.fillRect(x, yt, w, H);
+    // الفتحة: داخل معتم برفّين عليهما بضاعة
+    f.fillStyle = '#3B2A1E'; f.fillRect(x + 7, yt + 30, w - 14, H - 54);
+    [yt + 44, yt + 58].forEach((sy, r) => { f.fillStyle = PAL.wood; f.fillRect(x + 7, sy, w - 14, 2.5); for (let k = 0; k < 7; k++) { f.fillStyle = G[(k + r) % G.length]; f.beginPath(); f.arc(x + 15 + k * 12.5, sy - 4, 3.6, 0, 7); f.fill(); } });
+    // المظلة المخططة بحافة مقوّسة
+    for (let k = 0; k < 6; k++) { const ax = x - 4 + k * (w + 8) / 6, aw = (w + 8) / 6; f.fillStyle = k % 2 ? '#F4E3B8' : col; f.beginPath(); f.moveTo(ax, yt + 18); f.lineTo(ax + aw, yt + 18); f.lineTo(ax + aw, yt + 30); f.quadraticCurveTo(ax + aw / 2, yt + 37, ax, yt + 30); f.closePath(); f.fill(); }
+    f.fillStyle = 'rgba(0,0,0,.12)'; f.fillRect(x - 4, yt + 18, w + 8, 3);
+    // المنضدة
+    f.fillStyle = PAL.woodLight; f.fillRect(x - 3, yb - 26, w + 6, 6); f.fillStyle = shade(col, -10); f.fillRect(x + 2, yb - 20, w - 4, 20);
+    f.fillStyle = 'rgba(255,255,255,.18)'; for (let xx = x + 12; xx < x + w - 4; xx += 16) f.fillRect(xx, yb - 18, 2, 16);
+    f.strokeStyle = INK; f.lineWidth = 1; f.strokeRect(x - 3, yb - 26, w + 6, 26); f.strokeRect(x, yt, w, H);
+    // لوحة الاسم على الإفريز
+    f.fillStyle = PAL.wood; f.fillRect(x - 2, yt, w + 4, 18); f.strokeRect(x - 2, yt, w + 4, 18);
+    signboard(f, x + w / 2, yt + 9, s.sign);
+  });
+}
+export const kioskShadow = (ctx, s) => boxShadow(ctx, s.x - 52, s.y - 56, 104, 24, 70);   // يُرسم مع الأرض

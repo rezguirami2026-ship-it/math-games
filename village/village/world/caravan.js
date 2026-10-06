@@ -1,5 +1,7 @@
 // «طريق القافلة»: منطقة وحدة القياس (٢) في الفصل الثاني جنوب سوق الجمعية، تُفتح بإنهاء وحدة العدد
+// الرسم بأسلوب القرية: كثبان، طريق إسفلتي، مدرج وطائرة، واحة بنخيل، ومحطة وقود
 import { rr, shade } from '../core/util.js';
+import { INK, PAL, pattern, sprite, kiosk3d, kioskShadow, gateEW, gateEWShadows, palmCached, blobShadow, upright, shrub } from './art.js';
 export const WALL6_Y = 4500, GATE6 = { x0: 1190, x1: 1290 };
 export const ST8 = {
   fuel: { x: 380, y: 4790, sign: 'محطة الوقود', col: '#C0392B' }, signs: { x: 800, y: 4790, sign: 'دليل القافلة', col: '#8B5A2B' },
@@ -14,41 +16,63 @@ export function caravanColliders(open) {
   if (!open) c.push({ x: GATE6.x0, y: WALL6_Y - 4, w: GATE6.x1 - GATE6.x0, h: 20 });
   return c;
 }
+const GOODS = { fuel: ['#C0392B', '#3D3A3A', '#E3B04B'], signs: ['#8B5A2B', '#F2E6C9', '#2F6B73'], flights: ['#2F6FB2', '#F4F1E8', '#E3B04B'], century: ['#7B3F98', '#F2E6C9', '#C9971C'], rects: ['#2E8B57', '#7FB24A', '#C46A1E'], oasis: ['#1FC8B5', '#2E8B57', '#E3B04B'] };
+const OPTS = [[-110, 0], [-70, -40], [0, -48], [80, -34], [118, 4], [70, 36], [-20, 40], [-90, 30]];
+const DUNES = Array.from({ length: 34 }, (_, i) => [(i * 337) % 2900, WALL6_Y + 60 + (i * 191) % 900]).filter(([x, y]) => !(y > 4840 && y < 4960) && !(Math.abs(x - 1240) < 220 && y > 4560 && y < 4660) && !(Math.abs(x - OASIS.x) < 220 && Math.abs(y - OASIS.y) < 110));
+const PUMPS = [ST8.fuel.x - 90, ST8.fuel.x + 90];
+const PALMS = [[-150, 5080], [150, 5090], [-240, 5110], [235, 5100], [-190, 5030], [190, 5020]].map(([dx, y]) => ({ x: OASIS.x + dx, y }))
+  .concat([{ x: 180, y: 4650 }, { x: 2500, y: 4650 }, { x: 2650, y: 5100 }, { x: 420, y: 5150 }, { x: 2000, y: 5300 }]);
+function oasisPath(c, k) {   // حافة ناعمة: منحنيات بين منتصفات الأضلاع
+  const P = OPTS.map(([dx, dy]) => [OASIS.x + dx * k, OASIS.y + dy * k]), n = P.length, m = i => [(P[i % n][0] + P[(i + 1) % n][0]) / 2, (P[i % n][1] + P[(i + 1) % n][1]) / 2];
+  c.beginPath(); c.moveTo(...m(0)); for (let i = 1; i <= n; i++) c.quadraticCurveTo(P[i % n][0], P[i % n][1], ...m(i)); c.closePath();
+}
 export function drawCaravanGround(ctx, t) {
-  ctx.fillStyle = '#E8CF97'; ctx.fillRect(0, WALL6_Y, 2930, 1000);
-  ctx.fillStyle = '#DDBF80'; for (let i = 0; i < 40; i++) { const x = (i * 337) % 2900, y = WALL6_Y + 60 + (i * 191) % 900; ctx.beginPath(); ctx.ellipse(x, y, 60, 14, 0, 0, 7); ctx.fill(); }   // كثبان
-  ctx.fillStyle = '#B9A07A'; ctx.fillRect(0, 4880, 2930, 44); ctx.fillStyle = '#FFF4D6'; for (let x = 20; x < 2930; x += 90) ctx.fillRect(x, 4900, 44, 4);   // طريق القافلة
-  ctx.fillStyle = '#C9B48E'; rr(ctx, GATE6.x0 - 30, WALL6_Y + 12, GATE6.x1 - GATE6.x0 + 60, 60, 8); ctx.fill();
-  // المدرج والواحة
-  ctx.fillStyle = '#7D8597'; ctx.fillRect(1060, 4600, 360, 40); ctx.fillStyle = '#fff'; for (let x = 1070; x < 1410; x += 40) ctx.fillRect(x, 4618, 22, 4);
-  ctx.fillStyle = '#3FA9F5'; ctx.beginPath(); [[-110, 0], [-70, -40], [0, -48], [80, -34], [118, 4], [70, 36], [-20, 40], [-90, 30]].forEach(([dx, dy], i) => i ? ctx.lineTo(OASIS.x + dx, OASIS.y + dy) : ctx.moveTo(OASIS.x + dx, OASIS.y + dy)); ctx.closePath(); ctx.fill();
-  ctx.fillStyle = 'rgba(255,255,255,.3)'; for (let i = 0; i < 4; i++) ctx.fillRect(OASIS.x - 60 + i * 34 + (t * 10 % 20), OASIS.y - 8 + (i % 2) * 14, 18, 3);
+  gateEWShadows(ctx, WALL6_Y, GATE6.x0, GATE6.x1);
+  // كثبان: تلال رملية بوجه مضاء وظل ناعم
+  DUNES.forEach(([x, y]) => { ctx.fillStyle = 'rgba(160,110,50,.13)'; ctx.beginPath(); ctx.ellipse(x + 10, y + 6, 66, 15, 0, 0, 7); ctx.fill(); ctx.fillStyle = 'rgba(255,240,200,.25)'; ctx.beginPath(); ctx.ellipse(x - 6, y - 2, 50, 10, 0, 0, 7); ctx.fill(); });
+  // طريق القافلة: إسفلت بحافتين وخط متقطع
+  ctx.fillStyle = shade(PAL.stone, -10); ctx.fillRect(0, 4874, 2930, 56);
+  ctx.fillStyle = pattern(ctx, 'asphalt'); ctx.fillRect(0, 4880, 2930, 44);
+  ctx.fillStyle = '#FFF4D6'; for (let x = 20; x < 2930; x += 90) ctx.fillRect(x, 4900, 44, 4);
+  ctx.fillStyle = pattern(ctx, 'pavers'); ctx.fillRect(GATE6.x0 - 10, WALL6_Y + 12, GATE6.x1 - GATE6.x0 + 20, 70);   // ممر البوابة
+  // المدرج
+  ctx.fillStyle = shade(PAL.stone, -10); ctx.fillRect(1054, 4594, 372, 52);
+  ctx.fillStyle = pattern(ctx, 'asphalt'); ctx.fillRect(1060, 4600, 360, 40);
+  ctx.fillStyle = '#fff'; for (let x = 1090; x < 1390; x += 40) ctx.fillRect(x, 4618, 22, 4); [1064, 1404].forEach(x => { for (let k = 0; k < 5; k++) ctx.fillRect(x, 4604 + k * 7, 12, 3); });
+  // الواحة: حافة عشبية، ماء بتدرج، وبريق يتحرك
+  sprite(ctx, 'oasis', OASIS.x - 150, OASIS.y - 75, 300, 150, c => {
+    c.fillStyle = PAL.leafDark; oasisPath(c, 1.22); c.fill(); c.fillStyle = pattern(c, 'grass'); oasisPath(c, 1.16); c.fill();
+    c.fillStyle = '#C9B48E'; oasisPath(c, 1.04); c.fill();
+    const g = c.createRadialGradient(OASIS.x, OASIS.y, 10, OASIS.x, OASIS.y, 120); g.addColorStop(0, '#1F7FB8'); g.addColorStop(1, '#4FB8E8'); c.fillStyle = g; oasisPath(c, 1); c.fill();
+    c.strokeStyle = 'rgba(255,255,255,.5)'; c.lineWidth = 2; oasisPath(c, .97); c.stroke(); c.strokeStyle = INK; c.lineWidth = 1; oasisPath(c, 1.22); c.stroke();
+  });
+  ctx.fillStyle = 'rgba(255,255,255,.45)'; for (let i = 0; i < 5; i++) { const k = (t * .25 + i * .2) % 1; ctx.globalAlpha = Math.sin(k * Math.PI) * .8; ctx.fillRect(OASIS.x - 70 + i * 30 + k * 16, OASIS.y - 14 + (i % 3) * 12, 16, 2.5); } ctx.globalAlpha = 1;
+  // ساحة محطة الوقود
+  ctx.fillStyle = pattern(ctx, 'pavers'); rr(ctx, ST8.fuel.x - 140, 4740, 280, 90, 10); ctx.fill(); ctx.strokeStyle = INK; ctx.lineWidth = 1; rr(ctx, ST8.fuel.x - 140, 4740, 280, 90, 10); ctx.stroke();
+  Object.values(ST8).forEach(s => kioskShadow(ctx, s));
+  PALMS.forEach(p => blobShadow(ctx, p.x, p.y, 22, 70));
+  const px = 1180 + Math.sin(t / 3) * 4; ctx.fillStyle = 'rgba(40,30,20,.18)'; ctx.beginPath(); ctx.ellipse(px + 6, 4632, 46, 9, 0, 0, 7); ctx.fill();   // ظل الطائرة
 }
 export function caravanDrawables(open, t) {
-  const out = [{ y: WALL6_Y + 12, draw: c => wall(c, open) }];
-  Object.values(ST8).forEach(s => out.push({ y: s.y - 32, draw: c => stall(c, s) }));
-  out.push({ y: 4640, draw: c => { const x = 1180 + Math.sin(t / 3) * 4, y = 4620; c.fillStyle = '#F4F1E8'; rr(c, x - 50, y - 10, 100, 20, 10); c.fill(); c.fillStyle = '#2F6FB2'; c.fillRect(x - 46, y - 3, 92, 4); c.fillStyle = '#E8EEF3'; c.beginPath(); c.moveTo(x - 10, y); c.lineTo(x - 30, y - 36); c.lineTo(x + 6, y); c.fill(); c.beginPath(); c.moveTo(x - 10, y); c.lineTo(x - 30, y + 36); c.lineTo(x + 6, y); c.fill(); } });
-  [[ST8.fuel.x - 90, 4800], [ST8.fuel.x + 90, 4800]].forEach(([x, y]) => out.push({ y, draw: c => { c.fillStyle = '#C0392B'; rr(c, x - 10, y - 44, 20, 44, 4); c.fill(); c.fillStyle = '#fff'; c.fillRect(x - 6, y - 38, 12, 10); } }));
-  [[-150, 5080], [150, 5090], [-60, 5150], [80, 5150]].forEach(([dx, y]) => out.push({ y, draw: c => palm(c, OASIS.x + dx, y, t) }));
+  const out = [{ y: WALL6_Y + 12, draw: c => gateEW(c, 'caravangate', WALL6_Y, GATE6.x0, GATE6.x1, open, 'طريق القافلة') }];
+  Object.entries(ST8).forEach(([k, s]) => out.push({ y: s.y - 32, draw: c => kiosk3d(c, k, s, GOODS[k]) }));
+  out.push({ y: 4626, x: 1180, draw: c => plane(c, 1180 + Math.sin(t / 3) * 4, 4612) });
+  PUMPS.forEach(x => out.push({ y: 4800, x, draw: c => pump(c, x, 4800) }));
+  PALMS.forEach(p => out.push({ y: p.y, draw: c => palmCached(c, p.x, p.y, 1, false, t) }));
+  [[OASIS.x - 160, 5130], [OASIS.x + 165, 5120], [OASIS.x - 95, 5168]].forEach(([x, y]) => out.push({ y, draw: c => shrub(c, x, y, 12, false) }));
   return out;
 }
-function palm(c, x, y, t) {
-  c.fillStyle = '#8D6238'; for (let i = 0; i < 7; i++) { c.beginPath(); c.ellipse(x + Math.sin(i * .4) * 2, y - 4 - i * 8, 5, 4.5, 0, 0, 7); c.fill(); }
-  c.strokeStyle = '#2E8B47'; c.lineWidth = 5; c.lineCap = 'round'; for (let i = 0; i < 6; i++) { const a = -Math.PI / 2 + (i - 2.5) * .55 + Math.sin(t + i) * .03; c.beginPath(); c.moveTo(x, y - 58); c.quadraticCurveTo(x + Math.cos(a) * 16, y - 64 + Math.sin(a) * 16, x + Math.cos(a) * 28, y - 52 + Math.sin(a) * 18); c.stroke(); }
+function plane(c, x, y) {   // طائرة صغيرة متوقفة على المدرج (منظر علوي مائل)
+  c.fillStyle = '#D9E2EA'; c.beginPath(); c.moveTo(x - 6, y); c.lineTo(x - 30, y - 38); c.lineTo(x - 18, y - 38); c.lineTo(x + 14, y); c.closePath(); c.fill(); c.strokeStyle = INK; c.lineWidth = .8; c.stroke();
+  const g = c.createLinearGradient(0, y - 11, 0, y + 11); g.addColorStop(0, '#FFFFFF'); g.addColorStop(1, '#C9D3DC'); c.fillStyle = g; rr(c, x - 52, y - 10, 104, 20, 10); c.fill(); c.stroke();
+  c.fillStyle = '#2F6FB2'; c.fillRect(x - 48, y - 2, 94, 4); c.fillStyle = '#3E5A66'; for (let k = 0; k < 6; k++) { c.beginPath(); c.arc(x - 26 + k * 10, y - 4, 1.8, 0, 7); c.fill(); }
+  c.fillStyle = '#2A3F5F'; c.beginPath(); c.moveTo(x + 52, y - 4); c.quadraticCurveTo(x + 46, y - 9, x + 40, y - 8); c.lineTo(x + 40, y - 2); c.closePath(); c.fill();
+  c.fillStyle = '#C0392B'; c.beginPath(); c.moveTo(x - 50, y - 6); c.lineTo(x - 60, y - 22); c.lineTo(x - 50, y - 22); c.lineTo(x - 40, y - 6); c.closePath(); c.fill(); c.strokeStyle = INK; c.stroke();
+  c.fillStyle = '#BCC7D0'; c.beginPath(); c.moveTo(x - 6, y); c.lineTo(x - 30, y + 30); c.lineTo(x - 18, y + 30); c.lineTo(x + 14, y); c.closePath(); c.fill(); c.strokeStyle = INK; c.stroke();
 }
-function stall(c, s) {
-  const x = s.x, y = s.y - 32;
-  c.fillStyle = 'rgba(60,35,10,.18)'; c.fillRect(x - 54, y, 108, 8);
-  c.fillStyle = '#9B6B3D'; c.fillRect(x - 50, y - 70, 6, 70); c.fillRect(x + 44, y - 70, 6, 70);
-  for (let k = 0; k < 6; k++) { c.fillStyle = k % 2 ? '#F4E3B8' : s.col; c.fillRect(x - 56 + k * 18.7, y - 86, 18.7, 18); }
-  c.fillStyle = shade(s.col, -20); c.fillRect(x - 56, y - 70, 112, 4); c.fillStyle = '#B07A3B'; rr(c, x - 50, y - 24, 100, 24, 3); c.fill();
-  c.fillStyle = '#FFFDF6'; rr(c, x - 50, y - 116, 100, 24, 6); c.fill(); c.fillStyle = '#5B4636'; c.font = '900 12px Cairo, sans-serif'; c.textAlign = 'center'; c.fillText(s.sign, x, y - 99);
-}
-function wall(c, open) {
-  c.fillStyle = '#C9B48E';
-  [[0, GATE6.x0], [GATE6.x1, 2930]].forEach(([a, b]) => { c.fillRect(a, WALL6_Y, b - a, 12); for (let x = a; x < b; x += 18) c.fillRect(x, WALL6_Y - 4, 8, 18); });
-  c.fillStyle = '#B79F74'; c.fillRect(GATE6.x0 - 20, WALL6_Y - 30, 24, 44); c.fillRect(GATE6.x1 - 4, WALL6_Y - 30, 24, 44);
-  c.fillStyle = '#FFFDF6'; rr(c, (GATE6.x0 + GATE6.x1) / 2 - 64, WALL6_Y - 64, 128, 26, 7); c.fill();
-  c.fillStyle = '#5B4636'; c.font = '900 14px Cairo, sans-serif'; c.textAlign = 'center'; c.fillText(open ? 'طريق القافلة ↓' : 'طريق القافلة 🔒', (GATE6.x0 + GATE6.x1) / 2, WALL6_Y - 46);
-  if (!open) for (let i = 0; i < 7; i++) { c.fillStyle = i % 2 ? '#fff' : '#E2475C'; c.fillRect(GATE6.x0 + i * 14.3, WALL6_Y - 2, 14.3, 14); }
+function pump(c, x, y) {   // مضخة وقود: قاعدة، جسم بشاشة، وخرطوم
+  c.fillStyle = PAL.stone; c.fillRect(x - 16, y - 6, 32, 8); c.strokeStyle = INK; c.lineWidth = .8; c.strokeRect(x - 16, y - 6, 32, 8);
+  const g = c.createLinearGradient(x - 11, 0, x + 11, 0); g.addColorStop(0, '#E2564A'); g.addColorStop(1, '#A82F24'); c.fillStyle = g; rr(c, x - 11, y - 50, 22, 46, 4); c.fill(); c.stroke();
+  c.fillStyle = '#E8F4F0'; c.fillRect(x - 7, y - 44, 14, 10); c.fillStyle = '#1FA05A'; c.fillRect(x - 5, y - 41, 10, 2); c.fillStyle = '#FFF'; c.fillRect(x - 11, y - 26, 22, 3);
+  c.strokeStyle = '#2B2B2B'; c.lineWidth = 2; c.beginPath(); c.moveTo(x + 11, y - 30); c.quadraticCurveTo(x + 20, y - 18, x + 14, y - 8); c.stroke(); c.fillStyle = '#3D3A3A'; c.fillRect(x + 10, y - 34, 5, 8);
 }
