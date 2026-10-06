@@ -7,12 +7,14 @@ export const ACCENTS = ['#2F6FB2', '#C0392B', '#2E8B57', '#8E44AD'];
 export const INK = 'rgba(43,26,32,.62)';   // الخط المحيطي المشترك لكل رسوم العالم
 const HAIR = '#251A15';
 export const HERO_H = 64;                    // طول الطفل بوحدات العالم (البالغ أطول بـ١٠٪)
-export function heightOf(h) { return HERO_H * (h.kind === 'man' || h.kind === 'woman' ? 1.1 : 1) * (h.s || 1); }
+export function heightOf(h) { return HERO_H * (h.kind === 'man' || h.kind === 'woman' ? 1.1 : 1) * (h.tall || 1) * (h.s || 1); }
 
 /* أطوال العظام (وحدات العالم، الطفل) */
 const B = { ankle: 2.6, shin: 13.4, thigh: 13.4, torso: 17.2, neck: 2.6, R: 5.9, RH: 6.5, upper: 10, fore: 9.2, hipW: 2.7, shW: 6.9 };
 
-/* h = { x, y, dir, phase, moving, carry, kind, skin, robe, accent, s, bend, beard, mark, gear, pants, shoe, anim, animT } — (x, y) موضع القدمين */
+/* h = { x, y, dir, phase, moving, carry, kind, skin, robe, accent, s, bend, beard, mark, gear, pants, shoe, anim, animT,
+         build (عرض الجسم)، tall (الطول)، elder (انحناء خفيف)، hat: 'straw'|'cap'، glasses، vest، apron، postbag، tool: 'hoe'|'cane' } — (x, y) موضع القدمين
+   حركات إضافية لأهل القرية: wave (تلويح)، talk (كلام باليدين) */
 export function drawHuman(ctx, h) {
   const s = h.s || 1, dir = h.dir || 'down', side = dir === 'left' || dir === 'right', back = dir === 'up';
   const female = h.kind === 'girl' || h.kind === 'woman', adult = h.kind === 'man' || h.kind === 'woman';
@@ -38,7 +40,7 @@ export function drawHuman(ctx, h) {
   const ext = l => B.thigh * Math.cos(l.a) + B.shin * Math.cos(l.a - l.b);
   const jump = anim === 'celebrate' ? Math.abs(Math.sin(at * Math.PI * 2)) * 12 : 0;
   const hipV = -(B.ankle + Math.max(ext(legs[0]), ext(legs[1]))) - jump - (anim === 'idle' ? Math.sin(now / 760 + seed) * .25 : 0);
-  const lean = run ? .16 : anim === 'pickup' ? .55 * p : anim === 'place' ? .28 * p : 0;
+  const lean = (run ? .16 : anim === 'pickup' ? .55 * p : anim === 'place' ? .28 * p : 0) + (h.elder ? .12 : 0);
   const arms = [0, 1].map(i => {   // i=0 الذراع المقابلة للساق 0
     const q = ph + i * Math.PI;
     let c = walking ? -(run ? .85 : .55) * Math.sin(q) : Math.sin(now / 1900 + seed + i) * .03, e = walking ? (run ? 1.45 : .22 + .25 * Math.max(0, -Math.sin(q))) : .12;
@@ -47,6 +49,9 @@ export function drawHuman(ctx, h) {
     if (anim === 'interact' && i === 1) { c = 1.45 * p; e = .1; }
     if (anim === 'celebrate') { c = Math.PI - .42 + Math.sin(at * Math.PI * 6) * .12 * (i ? 1 : -1); e = .15; }
     if (anim === 'carry' || anim === 'carryWalk') { c = .42; e = 1.2; }
+    if (anim === 'wave' && i === 1) { c = Math.PI * .8 + Math.sin(at * Math.PI * 8) * .2; e = .55; }
+    if (anim === 'talk') { const k = Math.sin(at * Math.PI * 4 + i * 1.7); c = i ? .55 + .25 * k : .2 + .1 * k; e = i ? .95 + .2 * k : .5; }
+    if (h.tool === 'cane' && i === 1 && !walking) { c = .28; e = .3; }
     return { c, e };
   });
 
@@ -74,7 +79,8 @@ export function drawHuman(ctx, h) {
   const sh = 1 - jump / 28;
   ctx.fillStyle = 'rgba(40,24,12,.14)'; ctx.beginPath(); ctx.ellipse(-L * 8, 2.6, 18 * sh, 5.2 * sh, -L * .22, 0, 7); ctx.fill();
   ctx.fillStyle = 'rgba(40,24,12,.3)'; ctx.beginPath(); ctx.ellipse(0, 0, 11 * sh, 3.4 * sh, 0, 0, 7); ctx.fill();
-  ctx.scale(adult ? 1.06 : 1, adult ? 1.1 : 1);
+  const bw = h.build || 1;
+  ctx.scale((adult ? 1.06 : 1) * bw, (adult ? 1.1 : 1) * (h.tall || 1));
 
   const G = h.gear || {};
   // ترتيب الرسم: الأطراف البعيدة أولاً. جانبياً: البعيد lat<0 (يمين النظر إلى +x)
@@ -89,16 +95,22 @@ export function drawHuman(ctx, h) {
   skirt(ctx, LG, hipV, robe, acc, female, side, back, L, ph, walking);
   torso(ctx, rot, P, hipV, shV, robe, acc, female, adult, side, back, L, G);
   if (G.flask) flask(ctx, P, rot, shV);
+  outfit(ctx, h, rot, P, hipV, shV, side, back);   // سترة، مريلة، حقيبة بريد
   if (side) { if (h.carry) boxes(ctx, h.carry, AR[1].wr[0] - 3, AR[1].wr[1] + 1); drawArm(ctx, AR[1], robe, skin, acc, female, false, L); }
   else { drawArm(ctx, AR[0], robe, skin, acc, female, false, L); drawArm(ctx, AR[1], robe, skin, acc, female, false, -L); if (!back && h.carry) boxes(ctx, h.carry, -6.5, AR[0].wr[1] + 1); }
   if (G.shovel && back) shovelGear(ctx, shV);
-  // ── الرأس
+  if (h.tool) tool(ctx, h.tool, AR[1].wr, shV, walking);
+  // ── الرأس (لا يتسع مع عرض الجسم)
   const [nf, nv] = rot(side ? .9 : 0, shV - B.neck), [nx, ny] = P(0, nf, nv), hx = nx + (side ? .5 : 0), hy = ny - B.RH + 1;
+  ctx.save(); ctx.translate(hx, hy); ctx.scale(1 / bw, 1); ctx.translate(-hx, -hy);
   ctx.fillStyle = shade(skin, -20); rr(ctx, nx - 2.1, ny - 1.5, 4.2, B.neck + 3, 1.5); ctx.fill();
   if (female) hijab(ctx, h, hx, hy, side, back, L, acc, skin, detail);
   else headShape(ctx, hx, hy, side, back, skin, L, detail);
   if (!back) (detail ? faceHi : faceLo)(ctx, h, hx, hy + (female ? .5 : 0), side, skin, now, seed, anim, female);
-  if (!female) (adult ? massar : kumma)(ctx, h, hx, hy, side, back, acc, detail);
+  if (h.glasses && !back) glasses(ctx, hx, hy + (female ? .5 : 0), side);
+  if (h.hat) hat(ctx, h.hat, hx, hy, side, back, acc);
+  else if (!female) (adult ? massar : kumma)(ctx, h, hx, hy, side, back, acc, detail);
+  ctx.restore();
   ctx.restore();
 
   if (h.mark) {   // علامة المهمة فوق الرأس: ماسة ذهبية تطفو
@@ -315,5 +327,70 @@ function boxes(ctx, n, x0, y0) {   // كومة صناديق بين اليدين�
     ctx.fillStyle = '#E2AC6C'; ctx.fillRect(x + .6, y + .5, 11.8, 2.2);
     ctx.strokeStyle = INK; ctx.lineWidth = .8; ctx.strokeRect(x, y, 13, 8.4);
     ctx.strokeStyle = '#8E5A26'; ctx.lineWidth = .8; ctx.beginPath(); ctx.moveTo(x + 6.5, y + 2.6); ctx.lineTo(x + 6.5, y + 8.4); ctx.stroke();
+  }
+}
+
+/* ── أزياء المهن ── */
+function outfit(ctx, h, rot, P, hipV, shV, side, back) {
+  const poly = pts => { ctx.beginPath(); pts.forEach(([f, v, l], i) => { const [rf, rv] = rot(side ? f : 0, v), [x, y] = P(side ? 0 : l, rf, rv); i ? ctx.lineTo(x, y) : ctx.moveTo(x, y); }); ctx.closePath(); };
+  if (h.vest) {   // سترة عاكسة: لوحان أماميان وشريطان فضيان (ظهر كامل من الخلف)
+    const parts = side ? [[[-3.4, shV + 2], [3.6, shV + 2], [3.8, hipV - 1], [-3.6, hipV - 1]]]
+      : back ? [[[0, shV + 1, -6.6], [0, shV + 1, 6.6], [0, hipV - 1, 6], [0, hipV - 1, -6]]]
+      : [[[0, shV + 1, -6.8], [0, shV + 2, -1.9], [0, hipV - 1, -1.9], [0, hipV - 1, -6.2]], [[0, shV + 1, 6.8], [0, shV + 2, 1.9], [0, hipV - 1, 1.9], [0, hipV - 1, 6.2]]];
+    parts.forEach(pt => { poly(pt.map(([f, v, l]) => [f, v, l || 0])); ctx.fillStyle = h.vest; ctx.fill(); ctx.strokeStyle = INK; ctx.lineWidth = .7; ctx.stroke(); });
+    ctx.fillStyle = '#E8ECEF'; [shV + 8, shV + 12].forEach(v => parts.forEach(pt => { const lo = pt[0], hi = pt[1]; poly([[lo[0], v, lo[2] || 0], [hi[0], v, hi[2] || 0], [hi[0], v + 1.6, hi[2] || 0], [lo[0], v + 1.6, lo[2] || 0]]); ctx.fill(); }));
+  }
+  if (h.apron && !back) {   // مريلة صاحب الدكان من الخصر إلى الركبة
+    poly(side ? [[1.2, hipV - 5], [5, hipV - 5], [5.6, hipV + 15], [1.6, hipV + 15]] : [[0, hipV - 5, -5.6], [0, hipV - 5, 5.6], [0, hipV + 15, 6.2], [0, hipV + 15, -6.2]]);
+    ctx.fillStyle = h.apron; ctx.fill(); ctx.strokeStyle = INK; ctx.lineWidth = .7; ctx.stroke();
+    if (!side) { ctx.strokeStyle = shade(h.apron, -30); ctx.lineWidth = .8; ctx.beginPath(); ctx.moveTo(-3.6, shV + 1); ctx.lineTo(-3, hipV - 5); ctx.moveTo(3.6, shV + 1); ctx.lineTo(3, hipV - 5); ctx.stroke(); ctx.fillStyle = shade(h.apron, -20); rr(ctx, -3, hipV + 2, 6, 5, 1); ctx.fill(); }
+  }
+  if (h.postbag) {   // حقيبة البريد بحزام مائل
+    ctx.strokeStyle = '#5B3A22'; ctx.lineWidth = 1.4; ctx.beginPath();
+    if (!side) { ctx.moveTo(back ? 5 : -5, shV - .5); ctx.lineTo(back ? -5 : 5, hipV - 3); } else { ctx.moveTo(.5, shV); ctx.lineTo(-4, hipV - 3); }
+    ctx.stroke();
+    const bx = side ? -9 : back ? -11 : 4, by = hipV - 7;
+    ctx.fillStyle = '#2F6B73'; rr(ctx, bx, by, 8, 9, 1.6); ctx.fill(); ctx.fillStyle = shade('#2F6B73', -20); rr(ctx, bx, by, 8, 4, 1.4); ctx.fill();
+    ctx.fillStyle = '#E3B04B'; ctx.fillRect(bx + 3, by + 4.5, 2, 2); ctx.strokeStyle = INK; ctx.lineWidth = .6; ctx.strokeRect(bx, by, 8, 9);
+  }
+}
+function tool(ctx, kind, wr, shV, walking) {   // عصا كبير السن، أو معول المزارع يتكئ عليه
+  ctx.lineCap = 'round';
+  if (kind === 'cane') {
+    const bx = wr[0] + 2.5, top = wr[1] - 1;
+    ctx.strokeStyle = INK; ctx.lineWidth = 2.6; ctx.beginPath(); ctx.moveTo(bx, 0); ctx.lineTo(bx - .5, top); ctx.quadraticCurveTo(bx - .8, top - 3, bx - 3.5, top - 2); ctx.stroke();
+    ctx.strokeStyle = '#7A4A2A'; ctx.lineWidth = 1.6; ctx.stroke();
+    return;
+  }
+  if (kind === 'hoe' && !walking) {
+    const gx = wr[0] + 4, top = shV - 14;
+    ctx.strokeStyle = INK; ctx.lineWidth = 2.8; ctx.beginPath(); ctx.moveTo(gx, -1); ctx.lineTo(wr[0] - 1, top); ctx.stroke();
+    ctx.strokeStyle = '#9C6438'; ctx.lineWidth = 1.8; ctx.stroke();
+    ctx.fillStyle = '#8E99A4'; ctx.beginPath(); ctx.moveTo(gx - 1, -1); ctx.lineTo(gx + 7, 0); ctx.lineTo(gx + 6, 2.4); ctx.lineTo(gx - 1, 1.4); ctx.closePath(); ctx.fill(); ctx.strokeStyle = INK; ctx.lineWidth = .6; ctx.stroke();
+  }
+}
+function glasses(ctx, hx, hy, side) {
+  ctx.strokeStyle = '#2A1E19'; ctx.lineWidth = .55;
+  if (side) { ctx.beginPath(); ctx.arc(hx + 3.2, hy + .4, 1.7, 0, 7); ctx.moveTo(hx + 1.5, hy); ctx.lineTo(hx - 1.6, hy - .3); ctx.stroke(); return; }
+  ctx.beginPath(); ctx.arc(hx - 2.3, hy + .5, 1.75, 0, 7); ctx.moveTo(hx + 4.05, hy + .5); ctx.arc(hx + 2.3, hy + .5, 1.75, 0, 7); ctx.moveTo(hx - .55, hy + .3); ctx.lineTo(hx + .55, hy + .3); ctx.stroke();
+  ctx.fillStyle = 'rgba(255,255,255,.25)'; ctx.beginPath(); ctx.arc(hx - 2.8, hy, .5, 0, 7); ctx.arc(hx + 1.8, hy, .5, 0, 7); ctx.fill();
+}
+function hat(ctx, kind, hx, hy, side, back, acc) {
+  const R = B.R;
+  if (kind === 'straw') {   // قبعة خوص عريضة الحافة للمزارع
+    ctx.fillStyle = INK; ctx.beginPath(); ctx.ellipse(hx, hy - 3.4, 11.8, 4.1, 0, 0, 7); ctx.fill();
+    ctx.fillStyle = '#D9B76A'; ctx.beginPath(); ctx.ellipse(hx, hy - 3.4, 11, 3.5, 0, 0, 7); ctx.fill();
+    ctx.strokeStyle = 'rgba(140,100,40,.45)'; ctx.lineWidth = .5; for (let k = 1; k < 4; k++) { ctx.beginPath(); ctx.ellipse(hx, hy - 3.4, 11 - k * 2.2, 3.5 - k * .7, 0, 0, 7); ctx.stroke(); }
+    const g = ctx.createLinearGradient(hx - 6, 0, hx + 6, 0); g.addColorStop(0, '#E3C27A'); g.addColorStop(1, '#B38E48');
+    ctx.fillStyle = g; ctx.beginPath(); ctx.moveTo(hx - 5.6, hy - 3.6); ctx.bezierCurveTo(hx - 5.6, hy - 12.5, hx + 5.6, hy - 12.5, hx + 5.6, hy - 3.6); ctx.closePath(); ctx.fill(); ctx.strokeStyle = INK; ctx.lineWidth = .7; ctx.stroke();
+    ctx.fillStyle = '#7A4A2A'; ctx.fillRect(hx - 5.6, hy - 6.2, 11.2, 1.8);
+    return;
+  }
+  if (kind === 'cap') {   // قبعة رياضية حديثة
+    ctx.fillStyle = acc; ctx.beginPath(); ctx.moveTo(hx - R - .3, hy - 1.6); ctx.bezierCurveTo(hx - R, hy - 10.5, hx + R, hy - 10.5, hx + R + .3, hy - 1.6); ctx.closePath(); ctx.fill(); ctx.strokeStyle = INK; ctx.lineWidth = .7; ctx.stroke();
+    ctx.fillStyle = shade(acc, -28);
+    if (side) { ctx.beginPath(); ctx.ellipse(hx + R + 2.4, hy - 2.2, 4.6, 1.5, -.1, 0, 7); ctx.fill(); }
+    else if (!back) { ctx.beginPath(); ctx.ellipse(hx, hy - 1.4, 6.8, 2.4, 0, 0, Math.PI); ctx.fill(); }
+    ctx.fillStyle = '#fff'; ctx.beginPath(); ctx.arc(hx, hy - 8.6, .8, 0, 7); ctx.fill();
   }
 }

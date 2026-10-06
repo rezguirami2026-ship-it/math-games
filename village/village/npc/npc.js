@@ -67,25 +67,53 @@ export function makeNpcs() {
     { id: 'zainab', name: 'زينب', role: 'تاجرة التمور', kind: 'woman', robe: '#8B5A2B', accent: '#FFC23D', skin: '#D9A374', x: 1726, y: 5798, home: { x: 1726, y: 5800, r: 8 } },
     { id: 'jaber', name: 'جابر', role: 'صانع الكريستال', kind: 'man', robe: '#F4F1E8', accent: '#7B3F98', skin: '#8B5A38', beard: '#4A4A4A', x: 2146, y: 5798, home: { x: 2146, y: 5800, r: 8 } },
     { id: 'rashed', name: 'راشد', role: 'صاحب الورشة', kind: 'man', robe: '#C9D3DD', accent: '#5E6B78', skin: '#B97F52', beard: '#3A3A3A', x: 1290, y: 1320, home: { x: 1290, y: 1322, r: 16 } }
-  ].map(n => Object.assign({ dir: 'down', phase: 0, moving: false, target: null, wait: Math.random() * 2 }, n));
+  ].map(n => Object.assign({ dir: 'down', phase: 0, moving: false, target: null, wait: Math.random() * 2, gest: 2 + Math.random() * 5 }, variety(n), LOOKS[n.id] || {}, n));
 }
+/* تنوّع الأجسام: كل شخص بعرض وطول مختلفين قليلاً (ثابتين له)، وكبار السن ينحنون ويتكئون على عصا */
+function variety(n) {
+  let k = 0; for (const ch of n.id) k = (k * 31 + ch.charCodeAt(0)) % 997;
+  const old = n.beard === '#DDDDDD' || n.beard === '#6B6B6B';
+  return { build: .92 + (k % 7) * .035, tall: .95 + (k % 5) * .028, elder: n.beard === '#DDDDDD', tool: n.beard === '#DDDDDD' ? 'cane' : undefined, speed: old ? 30 : 36 + (k % 4) * 4 };
+}
+/* أزياء أهل القلب: كل مهنة بما يميّزها، وحركتها المعتادة حين تقف */
+const LOOKS = {
+  salem: { vest: '#F28C28', build: 1.12, gestureAnim: 'interact' },                    // السائق: سترة عاكسة
+  umkhalid: { build: 1.1, tall: .96, gestureAnim: 'talk' },
+  yousef: { hat: 'cap', gear: { bag: true }, tall: .94, gestureAnim: 'wave' },           // ابن المزارع: قبعة وحقيبة مدرسية
+  naser: { apron: '#3F6E5A', glasses: true, build: 1.2, tall: .97, gestureAnim: 'place' }, // صاحب الدكان: مريلة ونظارة
+  hamad: { hat: 'straw', tool: 'hoe', tall: 1.06, build: .92, gestureAnim: 'pickup' },  // المزارع: قبعة خوص ومعول
+  saeed: { hat: 'cap', accent: '#C0392B', postbag: true, gestureAnim: 'interact' },     // ساعي البريد: قبعة وحقيبة بريد
+  rashed: { apron: '#4A4F56', glasses: true, build: 1.08, gestureAnim: 'place' }           // صاحب الورشة: مريلة جلدية
+};
+const GEST_T = { pickup: 1.5, place: 1, interact: .8, talk: 1.6, wave: 1.1 };
+const play = (n, name, dur) => { n.anim = { name, t: 0, dur: dur || GEST_T[name] || 1 }; };
 export const npcVisible = (n, st) => !n.needs || !!st.world[n.needs];
 export function updateNpc(n, dt, player, blocked) {
-  if (Math.hypot(player.x - n.x, player.y - n.y) < 85 || n.talking) {
+  if (n.anim && (n.anim.t += dt / n.anim.dur) >= 1) n.anim = null;
+  const near = Math.hypot(player.x - n.x, player.y - n.y) < 85;
+  if (near || n.talking) {
     n.moving = false; n.target = null;
     const dx = player.x - n.x, dy = player.y - n.y; n.dir = Math.abs(dx) > Math.abs(dy) ? (dx > 0 ? 'right' : 'left') : (dy > 0 ? 'down' : 'up');
+    if (n.talking) { if (!n.anim) play(n, 'talk'); }               // يتكلم بيديه طوال الحوار
+    else if (!n.wasNear) play(n, 'wave');                           // يلوّح حين يقترب البطل
+    n.wasNear = true;
     return;
   }
+  n.wasNear = false;
   if (!n.target) {
-    n.moving = false; n.wait -= dt;
+    n.moving = false; n.wait -= dt; n.gest -= dt;
+    if (n.gest <= 0 && !n.anim) {   // حركة معتادة: حركة المهنة، أو التفات حوله
+      n.gest = 4 + Math.random() * 6;
+      if (Math.random() < .55) play(n, n.gestureAnim || 'interact'); else n.dir = ['down', 'left', 'right', 'down'][Math.floor(Math.random() * 4)];
+    }
     if (n.wait <= 0) { const a = Math.random() * 6.28, r = Math.random() * n.home.r; n.target = { x: n.home.x + Math.cos(a) * r, y: n.home.y + Math.sin(a) * r * .6 }; }
     return;
   }
   const dx = n.target.x - n.x, dy = n.target.y - n.y, d = Math.hypot(dx, dy);
   if (d < 3) { n.target = null; n.wait = 1.5 + Math.random() * 3; n.moving = false; return; }
-  const st = 42 * dt, nx = n.x + dx / d * st, ny = n.y + dy / d * st;
+  const st = (n.speed || 42) * dt, nx = n.x + dx / d * st, ny = n.y + dy / d * st;
   if (blocked(nx, ny)) { n.target = null; n.wait = 1; return; }
   n.x = nx; n.y = ny; n.moving = true; n.phase += st * .17;
   n.dir = Math.abs(dx) > Math.abs(dy) ? (dx > 0 ? 'right' : 'left') : (dy > 0 ? 'down' : 'up');
 }
-export const drawNpc = (ctx, n, mark) => drawHuman(ctx, Object.assign({}, n, { mark }));
+export const drawNpc = (ctx, n, mark) => drawHuman(ctx, Object.assign({}, n, { mark, anim: n.anim && !n.moving ? n.anim.name : undefined, animT: n.anim ? n.anim.t : 0 }));
