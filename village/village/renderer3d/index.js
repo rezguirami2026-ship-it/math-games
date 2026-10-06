@@ -6,6 +6,7 @@ import { RoomEnvironment } from '../lib/three/addons/RoomEnvironment.js';
 import { material, setAniso } from './textures.js';
 import { wind, sky, mountains, sea, palmGrove, clouds } from './nature.js';
 import { makeComposer } from './post.js';
+import { ramadan } from './ramadan.js';
 import { residential, funpark, port } from './city.js';
 import { buildRegions } from './regions.js';
 import { vehicles, shop3d, busStation, dhows, plane3d, pumps3d, stage3d, farmShed3d, bellTowers } from './things.js';
@@ -45,7 +46,7 @@ export async function create3D(opts) {
   scene.add(sun, sun.target);
   const SUN_DIR = new THREE.Vector3(-.52, 1, -.62).normalize();
   const pmrem = new THREE.PMREMGenerator(renderer); scene.environment = pmrem.fromScene(new RoomEnvironment(), .04).texture; scene.environmentIntensity = .32;
-  scene.add(sky());
+  const skyM = sky(); scene.add(skyM);
   await step(.12);
 
   const W = opts.world, bounds = { x0: 0, z0: 0, x1: 2930, z1: W.h };
@@ -83,6 +84,7 @@ export async function create3D(opts) {
 
   /* ── المجسّمات: قلب القرية (المرحلة ١) ── */
   const village = buildVillage({ quality: q }); scene.add(village.group);
+  const rmd = ramadan(scene, { sky: skyM, sun, hemi, renderer, village });   // بعد بناء كل المباني (يجمع زجاج النوافذ)
   await step(.75);
 
   /* ── الكاميرا: تتبع كاميرا المحرك، بزاوية مرتفعة ثابتة، والمسافة تحفظ عرض الرؤية نفسه ── */
@@ -190,6 +192,7 @@ export async function create3D(opts) {
         }
       dropFar(q === 'high' ? 30 : 18);
       wind.value = t; seaM.userData.tick(t);
+      rmd.set(!!(L.ramadan && L.ramadan()), L); rmd.tick(t);
       village.update(state, t, E.follow); regions.update(t, E.follow, L.gates && L.gates());
       if (L.vehicles) veh.update(L.vehicles()); boats.userData.tick(t); bells.userData.tick(t); stg.userData.update(t, L.allDone && L.allDone()); if (E.follow) { resi.userData.fade(E.follow); prt.userData.fade(E.follow); }
       if (L.people) try { syncPeople(L.people(), t); } catch (e) { if (!L._pErr) { L._pErr = 1; console.error('people', e); } }

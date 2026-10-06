@@ -5,8 +5,18 @@ import { LESSONS } from '../content/lessons.js';
 import { ar } from '../core/util.js';
 const $ = id => document.getElementById(id);
 let anim = 0;
+/* البطل في شاشات البداية: مجسّماً إن كان العرض ثلاثي الأبعاد مفعّلاً ومدعوماً، وإلا بالرسم ثنائي الأبعاد */
+const use3d = () => { try { const q = new URLSearchParams(location.search); if (q.has('2d') || localStorage.getItem('ramimath_3d') === '0') return false; const c = document.createElement('canvas'); return !!(c.getContext('webgl2') || c.getContext('webgl')); } catch (e) { return false; } };
+let P3 = null;
+const stopAll = () => { cancelAnimationFrame(anim); if (P3) P3.stopPreviews(); };   // عند مغادرة الشاشة: لا رسم في الخلفية
 function animate(canvases) {
-  cancelAnimationFrame(anim); let ph = 0;
+  cancelAnimationFrame(anim); if (P3) P3.stopPreviews();
+  if (use3d()) {   // كل canvas يُستبدل بنسخة جديدة (السياق ثنائي الأبعاد لا يتحول إلى WebGL)
+    const fresh = canvases.map(({ c, h }) => { const n = document.createElement('canvas'); n.width = c.width; n.height = c.height; n.className = c.className; n.id = c.id; c.replaceWith(n); return { c: n, h }; });
+    import('../renderer3d/preview.js').then(m => { P3 = m; fresh.forEach(({ c, h }) => { if (c.isConnected) m.previewHero(c, h); }); }).catch(() => {});
+    return;
+  }
+  let ph = 0;
   const loop = () => {
     ph += .14;
     canvases.forEach(({ c, h }) => { const x = c.getContext('2d'); x.setTransform(1, 0, 0, 1, 0, 0); x.clearRect(0, 0, c.width, c.height); drawHuman(x, Object.assign({ x: c.width / 2, y: c.height - 14, s: 2.2, dir: 'down', moving: true, phase: ph }, h())); });
@@ -21,9 +31,9 @@ export const screens = {
       <canvas id="tHero" width="200" height="190"></canvas>
       <div class="btns">${saved ? `<button class="act big" id="bCont">تابع مغامرتك</button><button class="act ghost" id="bNew">مغامرة جديدة</button>` : `<button class="act big" id="bNew">ابدأ المغامرة</button>`}<button class="act ghost" id="bCode">🔑 لديّ رمز تقدّم</button></div>`;
     animate([{ c: $('tHero'), h: () => saved ? heroLook(saved.hero) : { kind: 'boy', accent: ACCENTS[0], skin: SKINS[1] } }]);
-    if (saved) $('bCont').onclick = () => { cancelAnimationFrame(anim); el.className = 'screen'; onContinue(); };
+    if (saved) $('bCont').onclick = () => { stopAll(); el.className = 'screen'; onContinue(); };
     $('bNew').onclick = () => { if (saved && !confirm('ستبدأ مغامرة جديدة ويُمسح عالمك الحالي. هل أنت متأكد؟')) return; this.hero(onNew); };
-    $('bCode').onclick = () => { cancelAnimationFrame(anim); this.restore(saved, { onContinue, onNew, onRestore }); };
+    $('bCode').onclick = () => { stopAll(); this.restore(saved, { onContinue, onNew, onRestore }); };
   },
   /* استعادة المغامرة برمز التقدّم: يُعرض اسم البطل وتقدّمه قبل التأكيد */
   restore(saved, cb) {
@@ -41,7 +51,7 @@ export const screens = {
       $('codeMsg').innerHTML = `مغامرة <b>${s.hero.name}</b>: أنجز ${ar(done)} من ${ar(LESSONS.length)} درساً.${saved ? '<br>ستحلّ محلّ المغامرة المحفوظة على هذا الجهاز.' : ''}`;
       el.querySelector('.btns').innerHTML = `<button class="act big" id="bYes">✓ نعم، استعدها</button><button class="act ghost" id="bBack">رجوع</button>`;
       $('bBack').onclick = () => this.title(saved, cb);
-      $('bYes').onclick = () => { el.className = 'screen'; cb.onRestore(s); };
+      $('bYes').onclick = () => { stopAll(); el.className = 'screen'; cb.onRestore(s); };
     };
   },
   hero(done) {
@@ -60,7 +70,7 @@ export const screens = {
     $('bGo').onclick = () => {
       const name = $('hname').value.trim();
       if (!name) { $('hname').focus(); $('hname').classList.add('shake'); setTimeout(() => $('hname').classList.remove('shake'), 500); return; }
-      cancelAnimationFrame(anim); done(Object.assign({}, pick, { name }));
+      stopAll(); done(Object.assign({}, pick, { name }));
     };
   },
   chapter(n, title) {

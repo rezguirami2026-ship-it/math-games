@@ -48,14 +48,15 @@ export function buildVillage({ quality }) {
   const lamps = streetLamps(LAMPS); group.add(lamps.group);
   // (أُزيلت الحصى والعشب المبعثر بطلب المستخدم: الأرض أنظف)
   const P = new Parts(); bench(P, 1196, 548); group.add(P.build());
+  let forced = false;
   return {
-    group,
+    group, forceLamps(v) { forced = v; },
     update(state, t, pl) {
       if (pl) fades.forEach(f => f(pl));
       const delivered = !!state.world.delivered;
       farmGreen.visible = delivered; farmDry.visible = !delivered;
       wl.userData.setFull(delivered);
-      lamps.setLit(!!(state.quests && state.quests.done.primeNumbers));
+      lamps.setLit(forced || !!(state.quests && state.quests.done.primeNumbers));   // تضيء بعد درس الأعداد الأولية، وفي رمضان
     }
   };
 }
