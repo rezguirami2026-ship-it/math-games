@@ -322,13 +322,15 @@ function render(ctx, view, t) {
   SEASON.ramadan = ramadanOn(); eng.mood = SEASON.ramadan ? 'dusk' : 'day';   // أجواء رمضان: غروب دافئ وفوانيس
   const s = game.state, m = s.missions.convoy, now = Date.now(), c = cur();
   drawGround(ctx, view);
-  drawMarketGround(ctx);
-  drawHarborGround(ctx, t);
-  drawFortGround(ctx, t);
-  drawFestivalGround(ctx, t);
-  drawCoopGround(ctx);
-  drawCaravanGround(ctx, t);
-  drawWorkshopGround(ctx);
+  // أرض المناطق: فقط ما يقترب من الشاشة (الظلال تمتد قليلاً جنوباً وشرقاً)
+  const near = (x0, y0, x1, y1) => view.x < x1 + 260 && view.x + view.w > x0 - 260 && view.y < y1 + 260 && view.y + view.h > y0 - 260;
+  if (near(1500, 0, 2930, 1750)) drawMarketGround(ctx);
+  if (near(2290, 0, 3400, 6600)) drawHarborGround(ctx, t);
+  if (near(0, 1600, 2930, 2620)) drawFortGround(ctx, t);
+  if (near(0, 2580, 2930, 3520)) drawFestivalGround(ctx, t);
+  if (near(0, 3480, 2930, 4520)) drawCoopGround(ctx);
+  if (near(0, 4480, 2930, 5520)) drawCaravanGround(ctx, t);
+  if (near(0, 5480, 2930, 6600)) drawWorkshopGround(ctx);
   drawFarm(ctx, s.world.delivered ? clamp((now - s.world.delivered) / 2600, 0, 1) : 0, t);
   TREE_SPOTS.forEach((sp, i) => drawSpot(ctx, sp, s.world.delivered && !s.world.trees[i]));
   drawGarden(ctx, quests.isDone('decimalAdd'));

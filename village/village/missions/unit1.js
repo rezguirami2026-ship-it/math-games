@@ -2,7 +2,7 @@
 import { game } from '../core/state.js';
 import { bus } from '../core/events.js';
 import { ar, wait, rr, clamp, shade } from '../core/util.js';
-import { PAL, INK, pattern, sprite, signboard, palm } from '../world/art.js';
+import { PAL, INK, pattern, sprite, signboard, palm, palmCached } from '../world/art.js';
 import { say, puff, floatUp, bubble } from '../world/entities.js';
 import { earn } from '../rewards/goodDeeds.js';
 import { sfx } from '../core/sound.js';
@@ -157,7 +157,7 @@ export const factorsMultiples = {
     const rows = done ? 3 : d.rows || 0, cols = done ? 6 : d.cols || 0;
     for (let r = 0; r < rows; r++) for (let k = 0; k < cols; k++) {
       const x = O.x + O.cell * (k + .5), y = O.y + O.cell * (r + .5) + 6;
-      if (done || d.grown) palm(c, x, y, .32, false, 0);   // نخلة صغيرة
+      if (done || d.grown) palmCached(c, x, y, .32, false, 0);   // نخلة صغيرة
       else {   // حفرة بشتلة صغيرة
         c.fillStyle = '#5E3E26'; c.beginPath(); c.ellipse(x, y, 7, 3.4, 0, 0, 7); c.fill();
         c.strokeStyle = PAL.leafDark; c.lineWidth = 1.4; c.beginPath(); c.moveTo(x, y); c.lineTo(x, y - 9); c.stroke();

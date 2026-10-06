@@ -1,7 +1,7 @@
 // «الميناء»: منطقة الوحدة الثالثة (الهندسة) على البحر شرق السوق، تُفتح بإنهاء الوحدة الثانية
 // الرسم بأسلوب القرية (world/art.js): بحر بعمق وأمواج، أرصفة خشبية، سفن داو عُمانية، مبانٍ مجسّمة، وشاطئ الإحداثيات
 import { rr, shade, ar } from '../core/util.js';
-import { INK, PAL, SUN, pattern, sprite, boxShadow, blobShadow, building3d, palmCached, gateNS, gateNSShadows, workTable, signboard, box3d } from './art.js';
+import { INK, PAL, SUN, pattern, sprite, boxShadow, blobShadow, building3d, palmCached, gateNS, wallNSItems, gateNSShadows, workTable, signboard, box3d } from './art.js';
 import { crate3d } from './entities.js';
 export const GATE2_X = 2300, SEA_X = 2930;
 export const PIER_Y = [305, 605, 905];
@@ -90,7 +90,7 @@ function pier(c, x, y, w, h) {   // رصيف خشبي: أعمدة في الما�
 }
 export function harborDrawables(open, t) {
   const out = [];
-  out.push({ y: 700, draw: c => gateNS(c, 'htower', GATE2_X, open, 'الميناء') });
+  out.push({ y: 700, draw: c => gateNS(c, 'htower', GATE2_X, open, 'الميناء') }, ...wallNSItems('htower', GATE2_X));
   out.push({ y: FRAMES.y + FRAMES.h, draw: c => building3d(c, 'frames', Object.assign({}, FRAMES, { H: H_B, wall: '#DCE4EA', door: '#2F6B73', sign: 'ورشة الهياكل', ac: 1 })) });
   out.push({ y: GIFTS.y + GIFTS.h, draw: c => building3d(c, 'gifts', Object.assign({}, GIFTS, { H: H_B, wall: '#F1DCE0', door: '#9E3B5F', sign: 'دكان الهدايا', tank: 1 })) });
   [[FRAME_TABLE, 'frames'], [GIFT_TABLE, 'gifts'], [ROOF_TABLE, 'roof']].forEach(([tb, k]) => out.push({ y: tb.y, x: tb.x, draw: c => workTable(c, tb.x, tb.y, k) }));

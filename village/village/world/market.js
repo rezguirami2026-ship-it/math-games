@@ -1,7 +1,7 @@
 // «السوق الأسبوعي»: منطقة الوحدة الثانية (القياس) شرق القرية، تُفتح بوابتها بعد إنهاء الوحدة الأولى
 // الرسم بأسلوب القرية نفسه (world/art.js): مبنى مجسّم، ملعب بعشب، محطة حافلات بمظلة، ساحة مرصوفة، وأرض حظيرة
 import { rr, shade } from '../core/util.js';
-import { INK, PAL, SUN, boxShadow, blobShadow, signboard, pattern, sprite, building3d, leanAt, palmCached, shrub, gateNS, gateNSShadows, stall } from './art.js';
+import { INK, PAL, SUN, boxShadow, blobShadow, signboard, pattern, sprite, building3d, leanAt, palmCached, shrub, gateNS, wallNSItems, gateNSShadows, stall } from './art.js';
 export const GATE_X = 1500;
 export const CARP = { x: 1580, y: 140, w: 200, h: 120 }, BENCH = { x: 1700, y: 332 };
 export const FIELD = { x: 1880, y: 140, w: 380, h: 300 }, BOARD = { x: 1990, y: 478 };
@@ -78,7 +78,7 @@ export function drawMarketGround(ctx) {
 /* ── المباني والأشياء القائمة (لها عمق؛ ما له x يميل مع منظور الكاميرا) ── */
 export function marketDrawables(open, t) {
   const out = [];
-  out.push({ y: 700, draw: c => drawWall(c, open) });
+  out.push({ y: 700, draw: c => drawWall(c, open) }, ...wallNSItems('tower', GATE_X));
   out.push({ y: CARP.y + CARP.h, draw: c => building3d(c, 'carp', { x: CARP.x, y: CARP.y, w: CARP.w, h: CARP.h, H: H_CARP, wall: '#E6D3B0', door: '#6E4524', sign: 'ورشة النجار مبارك', tank: 1, doorW: 46, doorH: 66 }) });
   out.push({ y: BENCH.y, x: BENCH.x, draw: c => workbench(c, BENCH.x, BENCH.y) });
   out.push({ y: BOARD.y, x: BOARD.x, draw: c => chalkboard(c, BOARD.x, BOARD.y) });

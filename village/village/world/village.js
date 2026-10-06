@@ -185,7 +185,7 @@ function crops(ctx, x, y, w, h, kind, k, t) {   // المحاصيل تنمو ب�
 }
 
 /* ── النخلة: نفس الرسم للزينة وللنخيل التي يزرعها اللاعب ── */
-export function drawPalm(ctx, x, y, sc, dry, t) { palm(ctx, x, y, sc, dry, t); }
+export function drawPalm(ctx, x, y, sc, dry, t) { if (sc >= 1) palmCached(ctx, x, y, 1, dry, t, true); else palm(ctx, x, y, sc, dry, t); }   // تنمو حية ثم تُنسخ من الذاكرة
 
 /* ── عناصر لها عمق (تُرتّب مع الشخصيات حسب y). المبنى الذي يقف البطل خلفه يصبح شفافاً ── */
 const behind = (pl, b, H) => pl && pl.x > b.x - 8 && pl.x < b.x + b.w + 8 && pl.y < b.y + b.h - 4 && pl.y > b.y - H - 10;
@@ -255,7 +255,7 @@ function drawWell(ctx, full, t) {   // بئر حجرية بإطار خشبي و�
   for (let k = -3; k <= 3; k++) { ctx.beginPath(); ctx.moveTo(w.x + k * 7, top + r * .5 * Math.sqrt(1 - (k * 7 / r) ** 2) + (k % 2 ? 5 : 0)); ctx.lineTo(w.x + k * 7, top + r * .5 * Math.sqrt(1 - (k * 7 / r) ** 2) + (k % 2 ? 10 : 5)); ctx.stroke(); }
   ctx.fillStyle = PAL.stone; ctx.beginPath(); ctx.ellipse(w.x, top, r, r * .5, 0, 0, 7); ctx.fill(); ctx.strokeStyle = INK; ctx.lineWidth = 1; ctx.stroke();
   ctx.fillStyle = full ? PAL.water : '#3B2E22'; ctx.beginPath(); ctx.ellipse(w.x, top + 1, r - 7, r * .5 - 4, 0, 0, 7); ctx.fill();
-  if (full) { ctx.strokeStyle = 'rgba(255,255,255,.55)'; ctx.lineWidth = 1; const k = (t * .8) % 1; ctx.beginPath(); ctx.ellipse(w.x, top + 1, (r - 9) * k, (r * .5 - 5) * k, 0, 0, 7); ctx.stroke(); }
+  if (full) { ctx.strokeStyle = 'rgba(255,255,255,.55)'; ctx.lineWidth = 1; const k = (((t || 0) * .8) % 1 + 1) % 1; ctx.beginPath(); ctx.ellipse(w.x, top + 1, (r - 9) * k, (r * .5 - 5) * k, 0, 0, 7); ctx.stroke(); }
   ctx.strokeStyle = INK; ctx.lineWidth = 1; ctx.beginPath(); ctx.ellipse(w.x, w.y, r, r * .5, 0, 0, Math.PI); ctx.lineTo(w.x - r, top); ctx.stroke(); ctx.beginPath(); ctx.moveTo(w.x + r, w.y); ctx.lineTo(w.x + r, top); ctx.stroke();
   // الإطار الخشبي والبكرة والحبل والدلو
   ctx.lineCap = 'round';

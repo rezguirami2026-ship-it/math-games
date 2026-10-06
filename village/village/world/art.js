@@ -209,8 +209,12 @@ function nsWall(c, x, a, b) {
   c.strokeStyle = 'rgba(80,55,30,.3)'; c.lineWidth = .8; for (let y = b - H + 8; y < b; y += 8) { c.beginPath(); c.moveTo(x, y); c.lineTo(x + 12, y); c.stroke(); }
   c.strokeStyle = INK; c.lineWidth = 1; c.strokeRect(x, a - H, 12, b - a + H);
 }
-export function gateNS(c, key, X, open, label, bottom = 1700) {
-  nsWall(c, X, 0, 556); nsWall(c, X, 722, bottom);
+/* عناصر رسم السور: قطع بطول ٢٥٦ لكل منها y نهايتها، حتى لا يختفي السور الطويل حين تبتعد البوابة عن الشاشة */
+export function wallNSItems(key, X, bottom = 1700) {
+  const segs = [[0, 556]]; for (let a = 722; a < bottom; a += 256) segs.push([a, Math.min(a + 256, bottom)]);
+  return segs.map(([a, b]) => ({ y: b, draw: c => sprite(c, `${key}-w${a}-${b}`, X - 3, a - GW.H - 10, 18, b - a + 12, k => nsWall(k, X, a, b)) }));
+}
+export function gateNS(c, key, X, open, label) {   // البرجان والعارضة واللافتة (السور نفسه عبر wallNSItems)
   gateTowers(X).forEach((t, i) => stoneBox3d(c, key + i, t.x, t.y, t.w, t.d, GW.TH, GW.col));
   c.save(); c.translate(X + 6, 600);   // العارضة فوق كل شيء ليبقى حال البوابة واضحاً
   if (open) c.rotate(-1.35);
@@ -465,9 +469,9 @@ function roofProps(ctx, b, ry) {   // ما على السطح: قبة المسج�
 
 /* ── النبات ── */
 /* نخلة ثابتة من الذاكرة، تتمايل بإمالة الصورة حول قاعدتها (لا إعادة رسم في كل إطار) */
-export function palmCached(ctx, x, y, sc, dry, t) {
+export function palmCached(ctx, x, y, sc, dry, t, noLean) {   // noLean: حين يميل العنصر مسبقاً عبر upright
   const sway = Math.sin((t || 0) * 1.1 + x * .01) * .035, v = Math.round(Math.abs(Math.sin(x * .07)) * 3);
-  const { lx, ly } = leanAt(x, y);   // التمايل ومنظور الكاميرا معاً
+  const { lx, ly } = noLean ? { lx: 0, ly: 0 } : leanAt(x, y);   // التمايل ومنظور الكاميرا معاً
   ctx.save(); ctx.translate(x, y); ctx.transform(1, 0, -sway - lx, 1 - ly, 0, 0);
   sprite(ctx, `palm|${dry ? 1 : 0}|${sc}|${v}`, -64 * sc, -140 * sc, 128 * sc, 150 * sc, c => palm(c, 0, 0, sc, dry, 0, v));
   ctx.restore();
