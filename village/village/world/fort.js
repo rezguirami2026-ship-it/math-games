@@ -68,7 +68,7 @@ export function fortDrawables(open, t) {
   if (!FLAGS.three) out.push({ y: CASTLE.y + CASTLE.h, draw: c => castle(c, t) });
   if (!FLAGS.three) Object.entries(B4).forEach(([k, b]) => out.push({ y: b.y + b.h, draw: c => building3d(c, 'fort-' + k, Object.assign({}, b, { H: H_B, door: k === 'gold' ? '#7A4A2A' : k === 'kitchen' ? '#B8613E' : '#6E4524', tank: k === 'kitchen' || k === 'roof', ac: k === 'museum' })) }));
   if (!FLAGS.three) out.push({ y: ST4.well.y - 16, x: ST4.well.x, draw: c => stoneWell(c, ST4.well.x, ST4.well.y - 20, 26, t) });
-  [[2380, '#C0392B'], [2480, '#2F6FB2']].forEach(([x, col]) => out.push({ y: 1830, x, draw: c => bellTower(c, x, col, t) }));
+  if (!FLAGS.three) [[2380, '#C0392B'], [2480, '#2F6FB2']].forEach(([x, col]) => out.push({ y: 1830, x, draw: c => bellTower(c, x, col, t) }));
   [[ST4.trip, '#2E8B57'], [ST4.change, '#7B3F98']].forEach(([s, col]) => out.push({ y: s.y - 22, x: s.x, draw: c => stall(c, s.x, s.y - 22, col) }));
   out.push({ y: ST4.conveyor.y - 24, x: ST4.conveyor.x, draw: c => conveyor(c, ST4.conveyor, t) });
   out.push({ y: ST4.pack.y - 24, x: ST4.pack.x, draw: c => packer(c, ST4.pack, t) });

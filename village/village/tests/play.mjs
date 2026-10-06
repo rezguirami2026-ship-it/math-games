@@ -24,7 +24,7 @@ const server = createServer(async (req, res) => {
 });
 await new Promise(r => server.listen(0, r));
 const D3 = process.argv.includes('--3d');   // تشغيل الدروس نفسها على العرض ثلاثي الأبعاد
-const URL_ = `http://localhost:${server.address().port}/` + (D3 ? '?3d=1' : '');
+const URL_ = `http://localhost:${server.address().port}/` + (D3 ? '?3d=1' : '?2d=1');   // العرض ثلاثي الأبعاد صار الافتراضي؛ النسخة العادية تُختبر صراحةً
 
 const browser = await chromium.launch({ channel: 'chrome', headless: !SHOW, args: D3 ? ['--use-angle=d3d11', '--ignore-gpu-blocklist'] : [] });
 const page = await browser.newPage({ viewport: { width: 1000, height: 700 } });

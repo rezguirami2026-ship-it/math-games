@@ -153,7 +153,7 @@ export function sea(x0, z0, z1) {
   x.putImageData(img, 0, 0);
   const n = new THREE.CanvasTexture(c); n.wrapS = n.wrapT = THREE.RepeatWrapping; n.repeat.set(40, 120);
   const mat = new THREE.MeshStandardMaterial({ color: '#2B8FC2', roughness: .22, metalness: .1, normalMap: n, normalScale: new THREE.Vector2(.35, .35) });
-  const m = new THREE.Mesh(new THREE.PlaneGeometry(4000, z1 - z0 + 4000), mat); m.rotation.x = -Math.PI / 2; m.position.set(x0 + 2000, -3, (z0 + z1) / 2); m.receiveShadow = true;
+  const m = new THREE.Mesh(new THREE.PlaneGeometry(4000, z1 - z0 + 4000), mat); m.rotation.x = -Math.PI / 2; m.position.set(x0 + 2000, -.5, (z0 + z1) / 2); m.receiveShadow = true;
   m.userData.tick = t => { n.offset.set(t * .01, t * .006); };
   return m;
 }

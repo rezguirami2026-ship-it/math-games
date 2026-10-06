@@ -19,7 +19,7 @@ export function workshopColliders(open) {
 const GOODS = { tiles: ['#2F6FB2', '#F2E6C9', '#7CA6C8'], flag: ['#C0392B', '#F4F1E8', '#2E8B57'], protractor: ['#E3B04B', '#A9B4BF', '#5E6874'], crates: ['#8B5A2B', '#C9A06A', '#6E4524'], crystals: ['#B794F4', '#7CC8F0', '#7B3F98'] };
 const COURT = { x: 260, y: 5610, w: 1960, h: 260 };
 const PALMS = [{ x: 150, y: 5700 }, { x: 2350, y: 5700 }, { x: 2600, y: 6000 }, { x: 900, y: 6250 }, { x: 1580, y: 6250 }, { x: 300, y: 6200 }, { x: 2200, y: 6300 }];
-const ST = { x: STAGE.x - 160, y: STAGE.y - 70, w: 320, h: 60, H: 24 };
+export const ST = { x: STAGE.x - 160, y: STAGE.y - 70, w: 320, h: 60, H: 24 };
 const POLES = [[STAGE.x - 330, 6120], [STAGE.x + 330, 6120]];
 const WSHRUBS = [[STAGE.x - 200, 6200], [STAGE.x + 200, 6200], [COURT.x - 30, 5900], [COURT.x + COURT.w + 30, 5900]];
 const TABLES = [[1000, 5960, 'roof'], [1480, 5960, 'frames']];
@@ -42,7 +42,7 @@ export function drawWorkshopGround(ctx) {
 export function workshopDrawables(open, t, allDone) {
   const out = FLAGS.three ? [] : [{ y: WALL7_Y + 12, draw: c => gateEW(c, 'workgate', WALL7_Y, GATE7.x0, GATE7.x1, open, 'ورشة البنّاء') }];   // في 3D: البوابة مجسّمة
   if (!FLAGS.three) Object.entries(ST9).forEach(([k, s]) => out.push({ y: s.y - 32, draw: c => kiosk3d(c, k, s, GOODS[k]) }));
-  out.push({ y: STAGE.y - 10, draw: c => stage(c, t, allDone) });
+  if (!FLAGS.three) out.push({ y: STAGE.y - 10, draw: c => stage(c, t, allDone) });
   if (!FLAGS.three) PALMS.forEach(p => out.push({ y: p.y, draw: c => palmCached(c, p.x, p.y, 1, false, t) }));
   POLES.forEach(([x, y]) => out.push({ y, x, draw: c => { c.fillStyle = PAL.wood; c.fillRect(x - 2, y - 90, 4, 90); c.strokeStyle = INK; c.lineWidth = .7; c.strokeRect(x - 2, y - 90, 4, 90); } }));
   out.push({ y: STAGE.y + 1, draw: c => { const [a, b] = POLES; lanternString(c, elev(a[0], a[1], 90), elev(STAGE.x - 146, ST.y, ST.H + 120), 22, 6, t); lanternString(c, elev(STAGE.x + 146, ST.y, ST.H + 120), elev(b[0], b[1], 90), 22, 6, t); } });

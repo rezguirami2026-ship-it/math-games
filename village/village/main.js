@@ -171,7 +171,7 @@ async function start(state) {
   }
 }
 /* ── العرض ثلاثي الأبعاد (renderer3d): يُحمَّل فقط عند طلبه، ويرجع إلى الرسم الحالي إن لم يدعم الجهاز WebGL أو فشل التحميل ── */
-const V3D = 'نسخة 3D · ٨';   // تُعرض في شاشة التحميل وفي الزاوية: للتأكد أن المتصفح حمّل آخر نسخة
+const V3D = 'نسخة 3D · ٩';   // تُعرض في شاشة التحميل وفي الزاوية: للتأكد أن المتصفح حمّل آخر نسخة
 const want3d = () => gfx.d3();
 function loadingScreen() {
   const el = document.createElement('div'); el.className = 'load3d';
@@ -194,7 +194,9 @@ async function init3D() {
     load = loadingScreen(); FLAGS.three = true;
     let q = 'auto'; try { q = localStorage.getItem('ramimath_q') || 'auto'; } catch (e) {}   // تلقائية: تبدأ عالية وتنخفض وحدها إن كان الجهاز بطيئاً
     eng.l3 = await R.create3D({ quality: q === 'low' ? 'low' : 'high', world: WORLD, paintGround: paintStaticGround, onProgress: k => load.set(k) });
-    eng.l3.ground = paintDynamicGround; eng.l3.people = people3d; eng.l3.gates = () => W.gateK;
+    eng.l3.ground = paintDynamicGround; eng.l3.people = people3d; eng.l3.gates = () => W.gateK; eng.l3.allDone = allDone;
+    eng.l3.vehicles = () => { const s = game.state, m = s.missions.convoy, out = W.trucks.map(tr => ({ id: 't' + tr.i, x: tr.x, y: tr.y, load: m.loads[tr.i], covered: tr.covered, shake: tr.shake, sag: tr.sag }));
+      if (quests.isStarted('division1') || quests.isDone('division1')) out.push({ id: 'van', x: convoy.VAN.x, y: convoy.VAN.y, load: m.van || 0, covered: !!s.world.delivered, s: .72 }); return out; };
     gfx.onQ = v => { if (v !== 'auto') eng.l3.setQuality(v); else autoQuality(); };
     if (q === 'auto') autoQuality();
     const tag = document.createElement('div'); tag.className = 'ver3d'; tag.textContent = V3D; document.body.appendChild(tag);
@@ -468,14 +470,16 @@ function worldItems(view, t, three) {
   const list = staticDrawables(s, t, W.player, { three }).concat(...REGIONS.map((r, i) => r.draw(gk[i], t))).filter(d => d.y > view.y - 60 && d.y < view.y + view.h + 200);
   mods.forEach(md => { const d = quests.data(md.id), done = quests.isDone(md.id); try { if (md.draw) list.push(...md.draw(d, t, !done, done)); } catch (e) { report('الرسم', md.id, e); } });
   TREE_SPOTS.forEach((sp, i) => { const pt = s.world.trees[i]; if (pt) { const k = clamp((now - pt) / 2200, .05, 1); list.push({ y: sp.y, x: sp.x, draw: cc => drawPalm(cc, sp.x, sp.y, .2 + .8 * easeOut(k), false, t) }); } });
-  W.trucks.forEach(tr => list.push({ y: tr.y + 4, x: tr.x, draw: cc => drawTruck(cc, tr, m.loads[tr.i], convoyActive()) }));
+  if (!three) W.trucks.forEach(tr => list.push({ y: tr.y + 4, x: tr.x, draw: cc => drawTruck(cc, tr, m.loads[tr.i], convoyActive()) }));
+  else if (convoyActive()) W.trucks.forEach(tr => list.push({ y: tr.y + 4, draw: cc => bubble(cc, tr.x - 10, tr.y - 78, ar(m.loads[tr.i]), tr.flash ? '#E2475C' : '#2A1B66') }));   // في 3D: الشاحنة مجسّمة، والرقم فوقها
   if (convoyActive()) list.push({ y: PILE.y, x: PILE.x, draw: cc => drawPile(cc, m.pile) });
-  if (quests.isStarted('division1') || quests.isDone('division1')) list.push({ y: convoy.VAN.y + 4, x: convoy.VAN.x, draw: cc => drawVan(cc, m.van || 0) });
+  if ((quests.isStarted('division1') || quests.isDone('division1')) && !three) list.push({ y: convoy.VAN.y + 4, x: convoy.VAN.x, draw: cc => drawVan(cc, m.van || 0) });
+  else if ((quests.isStarted('division1') || quests.isDone('division1')) && convoyActive()) list.push({ y: convoy.VAN.y + 4, draw: cc => bubble(cc, convoy.VAN.x - 6, convoy.VAN.y - 56, ar(m.van || 0), '#7B3F98') });
   list.push({ y: SIGNAL.y, x: SIGNAL.x, draw: cc => drawSignal(cc, W.signalGreen) });
   const T = s.missions.tanks, tanksOn = quests.isStarted('decimalFractions') || quests.isDone('decimalFractions');
   if (tanksOn) tanks.TANKS.forEach((tk, i) => list.push({ y: tk.y, x: tk.x, draw: cc => tanks.drawTank(cc, i, T.levels[i], T.targets ? T.targets[i] : { t: 'd', s: '؟' }, T.done[i], t) }));
   tanks.TANKS.forEach((tk, i) => { if (T.done[i]) { const hs = HOUSES[tk.house]; list.push({ y: hs.y + hs.h + 9, draw: cc => tanks.drawFlowers(cc, hs) }); } });
-  list.push({ y: SHOP.y - 42, x: SHOP.x, draw: cc => drawShopBack(cc) }, { y: SHOP.y, x: SHOP.x, draw: cc => drawShop(cc) });
+  if (!three) list.push({ y: SHOP.y - 42, x: SHOP.x, draw: cc => drawShopBack(cc) }, { y: SHOP.y, x: SHOP.x, draw: cc => drawShop(cc) });
   if (!three) list.push({ y: HERO_DOOR.y - 13, draw: cc => signboard(cc, HERO_DOOR.x + 52, HERO_DOOR.y - 66, '🚪 خزانة البطل') });   // لافتة على جدار بيت البطل (في 3D على الواجهة نفسها)
   const giverMark = n => c && c.ready && MODS[c.id] && c.giver === n.id && !quests.isStarted(c.id) ? '!' : null;
   // الشخصيات خارج الشاشة لا تُرسم (كانت كلها تُرسم في كل إطار)

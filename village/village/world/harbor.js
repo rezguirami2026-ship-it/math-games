@@ -29,7 +29,7 @@ export function harborColliders(open) {
 }
 const H_B = 88, LIGHTHOUSE = { x: 2848, y: 40, s: 34, H: 150 };
 const PALMS_H = [{ x: 2860, y: 230 }, { x: 2870, y: 760 }, { x: 2350, y: 470 }, { x: 2850, y: 1420 }, { x: 2360, y: 1330 }];
-const SHIP_COLS = ['#C0392B', '#2F6FB2', '#2E8B57'];   // ألوان السفن جزء من درس تمييز الأشكال (الحمراء للمثلثات...)
+export const SHIP_COLS = ['#C0392B', '#2F6FB2', '#2E8B57'];   // ألوان السفن جزء من درس تمييز الأشكال (الحمراء للمثلثات...)
 
 export function drawHarborGround(ctx, t) {
   gateNSShadows(ctx, GATE2_X);
@@ -95,7 +95,7 @@ export function harborDrawables(open, t) {
   if (!FLAGS.three) out.push({ y: FRAMES.y + FRAMES.h, draw: c => building3d(c, 'frames', Object.assign({}, FRAMES, { H: H_B, wall: '#DCE4EA', door: '#2F6B73', sign: 'ورشة الهياكل', ac: 1 })) });
   if (!FLAGS.three) out.push({ y: GIFTS.y + GIFTS.h, draw: c => building3d(c, 'gifts', Object.assign({}, GIFTS, { H: H_B, wall: '#F1DCE0', door: '#9E3B5F', sign: 'دكان الهدايا', tank: 1 })) });
   [[FRAME_TABLE, 'frames'], [GIFT_TABLE, 'gifts'], [ROOF_TABLE, 'roof']].forEach(([tb, k]) => out.push({ y: tb.y, x: tb.x, draw: c => workTable(c, tb.x, tb.y, k) }));
-  PIER_Y.forEach((y, i) => out.push({ y: y + 40, x: SEA_X + 120, draw: c => dhow(c, SEA_X + 118, y + 12 + Math.sin(t * 1.4 + i * 2) * 1.6, SHIP_COLS[i], t + i) }));
+  if (!FLAGS.three) PIER_Y.forEach((y, i) => out.push({ y: y + 40, x: SEA_X + 120, draw: c => dhow(c, SEA_X + 118, y + 12 + Math.sin(t * 1.4 + i * 2) * 1.6, SHIP_COLS[i], t + i) }));
   out.push({ y: CRATES.y + 10, x: CRATES.x, draw: c => { [[-46, 0], [-30, 0], [-38, -10], [36, 0], [50, 0]].forEach(([dx, dy]) => crate3d(c, CRATES.x + dx, CRATES.y + 10 + dy, 14, 10)); c.fillStyle = '#2F6B73'; rr(c, CRATES.x + 14, CRATES.y - 14, 16, 22, 3); c.fill(); c.strokeStyle = INK; c.lineWidth = .8; c.stroke(); } });
   if (!FLAGS.three) out.push({ y: LIGHTHOUSE.y + LIGHTHOUSE.s, draw: c => lighthouse(c, t) });
   if (!FLAGS.three) PALMS_H.forEach(p => out.push({ y: p.y, draw: c => palmCached(c, p.x, p.y, 1, false, t) }));

@@ -26,7 +26,7 @@ export function caravanColliders(open) {
 const GOODS = { fuel: ['#C0392B', '#3D3A3A', '#E3B04B'], signs: ['#8B5A2B', '#F2E6C9', '#2F6B73'], flights: ['#2F6FB2', '#F4F1E8', '#E3B04B'], century: ['#7B3F98', '#F2E6C9', '#C9971C'], rects: ['#2E8B57', '#7FB24A', '#C46A1E'], oasis: ['#1FC8B5', '#2E8B57', '#E3B04B'] };
 const OPTS = [[-110, 0], [-70, -40], [0, -48], [80, -34], [118, 4], [70, 36], [-20, 40], [-90, 30]];
 const DUNES = Array.from({ length: 34 }, (_, i) => [(i * 337) % 2900, WALL6_Y + 60 + (i * 191) % 900]).filter(([x, y]) => !(y > 4840 && y < 4960) && !(Math.abs(x - 1240) < 220 && y > 4560 && y < 4660) && !(Math.abs(x - OASIS.x) < 220 && Math.abs(y - OASIS.y) < 110));
-const PUMPS = [ST8.fuel.x - 90, ST8.fuel.x + 90];
+export const PUMPS = [ST8.fuel.x - 90, ST8.fuel.x + 90];
 const OSHRUBS = [[OASIS.x - 160, 5130], [OASIS.x + 165, 5120], [OASIS.x - 95, 5168]];
 const PALMS = [[-150, 5080], [150, 5090], [-240, 5110], [235, 5100], [-190, 5030], [190, 5020]].map(([dx, y]) => ({ x: OASIS.x + dx, y }))
   .concat([{ x: 180, y: 4650 }, { x: 2500, y: 4650 }, { x: 420, y: 5150 }, { x: 2000, y: 5300 }]);   // (الساحل الجنوبي الشرقي صار ميناءً)
@@ -69,9 +69,9 @@ export function drawCaravanGround(ctx, t) {
 export function caravanDrawables(open, t) {
   const out = FLAGS.three ? [] : [{ y: WALL6_Y + 12, draw: c => gateEW(c, 'caravangate', WALL6_Y, GATE6.x0, GATE6.x1, open, 'طريق القافلة') }];   // في 3D: البوابة مجسّمة
   if (!FLAGS.three) Object.entries(ST8).forEach(([k, s]) => out.push({ y: s.y - 32, draw: c => kiosk3d(c, k, s, GOODS[k]) }));
-  out.push({ y: 4626, x: 1180, draw: c => plane(c, 1180 + Math.sin(t / 3) * 4, 4612) });
+  if (!FLAGS.three) out.push({ y: 4626, x: 1180, draw: c => plane(c, 1180 + Math.sin(t / 3) * 4, 4612) });
   if (!FLAGS.three) STACKS.forEach(([x, y, n, col], i) => out.push({ y: y + 74, draw: c => box3d(c, 'stack' + i, { x, y, w: 150, h: 74, H: 26 * n }, col, r => { r.fillStyle = col; r.fillRect(x, y - 26 * n, 150, 74); }, f => { f.fillStyle = col; f.fillRect(x, y + 74 - 26 * n, 150, 26 * n); f.fillStyle = 'rgba(0,0,0,.2)'; for (let k = x + 6; k < x + 150; k += 8) f.fillRect(k, y + 74 - 26 * n, 2, 26 * n); }) }));   // البديل ثنائي الأبعاد للحاويات
-  PUMPS.forEach(x => out.push({ y: 4800, x, draw: c => pump(c, x, 4800) }));
+  if (!FLAGS.three) PUMPS.forEach(x => out.push({ y: 4800, x, draw: c => pump(c, x, 4800) }));
   if (!FLAGS.three) PALMS.forEach(p => out.push({ y: p.y, draw: c => palmCached(c, p.x, p.y, 1, false, t) }));
   if (!FLAGS.three) OSHRUBS.forEach(([x, y]) => out.push({ y, draw: c => shrub(c, x, y, 12, false) }));
   return out;

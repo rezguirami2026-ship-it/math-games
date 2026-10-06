@@ -6,7 +6,7 @@ import { ACH } from '../achievements/achievements.js';
 import { sound, sfx } from '../core/sound.js';
 /* إعدادات العرض (تُحفظ على الجهاز): ثلاثي الأبعاد أو عادي، والجودة */
 export const gfx = {
-  d3() { try { const q = new URLSearchParams(location.search); if (q.has('2d')) return false; return q.has('3d') || localStorage.getItem('ramimath_3d') === '1'; } catch (e) { return false; } },
+  d3() { try { const q = new URLSearchParams(location.search); if (q.has('2d')) return false; return q.has('3d') || localStorage.getItem('ramimath_3d') !== '0'; } catch (e) { return true; } },   // ثلاثي الأبعاد هو الافتراضي؛ والجهاز بلا WebGL يرجع وحده إلى العادي
   set3d(on) { try { localStorage.setItem('ramimath_3d', on ? '1' : '0'); } catch (e) {} const u = new URL(location.href); u.searchParams.delete('3d'); u.searchParams.delete('2d'); if (!on) u.searchParams.set('2d', '1'); location.href = u.toString(); },
   q() { try { return localStorage.getItem('ramimath_q') || 'auto'; } catch (e) { return 'auto'; } },
   setQ(v) { try { localStorage.setItem('ramimath_q', v); } catch (e) {} if (gfx.onQ) gfx.onQ(v); }

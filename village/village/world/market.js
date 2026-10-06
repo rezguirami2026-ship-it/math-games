@@ -84,7 +84,7 @@ export function marketDrawables(open, t) {
   out.push({ y: BENCH.y, x: BENCH.x, draw: c => workbench(c, BENCH.x, BENCH.y) });
   out.push({ y: BOARD.y, x: BOARD.x, draw: c => chalkboard(c, BOARD.x, BOARD.y) });
   FLOOD.forEach(([x, y]) => out.push({ y, x, draw: c => floodlight(c, x, y) }));
-  out.push({ y: STATION.y + 30, draw: c => canopy(c) });
+  if (!FLAGS.three) out.push({ y: STATION.y + 30, draw: c => canopy(c) });
   BAYS.forEach(b => out.push({ y: b.y - 30, x: b.x - 52, draw: c => bayPost(c, b) }));
   out.push({ y: TIMETABLE.y, x: TIMETABLE.x, draw: c => timetable(c, TIMETABLE.x, TIMETABLE.y) });
   out.push({ y: CAL.y, x: CAL.x, draw: c => calendarBoard(c, CAL.x, CAL.y) });

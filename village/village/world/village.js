@@ -104,7 +104,7 @@ function paintGround(ctx, view) {
 }
 
 /* ── المزرعة: حقول غير منتظمة، فلج حجري يجري فيه الماء، ممرات، كوخ المضخة، وأدوات. g من ٠ (عطشى) إلى ١ (مرويّة) ── */
-const FI = { x: FARM.x + 14, y: FARM.y + 14, w: FARM.w - 28, h: FARM.h - 28 };
+export const FI = { x: FARM.x + 14, y: FARM.y + 14, w: FARM.w - 28, h: FARM.h - 28 };
 const PLOTS = [   // الحقول: [x, y, w, h, نوع]
   [FI.x + 8, FI.y + 44, 238, 92, 'veg'], [FI.x + 280, FI.y + 44, 262, 92, 'alfalfa'],
   [FI.x + 8, FI.y + 166, 238, 128, 'mounds'], [FI.x + 280, FI.y + 166, 126, 128, 'young']
@@ -193,8 +193,7 @@ const behind = (pl, b, H) => pl && pl.x > b.x - 8 && pl.x < b.x + b.w + 8 && pl.
 export function staticDrawables(state, t, pl, opts = {}) {
   const out = [];
   if (opts.three) {   // العرض ثلاثي الأبعاد يرسم المباني والنخيل والإنارة مجسّمة؛ يبقى هنا ما لم يُحوَّل بعد
-    out.push({ y: FI.y + 226, x: FI.x + 480, draw: c => farmShed(c, t, !!state.world.delivered) });
-    out.push({ y: 586, x: 784, draw: c => wayfinding(c, 784, 586) });
+    out.push({ y: 586, x: 784, draw: c => wayfinding(c, 784, 586) });   // (كوخ المضخة مجسّم في 3D)
     return out;
   }
   // المباني مجسّمة حسب موضعها من الكاميرا (أوجهها من ذاكرة الصور)، وشفافة إن وقف البطل خلفها
