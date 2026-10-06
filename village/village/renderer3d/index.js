@@ -28,7 +28,7 @@ export async function create3D(opts) {
   renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, q === 'high' ? 1.75 : 1));
   renderer.outputColorSpace = THREE.SRGBColorSpace;
   renderer.toneMapping = THREE.ACESFilmicToneMapping; renderer.toneMappingExposure = .92;
-  renderer.shadowMap.enabled = true; renderer.shadowMap.type = q === 'high' ? THREE.PCFSoftShadowMap : THREE.PCFShadowMap;
+  renderer.shadowMap.enabled = true; renderer.shadowMap.autoUpdate = false; let SHADOW_EVERY = q === 'high' ? 2 : 3; renderer.shadowMap.type = q === 'high' ? THREE.PCFSoftShadowMap : THREE.PCFShadowMap;
   setAniso(Math.min(8, renderer.capabilities.getMaxAnisotropy()));
   await step(.05);
 
@@ -86,7 +86,7 @@ export async function create3D(opts) {
   /* ── الكاميرا: تتبع كاميرا المحرك، بزاوية مرتفعة ثابتة، والمسافة تحفظ عرض الرؤية نفسه ── */
   const target = new THREE.Vector3(), tmp = new THREE.Vector3(), ray = new THREE.Raycaster(), plane = new THREE.Plane(new THREE.Vector3(0, 1, 0), 0);
   let frame = 0, view = { x: 0, y: 0, w: 1, h: 1 }, W2 = 0, H2 = 0;
-  const post = q === 'high' ? makeComposer(renderer, scene, camera) : null;   // توهج وتدرّج لوني سينمائي (الجودة العالية)
+  let post = q === 'high' ? makeComposer(renderer, scene, camera) : null;   // توهج وتدرّج لوني سينمائي (الجودة العالية)
   function resize() {
     W2 = window.innerWidth; H2 = window.innerHeight;
     renderer.setSize(W2, H2, false); camera.aspect = W2 / H2; camera.updateProjectionMatrix();
@@ -103,12 +103,12 @@ export async function create3D(opts) {
   decal.ctx = decal.canvas.getContext('2d');
   decal.mesh = new THREE.Mesh(new THREE.PlaneGeometry(1, 1).rotateX(-Math.PI / 2), new THREE.MeshStandardMaterial({ transparent: true, depthWrite: false, roughness: 1, polygonOffset: true, polygonOffsetFactor: -2 }));
   decal.mesh.receiveShadow = true; decal.mesh.renderOrder = 1; decal.mesh.visible = false; scene.add(decal.mesh);
-  const DECAL_HZ = q === 'high' ? 30 : 20, DECAL_PPU = q === 'high' ? 1.1 : .75;
+  let DECAL_HZ = q === 'high' ? 15 : 8, DECAL_PPU = q === 'high' ? .75 : .5;   // رفع الخامة إلى كرت الشاشة مكلف: معدل ودقة محدودان
   function paintDecal(t, paint) {
     if (decal.last >= 0 && t - decal.last < 1 / DECAL_HZ) return;
     decal.last = t;
-    const r = { x: Math.max(0, Math.floor(view.x / 64) * 64 - 64), y: Math.max(0, Math.floor(view.y / 64) * 64 - 64) };
-    r.w = Math.min(1800, Math.ceil((view.w + 128) / 64) * 64); r.h = Math.min(1800, Math.ceil((view.h + 128) / 64) * 64);
+    // مستطيل ثابت الحجم حول ما تنظر إليه الكاميرا (البعيد صغير على الشاشة فلا يحتاج طبقة متغيرة)، مثبّت على شبكة ٦٤ فلا يرتجف
+    const r = { w: 1536, h: 1152 }; r.x = Math.max(0, Math.round((target.x - r.w / 2) / 64) * 64); r.y = Math.max(0, Math.round((target.z - r.h * .62) / 64) * 64);
     const cw = Math.round(r.w * DECAL_PPU), ch = Math.round(r.h * DECAL_PPU), c = decal.canvas, x = decal.ctx;
     if (c.width !== cw || c.height !== ch) { c.width = cw; c.height = ch; if (decal.tex) decal.tex.dispose(); decal.tex = new THREE.CanvasTexture(c); decal.tex.colorSpace = THREE.SRGBColorSpace; decal.tex.generateMipmaps = false; decal.tex.minFilter = THREE.LinearFilter; decal.mesh.material.map = decal.tex; decal.mesh.material.needsUpdate = true; }
     x.setTransform(1, 0, 0, 1, 0, 0); x.clearRect(0, 0, cw, ch);
@@ -140,7 +140,16 @@ export async function create3D(opts) {
   window.addEventListener('touchend', () => { pinch = null; });
 
   const L = {
-    canvas, renderer, scene, camera, zoom: 1.22,
+    canvas, renderer, scene, camera, zoom: 1.22, quality: q,
+    /* تبديل الجودة أثناء اللعب (بلا إعادة تحميل): المعالجة اللاحقة، دقة البكسل، الظلال، وطبقة الأرض المتغيرة */
+    setQuality(v) {
+      if (v === L.quality) return; L.quality = v; const hi = v === 'high';
+      renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, hi ? 1.75 : 1));
+      if (hi && !post) post = makeComposer(renderer, scene, camera);
+      L.usePost = hi; SHADOW_EVERY = hi ? 2 : 3; DECAL_HZ = hi ? 15 : 8; DECAL_PPU = hi ? .75 : .5; decal.last = -1;
+      const SMv = hi ? 2048 : 1024; if (sun.shadow.mapSize.x !== SMv) { sun.shadow.mapSize.set(SMv, SMv); if (sun.shadow.map) { sun.shadow.map.dispose(); sun.shadow.map = null; } }
+      renderer.shadowMap.needsUpdate = true; resize();
+    },
     /* مصدر الشخصيات: () => [{ id, look, lookKey, x, y, moving, phase, run, anim, animT, carry, dir }] */
     people: null,
     /* انفتاح البوابات [٠..١] بترتيب REGIONS (من main.js) */
@@ -159,7 +168,11 @@ export async function create3D(opts) {
       // الظل يتبع ما تراه الكاميرا
       const ext = Math.min(1700, Math.max(520, dist * .75)), sc = sun.shadow.camera;
       if (sc.right !== ext) { sc.left = -ext; sc.right = ext; sc.top = ext; sc.bottom = -ext; sc.near = 10; sc.far = 4200; sc.updateProjectionMatrix(); }
-      sun.position.copy(target).addScaledVector(SUN_DIR, 1800); sun.target.position.copy(target); sun.target.updateMatrixWorld();
+      // الظل: مركزه مثبّت على شبكة ٦٤ (لا يرتجف)، ويُعاد رسمه عند انتقاله أو كل بضعة إطارات (للشخصيات المتحركة) بدل كل إطار
+      const snap = new THREE.Vector3(Math.round(target.x / 64) * 64, 0, Math.round(target.z / 64) * 64);
+      if (!L._sunAt || !L._sunAt.equals(snap)) { L._sunAt = snap; renderer.shadowMap.needsUpdate = true; }
+      if (frame % SHADOW_EVERY === 0) renderer.shadowMap.needsUpdate = true;
+      sun.position.copy(snap).addScaledVector(SUN_DIR, 1800); sun.target.position.copy(snap); sun.target.updateMatrixWorld();
       // ما يُرى من الأرض (للاستبعاد في الرسم فوقها)
       const pts = [[0, 0], [W2, 0], [0, H2], [W2, H2]].map(([a, b]) => groundAt(a, b) || { x: target.x, y: target.z - 2000 });
       const xs = pts.map(p => p.x), ys = pts.map(p => p.y);
@@ -179,7 +192,7 @@ export async function create3D(opts) {
       if (L.people) try { syncPeople(L.people(), t); } catch (e) { if (!L._pErr) { L._pErr = 1; console.error('people', e); } }
       if (L.ground) try { paintDecal(t, L.ground); } catch (e) { if (!L._gErr) { L._gErr = 1; console.error('ground layer', e); } }
       cl.userData.tick(t, camera); park.userData.tick(t);
-      if (post) post.render(); else renderer.render(scene, camera);
+      if (post && L.usePost !== false) post.render(); else renderer.render(scene, camera);
       return view;
     },
     get view() { return view; },

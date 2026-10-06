@@ -27,8 +27,8 @@ export function makeComposer(renderer, scene, camera) {
   const rt = new THREE.WebGLRenderTarget(size.x, size.y, { type: THREE.HalfFloatType, samples: 4 });
   const comp = new EffectComposer(renderer, rt);
   comp.addPass(new RenderPass(scene, camera));
-  const bloom = new UnrealBloomPass(new THREE.Vector2(size.x / 2, size.y / 2), .22, .55, .9); comp.addPass(bloom);
+  const bloom = new UnrealBloomPass(new THREE.Vector2(size.x / 4, size.y / 4), .22, .55, .9); comp.addPass(bloom);
   comp.addPass(new OutputPass());
   comp.addPass(new ShaderPass(Grade));
-  return { rt, render: () => comp.render(), setSize: (w, h) => { comp.setSize(w, h); bloom.resolution.set(w / 2, h / 2); }, setPixelRatio: r => comp.setPixelRatio(r) };
+  return { rt, render: () => comp.render(), setSize: (w, h) => { comp.setSize(w, h); bloom.resolution.set(w / 4, h / 4); }, setPixelRatio: r => comp.setPixelRatio(r) };
 }

@@ -4,6 +4,13 @@ import { ar } from '../core/util.js';
 import { drawHuman } from '../character/human.js';
 import { ACH } from '../achievements/achievements.js';
 import { sound, sfx } from '../core/sound.js';
+/* إعدادات العرض (تُحفظ على الجهاز): ثلاثي الأبعاد أو عادي، والجودة */
+export const gfx = {
+  d3() { try { const q = new URLSearchParams(location.search); if (q.has('2d')) return false; return q.has('3d') || localStorage.getItem('ramimath_3d') === '1'; } catch (e) { return false; } },
+  set3d(on) { try { localStorage.setItem('ramimath_3d', on ? '1' : '0'); } catch (e) {} const u = new URL(location.href); u.searchParams.delete('3d'); u.searchParams.delete('2d'); if (!on) u.searchParams.set('2d', '1'); location.href = u.toString(); },
+  q() { try { return localStorage.getItem('ramimath_q') || 'auto'; } catch (e) { return 'auto'; } },
+  setQ(v) { try { localStorage.setItem('ramimath_q', v); } catch (e) {} if (gfx.onQ) gfx.onQ(v); }
+};
 import { exportCode } from '../save/save.js';
 import { progress } from '../missions/quests.js';
 import { ramadanPref, setRamadanPref, PREF_LABEL } from '../core/season.js';
@@ -88,7 +95,9 @@ export const hud = {
           return Object.keys(c).length ? Object.keys(c).map(k => `<div class="bagrow"><span>${I[k] || k}</span><b>${ar(c[k])}</b></div>`).join('') : '<div class="bagrow muted"><span>🧰 الأدوات</span><b>تشتريها من دكان العم ناصر</b></div>'; })()}
         <button class="act ghost" id="sndBtn">${sound.on ? '🔊 الصوت يعمل' : '🔇 الصوت متوقف'}</button>
         <button class="act ghost" id="codeBtn">🔑 رمز حفظ التقدّم</button>
-        <button class="act ghost" id="ramBtn">🌙 أجواء رمضان: ${PREF_LABEL[ramadanPref()]}</button>`;
+        <button class="act ghost" id="ramBtn">🌙 أجواء رمضان: ${PREF_LABEL[ramadanPref()]}</button>
+        <button class="act ghost" id="d3Btn">🎮 العرض: ${gfx.d3() ? 'ثلاثي الأبعاد' : 'عادي'}</button>
+        ${gfx.d3() ? `<button class="act ghost" id="qBtn">✨ الجودة: ${{ auto: 'تلقائية', high: 'عالية', low: 'منخفضة' }[gfx.q()]}</button>` : ''}`;
     }
     if (kind === 'code') {
       const p = progress();
@@ -103,6 +112,8 @@ export const hud = {
     if (kind === 'bag') {
       $('sndBtn').onclick = e => { e.stopPropagation(); sound.on = !sound.on; this.panel('bag'); };
       $('codeBtn').onclick = e => { e.stopPropagation(); this.panel('code'); };
+      $('d3Btn').onclick = e => { e.stopPropagation(); gfx.set3d(!gfx.d3()); };   // يُعاد تحميل الصفحة: التقدّم محفوظ
+      if ($('qBtn')) $('qBtn').onclick = e => { e.stopPropagation(); gfx.setQ({ auto: 'high', high: 'low', low: 'auto' }[gfx.q()]); this.panel('bag'); };
       $('ramBtn').onclick = e => { e.stopPropagation(); const nx = { auto: 'on', on: 'off', off: 'auto' }[ramadanPref()]; setRamadanPref(nx); sfx('click'); this.panel('bag'); };
     }
     if (kind === 'code') {

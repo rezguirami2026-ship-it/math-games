@@ -28,14 +28,14 @@ function windy(mat, bendFrom, amp) {
 /* ── النخلة: جذع منحنٍ بحلقات، تاج من سعف مقوّس، وعذوق تمر ── */
 function palmTemplate(H = 132) {
   const lean = 7;
-  const trunk = new THREE.CylinderGeometry(3.6, 5.6, H, 10, 14, false); trunk.translate(0, H / 2, 0);
+  const trunk = new THREE.CylinderGeometry(3.6, 5.6, H, 8, 7, false); trunk.translate(0, H / 2, 0);
   const p = trunk.attributes.position;
   for (let i = 0; i < p.count; i++) { const y = p.getY(i), k = y / H, ring = 1 + .1 * Math.max(0, Math.sin(y * 1.1)); p.setX(i, p.getX(i) * ring + lean * k * k); p.setZ(i, p.getZ(i) * ring); }
   trunk.computeVertexNormals();
   const top = new THREE.Vector3(lean, H, 0), fr = [];
   const N = 13;
   for (let i = 0; i < N; i++) {
-    const L = 58 + (i % 3) * 8, g = new THREE.PlaneGeometry(22, L, 2, 8); g.translate(0, L / 2, 0);
+    const L = 58 + (i % 3) * 8, g = new THREE.PlaneGeometry(22, L, 1, 5); g.translate(0, L / 2, 0);
     const q = g.attributes.position;
     for (let k = 0; k < q.count; k++) { const y = q.getY(k), t = y / L; q.setZ(k, -Math.pow(t, 1.6) * L * .62 + Math.abs(q.getX(k)) * .35); q.setX(k, q.getX(k) * (1 - t * .55)); }   // السعفة تنحني للأسفل وتتقعّر
     g.computeVertexNormals();
@@ -47,14 +47,16 @@ function palmTemplate(H = 132) {
   const crown = new THREE.SphereGeometry(5.5, 8, 6); crown.translate(top.x, H - 1, 0);
   return { trunk: mergeGeometries([trunk, crown]), fronds: mergeGeometries(fr), dates: mergeGeometries(dates), H };
 }
-let PT = null;
+let PT = null; const palmMats = [];
 const trunkMat = () => { const m = material('wood', '#8A6238').clone(); m.map = m.map.clone(); m.map.repeat.set(1, 3); m.map.needsUpdate = true; return m; };
 /* palms: [{x, y, s?, dry?}] → Group من ثلاث InstancedMesh (جذوع، سعف، تمر) */
 export function palms(list, { dry = false } = {}) {
   PT = PT || palmTemplate();
   const g = new THREE.Group(), n = list.length; if (!n) return g;
-  const fm = windy(new THREE.MeshStandardMaterial({ map: frondTexture(), alphaTest: .45, side: THREE.DoubleSide, roughness: .8, color: dry ? '#C9A35E' : '#FFFFFF' }), 70, 9);
-  const tm = windy(trunkMat(), 30, 3), dm = windy(new THREE.MeshStandardMaterial({ color: dry ? '#8A5A2A' : '#D9822B', roughness: .6 }), 30, 3);
+  const MS = palmMats[dry ? 1 : 0] || (palmMats[dry ? 1 : 0] = {   // مواد مشتركة بين كل مجموعات النخيل
+    fm: windy(new THREE.MeshStandardMaterial({ map: frondTexture(), alphaTest: .45, side: THREE.DoubleSide, roughness: .8, color: dry ? '#C9A35E' : '#FFFFFF' }), 70, 9),
+    tm: windy(trunkMat(), 30, 3), dm: windy(new THREE.MeshStandardMaterial({ color: dry ? '#8A5A2A' : '#D9822B', roughness: .6 }), 30, 3) });
+  const { fm, tm, dm } = MS;
   const meshes = [[PT.trunk, tm], [PT.fronds, fm], [PT.dates, dm]].map(([geo, mat]) => { const m = new THREE.InstancedMesh(geo, mat, n); m.castShadow = true; m.receiveShadow = true; g.add(m); return m; });
   const M4 = new THREE.Matrix4(), Q = new THREE.Quaternion(), S = new THREE.Vector3(), E = new THREE.Euler();
   list.forEach((p, i) => {
@@ -62,6 +64,7 @@ export function palms(list, { dry = false } = {}) {
     E.set(0, f * Math.PI * 2, 0); Q.setFromEuler(E); S.set(sc, sc * (.92 + f * .2), sc); M4.compose(new THREE.Vector3(p.x, 0, p.y), Q, S);
     meshes.forEach(m => m.setMatrixAt(i, M4));
   });
+  meshes.forEach(m => { m.computeBoundingSphere(); m.boundingSphere.radius += 80; });   // حدود حقيقية للنسخ: يُستبعد ما خارج الكاميرا (+ هامش للتمايل والسعف)
   return g;
 }
 
@@ -161,7 +164,9 @@ export function palmGrove(bounds) {
   const band = (x0, z0, x1, z1, n) => { for (let i = 0; i < n; i++) list.push({ x: x0 + R() * (x1 - x0), y: z0 + R() * (z1 - z0), s: .95 + R() * .45 }); };
   band(bounds.x0 - 120, bounds.z0 - 150, bounds.x0 + 1650, bounds.z0 - 40, 26);      // صف نخيل خفيف شمال القرية (أمام حيّ العمارات)
   band(bounds.x0 - 360, bounds.z0 - 40, bounds.x0 - 40, bounds.z1, 150);           // غرب العالم كله
-  const g = palms(list);
+  // مجموعات بحسب الموضع (كل ٨٠٠ وحدة) حتى يستبعد المحرك ما خارج الكاميرا بدل رسم كل البستان دائماً
+  const g = new THREE.Group(), bins = new Map(); list.forEach(p => { const k = Math.floor(p.x / 800) + ',' + Math.floor(p.y / 800); if (!bins.has(k)) bins.set(k, []); bins.get(k).push(p); });
+  bins.forEach(b => g.add(palms(b)));
   // أرض البستان: عشب داكن متقطع تحت النخيل
   const gm = new THREE.MeshStandardMaterial({ color: '#7D8A44', roughness: 1 });
   const blobs = []; for (let i = 0; i < 70; i++) { const p = list[i * 3 % list.length], c = new THREE.CircleGeometry(40 + R() * 50, 12); c.rotateX(-Math.PI / 2); c.translate(p.x, .25 + i * .002, p.y); blobs.push(c); }

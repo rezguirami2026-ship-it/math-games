@@ -248,10 +248,19 @@ export function buildPerson(look) {
   const sh = blob(); sh.scale.set(9 * sx, 1, 7 * sx); sh.position.y = .3; root.add(sh);
   root.scale.setScalar(S);
   root.traverse(o => { if (o.isMesh && o !== sh) o.castShadow = true; });
+  [body, torso, neck, head, ...legs.flatMap(l => [l.hip, l.knee, l.ankle]), ...arms.flatMap(a => [a.sh, a.el])].forEach(p => mergeChildren(p, hd));   // أقل draw calls
   return { root, body, torso, legs, arms, neck, head, headM, faceOpen, faceClosed, carry, adult, female, elder: !!look.elder,
     pose: null, yaw: 0, blinkT: Math.random() * 3, lastX: null, lastY: null };
 }
 
+/* دمج الأجزاء الثابتة داخل كل مفصل حسب المادة: الشخصية الواحدة من ~٥٠ رسمة إلى ~١٥، والحركة كما هي (المفاصل لا تُدمج) */
+function mergeChildren(pv, keep) {
+  const by = new Map(), drop = [];
+  pv.children.forEach(o => { if (!o.isMesh || o === keep || Array.isArray(o.material)) return; o.updateMatrix(); const g = o.geometry.clone().applyMatrix4(o.matrix); const k = o.material; if (!by.has(k)) by.set(k, []); by.get(k).push(g.index ? g.toNonIndexed() : g); drop.push(o); });
+  by.forEach((list, m) => { if (list.length < 2) return; list.forEach(g => { ['uv1', 'uv2'].forEach(a => g.getAttribute(a) && g.deleteAttribute(a)); if (!g.getAttribute('uv')) g.setAttribute('uv', new THREE.BufferAttribute(new Float32Array(g.attributes.position.count * 2), 2)); });
+    const merged = mergeGeometries(list); if (!merged) return; const mm = new THREE.Mesh(merged, m); mm.castShadow = true; pv.add(mm);
+    drop.filter(o => o.material === m).forEach(o => pv.remove(o)); });
+}
 /* ── الوضعيات: زوايا المفاصل (راديان) لكل حركة، ثم تقترب الوضعية الحالية منها بنعومة ── */
 const ZERO = () => ({ hipL: 0, hipR: 0, kneeL: 0, kneeR: 0, shL: 0, shR: 0, shLz: 0, shRz: 0, elL: 0, elR: 0, lean: 0, bob: 0, headX: 0, headY: 0, twist: 0, crouch: 0 });
 function targetPose(st, P, t) {
