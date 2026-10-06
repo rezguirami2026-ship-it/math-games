@@ -1,7 +1,7 @@
 // «السوق الأسبوعي»: منطقة الوحدة الثانية (القياس) شرق القرية، تُفتح بوابتها بعد إنهاء الوحدة الأولى
 // الرسم بأسلوب القرية نفسه (world/art.js): مبنى مجسّم، ملعب بعشب، محطة حافلات بمظلة، ساحة مرصوفة، وأرض حظيرة
 import { rr, shade } from '../core/util.js';
-import { INK, PAL, SUN, boxShadow, blobShadow, signboard, pattern, sprite, building3d, leanAt, palmCached, shrub, gateNS, gateNSShadows } from './art.js';
+import { INK, PAL, SUN, boxShadow, blobShadow, signboard, pattern, sprite, building3d, leanAt, palmCached, shrub, gateNS, gateNSShadows, stall } from './art.js';
 export const GATE_X = 1500;
 export const CARP = { x: 1580, y: 140, w: 200, h: 120 }, BENCH = { x: 1700, y: 332 };
 export const FIELD = { x: 1880, y: 140, w: 380, h: 300 }, BOARD = { x: 1990, y: 478 };
@@ -146,15 +146,6 @@ function calendarBoard(c, x, y) {   // لوحة إعلانات خشبية بسق
   c.fillStyle = '#B8413A'; c.fillRect(x - 45, y - 89, 90, 13); c.fillStyle = '#fff'; c.font = '900 10px Cairo, sans-serif'; c.textAlign = 'center'; c.fillText('تقويم المهرجان', x, y - 79);
   c.fillStyle = '#D6C39A'; for (let i = 0; i < 5; i++) for (let j = 0; j < 3; j++) c.fillRect(x - 40 + i * 17, y - 72 + j * 13, 13, 9);
   c.strokeStyle = INK; c.lineWidth = 1; rr(c, x - 50, y - 94, 100, 68, 4); c.stroke();
-}
-function stall(c, x, y, col) {   // بسطة سوق: منضدة، بضاعة، ومظلة مخططة
-  c.fillStyle = 'rgba(70,42,20,.22)'; c.fillRect(x - 36, y, 82, 8);
-  [x - 38, x + 33].forEach(px => { c.fillStyle = PAL.wood; c.fillRect(px, y - 62, 5, 62); });
-  c.fillStyle = PAL.woodLight; c.fillRect(x - 40, y - 30, 80, 8); c.fillStyle = '#7A4A2A'; c.fillRect(x - 40, y - 22, 80, 22);
-  c.strokeStyle = INK; c.lineWidth = 1; c.strokeRect(x - 40, y - 30, 80, 30);
-  ['#C46A1E', '#4E7A34', '#E3B04B', '#B8413A'].forEach((g, k) => { c.fillStyle = g; for (let i = 0; i < 3; i++) { c.beginPath(); c.arc(x - 30 + k * 18 + i * 4, y - 33 - (i % 2) * 2, 3, 0, 7); c.fill(); } });
-  for (let k = 0; k < 5; k++) { c.fillStyle = k % 2 ? '#F2E6C9' : col; c.beginPath(); c.moveTo(x - 44 + k * 17.6, y - 78); c.lineTo(x - 44 + (k + 1) * 17.6, y - 78); c.lineTo(x - 44 + (k + 1) * 17.6, y - 60); c.quadraticCurveTo(x - 44 + (k + .5) * 17.6, y - 54, x - 44 + k * 17.6, y - 60); c.closePath(); c.fill(); }
-  c.strokeStyle = INK; c.lineWidth = 1; c.beginPath(); c.moveTo(x - 44, y - 78); c.lineTo(x + 44, y - 78); c.stroke();
 }
 /* سور السوق وبوابته: المكوّن المشترك في art.js */
 function drawWall(c, open) { gateNS(c, 'tower', GATE_X, open, 'السوق الأسبوعي'); }

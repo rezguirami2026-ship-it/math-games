@@ -226,6 +226,72 @@ export function gateNSShadows(ctx, X, bottom = 1700) {
   boxShadow(ctx, X, 0, 12, 556, GW.H); boxShadow(ctx, X, 722, 12, bottom - 722, GW.H);
   gateTowers(X).forEach(t => boxShadow(ctx, t.x, t.y, t.w, t.d, GW.TH));
 }
+/* ── بوابة في سور يمتد شرقاً وغرباً عند y=Y (القلعة والمهرجان والجمعية والقافلة والورشة): الوجه الأمامي للسور ظاهر،
+   برجان، ومصراعان خشبيان يُفتحان، ولافتة على العتبة فوق الممر. الممر بين x0 وx1 */
+const EW = { col: '#CDB58C', H: 52, TH: 76 };
+function ewSegment(c, x0, x1, Y) {   // قطعة سور: سطح علوي ووجه أمامي بمداميك وشُرَف
+  const H = EW.H, w = x1 - x0, yb = Y + 12, yt = yb - H;
+  c.fillStyle = shade(EW.col, 12); c.fillRect(x0, Y - H, w, 12);
+  const g = c.createLinearGradient(0, yt, 0, yb); g.addColorStop(0, shade(EW.col, 4)); g.addColorStop(1, shade(EW.col, -14)); c.fillStyle = g; c.fillRect(x0, yt, w, H);
+  c.strokeStyle = 'rgba(80,55,30,.25)'; c.lineWidth = .8;
+  for (let yy = yt + 9, r = 0; yy < yb; yy += 9, r++) { c.beginPath(); c.moveTo(x0, yy); c.lineTo(x1, yy); c.stroke(); for (let xx = x0 + (r % 2 ? 8 : 16); xx < x1; xx += 16) { c.beginPath(); c.moveTo(xx, yy - 9); c.lineTo(xx, yy); c.stroke(); } }
+  c.fillStyle = 'rgba(70,40,15,.18)'; c.fillRect(x0, yb - 6, w, 6);
+  c.strokeStyle = INK; c.lineWidth = 1.1; c.strokeRect(x0, Y - H, w, 12 + H);
+  crenels(c, x0, yt, w, EW.col, true);
+}
+export function gateEW(c, key, Y, x0, x1, open, label) {
+  sprite(c, key + '-wl', -4, Y - EW.H - 14, x0 - 24 + 8, EW.H + 32, k => ewSegment(k, 0, x0 - 24, Y));
+  sprite(c, key + '-wr', x1 + 20, Y - EW.H - 14, 2934 - x1 - 20, EW.H + 32, k => ewSegment(k, x1 + 24, 2930, Y));
+  const T = [{ x: x0 - 34, y: Y - 22 }, { x: x1 + 4, y: Y - 22 }];
+  T.forEach((t, i) => stoneBox3d(c, key + 't' + i, t.x, t.y, 30, 38, EW.TH, EW.col));
+  // المصراعان: مغلقان يسدّان الممر، أو مفتوحان إلى الجانبين
+  const dh = 48, yb = Y + 12, half = (x1 - x0) / 2;
+  const leaf = (x, w) => { const g = c.createLinearGradient(x, 0, x + w, 0); g.addColorStop(0, '#9C6438'); g.addColorStop(1, '#6E4524'); c.fillStyle = g; c.fillRect(x, yb - dh, w, dh); c.strokeStyle = 'rgba(40,20,10,.4)'; c.lineWidth = 1; for (let xx = x + 8; xx < x + w; xx += 8) { c.beginPath(); c.moveTo(xx, yb - dh); c.lineTo(xx, yb); c.stroke(); } c.fillStyle = '#E3B04B'; for (let r = 0; r < 3; r++) for (let k = 0; k < 2; k++) { c.beginPath(); c.arc(x + 4 + k * (w - 8), yb - dh + 10 + r * 14, 1.3, 0, 7); c.fill(); } c.strokeStyle = INK; c.lineWidth = 1; c.strokeRect(x, yb - dh, w, dh); };
+  if (open) { leaf(x0 - 4, 10); leaf(x1 - 6, 10); } else { leaf(x0, half); leaf(x0 + half, half); c.fillStyle = '#3D3A3A'; c.fillRect(x0 + half - 3, yb - 26, 6, 10); }
+  // العتبة فوق الممر واللافتة
+  c.fillStyle = shade(EW.col, 6); c.fillRect(x0 - 6, yb - dh - 14, x1 - x0 + 12, 14); c.strokeStyle = INK; c.lineWidth = 1; c.strokeRect(x0 - 6, yb - dh - 14, x1 - x0 + 12, 14);
+  signboard(c, (x0 + x1) / 2, yb - dh - 7, open ? label + ' ↓' : label + ' 🔒');
+}
+export function gateEWShadows(ctx, Y, x0, x1) {
+  boxShadow(ctx, 0, Y, x0 - 24, 12, EW.H); boxShadow(ctx, x1 + 24, Y, 2906 - x1, 12, EW.H);
+  [x0 - 34, x1 + 4].forEach(x => boxShadow(ctx, x, Y - 22, 30, 38, EW.TH));
+}
+/* بسطة سوق مشتركة: منضدة، بضاعة، ومظلة مخططة. (x, y) منتصف القاعدة */
+export function stall(c, x, y, col) {
+  c.fillStyle = 'rgba(70,42,20,.22)'; c.fillRect(x - 36, y, 82, 8);
+  [x - 38, x + 33].forEach(px => { c.fillStyle = PAL.wood; c.fillRect(px, y - 62, 5, 62); });
+  c.fillStyle = PAL.woodLight; c.fillRect(x - 40, y - 30, 80, 8); c.fillStyle = '#7A4A2A'; c.fillRect(x - 40, y - 22, 80, 22);
+  c.strokeStyle = INK; c.lineWidth = 1; c.strokeRect(x - 40, y - 30, 80, 30);
+  ['#C46A1E', '#4E7A34', '#E3B04B', '#B8413A'].forEach((g, k) => { c.fillStyle = g; for (let i = 0; i < 3; i++) { c.beginPath(); c.arc(x - 30 + k * 18 + i * 4, y - 33 - (i % 2) * 2, 3, 0, 7); c.fill(); } });
+  for (let k = 0; k < 5; k++) { c.fillStyle = k % 2 ? '#F2E6C9' : col; c.beginPath(); c.moveTo(x - 44 + k * 17.6, y - 78); c.lineTo(x - 44 + (k + 1) * 17.6, y - 78); c.lineTo(x - 44 + (k + 1) * 17.6, y - 60); c.quadraticCurveTo(x - 44 + (k + .5) * 17.6, y - 54, x - 44 + k * 17.6, y - 60); c.closePath(); c.fill(); }
+  c.strokeStyle = INK; c.lineWidth = 1; c.beginPath(); c.moveTo(x - 44, y - 78); c.lineTo(x + 44, y - 78); c.stroke();
+}
+/* برج مستدير (أسطوانة) بشُرَف: وجه منحنٍ مضاء من اليسار، وقمة بيضاوية. (cx, by) منتصف القاعدة */
+export function roundTower(c, cx, by, r, H, col) {
+  const ry = r * .42;
+  c.beginPath(); c.moveTo(cx - r, by - H); c.lineTo(cx - r, by); c.ellipse(cx, by, r, ry, 0, Math.PI, 0, true); c.lineTo(cx + r, by - H); c.closePath();
+  const g = c.createLinearGradient(cx - r, 0, cx + r, 0); g.addColorStop(0, shade(col, 6)); g.addColorStop(.45, shade(col, 12)); g.addColorStop(1, shade(col, -30));
+  c.fillStyle = g; c.fill();
+  c.save(); c.clip(); c.strokeStyle = 'rgba(80,55,30,.25)'; c.lineWidth = .8; for (let yy = by - H + 10; yy < by + ry; yy += 9) { c.beginPath(); c.ellipse(cx, yy, r, ry, 0, 0, Math.PI); c.stroke(); } c.restore();
+  c.fillStyle = '#3B2E22'; [[-.35, .35], [.3, .55]].forEach(([k, h]) => { c.fillRect(cx + k * r - 2, by - H * h - 8, 4, 12); });   // مزاغل
+  c.strokeStyle = INK; c.lineWidth = 1.1; c.stroke();
+  c.fillStyle = shade(col, 14); c.beginPath(); c.ellipse(cx, by - H, r, ry, 0, 0, 7); c.fill(); c.stroke();
+  c.fillStyle = 'rgba(80,50,20,.25)'; c.beginPath(); c.ellipse(cx, by - H, r - 5, ry - 3, 0, 0, 7); c.fill();
+  for (let k = 0; k < 9; k++) { const a = Math.PI + k * Math.PI / 8, x = cx + Math.cos(a) * r * .97, y = by - H + Math.sin(a) * ry; c.fillStyle = shade(col, 16); c.fillRect(x - 3, y - 7, 6, 7); c.strokeStyle = INK; c.lineWidth = .6; c.strokeRect(x - 3, y - 7, 6, 7); }
+  for (let k = 1; k < 8; k++) { const a = k * Math.PI / 8, x = cx + Math.cos(a) * r * .97, y = by - H + Math.sin(a) * ry; c.fillStyle = shade(col, 16); c.fillRect(x - 3, y - 7, 6, 7); c.strokeStyle = INK; c.lineWidth = .6; c.strokeRect(x - 3, y - 7, 6, 7); }
+}
+/* بئر حجرية بإطار خشبي وبكرة ودلو. (x, y) منتصف القاعدة الأمامية */
+export function stoneWell(c, x, y, r, t) {
+  const top = y - 16;
+  c.fillStyle = PAL.stoneDark; c.beginPath(); c.ellipse(x, y, r, r * .5, 0, 0, Math.PI); c.lineTo(x - r, top); c.ellipse(x, top, r, r * .5, 0, Math.PI, 0, true); c.closePath(); c.fill();
+  c.strokeStyle = 'rgba(60,40,20,.35)'; c.lineWidth = 1; for (let k = 0; k < 3; k++) { c.beginPath(); c.ellipse(x, top + 5 + k * 5, r, r * .5, 0, .2, Math.PI - .2); c.stroke(); }
+  c.fillStyle = PAL.stone; c.beginPath(); c.ellipse(x, top, r, r * .5, 0, 0, 7); c.fill(); c.strokeStyle = INK; c.stroke();
+  c.fillStyle = '#2B2418'; c.beginPath(); c.ellipse(x, top + 1, r - 7, r * .5 - 4, 0, 0, 7); c.fill();
+  c.lineCap = 'round'; [[-r + 3], [r - 3]].forEach(([dx]) => { c.strokeStyle = INK; c.lineWidth = 5; c.beginPath(); c.moveTo(x + dx, top + 2); c.lineTo(x + dx * .6, top - 40); c.stroke(); c.strokeStyle = PAL.woodLight; c.lineWidth = 3.4; c.stroke(); });
+  c.strokeStyle = PAL.wood; c.lineWidth = 3.4; c.beginPath(); c.moveTo(x - r * .7, top - 40); c.lineTo(x + r * .7, top - 40); c.stroke();
+  const by = top - 18 + Math.sin((t || 0) * 1.2) * 1.5; c.strokeStyle = '#8A6A44'; c.lineWidth = 1; c.beginPath(); c.moveTo(x, top - 38); c.lineTo(x, by - 5); c.stroke();
+  c.fillStyle = '#7A8792'; c.beginPath(); c.moveTo(x - 5, by - 5); c.lineTo(x + 5, by - 5); c.lineTo(x + 4, by + 3); c.lineTo(x - 4, by + 3); c.closePath(); c.fill();
+}
 /* طاولة عمل خشبية مجسّمة (للدروس): سطح سميك، أرجل، وأدوات حسب النوع */
 export function workTable(c, x, y, tools) {
   c.fillStyle = 'rgba(70,42,20,.2)'; c.beginPath(); c.ellipse(x + 8, y + 3, 36, 7, 0, 0, 7); c.fill();

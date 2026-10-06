@@ -97,7 +97,20 @@ const LOOKS = {
   ali: { vest: '#F2C230', build: 1.1, gestureAnim: 'pickup' },                             // البنّاء
   badr: { hat: 'straw', build: 1.05, gestureAnim: 'pickup' },                              // الصياد
   hind: { apron: '#7FB2C8', gestureAnim: 'interact' },                                     // الرسامة
-  sulaiman: { apron: '#C9B48E', build: 1.08, gestureAnim: 'place' }                        // صاحب الطاحونة
+  sulaiman: { apron: '#C9B48E', build: 1.08, gestureAnim: 'place' },                       // صاحب الطاحونة
+  // القلعة
+  hamdan: { vest: '#5E6B78', build: 1.1, gestureAnim: 'interact' },                        // حارس الجسر
+  muna: { glasses: true, gestureAnim: 'talk' },                                            // أمينة المتحف
+  zaid: { glasses: true, apron: '#3D3A3A', gestureAnim: 'place' },                         // الصائغ
+  aisha: { apron: '#F4F1E8', build: 1.08, gestureAnim: 'place' },                          // الحلوانية
+  fahad: { hat: 'cap', accent: '#4E7A34', gear: { bag: true }, gestureAnim: 'wave' },      // قائد الرحلة
+  harith: { tool: 'cane', build: .94, gestureAnim: 'interact' },                           // حارس البئر
+  mariam: { apron: '#2F6B73', gestureAnim: 'place' },                                       // صاحبة الكشك
+  khamis: { apron: '#8B5A2B', build: 1.15, gestureAnim: 'pickup' },                        // أمين المخزن
+  saleh: { build: 1.12, gestureAnim: 'talk' },                                              // تاجر التمر
+  murad: { vest: '#F2C230', hat: 'cap', accent: '#C9971C', gestureAnim: 'pickup' },        // البنّاء
+  zahra: { apron: '#F4F1E8', gestureAnim: 'place' },                                        // صانعة الحلوى
+  azzan: { vest: '#3D3A3A', tall: 1.07, build: 1.08, gestureAnim: 'interact' }             // حارس البوابة
 };
 const GEST_T = { pickup: 1.5, place: 1, interact: .8, talk: 1.6, wave: 1.1 };
 const play = (n, name, dur) => { n.anim = { name, t: 0, dur: dur || GEST_T[name] || 1 }; };

@@ -1,5 +1,7 @@
 // «القلعة»: منطقة الوحدة الرابعة (الأعداد ٢) جنوب القرية خلف سور، تُفتح بإنهاء الوحدة الثالثة
+// الرسم بأسلوب القرية (world/art.js): سور ببوابة خشبية، خندق، جسر خشبي هو خط الأعداد، قلعة عُمانية بأبراج مستديرة، ومحطات الدروس
 import { rr, shade } from '../core/util.js';
+import { INK, PAL, SUN, pattern, sprite, boxShadow, blobShadow, building3d, box3d, stoneBox3d, palmCached, gateEW, gateEWShadows, stall, roundTower, stoneWell, leanAt, upright } from './art.js';
 export const WALL_Y = 1712, GATE3 = { x0: 1190, x1: 1290 };
 export const BW = { x0: 420, x1: 1580, y: 1830 };                       // ممشى الجسر = خط الأعداد
 export const MOAT = { x: 380, y: 1852, w: 1240, h: 58 };
@@ -28,47 +30,112 @@ export function fortColliders(open) {
   if (!open) c.push({ x: GATE3.x0, y: WALL_Y - 4, w: GATE3.x1 - GATE3.x0, h: 20 });
   return c;
 }
+const H_B = 86, CAST = '#D2B47E', K_H = 96;
+const PALMS_F = [{ x: 200, y: 1800 }, { x: 1680, y: 2120 }, { x: 2560, y: 2300 }, { x: 160, y: 2480 }, { x: 1250, y: 2500 }];
+
 export function drawFortGround(ctx, t) {
-  ctx.fillStyle = '#E3CD98'; ctx.fillRect(0, WALL_Y, 2930, 2600 - WALL_Y);   // أرض القلعة أدكن قليلاً
-  ctx.fillStyle = '#3FA0E0'; rr(ctx, MOAT.x, MOAT.y, MOAT.w, MOAT.h, 20); ctx.fill();
-  ctx.fillStyle = 'rgba(255,255,255,.25)'; for (let i = 0; i < 16; i++) ctx.fillRect(MOAT.x + 30 + i * 75 + (t * 16 % 30), MOAT.y + 22 + (i % 2) * 14, 24, 3);
-  ctx.fillStyle = '#A9743F'; ctx.fillRect(BW.x0 - 20, BW.y - 14, BW.x1 - BW.x0 + 40, 28);
-  ctx.strokeStyle = '#7A4F2A'; ctx.lineWidth = 1.2; for (let x = BW.x0 - 20; x < BW.x1 + 20; x += 14) { ctx.beginPath(); ctx.moveTo(x, BW.y - 14); ctx.lineTo(x, BW.y + 14); ctx.stroke(); }
-  ctx.fillStyle = '#C9B48E'; rr(ctx, GATE3.x0 - 30, WALL_Y + 12, GATE3.x1 - GATE3.x0 + 60, 70, 8); ctx.fill();
+  // أرض القلعة: تراب مدكوك أدكن قليلاً، وطريق مرصوف من البوابة
+  ctx.fillStyle = 'rgba(160,120,70,.16)'; ctx.fillRect(0, WALL_Y, 2930, 2600 - WALL_Y);
+  ctx.fillStyle = pattern(ctx, 'pavers'); ctx.fillRect(GATE3.x0 - 10, WALL_Y + 12, GATE3.x1 - GATE3.x0 + 20, 128); ctx.fillRect(GATE3.x0 - 10, 2160, 600, 44);
+  gateEWShadows(ctx, WALL_Y, GATE3.x0, GATE3.x1);
+  // الخندق: حافتان حجريتان (الشمالية يظهر وجهها) وماء بتدرج وتموجات
+  sprite(ctx, 'moat', MOAT.x - 10, MOAT.y - 12, MOAT.w + 20, MOAT.h + 26, c => {
+    c.fillStyle = PAL.stone; rr(c, MOAT.x - 6, MOAT.y - 6, MOAT.w + 12, MOAT.h + 12, 22); c.fill();
+    const g = c.createLinearGradient(0, MOAT.y, 0, MOAT.y + MOAT.h); g.addColorStop(0, '#1E6E9E'); g.addColorStop(1, '#3FA0D0');
+    c.fillStyle = g; rr(c, MOAT.x, MOAT.y, MOAT.w, MOAT.h, 18); c.fill();
+    c.fillStyle = shade(PAL.stone, -34); c.fillRect(MOAT.x + 14, MOAT.y, MOAT.w - 28, 10);   // وجه الحافة الشمالية داخل الخندق
+    c.strokeStyle = INK; c.lineWidth = 1; rr(c, MOAT.x - 6, MOAT.y - 6, MOAT.w + 12, MOAT.h + 12, 22); c.stroke();
+  });
+  ctx.fillStyle = 'rgba(255,255,255,.3)'; for (let i = 0; i < 16; i++) ctx.fillRect(MOAT.x + 30 + i * 75 + (t * 16 % 30), MOAT.y + 26 + (i % 2) * 14, 22, 2);
+  // الجسر = خط الأعداد: ألواح خشبية بعارضتين وأعمدة درابزين بحبال
+  sprite(ctx, 'bridge', BW.x0 - 30, BW.y - 30, BW.x1 - BW.x0 + 60, 60, c => {
+    c.fillStyle = '#5E3B20'; c.fillRect(BW.x0 - 20, BW.y + 12, BW.x1 - BW.x0 + 40, 6);
+    c.fillStyle = '#A9763F'; c.fillRect(BW.x0 - 20, BW.y - 14, BW.x1 - BW.x0 + 40, 28);
+    c.strokeStyle = 'rgba(60,35,15,.45)'; c.lineWidth = 1; for (let x = BW.x0 - 20; x < BW.x1 + 20; x += 14) { c.beginPath(); c.moveTo(x, BW.y - 14); c.lineTo(x, BW.y + 14); c.stroke(); }
+    c.fillStyle = 'rgba(255,240,200,.18)'; c.fillRect(BW.x0 - 20, BW.y - 14, BW.x1 - BW.x0 + 40, 3);
+    c.strokeStyle = INK; c.strokeRect(BW.x0 - 20, BW.y - 14, BW.x1 - BW.x0 + 40, 32);
+    for (let x = BW.x0 - 16; x <= BW.x1 + 16; x += 80) { c.fillStyle = '#6E4524'; c.fillRect(x - 2, BW.y - 24, 4, 12); c.fillRect(x - 2, BW.y + 12, 4, 6); }
+    c.strokeStyle = '#B08350'; c.lineWidth = 1.4; c.beginPath(); for (let x = BW.x0 - 16; x < BW.x1 + 16; x += 80) { c.moveTo(x, BW.y - 22); c.quadraticCurveTo(x + 40, BW.y - 17, x + 80, BW.y - 22); } c.stroke();
+  });
+  boxShadow(ctx, CASTLE.x, CASTLE.y, CASTLE.w, CASTLE.h, K_H);
+  Object.values(B4).forEach(b => boxShadow(ctx, b.x, b.y, b.w, b.h, H_B));
+  [2380, 2480].forEach(x => boxShadow(ctx, x - 20, 1770, 40, 60, 74));
+  PALMS_F.forEach(p => blobShadow(ctx, p.x, p.y, 26, 80));
 }
 export function fortDrawables(open, t) {
-  const out = [{ y: WALL_Y + 12, draw: c => wall(c, open) }, { y: CASTLE.y + CASTLE.h, draw: c => castle(c, t) }];
-  Object.values(B4).forEach(b => out.push({ y: b.y + b.h, draw: c => building(c, b) }));
-  out.push({ y: ST4.well.y - 16, draw: c => { const w = ST4.well; c.fillStyle = '#A99878'; c.beginPath(); c.ellipse(w.x, w.y - 34, 26, 14, 0, 0, 7); c.fill(); c.fillStyle = '#2B2418'; c.beginPath(); c.ellipse(w.x, w.y - 34, 19, 9, 0, 0, 7); c.fill(); c.strokeStyle = '#7B6A4E'; c.lineWidth = 3; c.beginPath(); c.moveTo(w.x - 26, w.y - 34); c.lineTo(w.x - 26, w.y - 76); c.lineTo(w.x + 26, w.y - 76); c.lineTo(w.x + 26, w.y - 34); c.stroke(); } });
-  [[2380, '#C0392B'], [2480, '#2F6FB2']].forEach(([x, col]) => out.push({ y: 1830, draw: c => { c.fillStyle = '#C9B48E'; c.fillRect(x - 20, 1770, 40, 60); c.fillStyle = shade('#C9B48E', -20); c.fillRect(x - 20, 1770, 40, 8); c.fillStyle = col; c.beginPath(); c.moveTo(x - 12, 1762); c.lineTo(x + 12, 1762); c.lineTo(x + 8, 1740); c.lineTo(x - 8, 1740); c.closePath(); c.fill(); c.fillStyle = '#FFC23D'; c.beginPath(); c.arc(x, 1792, 9, Math.PI, 0); c.fill(); } }));
-  [[ST4.trip, '#2E8B57'], [ST4.change, '#7B3F98']].forEach(([s, col]) => out.push({ y: s.y - 22, draw: c => { c.fillStyle = '#9B6B3D'; c.fillRect(s.x - 40, s.y - 84, 5, 62); c.fillRect(s.x + 35, s.y - 84, 5, 62); for (let k = 0; k < 5; k++) { c.fillStyle = k % 2 ? '#F4E3B8' : col; c.fillRect(s.x - 44 + k * 17.6, s.y - 96, 17.6, 16); } c.fillStyle = '#B07A3B'; rr(c, s.x - 40, s.y - 44, 80, 22, 3); c.fill(); } }));
-  out.push({ y: ST4.conveyor.y - 24, draw: c => { const s = ST4.conveyor; c.fillStyle = '#5E6B78'; rr(c, s.x - 110, s.y - 50, 220, 26, 6); c.fill(); c.fillStyle = '#3B4452'; for (let i = 0; i < 11; i++) c.fillRect(s.x - 104 + ((i * 20 + t * 30) % 210), s.y - 46, 3, 18); } });
-  out.push({ y: ST4.pack.y - 24, draw: c => { const s = ST4.pack; c.fillStyle = '#C98A3A'; rr(c, s.x - 30, s.y - 54, 60, 30, 6); c.fill(); c.fillStyle = '#FFE7A0'; rr(c, s.x - 20, s.y - 48, 40, 12, 3); c.fill(); } });
+  const out = [{ y: WALL_Y + 12, draw: c => gateEW(c, 'fortgate', WALL_Y, GATE3.x0, GATE3.x1, open, 'القلعة') }];
+  out.push({ y: CASTLE.y + CASTLE.h, draw: c => castle(c, t) });
+  Object.entries(B4).forEach(([k, b]) => out.push({ y: b.y + b.h, draw: c => building3d(c, 'fort-' + k, Object.assign({}, b, { H: H_B, door: k === 'gold' ? '#7A4A2A' : k === 'kitchen' ? '#B8613E' : '#6E4524', tank: k === 'kitchen' || k === 'roof', ac: k === 'museum' })) }));
+  out.push({ y: ST4.well.y - 16, x: ST4.well.x, draw: c => stoneWell(c, ST4.well.x, ST4.well.y - 20, 26, t) });
+  [[2380, '#C0392B'], [2480, '#2F6FB2']].forEach(([x, col]) => out.push({ y: 1830, x, draw: c => bellTower(c, x, col, t) }));
+  [[ST4.trip, '#2E8B57'], [ST4.change, '#7B3F98']].forEach(([s, col]) => out.push({ y: s.y - 22, x: s.x, draw: c => stall(c, s.x, s.y - 22, col) }));
+  out.push({ y: ST4.conveyor.y - 24, x: ST4.conveyor.x, draw: c => conveyor(c, ST4.conveyor, t) });
+  out.push({ y: ST4.pack.y - 24, x: ST4.pack.x, draw: c => packer(c, ST4.pack, t) });
+  PALMS_F.forEach(p => out.push({ y: p.y, draw: c => palmCached(c, p.x, p.y, 1, false, t) }));
   return out;
 }
-function building(c, b) {
-  const fh = 34, rh = b.h - fh;
-  c.fillStyle = 'rgba(60,35,10,.16)'; c.fillRect(b.x + 6, b.y + b.h - 2, b.w, 8);
-  c.fillStyle = shade(b.wall, -22); c.fillRect(b.x, b.y + rh, b.w, fh); c.fillStyle = shade(b.wall, 12); c.fillRect(b.x, b.y, b.w, rh);
-  c.fillStyle = shade(b.wall, -4); for (let x = b.x; x < b.x + b.w - 8; x += 16) { c.beginPath(); c.moveTo(x, b.y + rh); c.lineTo(x + 8, b.y + rh - 7); c.lineTo(x + 16, b.y + rh); c.fill(); }
-  c.fillStyle = '#7A4F2A'; rr(c, b.x + b.w / 2 - 14, b.y + rh + 6, 28, fh - 6, 8); c.fill();
-  c.fillStyle = '#FFFDF6'; rr(c, b.x + b.w / 2 - 50, b.y + 16, 100, 24, 6); c.fill(); c.fillStyle = '#5B4636'; c.font = '900 13px Cairo, sans-serif'; c.textAlign = 'center'; c.fillText(b.sign, b.x + b.w / 2, b.y + 33);
-}
+/* القلعة العُمانية: أسوار بشُرَف وبوابة مقوّسة، فناء في الأعلى، برج رئيسي، وبرجان مستديران عند الركنين الأماميين */
 function castle(c, t) {
-  const K = CASTLE, wallC = '#D2B47E';
-  c.fillStyle = 'rgba(60,35,10,.2)'; c.fillRect(K.x + 10, K.y + K.h - 4, K.w, 14);
-  c.fillStyle = shade(wallC, -18); c.fillRect(K.x, K.y + 120, K.w, K.h - 120);
-  c.fillStyle = wallC; c.fillRect(K.x, K.y + 60, K.w, 70);
-  for (let x = K.x; x < K.x + K.w; x += 30) { c.fillStyle = shade(wallC, 10); c.fillRect(x, K.y + 46, 18, 16); }
-  [[K.x + 40, 0], [K.x + K.w - 40, 0], [K.x + K.w / 2, -30]].forEach(([x, dy]) => { c.fillStyle = shade(wallC, -8); c.beginPath(); c.arc(x, K.y + 120 + dy, 44, Math.PI, 0); c.fill(); c.fillRect(x - 44, K.y + 120 + dy, 88, K.h - 120 - dy); c.fillStyle = shade(wallC, 14); for (let k = -2; k <= 2; k++) c.fillRect(x + k * 17 - 6, K.y + 64 + dy, 12, 16); });
-  c.fillStyle = '#5B3A1E'; rr(c, K.x + K.w / 2 - 34, K.y + K.h - 90, 68, 90, 30); c.fill();
-  c.fillStyle = '#C0392B'; c.fillRect(K.x + K.w / 2 - 2, K.y - 30, 4, 50); c.beginPath(); c.moveTo(K.x + K.w / 2 + 2, K.y - 30); c.lineTo(K.x + K.w / 2 + 36 + Math.sin(t * 3) * 3, K.y - 20); c.lineTo(K.x + K.w / 2 + 2, K.y - 10); c.fill();
+  const K = CASTLE;
+  box3d(c, 'castle', { x: K.x, y: K.y, w: K.w, h: K.h, H: K_H }, CAST, r => {
+    const ry = K.y - K_H;
+    r.fillStyle = shade(CAST, 10); r.fillRect(K.x, ry, K.w, K.h);
+    r.fillStyle = '#D9C49A'; r.fillRect(K.x + 18, ry + 18, K.w - 36, K.h - 36);   // الفناء
+    r.fillStyle = 'rgba(80,50,20,.18)'; r.fillRect(K.x + 18, ry + 18, K.w - 36, 10); r.fillRect(K.x + 18, ry + 18, 10, K.h - 36);
+    r.fillStyle = pattern(r, 'pavers'); r.globalAlpha = .45; r.fillRect(K.x + 30, ry + 30, K.w - 60, K.h - 60); r.globalAlpha = 1;
+    r.strokeStyle = INK; r.lineWidth = 1.2; r.strokeRect(K.x, ry, K.w, K.h); r.strokeRect(K.x + 18, ry + 18, K.w - 36, K.h - 36);
+  }, f => {
+    const yb = K.y + K.h, yt = yb - K_H;
+    const g = f.createLinearGradient(K.x, 0, K.x + K.w, 0); g.addColorStop(0, shade(CAST, 4)); g.addColorStop(1, shade(CAST, -16));
+    f.fillStyle = g; f.fillRect(K.x, yt, K.w, K_H);
+    f.strokeStyle = 'rgba(80,55,30,.22)'; f.lineWidth = .8;
+    for (let yy = yt + 10, r = 0; yy < yb; yy += 10, r++) { f.beginPath(); f.moveTo(K.x, yy); f.lineTo(K.x + K.w, yy); f.stroke(); for (let xx = K.x + (r % 2 ? 9 : 18); xx < K.x + K.w; xx += 18) { f.beginPath(); f.moveTo(xx, yy - 10); f.lineTo(xx, yy); f.stroke(); } }
+    f.fillStyle = '#3B2E22'; for (let x = K.x + 70; x < K.x + K.w - 60; x += 70) if (Math.abs(x - (K.x + K.w / 2)) > 60) f.fillRect(x - 2, yt + 30, 4, 14);   // مزاغل
+    // البوابة الكبرى المقوّسة بباب خشبي ومسامير
+    const gx = K.x + K.w / 2, gw = 70, gh = 78;
+    f.fillStyle = shade(CAST, -26); f.beginPath(); f.moveTo(gx - gw / 2 - 8, yb); f.lineTo(gx - gw / 2 - 8, yb - gh + gw / 2); f.arc(gx, yb - gh + gw / 2, gw / 2 + 8, Math.PI, 0); f.lineTo(gx + gw / 2 + 8, yb); f.closePath(); f.fill();
+    const dg = f.createLinearGradient(gx - gw / 2, 0, gx + gw / 2, 0); dg.addColorStop(0, '#8E5A30'); dg.addColorStop(1, '#5E3B20');
+    f.fillStyle = dg; f.beginPath(); f.moveTo(gx - gw / 2, yb); f.lineTo(gx - gw / 2, yb - gh + gw / 2); f.arc(gx, yb - gh + gw / 2, gw / 2, Math.PI, 0); f.lineTo(gx + gw / 2, yb); f.closePath(); f.fill();
+    f.fillStyle = '#E3B04B'; for (let r = 0; r < 5; r++) for (let k = -2; k <= 2; k++) { f.beginPath(); f.arc(gx + k * 12, yb - 12 - r * 12, 1.6, 0, 7); f.fill(); }
+    f.strokeStyle = 'rgba(30,15,5,.5)'; f.lineWidth = 1.2; f.beginPath(); f.moveTo(gx, yb - gh); f.lineTo(gx, yb); f.stroke();
+    f.fillStyle = 'rgba(70,40,15,.16)'; f.fillRect(K.x, yb - 8, K.w, 8);
+    f.strokeStyle = INK; f.lineWidth = 1.2; f.strokeRect(K.x, yt, K.w, K_H);
+    for (let x = K.x; x < K.x + K.w; x += 22) { f.fillStyle = shade(CAST, 12); f.fillRect(x + 2, yt - 10, 14, 10); f.strokeStyle = INK; f.lineWidth = .6; f.strokeRect(x + 2, yt - 10, 14, 10); }
+  }, 120);
+  // البرج الرئيسي داخل الفناء: يرتفع من مستوى الأسوار، ومعه العَلَم
+  const { lx, ly } = leanAt(K.x + K.w / 2, K.y + K.h);
+  c.save(); c.translate(lx * K_H, -K_H * (1 - ly));
+  stoneBox3d(c, 'keep', K.x + K.w / 2 - 60, K.y + 70, 120, 90, 70, shade(CAST, -4));
+  const fx = K.x + K.w / 2, fy = K.y + 160 - 70 - 90;
+  c.strokeStyle = '#4B4747'; c.lineWidth = 2.4; c.beginPath(); c.moveTo(fx, fy + 40); c.lineTo(fx, fy - 30); c.stroke();
+  c.fillStyle = '#C0392B'; c.beginPath(); c.moveTo(fx + 1, fy - 30); c.quadraticCurveTo(fx + 20, fy - 26 + Math.sin(t * 3) * 3, fx + 38 + Math.sin(t * 3) * 3, fy - 22); c.quadraticCurveTo(fx + 20, fy - 16 + Math.sin(t * 3 + 1) * 3, fx + 1, fy - 12); c.fill();
+  c.fillStyle = '#fff'; c.fillRect(fx + 1, fy - 30, 10, 18); c.fillStyle = '#2E8B57'; c.fillRect(fx + 11, fy - 16, 26, 4);
+  c.restore();
+  // البرجان المستديران عند الركنين الأماميين (يميلان مع الكاميرا)
+  [K.x + 10, K.x + K.w - 10].forEach(x => upright(c, x, K.y + K.h + 10, cc => roundTower(cc, x, K.y + K.h + 10, 44, 130, CAST)));
 }
-function wall(c, open) {
-  c.fillStyle = '#C9B48E';
-  [[0, GATE3.x0], [GATE3.x1, 2930]].forEach(([a, b]) => { c.fillRect(a, WALL_Y, b - a, 12); for (let x = a; x < b; x += 18) c.fillRect(x, WALL_Y - 4, 8, 18); });
-  c.fillStyle = '#B79F74'; c.fillRect(GATE3.x0 - 20, WALL_Y - 30, 24, 44); c.fillRect(GATE3.x1 - 4, WALL_Y - 30, 24, 44);
-  c.fillStyle = '#FFFDF6'; rr(c, (GATE3.x0 + GATE3.x1) / 2 - 56, WALL_Y - 64, 112, 26, 7); c.fill();
-  c.fillStyle = '#5B4636'; c.font = '900 14px Cairo, sans-serif'; c.textAlign = 'center'; c.fillText(open ? 'القلعة ↓' : 'القلعة 🔒', (GATE3.x0 + GATE3.x1) / 2, WALL_Y - 46);
-  if (!open) for (let i = 0; i < 7; i++) { c.fillStyle = i % 2 ? '#fff' : '#E2475C'; c.fillRect(GATE3.x0 + i * 14.3, WALL_Y - 2, 14.3, 14); }
+function bellTower(c, x, col, t) {   // برج جرس صغير: عمودان وقوس وسقف بلون الفريق، وجرس يتأرجح
+  c.fillStyle = shade(CAST, -6); c.fillRect(x - 20, 1770, 8, 60); c.fillRect(x + 12, 1770, 8, 60); c.fillStyle = shade(CAST, 8); c.fillRect(x - 22, 1762, 44, 10); c.fillRect(x - 22, 1822, 44, 8);
+  c.strokeStyle = INK; c.lineWidth = 1; c.strokeRect(x - 22, 1762, 44, 68);
+  c.fillStyle = col; c.beginPath(); c.moveTo(x - 26, 1762); c.lineTo(x, 1736); c.lineTo(x + 26, 1762); c.closePath(); c.fill(); c.stroke();
+  c.save(); c.translate(x, 1774); c.rotate(Math.sin(t * 2.4) * .12);
+  c.strokeStyle = '#5E3B20'; c.lineWidth = 1.2; c.beginPath(); c.moveTo(0, 0); c.lineTo(0, 6); c.stroke();
+  c.fillStyle = '#E3B04B'; c.beginPath(); c.moveTo(-9, 22); c.quadraticCurveTo(-9, 6, 0, 6); c.quadraticCurveTo(9, 6, 9, 22); c.closePath(); c.fill(); c.strokeStyle = '#8A5A00'; c.stroke();
+  c.fillStyle = '#8A5A00'; c.beginPath(); c.arc(0, 23, 2.4, 0, 7); c.fill();
+  c.restore();
+}
+function conveyor(c, s, t) {   // سير ناقل: إطار معدني على أرجل، حزام داكن بأسطوانات تدور
+  c.fillStyle = '#4B4F57'; [s.x - 100, s.x - 30, s.x + 40, s.x + 96].forEach(x => c.fillRect(x, s.y - 30, 5, 30));
+  c.fillStyle = '#7E8996'; rr(c, s.x - 112, s.y - 52, 224, 14, 4); c.fill();
+  c.fillStyle = '#2E333B'; c.fillRect(s.x - 108, s.y - 50, 216, 10);
+  c.fillStyle = '#4E5560'; for (let i = 0; i < 11; i++) c.fillRect(s.x - 104 + ((i * 20 + t * 30) % 210), s.y - 49, 3, 8);
+  c.fillStyle = '#9AA5B1'; c.fillRect(s.x - 112, s.y - 38, 224, 6); c.strokeStyle = INK; c.lineWidth = 1; c.strokeRect(s.x - 112, s.y - 52, 224, 20);
+  [s.x - 112, s.x + 112].forEach(x => { c.fillStyle = '#5E6874'; c.beginPath(); c.arc(x, s.y - 45, 8, 0, 7); c.fill(); c.stroke(); });
+}
+function packer(c, s, t) {   // آلة التعبئة: صندوق معدني بنافذة ومؤشر وضوء
+  c.fillStyle = 'rgba(70,42,20,.2)'; c.fillRect(s.x - 26, s.y - 24, 66, 6);
+  c.fillStyle = '#C98A3A'; c.fillRect(s.x - 30, s.y - 76, 60, 10); c.fillStyle = '#B07430'; c.fillRect(s.x - 30, s.y - 66, 60, 42);
+  c.fillStyle = '#FFE7A0'; rr(c, s.x - 20, s.y - 60, 40, 14, 3); c.fill(); c.fillStyle = '#3A2400'; c.fillRect(s.x - 16, s.y - 55, 32, 3);
+  c.fillStyle = '#5E6874'; c.beginPath(); c.arc(s.x - 12, s.y - 34, 6, 0, 7); c.fill(); c.fillStyle = (t * 2 % 1) < .5 ? '#3BE07A' : '#1F7A44'; c.beginPath(); c.arc(s.x + 14, s.y - 34, 4, 0, 7); c.fill();
+  c.strokeStyle = INK; c.lineWidth = 1; c.strokeRect(s.x - 30, s.y - 76, 60, 52);
 }
