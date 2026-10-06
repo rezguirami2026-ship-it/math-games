@@ -72,6 +72,38 @@ export function blobShadow(ctx, x, y, r, H) {   // ظل جسم مستدير (ش�
   ctx.fillStyle = SUN.color; ctx.beginPath(); ctx.ellipse(x + SUN.dx * H * .45, y + SUN.dy * H * .32, r, r * .38, .35, 0, 7); ctx.fill();
 }
 
+/* ── الموسم: أجواء رمضان (تُضبط في main.js من الشهر الهجري أو من اختيار اللاعب) ── */
+export const SEASON = { ramadan: false };
+/* نقطة مرتفعة عن الأرض بارتفاع h فوق (gx, gy) بعد منظور الكاميرا: لأطراف الحبال المعلقة */
+export function elev(gx, gy, h) { const { lx, ly } = leanAt(gx, gy); return [gx + lx * h, gy - h * (1 - ly)]; }
+/* فانوس رمضاني صغير متوهج */
+export function lantern(ctx, x, y, col, t, k) {
+  const fl = .85 + Math.sin(t * 5 + k * 1.7) * .15;
+  ctx.save(); ctx.globalCompositeOperation = 'lighter';
+  const g = ctx.createRadialGradient(x, y + 3, 0, x, y + 3, 14); g.addColorStop(0, `rgba(255,190,90,${.5 * fl})`); g.addColorStop(1, 'rgba(255,190,90,0)');
+  ctx.fillStyle = g; ctx.fillRect(x - 14, y - 11, 28, 28); ctx.restore();
+  ctx.strokeStyle = '#4A3A2A'; ctx.lineWidth = .8; ctx.beginPath(); ctx.moveTo(x, y - 5); ctx.lineTo(x, y - 2); ctx.stroke();
+  ctx.fillStyle = col; ctx.beginPath(); ctx.moveTo(x - 3, y - 2); ctx.lineTo(x + 3, y - 2); ctx.lineTo(x + 4, y + 4); ctx.lineTo(x, y + 9); ctx.lineTo(x - 4, y + 4); ctx.closePath(); ctx.fill();
+  ctx.fillStyle = `rgba(255,236,170,${fl})`; ctx.beginPath(); ctx.moveTo(x - 1.6, y); ctx.lineTo(x + 1.6, y); ctx.lineTo(x + 2, y + 4); ctx.lineTo(x, y + 6.5); ctx.lineTo(x - 2, y + 4); ctx.closePath(); ctx.fill();
+  ctx.strokeStyle = INK; ctx.lineWidth = .6; ctx.beginPath(); ctx.moveTo(x - 3, y - 2); ctx.lineTo(x + 3, y - 2); ctx.lineTo(x + 4, y + 4); ctx.lineTo(x, y + 9); ctx.lineTo(x - 4, y + 4); ctx.closePath(); ctx.stroke();
+}
+/* حبل فوانيس معلّق بين نقطتين (يتدلى بقدر sag) */
+export function lanternString(ctx, a, b, sag, n, t) {
+  const pt = u => [a[0] + (b[0] - a[0]) * u, a[1] + (b[1] - a[1]) * u + Math.sin(Math.PI * u) * sag];
+  ctx.strokeStyle = 'rgba(50,35,25,.75)'; ctx.lineWidth = 1; ctx.beginPath(); for (let k = 0; k <= 20; k++) { const [x, y] = pt(k / 20); k ? ctx.lineTo(x, y) : ctx.moveTo(x, y); } ctx.stroke();
+  const cols = ['#E3B04B', '#2F8F86', '#C2453A', '#7B4FA8'];
+  for (let k = 1; k <= n; k++) { const [x, y] = pt(k / (n + 1)); lantern(ctx, x, y + 4, cols[k % 4], t, k + a[0]); }
+}
+export function banner(ctx, a, b, sag, text) {   // لافتة قماشية معلقة على حبل
+  const mx = (a[0] + b[0]) / 2, my = (a[1] + b[1]) / 2 + sag;
+  ctx.strokeStyle = 'rgba(50,35,25,.75)'; ctx.lineWidth = 1; ctx.beginPath(); ctx.moveTo(a[0], a[1]); ctx.quadraticCurveTo(mx, my + sag, b[0], b[1]); ctx.stroke();
+  ctx.font = '900 13px Cairo, sans-serif'; const w = ctx.measureText(text).width + 26;
+  ctx.fillStyle = 'rgba(40,25,15,.25)'; rr(ctx, mx - w / 2 + 3, my + 3, w, 22, 4); ctx.fill();
+  ctx.fillStyle = '#2A1B66'; rr(ctx, mx - w / 2, my, w, 22, 4); ctx.fill(); ctx.strokeStyle = '#E3B04B'; ctx.lineWidth = 1.4; ctx.stroke();
+  ctx.fillStyle = '#FFE7A0'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.fillText(text, mx, my + 11.5); ctx.textBaseline = 'alphabetic';
+  [mx - w / 2 + 8, mx + w / 2 - 8].forEach(x => { ctx.fillStyle = '#E3B04B'; ctx.beginPath(); ctx.arc(x, my + 11, 2.4, .7, Math.PI * 2 - .7); ctx.lineTo(x, my + 11); ctx.fill(); });
+}
+
 /* ── منظور الكاميرا: الكاميرا فوق مركز الشاشة، فما ارتفع عن الأرض يبتعد عن المركز قليلاً ──
    الجسم على يمين الشاشة يُظهر جانبه الأيسر، وعلى يسارها جانبه الأيمن؛ ويتغير ذلك مع حركة الكاميرا (Parallax).
    CAM يُحدَّث في كل إطار. lean لكل وحدة ارتفاع: lx إزاحة أفقية، ly نسبة قِصَر الارتفاع (جنوب الكاميرا أقصر) */
@@ -108,7 +140,7 @@ export function box3d(ctx, key, b, side, paintRoof, paintFront, roofPad = 34) {
 /* ── المبنى: صندوق بجدار أمامي بارتفاع حقيقي وسطح بحاجز ──
    b = { x, y, w, h (عمق الأرضية), H (ارتفاع الجدار), wall, door, style, sign?, ac?, tank?, dish?, stair? } */
 export function building3d(ctx, key, b) {
-  box3d(ctx, key, b, b.wall || PAL.plaster, c => buildingRoof(c, b), c => buildingFront(c, b));
+  box3d(ctx, key + (SEASON.ramadan ? '|r' : ''), b, b.wall || PAL.plaster, c => buildingRoof(c, b), c => buildingFront(c, b));
 }
 export function building(ctx, b, t) { buildingRoof(ctx, b); buildingFront(ctx, b, t); }
 function buildingRoof(ctx, b) {
@@ -204,7 +236,8 @@ export function door(ctx, x, y, w, h, col, style) {   // باب خشبي مقو�
 }
 function windowArch(ctx, x, y, w, h, style, i) {   // نافذة مقوّسة بمشربية خشبية ودرفتين
   ctx.fillStyle = shade(PAL.stone, 6); ctx.beginPath(); ctx.moveTo(x - 3, y + h + 3); ctx.lineTo(x - 3, y + w / 2); ctx.arc(x + w / 2, y + w / 2, w / 2 + 3, Math.PI, 0); ctx.lineTo(x + w + 3, y + h + 3); ctx.closePath(); ctx.fill();
-  const g = ctx.createLinearGradient(x, y, x + w, y + h); g.addColorStop(0, '#9CC8DA'); g.addColorStop(1, '#3E6E85');
+  const g = ctx.createLinearGradient(x, y, x + w, y + h);
+  if (SEASON.ramadan) { g.addColorStop(0, '#FFE3A0'); g.addColorStop(1, '#D9893A'); } else { g.addColorStop(0, '#9CC8DA'); g.addColorStop(1, '#3E6E85'); }   // في رمضان: ضوء دافئ من الداخل
   ctx.fillStyle = g; ctx.beginPath(); ctx.moveTo(x, y + h); ctx.lineTo(x, y + w / 2); ctx.arc(x + w / 2, y + w / 2, w / 2, Math.PI, 0); ctx.lineTo(x + w, y + h); ctx.closePath(); ctx.fill();
   ctx.save(); ctx.clip();
   ctx.fillStyle = 'rgba(255,255,255,.35)'; ctx.beginPath(); ctx.moveTo(x, y + h * .7); ctx.lineTo(x + w * .7, y); ctx.lineTo(x + w, y); ctx.lineTo(x, y + h); ctx.fill();   // انعكاس السماء

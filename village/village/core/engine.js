@@ -4,7 +4,8 @@ export function createEngine(canvas, world) {
   const ctx = canvas.getContext('2d');
   const E = { ctx, world, w: 0, h: 0, dpr: 1, zoom: 1, cam: { x: world.w / 2, y: world.h / 2 }, focus: null, follow: null, keys: {}, onTap: null, t: 0, running: false,
     lead: { x: 0, y: 0 }, punch: 0, quake: 0 };
-  let light = null, vignette = null;
+  let light = null, vignette = null, dusk = null, duskVig = null;
+  E.mood = 'day';   // 'dusk' لأجواء رمضان: غروب دافئ
   function resize() {
     E.dpr = Math.min(window.devicePixelRatio || 1, 2.5);
     E.w = canvas.clientWidth; E.h = canvas.clientHeight;
@@ -17,6 +18,11 @@ export function createEngine(canvas, world) {
     const r = Math.hypot(E.w, E.h) / 2;
     vignette = ctx.createRadialGradient(E.w / 2, E.h * .48, r * .45, E.w / 2, E.h * .48, r * 1.05);
     vignette.addColorStop(0, 'rgba(30,18,10,0)'); vignette.addColorStop(1, 'rgba(30,18,10,.34)');
+    // الغروب: ضوء برتقالي دافئ في الأعلى، وبنفسجي هادئ في الأسفل، والعالم يبقى واضحاً للعب
+    dusk = ctx.createLinearGradient(0, 0, 0, E.h);
+    dusk.addColorStop(0, 'rgba(255,150,70,.20)'); dusk.addColorStop(.55, 'rgba(200,90,90,.10)'); dusk.addColorStop(1, 'rgba(60,40,120,.26)');
+    duskVig = ctx.createRadialGradient(E.w / 2, E.h * .48, r * .4, E.w / 2, E.h * .48, r * 1.05);
+    duskVig.addColorStop(0, 'rgba(25,15,40,0)'); duskVig.addColorStop(1, 'rgba(25,15,40,.45)');
   }
   window.addEventListener('resize', resize); resize();
   const z = () => E.zoom * (1 + E.punch * .06);
@@ -53,7 +59,8 @@ export function createEngine(canvas, world) {
       ctx.setTransform(E.dpr * Z, 0, 0, E.dpr * Z, E.dpr * (E.w / 2 - E.cam.x * Z + qx), E.dpr * (E.h / 2 - E.cam.y * Z + qy));
       try { E.render(ctx, { x: E.cam.x - hw, y: E.cam.y - hh, w: hw * 2, h: hh * 2 }, E.t); } catch (err) { if (!E._errR) { E._errR = 1; console.error('render', err); } }
       ctx.setTransform(E.dpr, 0, 0, E.dpr, 0, 0);   // طبقة الضوء والتعتيم فوق العالم كله
-      ctx.fillStyle = light; ctx.fillRect(0, 0, E.w, E.h); ctx.fillStyle = vignette; ctx.fillRect(0, 0, E.w, E.h);
+      const dk = E.mood === 'dusk';
+      ctx.fillStyle = dk ? dusk : light; ctx.fillRect(0, 0, E.w, E.h); ctx.fillStyle = dk ? duskVig : vignette; ctx.fillRect(0, 0, E.w, E.h);
       requestAnimationFrame(frame);
     };
     requestAnimationFrame(frame);

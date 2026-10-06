@@ -6,6 +6,7 @@ import { ACH } from '../achievements/achievements.js';
 import { sound, sfx } from '../core/sound.js';
 import { exportCode } from '../save/save.js';
 import { progress } from '../missions/quests.js';
+import { ramadanPref, setRamadanPref, PREF_LABEL } from '../core/season.js';
 const $ = id => document.getElementById(id);
 window.addEventListener('pointerup', () => clearInterval(hud._hold));
 export const hud = {
@@ -78,7 +79,8 @@ export const hud = {
         ${(() => { const c = {}; (s.inventory || []).forEach(k => c[k] = (c[k] || 0) + 1); const I = { seeds: '🌱 بذور', bucket: '🪣 دلو', shovel: '⛏️ مجرفة', fert: '🧴 سماد', pot: '🪴 أصيص' };
           return Object.keys(c).length ? Object.keys(c).map(k => `<div class="bagrow"><span>${I[k] || k}</span><b>${ar(c[k])}</b></div>`).join('') : '<div class="bagrow muted"><span>🧰 الأدوات</span><b>تشتريها من دكان العم ناصر</b></div>'; })()}
         <button class="act ghost" id="sndBtn">${sound.on ? '🔊 الصوت يعمل' : '🔇 الصوت متوقف'}</button>
-        <button class="act ghost" id="codeBtn">🔑 رمز حفظ التقدّم</button>`;
+        <button class="act ghost" id="codeBtn">🔑 رمز حفظ التقدّم</button>
+        <button class="act ghost" id="ramBtn">🌙 أجواء رمضان: ${PREF_LABEL[ramadanPref()]}</button>`;
     }
     if (kind === 'code') {
       const p = progress();
@@ -93,6 +95,7 @@ export const hud = {
     if (kind === 'bag') {
       $('sndBtn').onclick = e => { e.stopPropagation(); sound.on = !sound.on; this.panel('bag'); };
       $('codeBtn').onclick = e => { e.stopPropagation(); this.panel('code'); };
+      $('ramBtn').onclick = e => { e.stopPropagation(); const nx = { auto: 'on', on: 'off', off: 'auto' }[ramadanPref()]; setRamadanPref(nx); sfx('click'); this.panel('bag'); };
     }
     if (kind === 'code') {
       const box = $('codeBox');

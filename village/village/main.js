@@ -8,7 +8,7 @@ import { loadSave, saveSoon, saveNow, wipeSave } from './save/save.js';
 import { createPlayer, updatePlayer } from './player/player.js';
 import { findPath } from './world/nav.js';
 import { drawHuman, heightOf } from './character/human.js';
-import { WORLD, PILE, SIGNAL, TREE_SPOTS, FARM, HOUSES, WAREHOUSE, ROADS, SOUTH, staticColliders, drawGround, drawFarm, drawPalm, staticDrawables } from './world/village.js';
+import { WORLD, PILE, SIGNAL, TREE_SPOTS, FARM, HOUSES, WAREHOUSE, ROADS, SOUTH, staticColliders, drawGround, drawFarm, drawPalm, staticDrawables, ramadanDecor } from './world/village.js';
 import { makeTrucks, truckColliders, drawTruck, drawPile, drawSignal, drawSpot, updateFx, drawFx, moveAlong, say, bubble, sparkle, dust } from './world/entities.js';
 import { makeNpcs, npcVisible, updateNpc, drawNpc } from './npc/npc.js';
 import { CHAPTER, introLines, npcLines } from './story/dialogues.js';
@@ -26,7 +26,8 @@ import { T2U3 } from './missions/t2u3.js';
 import { T2U4 } from './missions/t2u4.js';
 import { T2U5 } from './missions/t2u5.js';
 import { workshopColliders, drawWorkshopGround, workshopDrawables, STAGE } from './world/workshop.js';
-import { signboard, upright, CAM } from './world/art.js';
+import { signboard, upright, CAM, SEASON } from './world/art.js';
+import { ramadanOn } from './core/season.js';
 import { caravanColliders, drawCaravanGround, caravanDrawables } from './world/caravan.js';
 import { coopColliders, drawCoopGround, coopDrawables } from './world/coop.js';
 import { festivalColliders, drawFestivalGround, festivalDrawables } from './world/festival.js';
@@ -315,6 +316,7 @@ function update(dt) {
 /* ── الرسم ── */
 function render(ctx, view, t) {
   CAM.x = view.x + view.w / 2; CAM.y = view.y + view.h / 2;   // منظور الكاميرا: ما ارتفع يبتعد عن مركز الشاشة
+  SEASON.ramadan = ramadanOn(); eng.mood = SEASON.ramadan ? 'dusk' : 'day';   // أجواء رمضان: غروب دافئ وفوانيس
   const s = game.state, m = s.missions.convoy, now = Date.now(), c = cur();
   drawGround(ctx, view);
   drawMarketGround(ctx);
@@ -354,6 +356,7 @@ function render(ctx, view, t) {
   if (hand && hand.label && hand.label.trim()) bubble(ctx, pl.x, pl.y - 78 - Math.min(hand.n, 6) * 8, hand.label, '#2A1B66');
   if (mod && mod.handDraw && c && quests.isStarted(c.id)) try { mod.handDraw(ctx, pl.x, pl.y - 112, quests.data(c.id)); } catch (e) { report('ما في اليد', c.id, e); }
   if (W.tapMark) { const k = W.tapMark.t / .6; ctx.strokeStyle = `rgba(255,255,255,${1 - k})`; ctx.lineWidth = 3; ctx.beginPath(); ctx.ellipse(W.tapMark.x, W.tapMark.y, 8 + k * 16, 4 + k * 7, 0, 0, 7); ctx.stroke(); }
+  ramadanDecor(ctx, view, t);
   drawFx(ctx);
   drawGuide(ctx, view, t);
 }

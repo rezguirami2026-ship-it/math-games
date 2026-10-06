@@ -1,7 +1,7 @@
 // قرية الخير: تخطيط العالم ورسمه. المزرعة والبئر والنخيل تتغير حسب حالة العالم.
 // الرسم بأسلوب 2.5D مشترك (world/art.js): مبانٍ بجدران وأسطح، ظلال نحو الأسفل يميناً، أرصفة بحواف، وأنسجة مواد.
 import { rng, shade, mix, rr, clamp } from '../core/util.js';
-import { PAL, SUN, INK, CAM, leanAt, pattern, sprite, boxShadow, blobShadow, building3d, box3d, minaret, sidrCached, palm, palmCached, shrub, streetLamp, bench, signboard } from './art.js';
+import { PAL, SUN, INK, CAM, leanAt, pattern, sprite, boxShadow, blobShadow, building3d, box3d, minaret, sidrCached, palm, palmCached, shrub, streetLamp, bench, signboard, SEASON, elev, lantern, lanternString, banner } from './art.js';
 
 export const WORLD = { w: 3200, h: 6500 };   // القرية في الشمال، ثم السوق والميناء شرقاً، والقلعة والمهرجان والجمعية والقافلة والورشة جنوباً
 export const ROADS = [{ x: 0, y: 600, w: 2930, h: 80 }, { x: 700, y: 0, w: 70, h: 600 }];
@@ -201,7 +201,7 @@ export function staticDrawables(state, t, pl) {
   PALMS.forEach(p => out.push({ y: p.y, draw: c => palmCached(c, p.x, p.y, 1, false, t) }));
   SIDRS.forEach(p => out.push({ y: p.y, draw: c => sidrCached(c, p.x, p.y, 1, t) }));
   FARM_PALMS.forEach(p => out.push({ y: p.y, draw: c => palmCached(c, p.x, p.y, .95, !state.world.delivered, t) }));
-  const lit = !!(state.quests && state.quests.done.primeNumbers);   // بعد درس «فوانيس الساحة» تضيء أعمدة القرية
+  const lit = SEASON.ramadan || !!(state.quests && state.quests.done.primeNumbers);   // بعد درس «فوانيس الساحة» تضيء أعمدة القرية
   LAMPS.forEach(p => out.push({ y: p.y, x: p.x, draw: c => streetLamp(c, p.x, p.y, t, lit) }));
   SHRUBS.forEach(p => out.push({ y: p.y, x: p.x, draw: c => shrub(c, p.x, p.y, 9, p.f) }));
   out.push({ y: 548, x: 1196, draw: c => bench(c, 1196, 548) });
@@ -212,7 +212,9 @@ export function staticDrawables(state, t, pl) {
 /* المئذنة قائمة على سطح المسجد: ترتفع من مستوى السطح لا من الأرض */
 function mosqueTop(ctx, b) {
   const { lx, ly } = leanAt(b.x + b.w / 2, b.y + b.h), H = b.H;
-  ctx.save(); ctx.translate(lx * H, -H * (1 - ly)); minaret(ctx, 'minaret', MINARET.x, MINARET.y, MINARET.s, MINARET.H); ctx.restore();
+  ctx.save(); ctx.translate(lx * H, -H * (1 - ly)); minaret(ctx, 'minaret', MINARET.x, MINARET.y, MINARET.s, MINARET.H);
+  if (SEASON.ramadan) { const m = MINARET, by = m.y - m.H + m.s + 4; for (let k = 0; k < 6; k++) lantern(ctx, m.x - 4 + k * (m.s + 8) / 5, by, '#E3B04B', performance.now() / 1000, k); }   // أضواء حول شرفة المئذنة
+  ctx.restore();
 }
 /* المستودع: سقف معدني مضلّع، جدار خرساني، باب لفّاف كبير، ورصيف تحميل */
 function warehouseRoof(ctx) {
@@ -287,4 +289,15 @@ function wayfinding(ctx, x, y) {   // لافتة إرشاد عند التقاط�
   ctx.fillStyle = '#4B4747'; ctx.fillRect(x - 1.5, y - 52, 3, 52);
   const arm = (yy, text, right, col) => { ctx.font = '900 10px Cairo, sans-serif'; const w = ctx.measureText(text).width + 16, x0 = right ? x : x - w; ctx.fillStyle = col; ctx.beginPath(); ctx.moveTo(x0, yy - 7); ctx.lineTo(x0 + w - (right ? 0 : 0), yy - 7); right ? ctx.lineTo(x0 + w + 6, yy) : ctx.lineTo(x0 + w, yy); ctx.lineTo(x0 + w, yy + 7); ctx.lineTo(x0, yy + 7); right ? null : ctx.lineTo(x0 - 6, yy); ctx.closePath(); ctx.fill(); ctx.strokeStyle = '#F2E6C9'; ctx.lineWidth = 1; ctx.stroke(); ctx.fillStyle = '#FFF6E2'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.fillText(text, x0 + w / 2 + (right ? 2 : -2), yy + .5); ctx.textBaseline = 'alphabetic'; };
   arm(y - 46, 'المزرعة', true, '#3F7A55'); arm(y - 30, 'المستودع', false, PAL.teal);
+}
+
+/* ── أجواء رمضان: حبال فوانيس بين أعمدة الإنارة وفوق ساحة البئر، ولافتة «رمضان كريم» (فوق كل شيء، معلّقة في الهواء) ── */
+export function ramadanDecor(ctx, view, t) {
+  if (!SEASON.ramadan || view.y > 900) return;
+  const L = (x, y) => elev(x, y, 66);   // رأس عمود الإنارة
+  lanternString(ctx, L(612, 594), L(870, 594), 22, 6, t);
+  lanternString(ctx, L(870, 594), L(1220, 594), 30, 9, t);
+  banner(ctx, elev(950, 594, 56), elev(1140, 594, 56), 10, 'رمضان كريم 🌙');
+  lanternString(ctx, elev(1000, 270, 96), elev(1240, 460, 116), 26, 7, t);   // فوق ساحة البئر بين سطحين
+  lanternString(ctx, elev(790, 300, 66), elev(830, 270, 96), 10, 2, t);
 }
