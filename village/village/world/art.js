@@ -56,6 +56,7 @@ const TILES = {
     b(0, 0, 16, 8, 4); b(16, 0, 16, 8, -2); b(8, 8, 16, 8, 0); b(-8, 8, 16, 8, 6); b(24, 8, 16, 8, 6); b(0, 16, 16, 8, -3); b(16, 16, 16, 8, 3); b(8, 24, 16, 8, -1); b(-8, 24, 16, 8, 2); b(24, 24, 16, 8, 2);
   }],
   plaster: [96, (x, s) => { x.clearRect(0, 0, s, s); speckle(x, s, 70, ['rgba(120,90,50,.18)', 'rgba(255,255,255,.35)'], .6, 2.2, 11); }],
+  grass: [96, (x, s) => { x.fillStyle = '#5E9C45'; x.fillRect(0, 0, s, s); const R = rng(21); x.lineCap = 'round'; for (let i = 0; i < 260; i++) { const px = R() * s, py = R() * s; x.strokeStyle = ['#6FB052', '#4F8A3A', '#78B85A', '#558F3F'][Math.floor(R() * 4)]; x.lineWidth = .7; x.beginPath(); x.moveTo(px, py); x.lineTo(px + (R() - .5) * 2, py - 1.5 - R() * 2); x.stroke(); } }],
   soil: [64, (x, s) => { x.fillStyle = '#9C6B42'; x.fillRect(0, 0, s, s); speckle(x, s, 90, ['#8A5B36', '#B07C4E', '#7A4F2E'], .4, 1.3, 13); }],
   soilWet: [64, (x, s) => { x.fillStyle = '#6E4A2E'; x.fillRect(0, 0, s, s); speckle(x, s, 90, ['#5E3E26', '#83593A', '#4F3420'], .4, 1.3, 17); }]
 };

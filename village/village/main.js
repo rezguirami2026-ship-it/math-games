@@ -88,7 +88,7 @@ const unitDone = u => LESSONS.filter(l => l.u <= u).every(l => quests.isDone(l.i
 const curMod = () => { const c = cur(); return c && c.ready && MODS[c.id] ? MODS[c.id] : null; };
 /* المناطق المسوّرة: بوابة كل منطقة تُفتح بإنهاء الوحدة u (رقمها في UNITS)، ورسالة الفتح في UNITS[u].opens */
 const REGIONS = [
-  { u: 0, walls: marketColliders, draw: open => marketDrawables(open) },        // السوق الأسبوعي
+  { u: 0, walls: marketColliders, draw: (open, t) => marketDrawables(open, t) },        // السوق الأسبوعي
   { u: 1, walls: harborColliders, draw: harborDrawables },                      // الميناء
   { u: 2, walls: fortColliders, draw: fortDrawables },                          // القلعة
   { u: 3, walls: festivalColliders, draw: festivalDrawables },                  // ساحة المهرجان (نهاية الفصل الأول)
