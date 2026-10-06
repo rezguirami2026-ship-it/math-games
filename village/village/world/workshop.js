@@ -20,9 +20,9 @@ const GOODS = { tiles: ['#2F6FB2', '#F2E6C9', '#7CA6C8'], flag: ['#C0392B', '#F4
 const COURT = { x: 260, y: 5610, w: 1960, h: 260 };
 const PALMS = [{ x: 150, y: 5700 }, { x: 2350, y: 5700 }, { x: 2600, y: 6000 }, { x: 900, y: 6250 }, { x: 1580, y: 6250 }, { x: 300, y: 6200 }, { x: 2200, y: 6300 }];
 export const ST = { x: STAGE.x - 160, y: STAGE.y - 70, w: 320, h: 60, H: 24 };
-const POLES = [[STAGE.x - 330, 6120], [STAGE.x + 330, 6120]];
+export const POLES = [[STAGE.x - 330, 6120], [STAGE.x + 330, 6120]];
 const WSHRUBS = [[STAGE.x - 200, 6200], [STAGE.x + 200, 6200], [COURT.x - 30, 5900], [COURT.x + COURT.w + 30, 5900]];
-const TABLES = [[1000, 5960, 'roof'], [1480, 5960, 'frames']];
+export const TABLES = [[1000, 5960, 'roof'], [1480, 5960, 'frames']];
 export function drawWorkshopGround(ctx) {
   gateEWShadows(ctx, WALL7_Y, GATE7.x0, GATE7.x1);
   // ساحة الورشة: بلاط بنقش معيّنات داخل إطار حجري
@@ -44,10 +44,10 @@ export function workshopDrawables(open, t, allDone) {
   if (!FLAGS.three) Object.entries(ST9).forEach(([k, s]) => out.push({ y: s.y - 32, draw: c => kiosk3d(c, k, s, GOODS[k]) }));
   if (!FLAGS.three) out.push({ y: STAGE.y - 10, draw: c => stage(c, t, allDone) });
   if (!FLAGS.three) PALMS.forEach(p => out.push({ y: p.y, draw: c => palmCached(c, p.x, p.y, 1, false, t) }));
-  POLES.forEach(([x, y]) => out.push({ y, x, draw: c => { c.fillStyle = PAL.wood; c.fillRect(x - 2, y - 90, 4, 90); c.strokeStyle = INK; c.lineWidth = .7; c.strokeRect(x - 2, y - 90, 4, 90); } }));
-  out.push({ y: STAGE.y + 1, draw: c => { const [a, b] = POLES; lanternString(c, elev(a[0], a[1], 90), elev(STAGE.x - 146, ST.y, ST.H + 120), 22, 6, t); lanternString(c, elev(STAGE.x + 146, ST.y, ST.H + 120), elev(b[0], b[1], 90), 22, 6, t); } });
+  if (!FLAGS.three) POLES.forEach(([x, y]) => out.push({ y, x, draw: c => { c.fillStyle = PAL.wood; c.fillRect(x - 2, y - 90, 4, 90); c.strokeStyle = INK; c.lineWidth = .7; c.strokeRect(x - 2, y - 90, 4, 90); } }));
+  if (!FLAGS.three) out.push({ y: STAGE.y + 1, draw: c => { const [a, b] = POLES; lanternString(c, elev(a[0], a[1], 90), elev(STAGE.x - 146, ST.y, ST.H + 120), 22, 6, t); lanternString(c, elev(STAGE.x + 146, ST.y, ST.H + 120), elev(b[0], b[1], 90), 22, 6, t); } });
   if (!FLAGS.three) WSHRUBS.forEach(([x, y]) => out.push({ y, draw: c => shrub(c, x, y, 14, true) }));
-  TABLES.forEach(([x, y, k]) => out.push({ y, x, draw: c => workTable(c, x, y, k) }));
+  if (!FLAGS.three) TABLES.forEach(([x, y, k]) => out.push({ y, x, draw: c => workTable(c, x, y, k) }));
   return out;
 }
 function stage(c, t, allDone) {   // منصة التخرّج: خشب مجسّم، خلفية بقائمين ولافتة، وقصاصات احتفال عند إكمال الدروس

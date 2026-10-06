@@ -171,7 +171,7 @@ async function start(state) {
   }
 }
 /* ── العرض ثلاثي الأبعاد (renderer3d): يُحمَّل فقط عند طلبه، ويرجع إلى الرسم الحالي إن لم يدعم الجهاز WebGL أو فشل التحميل ── */
-const V3D = 'نسخة 3D · ١٠';   // تُعرض في شاشة التحميل وفي الزاوية: للتأكد أن المتصفح حمّل آخر نسخة
+const V3D = 'نسخة 3D · ١١';   // تُعرض في شاشة التحميل وفي الزاوية: للتأكد أن المتصفح حمّل آخر نسخة
 const want3d = () => gfx.d3();
 function loadingScreen() {
   const el = document.createElement('div'); el.className = 'load3d';
@@ -194,7 +194,7 @@ async function init3D() {
     load = loadingScreen(); FLAGS.three = true;
     let q = 'auto'; try { q = localStorage.getItem('ramimath_q') || 'auto'; } catch (e) {}   // تلقائية: تبدأ عالية وتنخفض وحدها إن كان الجهاز بطيئاً
     eng.l3 = await R.create3D({ quality: q === 'low' ? 'low' : 'high', world: WORLD, paintGround: paintStaticGround, onProgress: k => load.set(k) });
-    eng.l3.ground = paintDynamicGround; eng.l3.people = people3d; eng.l3.gates = () => W.gateK; eng.l3.allDone = allDone; eng.l3.ramadan = () => SEASON.ramadan;
+    eng.l3.ground = paintDynamicGround; eng.l3.people = people3d; eng.l3.gates = () => W.gateK; eng.l3.allDone = allDone; eng.l3.ramadan = () => SEASON.ramadan; eng.l3.signal = () => W.signalGreen;
     eng.l3.vehicles = () => { const s = game.state, m = s.missions.convoy, out = W.trucks.map(tr => ({ id: 't' + tr.i, x: tr.x, y: tr.y, load: m.loads[tr.i], covered: tr.covered, shake: tr.shake, sag: tr.sag }));
       if (quests.isStarted('division1') || quests.isDone('division1')) out.push({ id: 'van', x: convoy.VAN.x, y: convoy.VAN.y, load: m.van || 0, covered: !!s.world.delivered, s: .72 }); return out; };
     gfx.onQ = v => { if (v !== 'auto') eng.l3.setQuality(v); else autoQuality(); };
@@ -475,7 +475,7 @@ function worldItems(view, t, three) {
   if (convoyActive()) list.push({ y: PILE.y, x: PILE.x, draw: cc => drawPile(cc, m.pile) });
   if ((quests.isStarted('division1') || quests.isDone('division1')) && !three) list.push({ y: convoy.VAN.y + 4, x: convoy.VAN.x, draw: cc => drawVan(cc, m.van || 0) });
   else if ((quests.isStarted('division1') || quests.isDone('division1')) && convoyActive()) list.push({ y: convoy.VAN.y + 4, draw: cc => bubble(cc, convoy.VAN.x - 6, convoy.VAN.y - 56, ar(m.van || 0), '#7B3F98') });
-  list.push({ y: SIGNAL.y, x: SIGNAL.x, draw: cc => drawSignal(cc, W.signalGreen) });
+  if (!three) list.push({ y: SIGNAL.y, x: SIGNAL.x, draw: cc => drawSignal(cc, W.signalGreen) });
   const T = s.missions.tanks, tanksOn = quests.isStarted('decimalFractions') || quests.isDone('decimalFractions');
   if (tanksOn) tanks.TANKS.forEach((tk, i) => list.push({ y: tk.y, x: tk.x, draw: cc => tanks.drawTank(cc, i, T.levels[i], T.targets ? T.targets[i] : { t: 'd', s: '؟' }, T.done[i], t) }));
   tanks.TANKS.forEach((tk, i) => { if (T.done[i]) { const hs = HOUSES[tk.house]; list.push({ y: hs.y + hs.h + 9, draw: cc => tanks.drawFlowers(cc, hs) }); } });

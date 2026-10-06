@@ -9,6 +9,7 @@ import { makeComposer } from './post.js';
 import { ramadan } from './ramadan.js';
 import { residential, funpark, port } from './city.js';
 import { buildRegions } from './regions.js';
+import { lessonProps } from './props2.js';
 import { vehicles, shop3d, busStation, dhows, plane3d, pumps3d, stage3d, farmShed3d, bellTowers } from './things.js';
 import { buildVillage } from './world.js';
 import { buildPerson, animatePerson } from './people.js';
@@ -57,6 +58,7 @@ export async function create3D(opts) {
   const resi = residential(), prt = port(); scene.add(resi, prt);
   const regions = buildRegions({ quality: q }); scene.add(regions.group);
   const veh = vehicles(), boats = dhows(), stg = stage3d(), bells = bellTowers(); scene.add(veh.group, shop3d(), busStation(), boats, plane3d(), pumps3d(), stg, farmShed3d(), bells);
+  const lp = lessonProps(); scene.add(lp);
   const park = funpark(); scene.add(park);
   const seaM = sea(2930, -2000, W.h + 2000); scene.add(seaM);
   // رمل خارج العالم حتى الجبال
@@ -194,7 +196,7 @@ export async function create3D(opts) {
       wind.value = t; seaM.userData.tick(t);
       rmd.set(!!(L.ramadan && L.ramadan()), L); rmd.tick(t);
       village.update(state, t, E.follow); regions.update(t, E.follow, L.gates && L.gates());
-      if (L.vehicles) veh.update(L.vehicles()); boats.userData.tick(t); bells.userData.tick(t); stg.userData.update(t, L.allDone && L.allDone()); if (E.follow) { resi.userData.fade(E.follow); prt.userData.fade(E.follow); }
+      if (L.vehicles) veh.update(L.vehicles()); boats.userData.tick(t); lp.userData.tick(t, L.signal && L.signal()); bells.userData.tick(t); stg.userData.update(t, L.allDone && L.allDone()); if (E.follow) { resi.userData.fade(E.follow); prt.userData.fade(E.follow); }
       if (L.people) try { syncPeople(L.people(), t); } catch (e) { if (!L._pErr) { L._pErr = 1; console.error('people', e); } }
       if (L.ground) try { paintDecal(t, L.ground); } catch (e) { if (!L._gErr) { L._gErr = 1; console.error('ground layer', e); } }
       cl.userData.tick(t, camera); park.userData.tick(t);

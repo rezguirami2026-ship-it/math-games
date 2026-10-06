@@ -26,7 +26,7 @@ export function marketColliders(open) {
 }
 const H_CARP = 90, CANOPY_H = 70;
 const PALMS_M = [{ x: 1560, y: 470 }, { x: 2280, y: 110 }, { x: 1575, y: 1090 }, { x: 2285, y: 905 }, { x: 1830, y: 1120 }];
-const FLOOD = [[FIELD.x - 10, FIELD.y - 4], [FIELD.x + FIELD.w + 10, FIELD.y - 4], [FIELD.x - 10, FIELD.y + FIELD.h + 8], [FIELD.x + FIELD.w + 10, FIELD.y + FIELD.h + 8]];
+export const FLOOD = [[FIELD.x - 10, FIELD.y - 4], [FIELD.x + FIELD.w + 10, FIELD.y - 4], [FIELD.x - 10, FIELD.y + FIELD.h + 8], [FIELD.x + FIELD.w + 10, FIELD.y + FIELD.h + 8]];
 
 /* ── الأرضيات (من ذاكرة الصور): الملعب، موقف الحافلات، الساحة، وأرض الحظيرة ── */
 export function drawMarketGround(ctx) {
@@ -70,7 +70,7 @@ export function drawMarketGround(ctx) {
     [[P.x - 8, P.y - 8], [P.x + W2 + 4, P.y - 8], [P.x - 8, P.y + W2 + 4], [P.x + W2 + 4, P.y + W2 + 4]].forEach(([x, y]) => { c.fillStyle = PAL.wood; c.fillRect(x, y, 5, 5); });
     signboard(c, P.x + W2 / 2, P.y + W2 + 26, 'أرض الحظيرة — كل مربع ١ م');
   });
-  FLOOD.forEach(([x, y]) => { ctx.strokeStyle = SUN.color; ctx.lineWidth = 3; ctx.beginPath(); ctx.moveTo(x, y); ctx.lineTo(x + SUN.dx * 110, y + SUN.dy * 110); ctx.stroke(); });
+  if (!FLAGS.three) FLOOD.forEach(([x, y]) => { ctx.strokeStyle = SUN.color; ctx.lineWidth = 3; ctx.beginPath(); ctx.moveTo(x, y); ctx.lineTo(x + SUN.dx * 110, y + SUN.dy * 110); ctx.stroke(); });
   PALMS_M.forEach(p => blobShadow(ctx, p.x, p.y, 26, 80));
   boxShadow(ctx, STATION.x, STATION.y - 4, STATION.w, 30, CANOPY_H);
   boxShadow(ctx, CARP.x, CARP.y, CARP.w, CARP.h, H_CARP);
@@ -81,14 +81,14 @@ export function marketDrawables(open, t) {
   const out = [];
   if (!FLAGS.three) out.push({ y: 700, draw: c => drawWall(c, open) }, ...wallNSItems('tower', GATE_X));   // في 3D: السور والبوابة مجسّمان
   if (!FLAGS.three) out.push({ y: CARP.y + CARP.h, draw: c => building3d(c, 'carp', { x: CARP.x, y: CARP.y, w: CARP.w, h: CARP.h, H: H_CARP, wall: '#E6D3B0', door: '#6E4524', sign: 'ورشة النجار مبارك', tank: 1, doorW: 46, doorH: 66 }) });
-  out.push({ y: BENCH.y, x: BENCH.x, draw: c => workbench(c, BENCH.x, BENCH.y) });
-  out.push({ y: BOARD.y, x: BOARD.x, draw: c => chalkboard(c, BOARD.x, BOARD.y) });
-  FLOOD.forEach(([x, y]) => out.push({ y, x, draw: c => floodlight(c, x, y) }));
+  if (!FLAGS.three) out.push({ y: BENCH.y, x: BENCH.x, draw: c => workbench(c, BENCH.x, BENCH.y) });
+  if (!FLAGS.three) out.push({ y: BOARD.y, x: BOARD.x, draw: c => chalkboard(c, BOARD.x, BOARD.y) });
+  if (!FLAGS.three) FLOOD.forEach(([x, y]) => out.push({ y, x, draw: c => floodlight(c, x, y) }));
   if (!FLAGS.three) out.push({ y: STATION.y + 30, draw: c => canopy(c) });
-  BAYS.forEach(b => out.push({ y: b.y - 30, x: b.x - 52, draw: c => bayPost(c, b) }));
-  out.push({ y: TIMETABLE.y, x: TIMETABLE.x, draw: c => timetable(c, TIMETABLE.x, TIMETABLE.y) });
-  out.push({ y: CAL.y, x: CAL.x, draw: c => calendarBoard(c, CAL.x, CAL.y) });
-  [[SQUARE.x + 50, '#2F6B73'], [SQUARE.x + 220, '#B8613E']].forEach(([x, col]) => out.push({ y: SQUARE.y + 174, x, draw: c => stall(c, x, SQUARE.y + 174, col) }));
+  if (!FLAGS.three) BAYS.forEach(b => out.push({ y: b.y - 30, x: b.x - 52, draw: c => bayPost(c, b) }));
+  if (!FLAGS.three) out.push({ y: TIMETABLE.y, x: TIMETABLE.x, draw: c => timetable(c, TIMETABLE.x, TIMETABLE.y) });
+  if (!FLAGS.three) out.push({ y: CAL.y, x: CAL.x, draw: c => calendarBoard(c, CAL.x, CAL.y) });
+  if (!FLAGS.three) [[SQUARE.x + 50, '#2F6B73'], [SQUARE.x + 220, '#B8613E']].forEach(([x, col]) => out.push({ y: SQUARE.y + 174, x, draw: c => stall(c, x, SQUARE.y + 174, col) }));
   if (!FLAGS.three) PALMS_M.forEach(p => out.push({ y: p.y, draw: c => palmCached(c, p.x, p.y, 1, false, t) }));
   if (!FLAGS.three) [[1600, 470, '#D9478C'], [2270, 470, null], [1990, 1185, '#E8A33D']].forEach(([x, y, f]) => out.push({ y, x, draw: c => shrub(c, x, y, 9, f) }));
   return out;

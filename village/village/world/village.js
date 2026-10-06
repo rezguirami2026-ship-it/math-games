@@ -193,7 +193,6 @@ const behind = (pl, b, H) => pl && pl.x > b.x - 8 && pl.x < b.x + b.w + 8 && pl.
 export function staticDrawables(state, t, pl, opts = {}) {
   const out = [];
   if (opts.three) {   // العرض ثلاثي الأبعاد يرسم المباني والنخيل والإنارة مجسّمة؛ يبقى هنا ما لم يُحوَّل بعد
-    out.push({ y: 586, x: 784, draw: c => wayfinding(c, 784, 586) });   // (كوخ المضخة مجسّم في 3D)
     return out;
   }
   // المباني مجسّمة حسب موضعها من الكاميرا (أوجهها من ذاكرة الصور)، وشفافة إن وقف البطل خلفها
