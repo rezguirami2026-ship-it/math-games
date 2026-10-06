@@ -1,7 +1,7 @@
 // «طريق القافلة»: منطقة وحدة القياس (٢) في الفصل الثاني جنوب سوق الجمعية، تُفتح بإنهاء وحدة العدد
 // الرسم بأسلوب القرية: كثبان، طريق إسفلتي، مدرج وطائرة، واحة بنخيل، ومحطة وقود
 import { rr, shade } from '../core/util.js';
-import { INK, PAL, pattern, sprite, kiosk3d, kioskShadow, gateEW, gateEWShadows, palmCached, blobShadow, upright, shrub } from './art.js';
+import { INK, PAL, pattern, sprite, kiosk3d, kioskShadow, gateEW, gateEWShadows, palmCached, blobShadow, upright, shrub, solid } from './art.js';
 export const WALL6_Y = 4500, GATE6 = { x0: 1190, x1: 1290 };
 export const ST8 = {
   fuel: { x: 380, y: 4790, sign: 'محطة الوقود', col: '#C0392B' }, signs: { x: 800, y: 4790, sign: 'دليل القافلة', col: '#8B5A2B' },
@@ -13,6 +13,7 @@ export function caravanColliders(open) {
   const c = [{ x: 0, y: WALL6_Y, w: GATE6.x0, h: 12 }, { x: GATE6.x1, y: WALL6_Y, w: 2930 - GATE6.x1, h: 12 },
     { x: OASIS.x - 120, y: OASIS.y - 50, w: 240, h: 90 }];
   Object.values(ST8).forEach(s => c.push({ x: s.x - 52, y: s.y - 56, w: 104, h: 24 }));
+  c.push(...PALMS.map(p => solid.trunk(p.x, p.y)), ...PUMPS.map(x => solid.pump(x, 4800)), ...OSHRUBS.map(([x, y]) => solid.shrub(x, y, 12)));
   if (!open) c.push({ x: GATE6.x0, y: WALL6_Y - 4, w: GATE6.x1 - GATE6.x0, h: 20 });
   return c;
 }
@@ -20,6 +21,7 @@ const GOODS = { fuel: ['#C0392B', '#3D3A3A', '#E3B04B'], signs: ['#8B5A2B', '#F2
 const OPTS = [[-110, 0], [-70, -40], [0, -48], [80, -34], [118, 4], [70, 36], [-20, 40], [-90, 30]];
 const DUNES = Array.from({ length: 34 }, (_, i) => [(i * 337) % 2900, WALL6_Y + 60 + (i * 191) % 900]).filter(([x, y]) => !(y > 4840 && y < 4960) && !(Math.abs(x - 1240) < 220 && y > 4560 && y < 4660) && !(Math.abs(x - OASIS.x) < 220 && Math.abs(y - OASIS.y) < 110));
 const PUMPS = [ST8.fuel.x - 90, ST8.fuel.x + 90];
+const OSHRUBS = [[OASIS.x - 160, 5130], [OASIS.x + 165, 5120], [OASIS.x - 95, 5168]];
 const PALMS = [[-150, 5080], [150, 5090], [-240, 5110], [235, 5100], [-190, 5030], [190, 5020]].map(([dx, y]) => ({ x: OASIS.x + dx, y }))
   .concat([{ x: 180, y: 4650 }, { x: 2500, y: 4650 }, { x: 2650, y: 5100 }, { x: 420, y: 5150 }, { x: 2000, y: 5300 }]);
 function oasisPath(c, k) {   // حافة ناعمة: منحنيات بين منتصفات الأضلاع
@@ -59,7 +61,7 @@ export function caravanDrawables(open, t) {
   out.push({ y: 4626, x: 1180, draw: c => plane(c, 1180 + Math.sin(t / 3) * 4, 4612) });
   PUMPS.forEach(x => out.push({ y: 4800, x, draw: c => pump(c, x, 4800) }));
   PALMS.forEach(p => out.push({ y: p.y, draw: c => palmCached(c, p.x, p.y, 1, false, t) }));
-  [[OASIS.x - 160, 5130], [OASIS.x + 165, 5120], [OASIS.x - 95, 5168]].forEach(([x, y]) => out.push({ y, draw: c => shrub(c, x, y, 12, false) }));
+  OSHRUBS.forEach(([x, y]) => out.push({ y, draw: c => shrub(c, x, y, 12, false) }));
   return out;
 }
 function plane(c, x, y) {   // طائرة صغيرة متوقفة على المدرج (منظر علوي مائل)

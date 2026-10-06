@@ -560,3 +560,14 @@ export function kiosk3d(c, key, s, goods) {
   });
 }
 export const kioskShadow = (ctx, s) => boxShadow(ctx, s.x - 52, s.y - 56, 104, 24, 70);   // يُرسم مع الأرض
+/* ── تصادم الزينة: قاعدة صغيرة عند أسفل كل عنصر، حتى لا يمشي البطل عبره ولا تُسدّ الممرات ── */
+export const solid = {
+  trunk: (x, y) => ({ x: x - 8, y: y - 7, w: 16, h: 9 }),             // نخلة، سدرة
+  post: (x, y) => ({ x: x - 4, y: y - 5, w: 8, h: 7 }),               // عمود إنارة، عمود حبل
+  shrub: (x, y, r = 14) => ({ x: x - r * .8, y: y - 7, w: r * 1.6, h: 8 }),
+  bench: (x, y) => ({ x: x - 18, y: y - 12, w: 36, h: 12 }),
+  stall: (x, y) => ({ x: x - 40, y: y - 30, w: 80, h: 30 }),          // البسطة المشتركة stall()
+  table: (x, y) => ({ x: x - 32, y: y - 30, w: 64, h: 30 }),          // workTable()
+  well: (x, y, r) => ({ x: x - r, y: y - 22, w: r * 2, h: 26 }),      // stoneWell()
+  pump: (x, y) => ({ x: x - 16, y: y - 8, w: 32, h: 10 })
+};

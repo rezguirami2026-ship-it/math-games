@@ -1,7 +1,7 @@
 // «ساحة المهرجان»: منطقة الفصل الدراسي الثاني جنوب القلعة، تُفتح بإنهاء الفصل الأول
 // الرسم بأسلوب القرية (world/art.js): بوابة مشتركة، مبانٍ مجسّمة، برج ساعة، ألواح، كشك الدوّار، وحبال زينة معلّقة
 import { rr, shade, ar } from '../core/util.js';
-import { INK, PAL, SUN, pattern, sprite, boxShadow, blobShadow, building3d, box3d, palmCached, gateEW, gateEWShadows, workTable, signboard, leanAt, elev, stall, bench, shrub } from './art.js';
+import { INK, PAL, SUN, pattern, sprite, boxShadow, blobShadow, building3d, box3d, palmCached, gateEW, gateEWShadows, workTable, signboard, leanAt, elev, stall, bench, shrub, solid } from './art.js';
 export const WALL4_Y = 2600, GATE4 = { x0: 1190, x1: 1290 };
 export const KITCHEN = { x: 360, y: 2680, w: 440, h: 150 };
 export const ST5 = { scale: { x: 480, y: 2876 }, recipe: { x: 680, y: 2876 }, clock: { x: 1100, y: 2904 }, calls: { x: 1550, y: 2856 }, guest: { x: 2200, y: 2944 } };
@@ -20,7 +20,9 @@ export function festivalColliders(open) {
     { x: CALLS.x, y: CALLS.y + 10, w: CALLS.w, h: CALLS.h - 6 }, { x: GUEST.x, y: GUEST.y, w: GUEST.w, h: GUEST.h - 30 },
     { x: ST5.scale.x - 30, y: ST5.scale.y - 34, w: 60, h: 14 }, { x: ST5.recipe.x - 30, y: ST5.recipe.y - 34, w: 60, h: 14 },
     { x: ST6.graph.x - 50, y: ST6.graph.y - 70, w: 100, h: 20 }, { x: ST6.survey.x - 50, y: ST6.survey.y - 70, w: 100, h: 20 }, { x: ST6.spinner.x - 60, y: ST6.spinner.y - 120, w: 120, h: 70 },
-    ...PALMS6.map(p => ({ x: p.x - 8, y: p.y - 8, w: 16, h: 10 }))
+    ...PALMS6.map(p => ({ x: p.x - 8, y: p.y - 8, w: 16, h: 10 })),
+    ...PALMS_X.map(p => solid.trunk(p.x, p.y)), ...STALLS.map(([x, y]) => solid.stall(x, y)), ...BENCHES.map(([x, y]) => solid.bench(x, y)), ...SHRUBS.map(([x, y]) => solid.shrub(x, y)),
+    ...BUNTING.flatMap(([x1, x2, y]) => [solid.post(x1, y), solid.post(x2, y)])
   ];
   if (!open) c.push({ x: GATE4.x0, y: WALL4_Y - 4, w: GATE4.x1 - GATE4.x0, h: 20 });
   return c;

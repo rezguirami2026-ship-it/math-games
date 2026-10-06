@@ -1,7 +1,7 @@
 // «الميناء»: منطقة الوحدة الثالثة (الهندسة) على البحر شرق السوق، تُفتح بإنهاء الوحدة الثانية
 // الرسم بأسلوب القرية (world/art.js): بحر بعمق وأمواج، أرصفة خشبية، سفن داو عُمانية، مبانٍ مجسّمة، وشاطئ الإحداثيات
 import { rr, shade, ar } from '../core/util.js';
-import { INK, PAL, SUN, pattern, sprite, boxShadow, blobShadow, building3d, palmCached, gateNS, wallNSItems, gateNSShadows, workTable, signboard, box3d } from './art.js';
+import { INK, PAL, SUN, pattern, sprite, boxShadow, blobShadow, building3d, palmCached, gateNS, wallNSItems, gateNSShadows, workTable, signboard, box3d, solid } from './art.js';
 import { crate3d } from './entities.js';
 export const GATE2_X = 2300, SEA_X = 2930;
 export const PIER_Y = [305, 605, 905];
@@ -21,7 +21,8 @@ export function harborColliders(open) {
     { x: FRAMES.x, y: FRAMES.y + 10, w: FRAMES.w, h: FRAMES.h - 6 }, { x: GIFTS.x, y: GIFTS.y + 10, w: GIFTS.w, h: GIFTS.h - 6 },
     { x: FRAME_TABLE.x - 30, y: FRAME_TABLE.y - 14, w: 60, h: 16 }, { x: GIFT_TABLE.x - 30, y: GIFT_TABLE.y - 14, w: 60, h: 16 },
     { x: BOATHOUSE.x, y: BOATHOUSE.y + 30, w: BOATHOUSE.w, h: BOATHOUSE.h - 30 }, { x: ROOF_TABLE.x - 30, y: ROOF_TABLE.y - 14, w: 60, h: 16 },
-    { x: POOL.x, y: POOL.y, w: POOL.w, h: POOL.h }, { x: MILL.x - 22, y: MILL.y - 30, w: 44, h: 34 }
+    { x: POOL.x, y: POOL.y, w: POOL.w, h: POOL.h }, { x: MILL.x - 22, y: MILL.y - 30, w: 44, h: 34 },
+    ...PALMS_H.map(p => solid.trunk(p.x, p.y))
   ];
   if (!open) c.push({ x: GATE2_X - 4, y: 594, w: 20, h: 92 });
   return c;

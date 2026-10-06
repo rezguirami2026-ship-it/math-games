@@ -1,7 +1,7 @@
 // «السوق الأسبوعي»: منطقة الوحدة الثانية (القياس) شرق القرية، تُفتح بوابتها بعد إنهاء الوحدة الأولى
 // الرسم بأسلوب القرية نفسه (world/art.js): مبنى مجسّم، ملعب بعشب، محطة حافلات بمظلة، ساحة مرصوفة، وأرض حظيرة
 import { rr, shade } from '../core/util.js';
-import { INK, PAL, SUN, boxShadow, blobShadow, signboard, pattern, sprite, building3d, leanAt, palmCached, shrub, gateNS, wallNSItems, gateNSShadows, stall } from './art.js';
+import { INK, PAL, SUN, boxShadow, blobShadow, signboard, pattern, sprite, building3d, leanAt, palmCached, shrub, gateNS, wallNSItems, gateNSShadows, stall, solid } from './art.js';
 export const GATE_X = 1500;
 export const CARP = { x: 1580, y: 140, w: 200, h: 120 }, BENCH = { x: 1700, y: 332 };
 export const FIELD = { x: 1880, y: 140, w: 380, h: 300 }, BOARD = { x: 1990, y: 478 };
@@ -18,7 +18,8 @@ export function marketColliders(open) {
     { x: STATION.x, y: STATION.y, w: STATION.w, h: 30 },
     { x: TIMETABLE.x - 30, y: TIMETABLE.y - 10, w: 60, h: 12 },
     { x: CAL.x - 44, y: CAL.y - 10, w: 88, h: 12 },
-    { x: SQUARE.x + 10, y: SQUARE.y + 150, w: 80, h: 24 }, { x: SQUARE.x + 180, y: SQUARE.y + 150, w: 80, h: 24 }
+    { x: SQUARE.x + 10, y: SQUARE.y + 150, w: 80, h: 24 }, { x: SQUARE.x + 180, y: SQUARE.y + 150, w: 80, h: 24 },
+    ...PALMS_M.map(p => solid.trunk(p.x, p.y)), ...[[1600, 470], [2270, 470], [1990, 1185]].map(([x, y]) => solid.shrub(x, y, 9))
   ];
   if (!open) c.push({ x: GATE_X - 4, y: 594, w: 20, h: 92 });   // حاجز البوابة
   return c;

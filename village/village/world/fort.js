@@ -1,7 +1,7 @@
 // «القلعة»: منطقة الوحدة الرابعة (الأعداد ٢) جنوب القرية خلف سور، تُفتح بإنهاء الوحدة الثالثة
 // الرسم بأسلوب القرية (world/art.js): سور ببوابة خشبية، خندق، جسر خشبي هو خط الأعداد، قلعة عُمانية بأبراج مستديرة، ومحطات الدروس
 import { rr, shade } from '../core/util.js';
-import { INK, PAL, SUN, pattern, sprite, boxShadow, blobShadow, building3d, box3d, stoneBox3d, palmCached, gateEW, gateEWShadows, stall, roundTower, stoneWell, leanAt, upright } from './art.js';
+import { INK, PAL, SUN, pattern, sprite, boxShadow, blobShadow, building3d, box3d, stoneBox3d, palmCached, gateEW, gateEWShadows, stall, roundTower, stoneWell, leanAt, upright, solid } from './art.js';
 export const WALL_Y = 1712, GATE3 = { x0: 1190, x1: 1290 };
 export const BW = { x0: 420, x1: 1580, y: 1830 };                       // ممشى الجسر = خط الأعداد
 export const MOAT = { x: 380, y: 1852, w: 1240, h: 58 };
@@ -25,7 +25,8 @@ export function fortColliders(open) {
     ...Object.values(B4).map(b => ({ x: b.x, y: b.y + 10, w: b.w, h: b.h - 6 })),
     { x: ST4.well.x - 26, y: ST4.well.y - 52, w: 52, h: 36 }, { x: 2360, y: 1770, w: 40, h: 60 }, { x: 2460, y: 1770, w: 40, h: 60 },
     { x: ST4.trip.x - 40, y: ST4.trip.y - 44, w: 80, h: 22 }, { x: ST4.change.x - 40, y: ST4.change.y - 44, w: 80, h: 22 },
-    { x: ST4.conveyor.x - 110, y: ST4.conveyor.y - 50, w: 220, h: 26 }, { x: ST4.pack.x - 30, y: ST4.pack.y - 54, w: 60, h: 30 }
+    { x: ST4.conveyor.x - 110, y: ST4.conveyor.y - 50, w: 220, h: 26 }, { x: ST4.pack.x - 30, y: ST4.pack.y - 54, w: 60, h: 30 },
+    ...PALMS_F.map(p => solid.trunk(p.x, p.y))
   ];
   if (!open) c.push({ x: GATE3.x0, y: WALL_Y - 4, w: GATE3.x1 - GATE3.x0, h: 20 });
   return c;

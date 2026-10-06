@@ -1,7 +1,7 @@
 // قرية الخير: تخطيط العالم ورسمه. المزرعة والبئر والنخيل تتغير حسب حالة العالم.
 // الرسم بأسلوب 2.5D مشترك (world/art.js): مبانٍ بجدران وأسطح، ظلال نحو الأسفل يميناً، أرصفة بحواف، وأنسجة مواد.
 import { rng, shade, mix, rr, clamp } from '../core/util.js';
-import { PAL, SUN, INK, CAM, leanAt, pattern, sprite, boxShadow, blobShadow, building3d, box3d, minaret, sidrCached, palm, palmCached, shrub, streetLamp, bench, signboard, SEASON, elev, lantern, lanternString, banner } from './art.js';
+import { PAL, SUN, INK, CAM, leanAt, pattern, sprite, boxShadow, blobShadow, building3d, box3d, minaret, sidrCached, palm, palmCached, shrub, streetLamp, bench, signboard, SEASON, elev, lantern, lanternString, banner, solid } from './art.js';
 
 export const WORLD = { w: 3200, h: 6500 };   // القرية في الشمال، ثم السوق والميناء شرقاً، والقلعة والمهرجان والجمعية والقافلة والورشة جنوباً
 export const ROADS = [{ x: 0, y: 600, w: 2930, h: 80 }, { x: 700, y: 0, w: 70, h: 600 }];
@@ -42,7 +42,8 @@ export function staticColliders() {
     ...HOUSES.concat(SOUTH).map(b => ({ x: b.x - pad, y: b.y + 10, w: b.w + pad * 2, h: b.h - 6 })),
     { x: WAREHOUSE.x, y: WAREHOUSE.y + 10, w: WAREHOUSE.w, h: WAREHOUSE.h - 6 },
     { x: WELL.x - WELL.r, y: WELL.y - WELL.r, w: WELL.r * 2, h: WELL.r * 2 },
-    { x: SIGNAL.x - 5, y: SIGNAL.y - 6, w: 10, h: 10 }
+    { x: SIGNAL.x - 5, y: SIGNAL.y - 6, w: 10, h: 10 },
+    ...PALMS.concat(SIDRS, FARM_PALMS).map(p => solid.trunk(p.x, p.y)), ...LAMPS.map(p => solid.post(p.x, p.y)), ...SHRUBS.map(p => solid.shrub(p.x, p.y, 9))
   ];
 }
 export function inView(v, x, y, m) { return x > v.x - m && x < v.x + v.w + m && y > v.y - m && y < v.y + v.h + m; }

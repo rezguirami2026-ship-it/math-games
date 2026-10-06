@@ -1,7 +1,7 @@
 // «ورشة البنّاء»: منطقة الوحدة الأخيرة (الهندسة) جنوب طريق القافلة، ومنصة التخرّج بعد الدروس الـ٦٩
 // الرسم بأسلوب القرية: ساحة ببلاط مزخرف، أكشاك مجسّمة، ومنصة خشبية بخلفية ولافتة وزينة
 import { rr, shade } from '../core/util.js';
-import { INK, PAL, pattern, kiosk3d, kioskShadow, gateEW, gateEWShadows, palmCached, blobShadow, boxShadow, box3d, lanternString, elev, shrub, workTable } from './art.js';
+import { INK, PAL, pattern, kiosk3d, kioskShadow, gateEW, gateEWShadows, palmCached, blobShadow, boxShadow, box3d, lanternString, elev, shrub, workTable, solid } from './art.js';
 export const WALL7_Y = 5500, GATE7 = { x0: 1190, x1: 1290 };
 export const ST9 = {
   tiles: { x: 400, y: 5790, sign: 'بلاط حمود', col: '#2F6FB2' }, flag: { x: 820, y: 5790, sign: 'علم آمنة', col: '#C0392B' },
@@ -12,6 +12,7 @@ export const STAGE = { x: 1240, y: 6200 };
 export function workshopColliders(open) {
   const c = [{ x: 0, y: WALL7_Y, w: GATE7.x0, h: 12 }, { x: GATE7.x1, y: WALL7_Y, w: 2930 - GATE7.x1, h: 12 }, { x: STAGE.x - 160, y: STAGE.y - 70, w: 320, h: 60 }];
   Object.values(ST9).forEach(s => c.push({ x: s.x - 52, y: s.y - 56, w: 104, h: 24 }));
+  c.push(...PALMS.map(p => solid.trunk(p.x, p.y)), ...POLES.map(([x, y]) => solid.post(x, y)), ...WSHRUBS.map(([x, y]) => solid.shrub(x, y)), ...TABLES.map(([x, y]) => solid.table(x, y)));
   if (!open) c.push({ x: GATE7.x0, y: WALL7_Y - 4, w: GATE7.x1 - GATE7.x0, h: 20 });
   return c;
 }
@@ -20,6 +21,8 @@ const COURT = { x: 260, y: 5610, w: 1960, h: 260 };
 const PALMS = [{ x: 150, y: 5700 }, { x: 2350, y: 5700 }, { x: 2600, y: 6000 }, { x: 900, y: 6250 }, { x: 1580, y: 6250 }, { x: 300, y: 6200 }, { x: 2200, y: 6300 }];
 const ST = { x: STAGE.x - 160, y: STAGE.y - 70, w: 320, h: 60, H: 24 };
 const POLES = [[STAGE.x - 330, 6120], [STAGE.x + 330, 6120]];
+const WSHRUBS = [[STAGE.x - 200, 6200], [STAGE.x + 200, 6200], [COURT.x - 30, 5900], [COURT.x + COURT.w + 30, 5900]];
+const TABLES = [[1000, 5960, 'roof'], [1480, 5960, 'frames']];
 export function drawWorkshopGround(ctx) {
   gateEWShadows(ctx, WALL7_Y, GATE7.x0, GATE7.x1);
   // ساحة الورشة: بلاط بنقش معيّنات داخل إطار حجري
@@ -43,8 +46,8 @@ export function workshopDrawables(open, t, allDone) {
   PALMS.forEach(p => out.push({ y: p.y, draw: c => palmCached(c, p.x, p.y, 1, false, t) }));
   POLES.forEach(([x, y]) => out.push({ y, x, draw: c => { c.fillStyle = PAL.wood; c.fillRect(x - 2, y - 90, 4, 90); c.strokeStyle = INK; c.lineWidth = .7; c.strokeRect(x - 2, y - 90, 4, 90); } }));
   out.push({ y: STAGE.y + 1, draw: c => { const [a, b] = POLES; lanternString(c, elev(a[0], a[1], 90), elev(STAGE.x - 146, ST.y, ST.H + 120), 22, 6, t); lanternString(c, elev(STAGE.x + 146, ST.y, ST.H + 120), elev(b[0], b[1], 90), 22, 6, t); } });
-  [[STAGE.x - 200, 6200], [STAGE.x + 200, 6200], [COURT.x - 30, 5900], [COURT.x + COURT.w + 30, 5900]].forEach(([x, y]) => out.push({ y, draw: c => shrub(c, x, y, 14, true) }));
-  [[1000, 5960, 'roof'], [1480, 5960, 'frames']].forEach(([x, y, k]) => out.push({ y, x, draw: c => workTable(c, x, y, k) }));
+  WSHRUBS.forEach(([x, y]) => out.push({ y, draw: c => shrub(c, x, y, 14, true) }));
+  TABLES.forEach(([x, y, k]) => out.push({ y, x, draw: c => workTable(c, x, y, k) }));
   return out;
 }
 function stage(c, t, allDone) {   // منصة التخرّج: خشب مجسّم، خلفية بقائمين ولافتة، وقصاصات احتفال عند إكمال الدروس
