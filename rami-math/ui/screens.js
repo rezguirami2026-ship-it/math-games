@@ -3,6 +3,8 @@ import { drawHuman, SKINS, ACCENTS } from '../character/human.js';
 import { importCode } from '../save/save.js';
 import { LESSONS } from '../content/lessons.js';
 import { ar } from '../core/util.js';
+import { homeHTML, homeSheets } from './home.js';
+import { gfx } from './hud.js';
 const $ = id => document.getElementById(id);
 let anim = 0;
 /* البطل في شاشات البداية: مجسّماً إن كان العرض ثلاثي الأبعاد مفعّلاً ومدعوماً، وإلا بالرسم ثنائي الأبعاد */
@@ -13,7 +15,7 @@ function animate(canvases) {
   cancelAnimationFrame(anim); if (P3) P3.stopPreviews();
   if (use3d()) {   // كل canvas يُستبدل بنسخة جديدة (السياق ثنائي الأبعاد لا يتحول إلى WebGL)
     const fresh = canvases.map(({ c, h }) => { const n = document.createElement('canvas'); n.width = c.width; n.height = c.height; n.className = c.className; n.id = c.id; c.replaceWith(n); return { c: n, h }; });
-    import('../renderer3d/preview.js').then(m => { P3 = m; fresh.forEach(({ c, h }) => { if (c.isConnected) m.previewHero(c, h); }); }).catch(() => {});
+    import('../renderer3d/preview.js').then(m => { P3 = m; fresh.forEach(({ c, h }) => { if (c.isConnected) m.previewHero(c, h, { bust: c.id === 'tHero' }); }); }).catch(() => {});
     return;
   }
   let ph = 0;
@@ -26,10 +28,8 @@ function animate(canvases) {
 }
 export const screens = {
   title(saved, { onContinue, onNew, onRestore }) {
-    const el = $('screen'); el.className = 'screen on title';
-    el.innerHTML = `<div class="sky"></div><div class="logo">قرية الخير</div><div class="tag">مغامرة رامي ماث</div>
-      <canvas id="tHero" width="200" height="190"></canvas>
-      <div class="btns">${saved ? `<button class="act big" id="bCont">تابع مغامرتك</button><button class="act ghost" id="bNew">مغامرة جديدة</button>` : `<button class="act big" id="bNew">ابدأ المغامرة</button>`}<button class="act ghost" id="bCode">🔑 لديّ رمز تقدّم</button></div>`;
+    const el = $('screen'); el.className = 'screen on title home-on';
+    el.innerHTML = homeHTML(saved); homeSheets(el, saved, gfx);   // الشاشة الرئيسية الجديدة (ui/home.js)
     animate([{ c: $('tHero'), h: () => saved ? heroLook(saved.hero) : { kind: 'boy', accent: ACCENTS[0], skin: SKINS[1] } }]);
     if (saved) $('bCont').onclick = () => { stopAll(); el.className = 'screen'; onContinue(); };
     $('bNew').onclick = () => { if (saved && !confirm('ستبدأ مغامرة جديدة ويُمسح عالمك الحالي. هل أنت متأكد؟')) return; this.hero(onNew); };

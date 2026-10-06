@@ -6,7 +6,7 @@ const live = new Set();
 export function stopPreviews() { live.forEach(p => p.dispose()); live.clear(); }
 
 /* canvas: عنصر الرسم الموجود، look(): مظهر البطل الحالي (قد يتغير باختيار اللون أو النوع) */
-export function previewHero(canvas, look) {
+export function previewHero(canvas, look, opts = {}) {
   const W = canvas.width, H = canvas.height;
   const r = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: true });
   r.setPixelRatio(Math.min(2, devicePixelRatio || 1)); r.setSize(W, H, false);
@@ -20,7 +20,8 @@ export function previewHero(canvas, look) {
   const rimL = new THREE.DirectionalLight('#9FD6FF', 1.4); rimL.position.set(60, 50, -60); sc.add(rimL);   // إضاءة خلفية زرقاء تفصل الشخصية
   const base = new THREE.Mesh(new THREE.CylinderGeometry(26, 28, 4, 40), new THREE.MeshStandardMaterial({ color: '#F2E3C0', roughness: .7 })); base.position.y = -2; base.receiveShadow = true; sc.add(base);
   const ring = new THREE.Mesh(new THREE.TorusGeometry(27, 1.2, 8, 48), new THREE.MeshStandardMaterial({ color: '#E3B04B', metalness: .8, roughness: .3 })); ring.rotation.x = Math.PI / 2; sc.add(ring);
-  const cam = new THREE.PerspectiveCamera(26, W / H, 1, 1000); cam.position.set(0, 44, 140); cam.lookAt(0, 33, 0);
+  if (opts.bust) { base.visible = ring.visible = false; }   // الشاشة الرئيسية: البطل من الخصر للأعلى بلا قاعدة
+  const cam = new THREE.PerspectiveCamera(26, W / H, 1, 1000); if (opts.bust) { cam.position.set(0, 50, 112); cam.lookAt(0, 40, 0); } else { cam.position.set(0, 44, 140); cam.lookAt(0, 33, 0); }
   let P = null, lk = '', t = 0, last = performance.now(), raf = 0, waveT = 2 + Math.random() * 2;
   const loop = now => {
     const dt = Math.min(.05, (now - last) / 1000); last = now; t += dt;
