@@ -89,7 +89,15 @@ const LOOKS = {
   khalid: { hat: 'cap', accent: '#2E8B57', tall: 1.04, build: .95, gestureAnim: 'wave' },  // المدرب: قبعة رياضية
   abdullah: { vest: '#2F6B73', hat: 'cap', accent: '#2A3F5F', gestureAnim: 'interact' },  // ناظر المحطة: سترة وقبعة
   shaikha: { elder: true, tool: 'cane', tall: .94, gestureAnim: 'talk' },                  // الجدة شيخة: عصا
-  juma: { hat: 'straw', tool: 'cane', build: .95, gestureAnim: 'interact' }                 // الراعي: قبعة خوص وعصا رعي
+  juma: { hat: 'straw', tool: 'cane', build: .95, gestureAnim: 'interact' },                // الراعي: قبعة خوص وعصا رعي
+  // الميناء
+  saif: { hat: 'cap', accent: '#1F4E79', build: 1.12, tall: 1.04, gestureAnim: 'wave' },   // القبطان
+  reem: { glasses: true, vest: '#F28C28', gestureAnim: 'interact' },                       // المهندسة: سترة عمل ونظارة
+  layla: { apron: '#E85D75', gestureAnim: 'place' },                                       // صاحبة دكان الهدايا
+  ali: { vest: '#F2C230', build: 1.1, gestureAnim: 'pickup' },                             // البنّاء
+  badr: { hat: 'straw', build: 1.05, gestureAnim: 'pickup' },                              // الصياد
+  hind: { apron: '#7FB2C8', gestureAnim: 'interact' },                                     // الرسامة
+  sulaiman: { apron: '#C9B48E', build: 1.08, gestureAnim: 'place' }                        // صاحب الطاحونة
 };
 const GEST_T = { pickup: 1.5, place: 1, interact: .8, talk: 1.6, wave: 1.1 };
 const play = (n, name, dur) => { n.anim = { name, t: 0, dur: dur || GEST_T[name] || 1 }; };

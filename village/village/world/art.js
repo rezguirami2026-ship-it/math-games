@@ -196,6 +196,46 @@ export function stoneBox(ctx, x, y, w, d, H, col, crenel = true) {
   ctx.strokeStyle = INK; ctx.lineWidth = 1.1; ctx.strokeRect(x, ry, w, d); ctx.strokeRect(x, yt, w, H);
   if (crenel) crenels(ctx, x, yt, w, col, true);
 }
+/* ── بوابة منطقة في سور يمتد شمالاً وجنوباً عند x: سور حجري بشُرَف، برجان، وعارضة خشبية تُرفع حين تُفتح ──
+   (البوابة تعترض الشارع الأفقي بين y=594 وy=686). السور والبرجان منخفضان ليبقى ممر البوابة ظاهراً */
+const GW = { col: '#CDB58C', H: 40, TH: 58 };
+const gateTowers = X => [{ x: X - 8, y: 556, w: 28, d: 40 }, { x: X - 8, y: 690, w: 28, d: 32 }];
+function nsWall(c, x, a, b) {
+  const H = GW.H, col = GW.col;
+  c.fillStyle = shade(col, 8); c.fillRect(x, a - H, 12, b - a);
+  c.fillStyle = 'rgba(80,50,20,.18)'; c.fillRect(x + 8, a - H, 4, b - a);
+  for (let y = a + 4; y < b - 10; y += 16) { c.fillStyle = shade(col, 16); c.fillRect(x, y - H - 7, 12, 8); c.fillStyle = shade(col, -14); c.fillRect(x, y - H + 1, 12, 6); c.strokeStyle = INK; c.lineWidth = .6; c.strokeRect(x, y - H - 7, 12, 14); }
+  c.fillStyle = shade(col, -10); c.fillRect(x, b - H, 12, H);
+  c.strokeStyle = 'rgba(80,55,30,.3)'; c.lineWidth = .8; for (let y = b - H + 8; y < b; y += 8) { c.beginPath(); c.moveTo(x, y); c.lineTo(x + 12, y); c.stroke(); }
+  c.strokeStyle = INK; c.lineWidth = 1; c.strokeRect(x, a - H, 12, b - a + H);
+}
+export function gateNS(c, key, X, open, label, bottom = 1700) {
+  nsWall(c, X, 0, 556); nsWall(c, X, 722, bottom);
+  gateTowers(X).forEach((t, i) => stoneBox3d(c, key + i, t.x, t.y, t.w, t.d, GW.TH, GW.col));
+  c.save(); c.translate(X + 6, 600);   // العارضة فوق كل شيء ليبقى حال البوابة واضحاً
+  if (open) c.rotate(-1.35);
+  c.fillStyle = 'rgba(70,42,20,.22)'; if (!open) c.fillRect(6, 4, 8, 82);
+  c.fillStyle = '#8A5A30'; rr(c, -4, 0, 8, 84, 3); c.fill(); c.fillStyle = '#A9743F'; c.fillRect(-4, 0, 3, 84);
+  c.fillStyle = '#D9A23A'; [10, 40, 70].forEach(y => c.fillRect(-4.5, y, 9, 4));
+  c.strokeStyle = INK; c.lineWidth = .9; rr(c, -4, 0, 8, 84, 3); c.stroke();
+  c.restore();
+  const t0 = gateTowers(X)[0];
+  signboard(c, X + 6, t0.y + t0.d - GW.TH + 22, open ? label + ' ←' : label + ' 🔒');
+}
+export function gateNSShadows(ctx, X, bottom = 1700) {
+  boxShadow(ctx, X, 0, 12, 556, GW.H); boxShadow(ctx, X, 722, 12, bottom - 722, GW.H);
+  gateTowers(X).forEach(t => boxShadow(ctx, t.x, t.y, t.w, t.d, GW.TH));
+}
+/* طاولة عمل خشبية مجسّمة (للدروس): سطح سميك، أرجل، وأدوات حسب النوع */
+export function workTable(c, x, y, tools) {
+  c.fillStyle = 'rgba(70,42,20,.2)'; c.beginPath(); c.ellipse(x + 8, y + 3, 36, 7, 0, 0, 7); c.fill();
+  c.fillStyle = PAL.wood; [[-26], [22]].forEach(([dx]) => c.fillRect(x + dx, y - 18, 4, 18));
+  c.fillStyle = PAL.woodLight; c.fillRect(x - 32, y - 30, 64, 10); c.fillStyle = shade(PAL.woodLight, -24); c.fillRect(x - 32, y - 20, 64, 5);
+  c.strokeStyle = INK; c.lineWidth = 1; c.strokeRect(x - 32, y - 30, 64, 15);
+  if (tools === 'frames') { c.strokeStyle = '#5E6874'; c.lineWidth = 1.6; c.beginPath(); c.moveTo(x - 20, y - 32); c.lineTo(x - 8, y - 46); c.lineTo(x + 4, y - 32); c.closePath(); c.moveTo(x - 8, y - 46); c.lineTo(x - 8, y - 32); c.stroke(); c.fillStyle = '#E2475C'; [[x - 20, y - 32], [x - 8, y - 46], [x + 4, y - 32]].forEach(([px, py]) => { c.beginPath(); c.arc(px, py, 1.8, 0, 7); c.fill(); }); }
+  if (tools === 'gifts') { [['#E85D75', -18], ['#2F6FB2', -2], ['#2E8B57', 14]].forEach(([col, dx]) => { c.fillStyle = col; c.fillRect(x + dx - 6, y - 41, 12, 10); c.fillStyle = '#FFC23D'; c.fillRect(x + dx - 1, y - 41, 2, 10); c.strokeStyle = INK; c.lineWidth = .6; c.strokeRect(x + dx - 6, y - 41, 12, 10); }); }
+  if (tools === 'roof') { c.fillStyle = '#D9A066'; c.fillRect(x - 24, y - 35, 44, 4); c.save(); c.translate(x + 8, y - 34); c.rotate(-.5); c.fillRect(-18, -2, 30, 4); c.restore(); c.fillStyle = '#A9B4BF'; c.beginPath(); c.moveTo(x + 14, y - 40); c.arc(x + 14, y - 34, 8, Math.PI, 0); c.closePath(); c.fill(); }   // ألواح ومنقلة
+}
 /* كتلة حجرية مجسّمة حسب الكاميرا (برج، بوابة) */
 export function stoneBox3d(ctx, key, x, y, w, d, H, col) {
   const roof = c => { c.fillStyle = shade(col, 12); c.fillRect(x, y - H, w, d); c.fillStyle = 'rgba(80,50,20,.12)'; c.fillRect(x + 3, y - H + 3, w - 6, d - 6); c.strokeStyle = INK; c.lineWidth = 1.1; c.strokeRect(x, y - H, w, d); };
