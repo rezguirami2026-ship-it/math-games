@@ -5,6 +5,14 @@ import { drawHuman } from '../character/human.js';
 import { ACH } from '../achievements/achievements.js';
 import { sound, sfx } from '../core/sound.js';
 /* إعدادات العرض (تُحفظ على الجهاز): ثلاثي الأبعاد أو عادي، والجودة */
+/* تثبيت التطبيق: زر المتصفح إن وُجد (أندرويد والحاسوب)، وتعليمات «إضافة إلى الشاشة الرئيسية» في آيفون */
+const standalone = () => matchMedia('(display-mode: standalone)').matches || matchMedia('(display-mode: fullscreen)').matches || navigator.standalone;
+const isIOS = () => /iPhone|iPad|iPod/.test(navigator.userAgent);
+function installable() { return !standalone() && (!!window.__install || isIOS()); }
+function install() {
+  if (window.__install) { window.__install.prompt(); window.__install.userChoice.finally(() => { window.__install = null; hud.panel('bag'); }); return; }
+  hud.toast('📲 في آيفون: اضغط زر المشاركة ⬆️ ثم «إضافة إلى الشاشة الرئيسية»');
+}
 export const gfx = {
   d3() { try { const q = new URLSearchParams(location.search); if (q.has('2d')) return false; return q.has('3d') || localStorage.getItem('ramimath_3d') !== '0'; } catch (e) { return true; } },   // ثلاثي الأبعاد هو الافتراضي؛ والجهاز بلا WebGL يرجع وحده إلى العادي
   set3d(on) { try { localStorage.setItem('ramimath_3d', on ? '1' : '0'); } catch (e) {} const u = new URL(location.href); u.searchParams.delete('3d'); u.searchParams.delete('2d'); if (!on) u.searchParams.set('2d', '1'); location.href = u.toString(); },
@@ -96,6 +104,7 @@ export const hud = {
         <button class="act ghost" id="sndBtn">${sound.on ? '🔊 الصوت يعمل' : '🔇 الصوت متوقف'}</button>
         <button class="act ghost" id="codeBtn">🔑 رمز حفظ التقدّم</button>
         <button class="act ghost" id="ramBtn">🌙 أجواء رمضان: ${PREF_LABEL[ramadanPref()]}</button>
+        ${installable() ? '<button class="act go" id="instBtn">📲 ثبّت اللعبة كتطبيق</button>' : ''}
         <button class="act ghost" id="d3Btn">🎮 العرض: ${gfx.d3() ? 'ثلاثي الأبعاد' : 'عادي'}</button>
         ${gfx.d3() ? `<button class="act ghost" id="qBtn">✨ الجودة: ${{ auto: 'تلقائية', high: 'عالية', low: 'منخفضة' }[gfx.q()]}</button>` : ''}`;
     }
@@ -112,6 +121,7 @@ export const hud = {
     if (kind === 'bag') {
       $('sndBtn').onclick = e => { e.stopPropagation(); sound.on = !sound.on; this.panel('bag'); };
       $('codeBtn').onclick = e => { e.stopPropagation(); this.panel('code'); };
+      if ($('instBtn')) $('instBtn').onclick = e => { e.stopPropagation(); install(); };
       $('d3Btn').onclick = e => { e.stopPropagation(); gfx.set3d(!gfx.d3()); };   // يُعاد تحميل الصفحة: التقدّم محفوظ
       if ($('qBtn')) $('qBtn').onclick = e => { e.stopPropagation(); gfx.setQ({ auto: 'high', high: 'low', low: 'auto' }[gfx.q()]); this.panel('bag'); };
       $('ramBtn').onclick = e => { e.stopPropagation(); const nx = { auto: 'on', on: 'off', off: 'auto' }[ramadanPref()]; setRamadanPref(nx); sfx('click'); this.panel('bag'); };
