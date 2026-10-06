@@ -182,7 +182,7 @@ async function init3D() {
     load = loadingScreen(); FLAGS.three = true;
     let q = 'high'; try { q = localStorage.getItem('ramimath_q') || 'high'; } catch (e) {}
     eng.l3 = await R.create3D({ quality: q, world: WORLD, paintGround: paintStaticGround, onProgress: k => load.set(k) });
-    eng.l3.ground = paintDynamicGround;
+    eng.l3.ground = paintDynamicGround; eng.l3.people = people3d;
   } catch (e) { console.error('[قرية الخير] تعذّر العرض ثلاثي الأبعاد، نكمل بالرسم الحالي', e); FLAGS.three = false; eng.l3 = null; const c = document.getElementById('game3d'); if (c) c.remove(); }
   if (load) load.done();
 }
@@ -430,7 +430,7 @@ function render3d(ctx, view, t) {
   list.sort((a, b) => a.y - b.y).forEach(d => { setT(L.itemTransform(d.y)); d.draw(ctx); });
   setT(L.itemTransform(W.player.y)); heroExtras(ctx);
   drawFx(ctx);
-  ctx.setTransform(dpr, 0, 0, dpr, 0, 0); drawGuide3d(ctx, t);
+  ctx.setTransform(dpr, 0, 0, dpr, 0, 0); drawMarks3d(ctx, t); drawGuide3d(ctx, t);
 }
 /* السهم إلى الهدف على حافة الشاشة (بإحداثيات الشاشة في 3D) */
 function drawGuide3d(ctx, t) {
@@ -463,11 +463,31 @@ function worldItems(view, t, three) {
   if (!three) list.push({ y: HERO_DOOR.y - 13, draw: cc => signboard(cc, HERO_DOOR.x + 52, HERO_DOOR.y - 66, '🚪 خزانة البطل') });   // لافتة على جدار بيت البطل (في 3D على الواجهة نفسها)
   const giverMark = n => c && c.ready && MODS[c.id] && c.giver === n.id && !quests.isStarted(c.id) ? '!' : null;
   // الشخصيات خارج الشاشة لا تُرسم (كانت كلها تُرسم في كل إطار)
-  W.npcs.filter(n => npcVisible(n, s) && n.x > view.x - 60 && n.x < view.x + view.w + 60 && n.y > view.y - 20 && n.y < view.y + view.h + 110).forEach(n => list.push({ y: n.y, x: n.x, lean: .5, draw: cc => drawNpc(cc, n, giverMark(n)) }));
+  if (!three) W.npcs.filter(n => npcVisible(n, s) && n.x > view.x - 60 && n.x < view.x + view.w + 60 && n.y > view.y - 20 && n.y < view.y + view.h + 110).forEach(n => list.push({ y: n.y, x: n.x, lean: .5, draw: cc => drawNpc(cc, n, giverMark(n)) }));   // في 3D: الشخصيات مجسّمة (people3d)
   const pl = W.player, mod = curMod(), hand = mod && mod.hand && c && quests.isStarted(c.id) ? mod.hand(quests.data(c.id)) : null;
   const pa = pl.anim ? pl.anim.name : pl.moving ? (pl.speed > 160 ? 'run' : 'walk') : 'idle';
-  list.push({ y: pl.y, x: pl.x, lean: .5, draw: cc => drawHuman(cc, Object.assign(hero(), { x: pl.x, y: pl.y, dir: pl.dir, phase: pl.phase, moving: pl.moving, carry: hand ? Math.min(hand.n, 6) : s.carry, bend: pl.act === 'plant', anim: pa, animT: pl.anim ? pl.anim.t : 0 })) });
+  if (!three) list.push({ y: pl.y, x: pl.x, lean: .5, draw: cc => drawHuman(cc, Object.assign(hero(), { x: pl.x, y: pl.y, dir: pl.dir, phase: pl.phase, moving: pl.moving, carry: hand ? Math.min(hand.n, 6) : s.carry, bend: pl.act === 'plant', anim: pa, animT: pl.anim ? pl.anim.t : 0 })) });
   return list;
+}
+/* الشخصيات للعرض ثلاثي الأبعاد: البطل وأهل القرية القريبون من الرؤية، بمظهرهم وحالتهم (قراءة فقط) */
+function people3d() {
+  const s = game.state, v = eng.l3.view, pl = W.player, c = cur(), mod = curMod(), hand = mod && mod.hand && c && quests.isStarted(c.id) ? mod.hand(quests.data(c.id)) : null;
+  const H = hero(), out = [{ id: 'hero', look: H, lookKey: JSON.stringify(H), x: pl.x, y: pl.y, moving: pl.moving, phase: pl.phase, run: pl.speed > 160, dir: pl.dir,
+    anim: pl.act === 'plant' ? 'pickup' : pl.anim ? pl.anim.name : null, animT: pl.act === 'plant' ? .5 : pl.anim ? pl.anim.t : 0, carry: hand ? Math.min(hand.n, 6) : s.carry }];
+  W.npcs.forEach(n => { if (npcVisible(n, s) && n.x > v.x - 80 && n.x < v.x + v.w + 80 && n.y > v.y - 60 && n.y < v.y + v.h + 80)
+    out.push({ id: n.id, look: n, lookKey: n.id, x: n.x, y: n.y, moving: n.moving, phase: n.phase, dir: n.dir, anim: n.anim && !n.moving ? n.anim.name : null, animT: n.anim ? n.anim.t : 0, carry: 0, face: Math.hypot(n.x - pl.x, n.y - pl.y) < 150 ? pl : null }); });
+  return out;
+}
+/* علامة المهمة فوق رأس من ينتظر البطل (فوق المجسّم، على الشاشة) */
+function drawMarks3d(ctx, t) {
+  const c = cur(); if (!c || !c.ready || !MODS[c.id] || quests.isStarted(c.id)) return;
+  const n = W.npcs.find(x => x.id === c.giver); if (!n || !npcVisible(n, game.state)) return;
+  const p = eng.l3.project(n.x, n.y, heightOf(n) + 22 + Math.sin(t * 3) * 3);
+  ctx.save(); ctx.translate(p.x, p.y); ctx.shadowColor = 'rgba(0,0,0,.3)'; ctx.shadowBlur = 6; ctx.shadowOffsetY = 2;
+  ctx.fillStyle = '#FFC23D'; ctx.beginPath(); ctx.moveTo(0, -14); ctx.lineTo(11, 0); ctx.lineTo(0, 14); ctx.lineTo(-11, 0); ctx.closePath(); ctx.fill();
+  ctx.shadowColor = 'transparent'; ctx.strokeStyle = '#FFF6E2'; ctx.lineWidth = 2; ctx.stroke();
+  ctx.fillStyle = '#3A2400'; ctx.font = '900 15px Cairo, sans-serif'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.fillText('!', 0, 1);
+  ctx.restore();
 }
 const ordered = (ctx, list) => list.sort((a, b) => a.y - b.y).forEach(d => d.x !== undefined ? upright(ctx, d.x, d.y, d.draw, d.lean) : d.draw(ctx));   // القائم يميل مع منظور الكاميرا
 function heroExtras(ctx) {   // ما في يد البطل: لافتة العدد، ورسم الدرس الخاص

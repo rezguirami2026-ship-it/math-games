@@ -6,6 +6,7 @@ import { RoomEnvironment } from '../lib/three/addons/RoomEnvironment.js';
 import { material, setAniso } from './textures.js';
 import { wind, sky, mountains, sea } from './nature.js';
 import { buildVillage } from './world.js';
+import { buildPerson, animatePerson } from './people.js';
 
 export function webglOK() {
   try { const c = document.createElement('canvas'); return !!(window.WebGLRenderingContext && (c.getContext('webgl2') || c.getContext('webgl'))); } catch (e) { return false; }
@@ -106,14 +107,30 @@ export async function create3D(opts) {
     decal.mesh.scale.set(r.w, 1, r.h); decal.mesh.position.set(r.x + r.w / 2, .4, r.y + r.h / 2); decal.mesh.visible = true;
   }
 
+  /* ── الشخصيات: تُبنى عند ظهورها أول مرة (ثلاث على الأكثر في الإطار)، وتختفي خارج الرؤية ── */
+  const people = new Map(); let lastT = 0;
+  function syncPeople(list, t) {
+    const dt = Math.min(.05, Math.max(0, t - lastT)); lastT = t; let built = 0;
+    const seen = new Set();
+    list.forEach(st => {
+      let P = people.get(st.id);
+      if (!P || P.lookKey !== st.lookKey) { if (built >= 3 && P) { /* نحدّث المظهر لاحقاً */ } else if (built < 3 || frame < 3) { if (P) scene.remove(P.root); P = buildPerson(st.look); P.lookKey = st.lookKey; people.set(st.id, P); scene.add(P.root); built++; } }
+      if (!P) return;
+      P.root.visible = true; seen.add(st.id); animatePerson(P, st, dt, t);
+    });
+    people.forEach((P, id) => { if (!seen.has(id)) { P.root.visible = false; P.lastX = null; } });
+  }
+
   const L = {
     canvas, renderer, scene, camera,
+    /* مصدر الشخصيات: () => [{ id, look, lookKey, x, y, moving, phase, run, anim, animT, carry, dir }] */
+    people: null,
     /* الرسم على الأرض المتغيرة: paint(ctx, rect) بإحداثيات اللعبة */
     ground: null,
     /* يُستدعى في كل إطار من المحرك */
     frame(E, t, state) {
       frame++;
-      const zoom = E.zoom * (1 + E.punch * .06), viewW = E.w / zoom;
+      const zoom = E.zoom * (1 + E.punch * .06), viewW = E.w / zoom * .82;   // أقرب قليلاً من الرسم ثنائي الأبعاد: الشخصيات أوضح
       const dist = (viewW / 2) / (Math.tan(FOV * Math.PI / 360) * camera.aspect);
       target.set(E.cam.x, 0, E.cam.y + 46);
       const qx = E.quake ? (Math.random() - .5) * 6 * E.quake : 0, qy = E.quake ? (Math.random() - .5) * 6 * E.quake : 0;
@@ -139,6 +156,7 @@ export async function create3D(opts) {
       dropFar(q === 'high' ? 30 : 18);
       wind.value = t; seaM.userData.tick(t);
       village.update(state, t, E.follow);
+      if (L.people) try { syncPeople(L.people(), t); } catch (e) { if (!L._pErr) { L._pErr = 1; console.error('people', e); } }
       if (L.ground) try { paintDecal(t, L.ground); } catch (e) { if (!L._gErr) { L._gErr = 1; console.error('ground layer', e); } }
       renderer.render(scene, camera);
       return view;

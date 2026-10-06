@@ -1,0 +1,48 @@
+<!doctype html>
+<!-- عارض للتطوير: الشخصيات المجسّمة عن قرب بحركاتها (لا يدخل في اللعبة) -->
+<html lang="ar" dir="rtl"><head><meta charset="utf-8"><title>شخصيات 3D</title>
+<link rel="stylesheet" href="../style.css">
+<style>html,body{background:#E9D9B5;overflow:hidden}canvas{display:block}</style></head>
+<body>
+<script type="module">
+import * as THREE from '../lib/three/three.module.min.js';
+import { RoomEnvironment } from '../lib/three/addons/RoomEnvironment.js';
+import { buildPerson, animatePerson } from '../renderer3d/people.js';
+const q = new URLSearchParams(location.search), mode = q.get('mode') || 'line';
+const r = new THREE.WebGLRenderer({ antialias: true }); r.setSize(innerWidth, innerHeight); r.setPixelRatio(Math.min(2, devicePixelRatio));
+r.outputColorSpace = THREE.SRGBColorSpace; r.toneMapping = THREE.ACESFilmicToneMapping; r.toneMappingExposure = .95; r.shadowMap.enabled = true; r.shadowMap.type = THREE.PCFSoftShadowMap;
+document.body.appendChild(r.domElement);
+const sc = new THREE.Scene(); sc.background = new THREE.Color('#EAD9B8');
+sc.environment = new THREE.PMREMGenerator(r).fromScene(new RoomEnvironment(), .04).texture; sc.environmentIntensity = .35;
+sc.add(new THREE.HemisphereLight('#CFE4FA', '#B08D62', 1.1));
+const sun = new THREE.DirectionalLight('#FFE9C4', 2.6); sun.position.set(-60, 120, 80); sun.castShadow = true; sun.shadow.mapSize.set(2048, 2048); Object.assign(sun.shadow.camera, { left: -150, right: 150, top: 150, bottom: -150 }); sc.add(sun);
+const gr = new THREE.Mesh(new THREE.PlaneGeometry(800, 800), new THREE.MeshStandardMaterial({ color: '#E2CFA3', roughness: 1 })); gr.rotation.x = -Math.PI / 2; gr.receiveShadow = true; sc.add(gr);
+const cam = new THREE.PerspectiveCamera(30, innerWidth / innerHeight, 1, 3000);
+const looks = [
+  { kind: 'boy', skin: '#DDA779', accent: '#2F6FB2', robe: '#F7F5EF' },
+  { kind: 'girl', skin: '#C98E5F', accent: '#2E8B57', robe: '#D85C7B' },
+  { kind: 'man', skin: '#B97F52', accent: '#7B3F98', robe: '#F4F1E8', beard: '#3A2E26' },
+  { kind: 'woman', skin: '#D9A374', accent: '#C0392B', robe: '#3A2E4E' },
+  { kind: 'man', skin: '#8B5A38', accent: '#1F4E79', robe: '#EFE6D2', beard: '#D8D2C8', elder: true, tool: 'cane' },
+  { kind: 'man', skin: '#C98E5F', accent: '#2F6FB2', robe: '#E3D8C2', hat: 'straw', tool: 'hoe' },
+  { kind: 'man', skin: '#DDA779', accent: '#2A3F5F', robe: '#F4F1E8', vest: '#F28C28', hat: 'cap' },
+  { kind: 'woman', skin: '#DDA779', accent: '#7B3F98', robe: '#2E6E8E', apron: '#F4F1E8', glasses: true }
+];
+const anims = [null, null, 'wave', 'talk', null, 'interact', 'celebrate', 'pickup'];
+const P = looks.map((l, i) => { const p = buildPerson(l); sc.add(p.root); return p; });
+let t = 0, last = performance.now();
+function loop(now) {
+  const dt = Math.min(.05, (now - last) / 1000); last = now; t += dt;
+  P.forEach((p, i) => {
+    const walk = mode === 'walk' ? i % 2 === 0 : i === 0 || i === 1;
+    const x = (i - 3.5) * 34, y = 0, st = { x: walk && mode === 'walk' ? x : x, y, moving: walk, phase: t * 9, run: mode === 'walk' && i === 6, dir: 'down', anim: walk ? null : anims[i], animT: (t * .6) % 1, carry: i === 4 && mode === 'walk' ? 3 : 0 };
+    p.lockDir = true; p.lastX = null; animatePerson(p, st, dt, t); p.yaw = mode === 'side' ? Math.PI / 2 : 0;
+    p.root.rotation.y = p.yaw;
+  });
+  const close = mode === 'face';
+  cam.position.set(close ? -51 : 0, close ? 62 : 70, close ? 60 : 330); cam.lookAt(close ? -51 : 0, close ? 58 : 34, 0);
+  r.render(sc, cam); requestAnimationFrame(loop);
+}
+requestAnimationFrame(loop);
+</script>
+</body></html>

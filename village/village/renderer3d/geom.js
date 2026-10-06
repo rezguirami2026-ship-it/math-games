@@ -26,9 +26,10 @@ export class Parts {
     this.by.get(mat).push(norm(geo));
     return geo;
   }
-  build({ cast = true, receive = true } = {}) {
+  build({ cast = true, receive = true, ao = true } = {}) {
     const g = new THREE.Group();
     this.by.forEach((list, mat) => {
+      if (ao) groundAO(mat);
       const geo = mergeGeometries(list, false); if (!geo) return;
       const m = new THREE.Mesh(geo, mat); m.castShadow = cast && !mat.transparent; m.receiveShadow = receive; g.add(m);
     });
@@ -36,6 +37,24 @@ export class Parts {
   }
 }
 
+/* تعتيق القاعدة: كل ما يقترب من الأرض يغمق تدريجياً (بديل خفيف للإطباق المحيطي)، وخطوط خفيفة من الأعلى */
+export function groundAO(mat) {
+  if (mat.userData.ao) return; mat.userData.ao = 1;
+  const prev = mat.onBeforeCompile;
+  mat.onBeforeCompile = (sh, r) => {
+    if (prev) prev(sh, r);
+    sh.vertexShader = sh.vertexShader.replace('#include <common>', '#include <common>\nvarying float vWY;').replace('#include <worldpos_vertex>', '#include <worldpos_vertex>\nvWY = (modelMatrix * vec4(transformed, 1.0)).y;');
+    sh.fragmentShader = sh.fragmentShader.replace('#include <common>', '#include <common>\nvarying float vWY;').replace('#include <map_fragment>', '#include <map_fragment>\ndiffuseColor.rgb *= mix(0.62, 1.0, smoothstep(0.0, 26.0, vWY)) * mix(0.93, 1.0, smoothstep(26.0, 60.0, vWY));');
+  };
+  mat.customProgramCacheKey = () => 'ao' + (mat.uuid);
+  mat.needsUpdate = true;
+}
+/* يضيّق الجدار نحو الأعلى قليلاً (كبيوت الطين العُمانية) */
+export function taper(geo, cx, cz, y0, H, k) {
+  const p = geo.attributes.position;
+  for (let i = 0; i < p.count; i++) { const t = Math.max(0, (p.getY(i) - y0) / H); p.setX(i, cx + (p.getX(i) - cx) * (1 - k * t)); p.setZ(i, cz + (p.getZ(i) - cz) * (1 - k * t)); }
+  geo.computeVertexNormals(); return geo;
+}
 /* صندوق بمركز (x, y, z) — y هو الارتفاع */
 export function box(w, h, d, x, y, z, r = 0) {
   const g = r > 0 ? new RoundedBoxGeometry(w, h, d, 2, Math.min(r, w / 2 - .01, h / 2 - .01, d / 2 - .01)) : new THREE.BoxGeometry(w, h, d);
