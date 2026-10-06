@@ -1,6 +1,7 @@
 // نقطة الدخول: تربط الأنظمة ببعضها، واللعبة كلها تسير على ترتيب دروس المنهج
 import { game, fresh, upgrade, CARRY_MAX, TREE_COST } from './core/state.js';
 import { bus } from './core/events.js';
+import { ambient } from './core/sound.js';
 import { ar, clamp } from './core/util.js';
 import { createEngine } from './core/engine.js';
 import { loadSave, saveSoon, saveNow, wipeSave } from './save/save.js';
@@ -8,7 +9,7 @@ import { createPlayer, updatePlayer } from './player/player.js';
 import { findPath } from './world/nav.js';
 import { drawHuman, heightOf } from './character/human.js';
 import { WORLD, PILE, SIGNAL, TREE_SPOTS, FARM, HOUSES, WAREHOUSE, ROADS, SOUTH, staticColliders, drawGround, drawFarm, drawPalm, staticDrawables } from './world/village.js';
-import { makeTrucks, truckColliders, drawTruck, drawPile, drawSignal, drawSpot, updateFx, drawFx, moveAlong, say, bubble } from './world/entities.js';
+import { makeTrucks, truckColliders, drawTruck, drawPile, drawSignal, drawSpot, updateFx, drawFx, moveAlong, say, bubble, sparkle, dust } from './world/entities.js';
 import { makeNpcs, npcVisible, updateNpc, drawNpc } from './npc/npc.js';
 import { CHAPTER, introLines, npcLines } from './story/dialogues.js';
 import * as convoy from './missions/convoy.js';
@@ -282,7 +283,16 @@ function objectiveTarget() {
 
 /* ── حركات البطل: كل مؤثر صوتي يحرّك البطل حركته (التقاط، وضع، احتفال، انحناء) ── */
 const ANIMS = { pick: ['pickup', .35], drop: ['place', .35], win: ['celebrate', 1.1], plant: ['pickup', .6], good: ['interact', .4] };
-bus.on('sfx', k => { const a = ANIMS[k]; if (a && W) W.player.anim = { name: a[0], t: 0, dur: a[1] }; });
+bus.on('sfx', k => {
+  const a = ANIMS[k]; if (!W) return;
+  if (a) W.player.anim = { name: a[0], t: 0, dur: a[1] };
+  const p = W.player;   // إحساس اللعب: كل فعل مهم له أثر في العالم
+  if (k === 'pick' || k === 'drop') dust(p.x, p.y);
+  if (k === 'win') { eng.kick(1); sparkle(p.x, p.y - 40, 18); }
+  if (k === 'good') sparkle(p.x, p.y - 50, 6);
+  if (k === 'plant') sparkle(p.x, p.y - 10, 10, '#7CC36B');
+  if (k === 'cough') eng.shake(.5);
+});
 const routeLeft = pl => { if (!pl.target) return 0; let d = Math.hypot(pl.target.x - pl.x, pl.target.y - pl.y); (pl.route || []).forEach((p, i, r) => { if (i) d += Math.hypot(p.x - r[i - 1].x, p.y - r[i - 1].y); }); return d; };
 
 /* ── التحديث ── */
@@ -295,6 +305,7 @@ function update(dt) {
   W.trucks.forEach(t => moveAlong(t, dt, 230));
   { const c = cur(), md = curMod(); if (md && md.update && quests.isStarted(c.id)) try { md.update(dt, W, quests.data(c.id)); } catch (e) { report('التحديث', c.id, e); } }
   updateFx(dt);
+  if ((W.birds = (W.birds || 9) - dt) <= 0) { W.birds = 8 + Math.random() * 9; ambient(); }   // تغريد خافت بين حين وآخر
   if (W.tapMark) { W.tapMark.t += dt; if (W.tapMark.t > .6) W.tapMark = null; }
   hud.actions(currentActions());
   W.savedAt += dt;

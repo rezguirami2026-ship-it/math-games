@@ -201,7 +201,8 @@ export function staticDrawables(state, t, pl) {
   PALMS.forEach(p => out.push({ y: p.y, draw: c => palmCached(c, p.x, p.y, 1, false, t) }));
   SIDRS.forEach(p => out.push({ y: p.y, draw: c => sidrCached(c, p.x, p.y, 1, t) }));
   FARM_PALMS.forEach(p => out.push({ y: p.y, draw: c => palmCached(c, p.x, p.y, .95, !state.world.delivered, t) }));
-  LAMPS.forEach(p => out.push({ y: p.y, x: p.x, draw: c => streetLamp(c, p.x, p.y, t, false) }));
+  const lit = !!(state.quests && state.quests.done.primeNumbers);   // بعد درس «فوانيس الساحة» تضيء أعمدة القرية
+  LAMPS.forEach(p => out.push({ y: p.y, x: p.x, draw: c => streetLamp(c, p.x, p.y, t, lit) }));
   SHRUBS.forEach(p => out.push({ y: p.y, x: p.x, draw: c => shrub(c, p.x, p.y, 9, p.f) }));
   out.push({ y: 548, x: 1196, draw: c => bench(c, 1196, 548) });
   out.push({ y: FI.y + 226, x: FI.x + 480, draw: c => farmShed(c, t, !!state.world.delivered) });

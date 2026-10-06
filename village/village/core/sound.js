@@ -10,6 +10,8 @@ function tone(f, d, type, vol, when) {
     o.connect(g); g.connect(AC.destination); o.start(t); o.stop(t + d);
   } catch (e) {}
 }
+/* أصوات البيئة: تغريد خافت، فقط بعد أن يبدأ الصوت بلمسة من اللاعب (شرط المتصفحات) */
+export function ambient() { if (AC && sound.on) sfx('bird'); }
 export function sfx(k) {
   bus.emit('sfx', k);
   if (k === 'pick') tone(520, .07, 'triangle', .1);
@@ -20,4 +22,5 @@ export function sfx(k) {
   if (k === 'good') { tone(880, .15, 'sine', .1); tone(1320, .2, 'sine', .08, .1); }
   if (k === 'talk') tone(700, .05, 'square', .04);
   if (k === 'plant') [392, 523, 659].forEach((f, i) => tone(f, .2, 'sine', .09, i * .1));
+  if (k === 'bird') { const b = 2200 + Math.random() * 900; [0, .09, .2].forEach((w, i) => tone(b + i * 160, .07, 'sine', .022, w)); }   // تغريد خافت في الخلفية
 }

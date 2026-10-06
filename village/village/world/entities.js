@@ -94,14 +94,24 @@ export function puff(x, y, color, n) {
 }
 export function say(x, y, text, color, ms) { fx.bubbles.push({ x, y, text, color: color || '#2A1B66', until: performance.now() + (ms || 2200) }); }
 export function floatUp(x, y, text, color) { fx.floaters.push({ x, y, text, color: color || '#1FA05A', t: 0 }); }
+/* شرر الإنجاز: نجوم صغيرة تتطاير وتخفت (ذهبي للنجاح، أخضر للزراعة) */
+export function sparkle(x, y, n, color) {
+  for (let i = 0; i < n; i++) { const a = Math.random() * 6.28, v = 30 + Math.random() * 60; fx.particles.push({ kind: 'spark', x: x + Math.cos(a) * 8, y: y + Math.sin(a) * 8, vx: Math.cos(a) * v, vy: Math.sin(a) * v - 40, r: 2 + Math.random() * 2.5, life: 1, c: color || '#FFD45C', spin: Math.random() * 6 }); }
+}
+/* غبار خفيف تحت القدمين عند الالتقاط والوضع */
+export function dust(x, y) { for (let i = 0; i < 5; i++) fx.particles.push({ kind: 'dust', x: x + (Math.random() - .5) * 16, y: y - 2, vx: (Math.random() - .5) * 30, vy: -8 - Math.random() * 10, r: 2.5 + Math.random() * 2, life: .8, c: '#D8C3A0' }); }
 export function updateFx(dt) {
-  fx.particles.forEach(p => { p.x += p.vx * dt; p.y += p.vy * dt; p.r += 6 * dt; p.life -= dt * .9; });
+  fx.particles.forEach(p => { p.x += p.vx * dt; p.y += p.vy * dt; if (p.kind === 'spark') { p.vy += 60 * dt; p.vx *= .97; p.life -= dt * 1.1; p.spin += dt * 6; } else { p.r += 6 * dt; p.life -= dt * .9; } });
   fx.particles = fx.particles.filter(p => p.life > 0);
   const now = performance.now(); fx.bubbles = fx.bubbles.filter(b => b.until > now);
   fx.floaters.forEach(f => { f.t += dt; }); fx.floaters = fx.floaters.filter(f => f.t < 1.6);
 }
 export function drawFx(ctx) {
-  fx.particles.forEach(p => { ctx.globalAlpha = Math.max(0, p.life) * .7; ctx.fillStyle = p.c; ctx.beginPath(); ctx.arc(p.x, p.y, p.r, 0, 7); ctx.fill(); });
+  fx.particles.forEach(p => {
+    ctx.globalAlpha = Math.max(0, p.life) * (p.kind === 'spark' ? 1 : .7); ctx.fillStyle = p.c;
+    if (p.kind === 'spark') { ctx.save(); ctx.translate(p.x, p.y); ctx.rotate(p.spin); ctx.beginPath(); for (let k = 0; k < 8; k++) { const r = k % 2 ? p.r * .38 : p.r * 1.4, a = k * Math.PI / 4; ctx.lineTo(Math.cos(a) * r, Math.sin(a) * r); } ctx.closePath(); ctx.fill(); ctx.restore(); }
+    else { ctx.beginPath(); ctx.arc(p.x, p.y, p.r, 0, 7); ctx.fill(); }
+  });
   ctx.globalAlpha = 1;
   fx.bubbles.forEach(b => bubble(ctx, b.x, b.y, b.text, b.color));
   fx.floaters.forEach(f => {
