@@ -167,10 +167,11 @@ async function start(state) {
   }
 }
 /* ── العرض ثلاثي الأبعاد (renderer3d): يُحمَّل فقط عند طلبه، ويرجع إلى الرسم الحالي إن لم يدعم الجهاز WebGL أو فشل التحميل ── */
+const V3D = 'نسخة 3D · ٢';   // تُعرض في شاشة التحميل وفي الزاوية: للتأكد أن المتصفح حمّل آخر نسخة
 function want3d() { try { const q = new URLSearchParams(location.search); if (q.has('2d')) return false; return q.has('3d') || localStorage.getItem('ramimath_3d') === '1'; } catch (e) { return false; } }
 function loadingScreen() {
   const el = document.createElement('div'); el.className = 'load3d';
-  el.innerHTML = '<div class="lbox"><b>🏡 قرية الخير</b><small>تجهيز العالم ثلاثي الأبعاد…</small><div class="lbar"><i></i></div></div>';
+  el.innerHTML = '<div class="lbox"><b>🏡 قرية الخير</b><small>تجهيز العالم ثلاثي الأبعاد…</small><div class="lbar"><i></i></div><small class="lver">' + V3D + '</small></div>';
   document.body.appendChild(el); const bar = el.querySelector('i');
   return { set: k => { bar.style.width = Math.round(k * 100) + '%'; }, done: () => { el.classList.add('out'); setTimeout(() => el.remove(), 500); } };
 }
@@ -178,12 +179,13 @@ async function init3D() {
   let load = null;
   try {
     const R = await import('./renderer3d/index.js');
-    if (!R.webglOK()) return;
+    if (!R.webglOK()) { setTimeout(() => hud.toast('⚠️ هذا الجهاز لا يدعم العرض ثلاثي الأبعاد (WebGL)، فتعمل النسخة العادية'), 800); return; }
     load = loadingScreen(); FLAGS.three = true;
     let q = 'high'; try { q = localStorage.getItem('ramimath_q') || 'high'; } catch (e) {}
     eng.l3 = await R.create3D({ quality: q, world: WORLD, paintGround: paintStaticGround, onProgress: k => load.set(k) });
     eng.l3.ground = paintDynamicGround; eng.l3.people = people3d;
-  } catch (e) { console.error('[قرية الخير] تعذّر العرض ثلاثي الأبعاد، نكمل بالرسم الحالي', e); FLAGS.three = false; eng.l3 = null; const c = document.getElementById('game3d'); if (c) c.remove(); }
+    const tag = document.createElement('div'); tag.className = 'ver3d'; tag.textContent = V3D; document.body.appendChild(tag);
+  } catch (e) { console.error('[قرية الخير] تعذّر العرض ثلاثي الأبعاد، نكمل بالرسم الحالي', e); setTimeout(() => hud.toast('⚠️ تعذّر تشغيل العرض ثلاثي الأبعاد على هذا الجهاز: ' + (e && e.message || e).toString().slice(0, 60)), 800); FLAGS.three = false; eng.l3 = null; const c = document.getElementById('game3d'); if (c) c.remove(); }
   if (load) load.done();
 }
 /* الأرض الثابتة لقطع الأرض في 3D: نفس رسم الأرض ثنائي الأبعاد (الطرق والساحات والحقول) */
