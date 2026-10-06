@@ -53,7 +53,8 @@ async function settle(ms = 20000, quiet = 0) {
     idle = 0;
     await sleep(120);
   }
-  throw new Error('اللعبة بقيت مشغولة');
+  const why = await G(() => ({ busy: window.__game.game.busy, dialog: document.getElementById('dialog').className, panel: document.getElementById('panel').className, screen: document.getElementById('screen').className, stones: !!window.__game.W.stones }));
+  throw new Error('اللعبة بقيت مشغولة ' + JSON.stringify(why));
 }
 // ينقل البطل مباشرة إلى نقطة (بدل المشي) ثم ينتظر أن تُرسم الأزرار
 async function goTo(x, y) {

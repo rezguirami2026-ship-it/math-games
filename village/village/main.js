@@ -306,6 +306,9 @@ function update(dt) {
   W.trucks.forEach(t => moveAlong(t, dt, 230));
   { const c = cur(), md = curMod(); if (md && md.update && quests.isStarted(c.id)) try { md.update(dt, W, quests.data(c.id)); } catch (e) { report('التحديث', c.id, e); } }
   updateFx(dt);
+  // شبكة أمان: انشغال بلا حوار ولا لوحة ولا شاشة لأكثر من ١٥ ثانية يعني خللاً؛ نحرّر اللاعب ونسجّل الخطأ
+  const uiOpen = ['dialog', 'panel', 'screen'].some(id => document.getElementById(id).classList.contains('on'));
+  if (game.busy && !uiOpen && !W.stones) { if ((W.busyT = (W.busyT || 0) + dt) > 15) { game.busy = false; W.busyT = 0; report('انشغال عالق', cur() ? cur().id : '-', new Error('game.busy بقي true بلا نافذة مفتوحة')); } } else W.busyT = 0;
   if ((W.birds = (W.birds || 9) - dt) <= 0) { W.birds = 8 + Math.random() * 9; ambient(); }   // تغريد خافت بين حين وآخر
   if (W.tapMark) { W.tapMark.t += dt; if (W.tapMark.t > .6) W.tapMark = null; }
   hud.actions(currentActions());

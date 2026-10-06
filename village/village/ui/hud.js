@@ -13,7 +13,8 @@ export const hud = {
   init(api) {
     this.api = api;
     $('bBag').onclick = () => this.panel('bag'); $('bMap').onclick = () => this.panel('map'); $('bAch').onclick = () => this.panel('ach');
-    $('panel').onclick = e => { if (e.target.id === 'panel' || e.target.closest('[data-close]')) this.closePanel(); };
+    // الضغط خارج اللوحة يغلق نوافذ المعلومات فقط؛ لوحات الدروس والدكان والخزانة تُغلق بزر «رجوع» الذي يحرّر اللعب
+    $('panel').onclick = e => { const lesson = $('panel').querySelector('.bench, .shop, .wardrobe'); if ((e.target.id === 'panel' && !lesson) || e.target.closest('[data-close]')) this.closePanel(); };
   },
   show(on) { $('hud').classList.toggle('on', on); },
   good() { $('goodN').textContent = ar(game.state.good); const p = $('goodPill'); p.classList.remove('pulse'); void p.offsetWidth; p.classList.add('pulse'); },
