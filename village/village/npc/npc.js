@@ -121,7 +121,32 @@ const LOOKS = {
   sara: { hat: 'straw', gear: { bag: true }, gestureAnim: 'pickup' },                       // المهندسة الزراعية
   khalfan: { hat: 'straw', tool: 'cane', elder: true, gestureAnim: 'pickup' },             // صاحب النخيل
   noor: { vest: '#FFC23D', gestureAnim: 'wave' },                                           // منظمة الألعاب
-  yaqoob: { apron: '#E85D75', build: 1.08, gestureAnim: 'interact' }                        // صاحب كشك الدوّار
+  yaqoob: { apron: '#E85D75', build: 1.08, gestureAnim: 'interact' },                       // صاحب كشك الدوّار
+  // سوق الجمعية
+  jamal: { glasses: true, vest: '#5E6B78', build: 1.08, gestureAnim: 'interact' },         // أمين الخزينة
+  ruqaya: { glasses: true, gestureAnim: 'talk' },                                           // معلمة التاريخ
+  saud: { apron: '#2E8B57', build: 1.15, gestureAnim: 'place' },                            // صاحب البقالة
+  obaid: { apron: '#7CA6C8', hat: 'straw', gestureAnim: 'pickup' },                         // بائع السمك
+  hessa: { vest: '#C98A3A', gestureAnim: 'wave' },                                          // صاحبة لعبة العشرات
+  adil: { apron: '#4A4F56', glasses: true, gestureAnim: 'interact' },                       // صاحب الآلة
+  latifa: { apron: '#F2C6D0', build: 1.08, gestureAnim: 'place' },                          // صانعة الكعك
+  ghanim: { build: 1.1, tall: 1.03, gestureAnim: 'wave' },                                  // صاحب محل العيد
+  shamsa: { apron: '#E3B04B', elder: true, gestureAnim: 'place' },                          // صانعة الخلطات
+  raya: { apron: '#6B4520', gestureAnim: 'place' },                                         // بائعة الشوكولاتة
+  humaid: { vest: '#1F4E79', build: 1.15, gestureAnim: 'pickup' },                          // حارس البراميل
+  // طريق القافلة
+  mansour: { hat: 'cap', accent: '#C0392B', vest: '#F28C28', gestureAnim: 'interact' },     // عامل محطة الوقود
+  sultan: { tool: 'cane', tall: 1.06, build: .95, gestureAnim: 'wave' },                    // دليل القافلة
+  lubna: { vest: '#2F6FB2', gestureAnim: 'talk' },                                          // موظفة المطار
+  faisal: { vest: '#5E6B78', build: 1.1, tall: 1.05, gestureAnim: 'interact' },             // حارس جدار القرن
+  wafa: { hat: 'straw', apron: '#4E7A34', gestureAnim: 'pickup' },                          // البستانية
+  buthaina: { elder: true, tool: 'cane', gestureAnim: 'talk' },                             // حارسة الواحة
+  // ورشة البنّاء
+  hamood: { apron: '#7CA6C8', build: 1.08, gestureAnim: 'place' },                          // معلم البلاط
+  amna: { glasses: true, apron: '#C0392B', gestureAnim: 'interact' },                       // خياطة العلم
+  mohsen: { apron: '#8B5A2B', build: 1.12, gestureAnim: 'pickup' },                         // نجار الأبواب
+  zainab: { build: 1.05, gestureAnim: 'talk' },                                             // تاجرة التمور
+  jaber: { glasses: true, vest: '#7B3F98', gestureAnim: 'interact' }                        // صانع الكريستال
 };
 const GEST_T = { pickup: 1.5, place: 1, interact: .8, talk: 1.6, wave: 1.1 };
 const play = (n, name, dur) => { n.anim = { name, t: 0, dur: dur || GEST_T[name] || 1 }; };
