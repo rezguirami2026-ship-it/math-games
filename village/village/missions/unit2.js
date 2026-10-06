@@ -3,6 +3,7 @@ import { game } from '../core/state.js';
 import { bus } from '../core/events.js';
 import { ar, wait, rr, clamp } from '../core/util.js';
 import { say, puff, bubble } from '../world/entities.js';
+import { PAL, INK, pattern } from '../world/art.js';
 import { earn } from '../rewards/goodDeeds.js';
 import { sfx } from '../core/sound.js';
 import { complete } from './quests.js';
@@ -74,10 +75,16 @@ export const lengthMeasure = {
   },
   draw(d, t, active, done) {
     if (!done) return [];
-    return [{ y: BENCH.y + 30, draw: c => {   // القارب المكتمل بجانب الورشة
-      const x = BENCH.x - 70, y = BENCH.y + 30;
-      c.fillStyle = '#8B5A2B'; c.beginPath(); c.moveTo(x - 30, y - 16); c.lineTo(x + 30, y - 16); c.lineTo(x + 20, y); c.lineTo(x - 20, y); c.closePath(); c.fill();
-      c.fillStyle = '#F4F1E8'; c.beginPath(); c.moveTo(x, y - 18); c.lineTo(x, y - 50); c.lineTo(x + 18, y - 22); c.closePath(); c.fill();
+    const x = BENCH.x - 70, y = BENCH.y + 30;
+    return [{ y, x, draw: c => {   // القارب المكتمل على حاملين خشبيين بجانب الورشة: بدن بألواح، حافة ذهبية، وشراع
+      c.fillStyle = 'rgba(60,35,10,.22)'; c.beginPath(); c.ellipse(x + 8, y + 2, 42, 6, 0, 0, 7); c.fill();
+      c.fillStyle = PAL.wood; [-24, 20].forEach(dx => { c.fillRect(x + dx, y - 12, 4, 12); c.fillRect(x + dx - 6, y - 14, 16, 3); });
+      const g = c.createLinearGradient(0, y - 34, 0, y - 10); g.addColorStop(0, '#A06A36'); g.addColorStop(1, '#6E4524'); c.fillStyle = g;
+      c.beginPath(); c.moveTo(x - 40, y - 34); c.quadraticCurveTo(x - 30, y - 10, x, y - 12); c.quadraticCurveTo(x + 30, y - 10, x + 42, y - 36); c.closePath(); c.fill(); c.strokeStyle = INK; c.lineWidth = 1; c.stroke();
+      c.strokeStyle = 'rgba(40,20,5,.35)'; c.lineWidth = .8; [-26, -20].forEach(o => { c.beginPath(); c.moveTo(x - 36, y + o - 2); c.quadraticCurveTo(x, y + o + 10, x + 38, y + o - 4); c.stroke(); });
+      c.fillStyle = '#E3B04B'; c.beginPath(); c.moveTo(x - 40, y - 34); c.quadraticCurveTo(x, y - 30, x + 42, y - 36); c.lineTo(x + 42, y - 33); c.quadraticCurveTo(x, y - 27, x - 40, y - 31); c.closePath(); c.fill();
+      c.strokeStyle = '#5A3A1A'; c.lineWidth = 2.4; c.beginPath(); c.moveTo(x, y - 30); c.lineTo(x, y - 78); c.stroke();
+      c.fillStyle = '#F4F1E8'; c.beginPath(); c.moveTo(x + 2, y - 76); c.quadraticCurveTo(x + 24, y - 56, x + 2, y - 34); c.closePath(); c.fill(); c.strokeStyle = INK; c.lineWidth = .8; c.stroke();
     } }];
   }
 };
@@ -321,10 +328,21 @@ export const areaPerimeterT1 = {
   ground(c, d, active, done) {
     const [l, w] = done && d.final ? d.final : [d.l || 0, d.w || 0]; if (!l) return;
     const x = PEN.x, y = PEN.y, cs = PEN.cell, built = done || d.built;
-    c.fillStyle = built ? 'rgba(124,179,90,.55)' : 'rgba(255,255,255,.35)'; c.fillRect(x, y, l * cs, w * cs);
-    c.strokeStyle = built ? '#7A4F2A' : '#2A1B66'; c.lineWidth = built ? 4 : 2; c.setLineDash(built ? [] : [6, 5]); c.strokeRect(x, y, l * cs, w * cs); c.setLineDash([]);
-    if (built) { c.fillStyle = '#5A3A1A'; for (let i = 0; i <= l; i++) for (const yy of [y, y + w * cs]) c.fillRect(x + i * cs - 2, yy - 4, 4, 8); for (let j = 0; j <= w; j++) for (const xx of [x, x + l * cs]) c.fillRect(xx - 4, y + j * cs - 2, 8, 4);
-      for (let k = 0; k < Math.min(6, l * w / 4); k++) { const sx = x + 16 + (k * 37) % Math.max(20, l * cs - 30), sy = y + 16 + Math.floor(k * 37 / Math.max(20, l * cs - 30)) * 26 % Math.max(20, w * cs - 24); c.fillStyle = '#F4F1E8'; c.beginPath(); c.ellipse(sx, sy, 9, 6, 0, 0, 7); c.fill(); c.fillStyle = '#3A2E1E'; c.beginPath(); c.arc(sx + 8, sy - 2, 3, 0, 7); c.fill(); } }
+    const W2 = l * cs, H2 = w * cs;
+    if (!built) { c.fillStyle = 'rgba(255,255,255,.35)'; c.fillRect(x, y, W2, H2); c.strokeStyle = '#2A1B66'; c.lineWidth = 2; c.setLineDash([6, 5]); c.strokeRect(x, y, W2, H2); c.setLineDash([]); return; }
+    c.fillStyle = pattern(c, 'grass'); c.fillRect(x, y, W2, H2); c.fillStyle = 'rgba(60,35,10,.18)'; c.fillRect(x, y, W2, 6);   // عشب الحظيرة
+    const rail = (x1, y1, x2, y2) => { c.strokeStyle = '#6B4520'; c.lineWidth = 2.4; [10, 4].forEach(h => { c.beginPath(); c.moveTo(x1, y1 - h); c.lineTo(x2, y2 - h); c.stroke(); }); };
+    const postAt = (px, py) => { c.fillStyle = '#5A3A1A'; c.fillRect(px - 2, py - 15, 4, 16); c.fillStyle = 'rgba(255,255,255,.2)'; c.fillRect(px - 2, py - 15, 1.2, 16); };
+    rail(x, y, x + W2, y); for (let i = 0; i <= l; i++) postAt(x + i * cs, y);   // السياج الخلفي والجانبان
+    for (let j = 0; j <= w; j++) { postAt(x, y + j * cs); postAt(x + W2, y + j * cs); } rail(x, y, x, y + H2); rail(x + W2, y, x + W2, y + H2);
+    for (let k = 0; k < Math.min(6, l * w / 4); k++) {   // خراف: صوف، رأس داكن، وأرجل
+      const sx = x + 16 + (k * 37) % Math.max(20, W2 - 30), sy = y + 22 + Math.floor(k * 37 / Math.max(20, W2 - 30)) * 26 % Math.max(20, H2 - 30);
+      c.fillStyle = 'rgba(40,60,20,.25)'; c.beginPath(); c.ellipse(sx + 2, sy + 1, 10, 3, 0, 0, 7); c.fill();
+      c.fillStyle = '#2E2620'; [-5, -1, 3, 6].forEach(dx => c.fillRect(sx + dx, sy - 4, 1.8, 5));
+      c.fillStyle = '#F4F1E8'; [[-4, -8], [0, -10], [4, -8], [0, -6]].forEach(([dx, dy]) => { c.beginPath(); c.arc(sx + dx, sy + dy, 5, 0, 7); c.fill(); });
+      c.strokeStyle = 'rgba(0,0,0,.25)'; c.lineWidth = .7; c.beginPath(); c.ellipse(sx, sy - 8, 9, 5.5, 0, 0, 7); c.stroke();
+      c.fillStyle = '#3A2E1E'; c.beginPath(); c.ellipse(sx + 10, sy - 10, 3.2, 4, .3, 0, 7); c.fill(); }
+    rail(x, y + H2, x + W2, y + H2); for (let i = 0; i <= l; i++) postAt(x + i * cs, y + H2);   // السياج الأمامي
   }
 };
 

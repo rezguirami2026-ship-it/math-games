@@ -3,7 +3,8 @@ import { ar, wait, rr, clamp } from '../core/util.js';
 import { say, puff, bubble } from '../world/entities.js';
 import { sfx } from '../core/sound.js';
 import { R, shuffle, near, changed, dec, sg, finish, panel, sheetOpen, sheetClose, hiDPI, msgBox, setMsg, btn, numPad, counters } from './bench.js';
-import { BW, ST4, B4 } from '../world/fort.js';
+import { BW, ST4, B4, H_B } from '../world/fort.js';
+import { PAL, INK, onRoof } from '../world/art.js';
 import { rial } from './shop.js';
 
 const nArab = s => String(s).replace(/[٠-٩]/g, d => '٠١٢٣٤٥٦٧٨٩'.indexOf(d)).replace('٫', '.').trim();
@@ -35,9 +36,9 @@ export const numberLineEstimate = {
   },
   ground(c, d, active, done) {
     if (!d.rounds) return; const r = d.rounds[Math.min(d.r, 2)];
-    const post = (x, t) => { c.fillStyle = '#5B3A1E'; c.fillRect(x - 3, BW.y - 40, 6, 30); c.fillStyle = '#FFFDF6'; rr(c, x - 28, BW.y - 64, 56, 22, 5); c.fill(); c.fillStyle = '#2A1B66'; c.font = '900 13px Cairo, sans-serif'; c.textAlign = 'center'; c.fillText(t, x, BW.y - 48); };
+    const post = (x, t) => { c.fillStyle = 'rgba(60,35,10,.22)'; c.beginPath(); c.ellipse(x + 6, BW.y - 10, 9, 3, 0, 0, 7); c.fill(); c.fillStyle = PAL.wood; c.fillRect(x - 3, BW.y - 42, 6, 32); c.fillStyle = 'rgba(255,255,255,.18)'; c.fillRect(x - 3, BW.y - 42, 2, 32); c.fillStyle = '#C9B48E'; rr(c, x - 28, BW.y - 63, 56, 24, 5); c.fill(); c.fillStyle = '#FFFDF6'; rr(c, x - 28, BW.y - 66, 56, 22, 5); c.fill(); c.strokeStyle = INK; c.lineWidth = .9; rr(c, x - 28, BW.y - 66, 56, 25, 5); c.stroke(); c.fillStyle = '#2A1B66'; c.font = '900 13px Cairo, sans-serif'; c.textAlign = 'center'; c.fillText(t, x, BW.y - 50); };   // لافتة خشبية بحافة
     if (!done) { post(BW.x0, ar(r.lo)); post(BW.x1, ar(r.hi)); if (r.mid) post((BW.x0 + BW.x1) / 2, ar((r.lo + r.hi) / 2)); }
-    (d.flags || []).forEach(f => { c.fillStyle = '#5B3A1E'; c.fillRect(f.x - 1.5, BW.y - 46, 3, 36); c.fillStyle = '#E2475C'; c.beginPath(); c.moveTo(f.x + 1.5, BW.y - 46); c.lineTo(f.x + 24, BW.y - 39); c.lineTo(f.x + 1.5, BW.y - 32); c.fill(); });
+    (d.flags || []).forEach(f => { c.fillStyle = 'rgba(60,35,10,.2)'; c.beginPath(); c.ellipse(f.x + 4, BW.y - 10, 6, 2, 0, 0, 7); c.fill(); c.fillStyle = '#5B3A1E'; c.fillRect(f.x - 1.5, BW.y - 46, 3, 36); c.fillStyle = '#E3B04B'; c.beginPath(); c.arc(f.x, BW.y - 47, 2.2, 0, 7); c.fill(); c.fillStyle = '#E2475C'; c.beginPath(); c.moveTo(f.x + 1.5, BW.y - 45); c.quadraticCurveTo(f.x + 12, BW.y - 46, f.x + 24, BW.y - 39); c.quadraticCurveTo(f.x + 12, BW.y - 35, f.x + 1.5, BW.y - 32); c.fill(); c.strokeStyle = 'rgba(0,0,0,.25)'; c.lineWidth = .7; c.stroke(); });
   }
 };
 
@@ -294,7 +295,12 @@ export const multiplyT2 = Object.assign({
       sfx('win'); d.r++; changed(); if (d.r >= 2) { sheetClose(); await finish(W, 'multiplyT2', [{ who: 'murad', text: 'السطح مبلّط بلا بلاطة زائدة ولا ناقصة!' }]); } else this.open(W, d, '✓ السطح الأول جاهز! والسطح الثاني…', 'ok');
     });
   },
-  draw(d, t, active, done) { const b = B4.roof; return done ? [{ y: b.y + b.h + 1, draw: c => { c.fillStyle = '#C0392B'; for (let i = 0; i < 6; i++) for (let j = 0; j < 3; j++) c.fillRect(b.x + 12 + i * 27, b.y + 6 + j * 18, 24, 15); } }] : []; }
+  draw(d, t, active, done) { const b = Object.assign({}, B4.roof, { H: H_B }); return done ? [{ y: b.y + b.h + 1, draw: c => onRoof(c, b, (r, ry) => {   // بلاط القرميد على السطح نفسه: صفوف متراكبة بظل
+    for (let j = 0; j < 4; j++) for (let i = 0; i < 7; i++) { const x = b.x + 12 + i * 22.6 + (j % 2) * 6, y = ry + 12 + j * 19; if (x + 20 > b.x + b.w - 8) continue;
+      r.fillStyle = '#9E3A2A'; r.fillRect(x, y + 12, 20, 4); r.fillStyle = j % 2 ? '#C0503A' : '#B8452F'; r.beginPath(); r.moveTo(x, y + 12); r.lineTo(x, y + 3); r.quadraticCurveTo(x + 10, y - 3, x + 20, y + 3); r.lineTo(x + 20, y + 12); r.closePath(); r.fill();
+      r.fillStyle = 'rgba(255,220,190,.25)'; r.fillRect(x + 3, y + 2, 3, 9); }
+    r.strokeStyle = INK; r.lineWidth = 1; r.strokeRect(b.x + 8, ry + 8, b.w - 16, b.h - 16);
+  }) }] : []; }
 }, (() => { const s = at(ST4.roof, 'roof', '🧱 مخطط السطح'); delete s.draw; return s; })());
 
 /* ═══ ٣٥. القسمة (٢) — «توزيع الحلوى» ═══ */

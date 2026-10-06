@@ -188,7 +188,16 @@ export const regularPolyhedra = Object.assign({
       else { sfx('cough'); setMsg(d.face !== P.f ? `وجوه ${P.n} ليست على شكل ${d.face ? FACE[d.face][0] : 'هذا'}` : `عدد الأوجه لا يطابق ${P.n}`, 'bad'); }
     });
   },
-  draw(d, t, active, done) { const s = ST9.crystals; return done ? [{ y: s.y + 30, draw: c => { [[-70, '#B794F4'], [70, '#7CC8F0'], [-40, '#F6AD55'], [40, '#68D391']].forEach(([dx, col], i) => { const x = s.x + dx, y = s.y + 20, h = 22 + Math.sin(t * 2 + i) * 2; c.fillStyle = col; c.beginPath(); c.moveTo(x, y - h); c.lineTo(x + 9, y - h / 2); c.lineTo(x, y); c.lineTo(x - 9, y - h / 2); c.closePath(); c.fill(); }); bubble(c, s.x, s.y - 160, '✓', '#1FA05A'); } }] : []; }
+  draw(d, t, active, done) { const s = ST9.crystals; return done ? [[-70, '#B794F4'], [70, '#7CC8F0']].map(([dx, col], i) => ({ y: s.y + 20, x: s.x + dx, draw: c => {   // عناقيد كريستال على قواعد حجرية تتلألأ
+    const x = s.x + dx, y = s.y + 20;
+    c.fillStyle = 'rgba(60,35,10,.22)'; c.beginPath(); c.ellipse(x + 4, y, 16, 4, 0, 0, 7); c.fill();
+    c.fillStyle = '#B5A58A'; c.fillRect(x - 13, y - 8, 26, 8); c.strokeStyle = '#2B1E14'; c.lineWidth = .8; c.strokeRect(x - 13, y - 8, 26, 8);
+    [[0, 30, 7], [-8, 20, 5], [8, 22, 5]].forEach(([ox, h, r], k) => { const cx = x + ox, by = y - 8, hh = h + Math.sin(t * 2 + i + k) * 1.5;
+      c.fillStyle = col; c.beginPath(); c.moveTo(cx - r, by); c.lineTo(cx - r, by - hh * .7); c.lineTo(cx, by - hh); c.lineTo(cx + r, by - hh * .7); c.lineTo(cx + r, by); c.closePath(); c.fill();
+      c.fillStyle = 'rgba(255,255,255,.45)'; c.beginPath(); c.moveTo(cx - r, by - hh * .7); c.lineTo(cx, by - hh); c.lineTo(cx, by); c.lineTo(cx - r, by); c.closePath(); c.fill();
+      c.strokeStyle = 'rgba(40,20,60,.5)'; c.lineWidth = .7; c.beginPath(); c.moveTo(cx - r, by); c.lineTo(cx - r, by - hh * .7); c.lineTo(cx, by - hh); c.lineTo(cx + r, by - hh * .7); c.lineTo(cx + r, by); c.stroke(); });
+    const k = (t * .7 + i * .5) % 1; c.fillStyle = 'rgba(255,255,255,' + Math.sin(k * Math.PI).toFixed(2) + ')'; c.beginPath(); c.arc(x - 2, y - 34, 2.2, 0, 7); c.fill();
+  } })).concat([{ y: s.y + 30, draw: c => bubble(c, s.x, s.y - 160, '✓', '#1FA05A') }]) : []; }
 }, (() => { const s = at(ST9.crystals, 'crystals', '💎 فرن الكريستال'); delete s.draw; return s; })());
 
 export const T2U5 = { classifyShapes, transformPolygons, measureAngles, prisms, regularPolyhedra };

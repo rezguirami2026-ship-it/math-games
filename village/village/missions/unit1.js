@@ -13,14 +13,28 @@ const shuffle = a => a.map(v => [Math.random(), v]).sort((x, y) => x[0] - y[0]).
 const near = (W, p, r) => Math.hypot(W.player.x - p.x, W.player.y - p.y) < (r || 50);
 const changed = () => { bus.emit('mission'); bus.emit('save'); };
 const fmtNum = v => { let s = (Math.round(v * 10000) / 10000).toString(); return ar(s).replace('.', '٫'); };
-function crate(ctx, x, y, w, label) {
-  ctx.fillStyle = '#D79B57'; rr(ctx, x - w / 2, y - w * .8, w, w * .8, 2); ctx.fill(); ctx.strokeStyle = '#A66C2E'; ctx.lineWidth = 1; ctx.stroke();
-  if (label && w > 16) { ctx.fillStyle = '#5A3A10'; ctx.font = `900 ${Math.max(8, w * .32)}px Cairo, sans-serif`; ctx.textAlign = 'center'; ctx.fillText(label, x, y - w * .28); }
+function crate(ctx, x, y, w, label) {   // صندوق خشبي مجسّم: سطح مضاء، وجه بألواح، وتسمية
+  const h = w * .72, d = w * .34, x0 = x - w / 2;
+  ctx.fillStyle = '#E8B878'; ctx.fillRect(x0, y - h - d, w, d);
+  const g = ctx.createLinearGradient(x0, 0, x0 + w, 0); g.addColorStop(0, '#D49556'); g.addColorStop(1, '#B9783C'); ctx.fillStyle = g; ctx.fillRect(x0, y - h, w, h);
+  ctx.strokeStyle = 'rgba(110,60,20,.45)'; ctx.lineWidth = .8; ctx.beginPath(); ctx.moveTo(x0 + 2, y - h * .5); ctx.lineTo(x0 + w - 2, y - h * .5); ctx.moveTo(x0 + 2, y - h - d * .5); ctx.lineTo(x0 + w - 2, y - h - d * .5); ctx.stroke();
+  ctx.strokeStyle = INK; ctx.lineWidth = .8; ctx.strokeRect(x0, y - h - d, w, h + d); ctx.beginPath(); ctx.moveTo(x0, y - h); ctx.lineTo(x0 + w, y - h); ctx.stroke();
+  if (label && w > 16) { ctx.fillStyle = '#4A2C0E'; ctx.font = `900 ${Math.max(8, w * .3)}px Cairo, sans-serif`; ctx.textAlign = 'center'; ctx.fillText(label, x, y - h * .2); }
 }
-function post(ctx, x, y, text, color) {
-  ctx.fillStyle = '#7D5A36'; ctx.fillRect(x - 2, y - 34, 4, 34);
-  ctx.fillStyle = color || '#2E7D5B'; rr(ctx, x - 22, y - 52, 44, 22, 5); ctx.fill();
-  ctx.fillStyle = '#fff'; ctx.font = '900 13px Cairo, sans-serif'; ctx.textAlign = 'center'; ctx.fillText(text, x, y - 36);
+function post(ctx, x, y, text, color) {   // لافتة على عمود خشبي بظل وحافة
+  ctx.fillStyle = 'rgba(70,42,20,.22)'; ctx.beginPath(); ctx.ellipse(x + 6, y, 9, 3, 0, 0, 7); ctx.fill();
+  ctx.fillStyle = PAL.wood; ctx.fillRect(x - 2.5, y - 34, 5, 34); ctx.fillStyle = 'rgba(255,255,255,.18)'; ctx.fillRect(x - 2.5, y - 34, 1.5, 34);
+  const col = color || '#2E7D5B'; ctx.fillStyle = shade(col, -28); rr(ctx, x - 22, y - 50, 44, 22, 5); ctx.fill();
+  ctx.fillStyle = col; rr(ctx, x - 22, y - 53, 44, 21, 5); ctx.fill(); ctx.strokeStyle = INK; ctx.lineWidth = .9; rr(ctx, x - 22, y - 53, 44, 24, 5); ctx.stroke();
+  ctx.fillStyle = '#fff'; ctx.font = '900 13px Cairo, sans-serif'; ctx.textAlign = 'center'; ctx.fillText(text, x, y - 37);
+}
+function handcart(c, x, y) {   // عربة يد خشبية: صندوق بجوانب ألواح، عجلتان بقضبان، ومقبض
+  c.fillStyle = 'rgba(60,35,10,.22)'; c.beginPath(); c.ellipse(x + 8, y + 3, 54, 7, 0, 0, 7); c.fill();
+  c.fillStyle = '#8A5A30'; c.fillRect(x - 50, y - 22, 100, 6); c.fillStyle = '#6B4520'; c.fillRect(x - 50, y - 16, 100, 8);
+  c.strokeStyle = 'rgba(40,20,5,.4)'; c.lineWidth = .8; for (let k = 1; k < 5; k++) { c.beginPath(); c.moveTo(x - 50 + k * 20, y - 16); c.lineTo(x - 50 + k * 20, y - 8); c.stroke(); }
+  c.strokeStyle = INK; c.strokeRect(x - 50, y - 22, 100, 14);
+  c.strokeStyle = PAL.wood; c.lineWidth = 3; c.lineCap = 'round'; c.beginPath(); c.moveTo(x + 50, y - 14); c.lineTo(x + 70, y - 26); c.stroke();
+  [[-34], [34]].forEach(([dx]) => { const cx = x + dx; c.fillStyle = '#3B2E22'; c.beginPath(); c.arc(cx, y - 4, 8, 0, 7); c.fill(); c.strokeStyle = '#A9743F'; c.lineWidth = 1.2; for (let k = 0; k < 4; k++) { const a = k * Math.PI / 4; c.beginPath(); c.moveTo(cx - Math.cos(a) * 6, y - 4 - Math.sin(a) * 6); c.lineTo(cx + Math.cos(a) * 6, y - 4 + Math.sin(a) * 6); c.stroke(); } c.strokeStyle = INK; c.lineWidth = 1; c.beginPath(); c.arc(cx, y - 4, 8, 0, 7); c.stroke(); });
 }
 async function finish(W, id, lines, reward) {
   sfx('win'); await wait(700);
@@ -70,10 +84,9 @@ export const placeValue = {
   },
   draw(d) {
     if (!d.rounds) return [];
-    const out = PILES.map(p => ({ y: p.y, draw: c => { for (let i = 0; i < 3; i++) crate(c, p.x + (i % 2) * 3, p.y - i * p.w * .75, p.w, p.label); } }));
-    out.push({ y: CART.y, draw: c => {
-      c.fillStyle = '#6B4F33'; rr(c, CART.x - 48, CART.y - 16, 96, 14, 3); c.fill();
-      [[-36, 0], [36, 0]].forEach(([dx]) => { c.fillStyle = '#26262F'; c.beginPath(); c.arc(CART.x + dx, CART.y, 6, 0, 7); c.fill(); });
+    const out = PILES.map(p => ({ y: p.y, x: p.x, draw: c => { for (let i = 0; i < 3; i++) crate(c, p.x + (i % 2) * 3, p.y - i * p.w * .72, p.w, p.label); } }));
+    out.push({ y: CART.y, x: CART.x, draw: c => {
+      handcart(c, CART.x, CART.y + 6);
       let x = CART.x - 44; d.cart.forEach((n, k) => { for (let i = 0; i < n; i++) crate(c, x + PILES[k].w / 2 + (i % 3) * 2, CART.y - 16 - Math.floor(i / 3) * PILES[k].w * .7 - (i % 3) * 3, PILES[k].w, ''); x += n ? PILES[k].w + 2 : 0; });
       if (d.r < d.rounds.length) bubble(c, CART.x, CART.y - 70, `الطلب: ${ar(d.rounds[d.r])}`, '#2A1B66');
     } });
@@ -207,7 +220,15 @@ export const oddEven = {
     if (active) { for (let i = 0; i < 6 - (d.i || 0) - (d.hand ? 1 : 0); i++) { c.fillStyle = i % 2 ? '#FFFDF6' : '#F4E3B8'; rr(c, LETTERS.x - 12 + (i % 3) * 3, LETTERS.y - 6 - i * 4, 24, 15, 2); c.fill(); c.strokeStyle = '#C9A46B'; c.stroke(); } }
   },
   draw() {
-    const box = (p, col, t) => ({ y: p.y, draw: c => { c.fillStyle = '#5B5B5B'; c.fillRect(p.x - 2, p.y - 30, 4, 30); c.fillStyle = col; rr(c, p.x - 15, p.y - 54, 30, 26, 6); c.fill(); c.fillStyle = '#222'; c.fillRect(p.x - 9, p.y - 46, 18, 3); c.fillStyle = '#fff'; c.font = '900 10px Cairo, sans-serif'; c.textAlign = 'center'; c.fillText(t, p.x, p.y - 33); } });
+    const box = (p, col, t) => ({ y: p.y, x: p.x, draw: c => {   // صندوق بريد معدني: عمود، جسم بقمة مقوّسة وجانب مظلل، فتحة، وراية
+      c.fillStyle = 'rgba(60,35,10,.22)'; c.beginPath(); c.ellipse(p.x + 8, p.y, 14, 4, 0, 0, 7); c.fill();
+      c.fillStyle = '#4A4F56'; c.fillRect(p.x - 3, p.y - 30, 6, 30); c.fillStyle = '#6E7680'; c.fillRect(p.x - 3, p.y - 30, 2, 30);
+      const g = c.createLinearGradient(p.x - 15, 0, p.x + 15, 0); g.addColorStop(0, shade(col, 16)); g.addColorStop(.7, shade(col, -4)); g.addColorStop(1, shade(col, -34)); c.fillStyle = g;
+      c.beginPath(); c.moveTo(p.x - 15, p.y - 30); c.lineTo(p.x - 15, p.y - 54); c.arc(p.x, p.y - 54, 15, Math.PI, 0); c.lineTo(p.x + 15, p.y - 30); c.closePath(); c.fill(); c.strokeStyle = INK; c.lineWidth = 1; c.stroke();
+      c.fillStyle = '#1E1E24'; rr(c, p.x - 9, p.y - 58, 18, 4, 2); c.fill();
+      c.fillStyle = '#FFFDF6'; rr(c, p.x - 13, p.y - 47, 26, 13, 3); c.fill(); c.fillStyle = shade(col, -30); c.font = '900 10px Cairo, sans-serif'; c.textAlign = 'center'; c.fillText(t, p.x, p.y - 37);
+      c.fillStyle = '#E3B04B'; c.fillRect(p.x + 15, p.y - 64, 2, 16); c.fillRect(p.x + 17, p.y - 64, 8, 6);
+    } });
     return [box(BOX_ODD, '#D63B3B', 'فردي'), box(BOX_EVEN, '#2F6FB2', 'زوجي')];
   }
 };
@@ -239,12 +260,17 @@ export const primeNumbers = {
   },
   draw(d, t, active, done) {
     if (!d.nums) return [];
-    return LAMPS.map((l, i) => ({ y: l.y, draw: c => {
+    return LAMPS.map((l, i) => ({ y: l.y, x: l.x, draw: c => {   // فانوس على عمود: قاعدة حجرية، زجاج مضيء، وقبعة نحاسية
       const on = (d.lit || []).includes(i);
-      c.fillStyle = '#4A4F63'; c.fillRect(l.x - 2, l.y - 42, 4, 42);
-      if (on) { c.fillStyle = 'rgba(255,200,80,.35)'; c.beginPath(); c.arc(l.x, l.y - 52, 22 + Math.sin(t * 5 + i) * 2, 0, 7); c.fill(); }
-      c.fillStyle = on ? '#FFC23D' : '#6B6F80'; rr(c, l.x - 9, l.y - 64, 18, 22, 5); c.fill();
-      c.fillStyle = '#2B2E3B'; rr(c, l.x - 13, l.y - 68, 26, 6, 3); c.fill();
+      c.fillStyle = 'rgba(60,35,10,.2)'; c.beginPath(); c.ellipse(l.x + 6, l.y, 10, 3, 0, 0, 7); c.fill();
+      c.fillStyle = PAL.stone; c.fillRect(l.x - 6, l.y - 6, 12, 6); c.strokeStyle = INK; c.lineWidth = .7; c.strokeRect(l.x - 6, l.y - 6, 12, 6);
+      c.fillStyle = '#3D4250'; c.fillRect(l.x - 2, l.y - 44, 4, 38); c.fillStyle = '#6A7080'; c.fillRect(l.x - 2, l.y - 44, 1.3, 38);
+      if (on) { c.save(); c.globalCompositeOperation = 'lighter'; const g = c.createRadialGradient(l.x, l.y - 54, 0, l.x, l.y - 54, 30 + Math.sin(t * 5 + i) * 2); g.addColorStop(0, 'rgba(255,200,90,.55)'); g.addColorStop(1, 'rgba(255,200,90,0)'); c.fillStyle = g; c.fillRect(l.x - 32, l.y - 86, 64, 64); c.restore(); }
+      c.fillStyle = '#2B2E3B'; c.beginPath(); c.moveTo(l.x - 8, l.y - 44); c.lineTo(l.x + 8, l.y - 44); c.lineTo(l.x + 10, l.y - 64); c.lineTo(l.x - 10, l.y - 64); c.closePath(); c.fill();
+      c.fillStyle = on ? '#FFE08A' : '#8A90A0'; c.beginPath(); c.moveTo(l.x - 6, l.y - 46); c.lineTo(l.x + 6, l.y - 46); c.lineTo(l.x + 7.5, l.y - 62); c.lineTo(l.x - 7.5, l.y - 62); c.closePath(); c.fill();
+      if (!on) { c.fillStyle = 'rgba(255,255,255,.35)'; c.fillRect(l.x - 5, l.y - 60, 2, 12); }
+      c.fillStyle = '#B8862E'; c.beginPath(); c.moveTo(l.x - 12, l.y - 64); c.lineTo(l.x, l.y - 74); c.lineTo(l.x + 12, l.y - 64); c.closePath(); c.fill(); c.strokeStyle = INK; c.lineWidth = .8; c.stroke();
+      c.fillStyle = '#B8862E'; c.beginPath(); c.arc(l.x, l.y - 76, 2.5, 0, 7); c.fill();
       if (!done) { c.fillStyle = '#FFFDF6'; rr(c, l.x - 14, l.y - 92, 28, 18, 5); c.fill(); c.fillStyle = '#2A1B66'; c.font = '900 12px Cairo, sans-serif'; c.textAlign = 'center'; c.fillText(ar(d.nums[i]), l.x, l.y - 79); }
     } }));
   }
@@ -277,11 +303,17 @@ export const powerOf10 = {
   },
   draw(d, t) {
     if (!d.rounds) return [];
-    return [{ y: MACH.y, draw: c => {
+    return [{ y: MACH.y, x: MACH.x, draw: c => {
       const [a, b] = d.rounds[Math.min(d.r, d.rounds.length - 1)];
-      c.fillStyle = 'rgba(60,35,10,.22)'; c.fillRect(MACH.x - 50, MACH.y - 4, 100, 10);
-      c.fillStyle = '#5E6B78'; rr(c, MACH.x - 46, MACH.y - 70, 92, 70, 10); c.fill();
-      c.fillStyle = '#0E1A12'; rr(c, MACH.x - 36, MACH.y - 60, 72, 24, 5); c.fill();
+      const X = MACH.x, Y = MACH.y;   // آلة معدنية مجسّمة: سطح علوي، وجه بشاشة، جانب مظلل، ومسامير
+      c.fillStyle = 'rgba(60,35,10,.22)'; c.beginPath(); c.moveTo(X + 46, Y - 4); c.lineTo(X + 70, Y - 12); c.lineTo(X + 70, Y + 8); c.lineTo(X - 40, Y + 8); c.lineTo(X - 46, Y); c.closePath(); c.fill();
+      c.fillStyle = '#4A5560'; c.beginPath(); c.moveTo(X + 46, Y); c.lineTo(X + 56, Y - 8); c.lineTo(X + 56, Y - 78); c.lineTo(X + 46, Y - 70); c.closePath(); c.fill();
+      c.fillStyle = '#8994A0'; c.beginPath(); c.moveTo(X - 46, Y - 70); c.lineTo(X - 36, Y - 78); c.lineTo(X + 56, Y - 78); c.lineTo(X + 46, Y - 70); c.closePath(); c.fill();
+      const g = c.createLinearGradient(X - 46, 0, X + 46, 0); g.addColorStop(0, '#6E7A86'); g.addColorStop(1, '#55616C'); c.fillStyle = g; c.fillRect(X - 46, Y - 70, 92, 70);
+      c.strokeStyle = INK; c.lineWidth = 1; c.strokeRect(X - 46, Y - 70, 92, 70); c.beginPath(); c.moveTo(X - 46, Y - 70); c.lineTo(X - 36, Y - 78); c.lineTo(X + 56, Y - 78); c.lineTo(X + 56, Y - 8); c.lineTo(X + 46, Y); c.moveTo(X + 46, Y - 70); c.lineTo(X + 56, Y - 78); c.stroke();
+      c.fillStyle = '#C9CED4'; [[-41, -65], [41, -65], [-41, -5], [41, -5]].forEach(([dx, dy]) => { c.beginPath(); c.arc(X + dx, Y + dy, 1.6, 0, 7); c.fill(); });
+      c.fillStyle = '#3A434C'; c.fillRect(X - 40, Y - 64, 80, 32); c.fillStyle = '#0E1A12'; rr(c, X - 36, Y - 60, 72, 24, 4); c.fill();
+      c.fillStyle = 'rgba(110,245,160,.08)'; c.fillRect(X - 34, Y - 58, 68, 4);
       c.fillStyle = '#6EF5A0'; c.font = '900 15px Cairo, sans-serif'; c.textAlign = 'center'; c.fillText(fmtNum(d.show !== null && d.show !== undefined ? d.show : a), MACH.x, MACH.y - 42);
       c.save(); c.translate(MACH.x - 26, MACH.y - 18); c.rotate(t * 2); c.fillStyle = '#C9A24A'; for (let i = 0; i < 6; i++) { c.rotate(Math.PI / 3); c.fillRect(-2, -10, 4, 6); } c.beginPath(); c.arc(0, 0, 6, 0, 7); c.fill(); c.restore();
       bubble(c, MACH.x, MACH.y - 92, `الهدف: ${fmtNum(b)}`, '#2A1B66');

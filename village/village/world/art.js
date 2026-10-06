@@ -571,3 +571,8 @@ export const solid = {
   well: (x, y, r) => ({ x: x - r, y: y - 22, w: r * 2, h: 26 }),      // stoneWell()
   pump: (x, y) => ({ x: x - 16, y: y - 8, w: 32, h: 10 })
 };
+/* يرسم على سطح صندوق مجسّم (بالإزاحة نفسها التي يرسم بها box3d السطح). draw(ctx, ry) حيث ry أعلى السطح */
+export function onRoof(ctx, b, draw) {
+  const { x, w, H } = b, { lx, ly } = leanAt(x + w / 2, b.y + b.h);
+  ctx.save(); ctx.translate(lx * H, H * ly); draw(ctx, b.y - H); ctx.restore();
+}

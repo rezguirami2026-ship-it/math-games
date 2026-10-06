@@ -4,6 +4,7 @@ import { bubble } from '../world/entities.js';
 import { sfx } from '../core/sound.js';
 import { R, shuffle, near, changed, dec, finish, panel, sheetOpen, sheetClose, hiDPI, msgBox, setMsg, btn, numPad, counters } from './bench.js';
 import { ST8 } from '../world/caravan.js';
+import { shrub } from '../world/art.js';
 
 const at = (st, key, label) => ({
   target: () => st,
@@ -178,7 +179,7 @@ export const irregularShapes = Object.assign({
       c.strokeStyle = '#E2475C'; c.setLineDash([4, 3]); c.beginPath(); c.moveTo(ox + (x0 + 2) * u, oy + y0 * u); c.lineTo(ox + (x0 + 2) * u, oy + (y0 + r.h) * u); c.stroke(); c.setLineDash([]);
     }
   },
-  draw(d, t, active, done) { return done ? [{ y: 5150, draw: c => { c.fillStyle = '#4CAF50'; for (let i = 0; i < 18; i++) { const a = i / 18 * Math.PI * 2; c.beginPath(); c.arc(ST8.oasis.x + Math.cos(a) * 150, 5100 + Math.sin(a) * 74, 6, 0, 7); c.fill(); } } }] : []; }
-}, at(ST8.oasis, 'oasis', '🌱 مخطط الواحة'));
+  draw(d, t, active, done) { if (!done) return []; const s = ST8.oasis; return [-2.6, -2.1, -1.6, -1.05, -.5, .05, 3.2].map((a, i) => { const x = s.x + Math.cos(a) * 176, y = 5100 + Math.sin(a) * 86; return { y, x, draw: c => shrub(c, x, y, 9, i % 2 ? '#E8A33D' : '#D9478C') }; }).concat([{ y: s.y + 30, draw: c => bubble(c, s.x, s.y - 160, '✓', '#1FA05A') }]); }   // شجيرات مزهرة حول الواحة بعد تخطيطها
+}, (() => { const s = at(ST8.oasis, 'oasis', '🌱 مخطط الواحة'); delete s.draw; return s; })());
 
 export const T2U4 = { capacityMass, distance, timeZones2, leapYears, rectangles, irregularShapes };

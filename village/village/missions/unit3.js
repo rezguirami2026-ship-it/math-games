@@ -3,6 +3,7 @@ import { game } from '../core/state.js';
 import { bus } from '../core/events.js';
 import { ar, wait, rr, clamp } from '../core/util.js';
 import { say, puff, bubble } from '../world/entities.js';
+import { PAL, INK, signboard } from '../world/art.js';
 import { earn } from '../rewards/goodDeeds.js';
 import { sfx } from '../core/sound.js';
 import { complete } from './quests.js';
@@ -242,11 +243,22 @@ export const triangleAngles = {
   },
   draw(d, t, active, done) {
     const n = done ? 3 : (d.r || 0);
-    return [{ y: BOATHOUSE.y + BOATHOUSE.h, draw: c => {
-      const B = BOATHOUSE; c.fillStyle = '#8B5A2B'; c.fillRect(B.x + 6, B.y + 40, 8, B.h - 40); c.fillRect(B.x + B.w - 14, B.y + 40, 8, B.h - 40);
-      c.fillStyle = '#5E6B78'; c.fillRect(B.x, B.y + 34, B.w, 8);
-      for (let i = 0; i < 3; i++) { const x = B.x + 30 + i * 70; c.strokeStyle = i < n ? '#8B5A2B' : 'rgba(139,90,43,.25)'; c.lineWidth = 5; c.setLineDash(i < n ? [] : [6, 6]); c.beginPath(); c.moveTo(x - 30, B.y + 36); c.lineTo(x + 30, B.y + 36); c.lineTo(x, B.y); c.closePath(); c.stroke(); c.setLineDash([]); }
-      c.fillStyle = '#FFFDF6'; rr(c, B.x + B.w / 2 - 50, B.y + 60, 100, 22, 6); c.fill(); c.fillStyle = '#5B4636'; c.font = '900 12px Cairo, sans-serif'; c.textAlign = 'center'; c.fillText('مرسى القوارب', B.x + B.w / 2, B.y + 75);
+    const B = BOATHOUSE, yb = B.y + B.h, H = 78, cx = B.x + B.w / 2;
+    return [{ y: yb, x: cx, draw: c => {   // مرسى مفتوح: قوائم وعارضة، جمالونات تُضاف جولةً بعد جولة، وسقف معدني عند الإكمال
+      c.fillStyle = 'rgba(60,35,10,.2)'; c.fillRect(B.x + 10, yb - 2, B.w + 24, 8);
+      c.fillStyle = '#7A4A2A'; c.beginPath(); c.moveTo(cx - 54, yb - 30); c.quadraticCurveTo(cx, yb - 4, cx + 54, yb - 30); c.lineTo(cx + 46, yb - 34); c.lineTo(cx - 46, yb - 34); c.closePath(); c.fill(); c.strokeStyle = INK; c.lineWidth = 1; c.stroke();   // قارب تحت المرسى
+      c.fillStyle = '#E3B04B'; c.fillRect(cx - 46, yb - 37, 92, 3);
+      [B.x + 4, B.x + B.w - 12].forEach(x => { c.fillStyle = PAL.wood; c.fillRect(x, yb - H, 8, H); c.fillStyle = 'rgba(255,255,255,.15)'; c.fillRect(x, yb - H, 2.5, H); c.strokeStyle = INK; c.lineWidth = .9; c.strokeRect(x, yb - H, 8, H); });
+      c.fillStyle = '#6B4520'; c.fillRect(B.x - 2, yb - H - 8, B.w + 4, 10); c.strokeStyle = INK; c.strokeRect(B.x - 2, yb - H - 8, B.w + 4, 10);
+      for (let i = 0; i < 3; i++) { const x = B.x + 34 + i * 66, by = yb - H - 8; c.setLineDash(i < n ? [] : [5, 5]); c.lineCap = 'round';
+        c.strokeStyle = i < n ? '#8B5A2B' : 'rgba(139,90,43,.3)'; c.lineWidth = 5; c.beginPath(); c.moveTo(x - 32, by); c.lineTo(x, by - 34); c.lineTo(x + 32, by); c.moveTo(x, by); c.lineTo(x, by - 34); c.stroke();
+        if (i < n) { c.strokeStyle = INK; c.lineWidth = .8; c.beginPath(); c.moveTo(x - 32, by); c.lineTo(x, by - 34); c.lineTo(x + 32, by); c.stroke(); } c.setLineDash([]); }
+      if (n >= 3) {   // السقف: ألواح معدنية مموجة على الجمالونات
+        c.fillStyle = '#A9B4BF'; c.beginPath(); c.moveTo(B.x - 6, yb - H - 6); c.lineTo(B.x + 2, yb - H - 46); c.lineTo(B.x + B.w - 2, yb - H - 46); c.lineTo(B.x + B.w + 6, yb - H - 6); c.closePath(); c.fill();
+        c.strokeStyle = 'rgba(70,80,90,.35)'; c.lineWidth = 1; for (let x = B.x + 2; x < B.x + B.w; x += 8) { c.beginPath(); c.moveTo(x - 4, yb - H - 6); c.lineTo(x, yb - H - 46); c.stroke(); }
+        c.strokeStyle = INK; c.beginPath(); c.moveTo(B.x - 6, yb - H - 6); c.lineTo(B.x + 2, yb - H - 46); c.lineTo(B.x + B.w - 2, yb - H - 46); c.lineTo(B.x + B.w + 6, yb - H - 6); c.closePath(); c.stroke();
+      }
+      signboard(c, cx, yb - H - 3, 'مرسى القوارب');
     } }];
   }
 };
@@ -379,7 +391,14 @@ export const coordinates = {
       if (d.r >= 3) await finish(W, 'coordinates', [{ who: 'majid', text: 'الكنوز الثلاثة! قرأتَ الخريطة كبحّار خبير.' }], 60); }
     else { await wait(300); say(p.x, p.y - 50, `حفرتَ عند ${pt(gx, gy)}، والرمل فارغ`, '#B7791F', 2400); }
   },
-  draw(d) { return (d.dug || []).map(([gx, gy]) => { const p = BP(gx, gy); return { y: p.y, draw: c => { c.fillStyle = '#8B5A2B'; rr(c, p.x - 12, p.y - 14, 24, 16, 3); c.fill(); c.fillStyle = '#FFC23D'; c.fillRect(p.x - 12, p.y - 9, 24, 3); c.fillRect(p.x - 2, p.y - 14, 4, 16); } }; }); }
+  draw(d) { return (d.dug || []).map(([gx, gy]) => { const p = BP(gx, gy); return { y: p.y, x: p.x, draw: c => {   // صندوق كنز مفتوح: حفرة رمل، جسم خشبي بأطواق ذهبية، وغطاء مرفوع يلمع ما بداخله
+    c.fillStyle = 'rgba(120,85,40,.35)'; c.beginPath(); c.ellipse(p.x, p.y, 18, 6, 0, 0, 7); c.fill();
+    c.fillStyle = '#6E4524'; c.beginPath(); c.moveTo(p.x - 13, p.y - 16); c.lineTo(p.x - 10, p.y - 30); c.lineTo(p.x + 10, p.y - 30); c.lineTo(p.x + 13, p.y - 16); c.closePath(); c.fill(); c.strokeStyle = INK; c.lineWidth = .8; c.stroke();
+    c.fillStyle = '#FFD45E'; c.beginPath(); c.ellipse(p.x, p.y - 16, 11, 3.5, 0, 0, 7); c.fill(); c.fillStyle = '#FFF2B0'; [[-5, -17], [3, -18], [6, -16]].forEach(([dx, dy]) => { c.beginPath(); c.arc(p.x + dx, p.y + dy, 1.6, 0, 7); c.fill(); });
+    const g = c.createLinearGradient(p.x - 13, 0, p.x + 13, 0); g.addColorStop(0, '#A06A36'); g.addColorStop(1, '#7A4A22'); c.fillStyle = g; c.fillRect(p.x - 13, p.y - 16, 26, 15);
+    c.fillStyle = '#E3B04B'; c.fillRect(p.x - 13, p.y - 16, 26, 2.5); c.fillRect(p.x - 9, p.y - 16, 2.5, 15); c.fillRect(p.x + 6.5, p.y - 16, 2.5, 15); c.fillRect(p.x - 2, p.y - 11, 4, 5);
+    c.strokeStyle = INK; c.lineWidth = .8; c.strokeRect(p.x - 13, p.y - 16, 26, 15);
+  } }; }); }
 };
 
 export const UNIT3 = { shapesIdentify, shapes3D, nets, triangleAngles, translation, reflection, rotation, coordinates };

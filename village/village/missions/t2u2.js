@@ -134,7 +134,13 @@ export const statsAverage = Object.assign({
       btn('benchOut', () => { sheetClose(); changed(); });
     }
   },
-  draw(d, t, active, done) { return done ? PALMS6.map(p => ({ y: p.y + 6, draw: c => { c.fillStyle = '#C98A3A'; rr(c, p.x - 10, p.y + 2, 20, 12, 3); c.fill(); c.fillStyle = '#7A3E12'; for (let k = 0; k < 4; k++) { c.beginPath(); c.arc(p.x - 6 + k * 4, p.y + 1, 2.4, 0, 7); c.fill(); } } })) : []; }
+  draw(d, t, active, done) { return done ? PALMS6.map(p => ({ y: p.y + 14, x: p.x, draw: c => {   // سلة خوص ممتلئة تمراً عند كل نخلة
+    const x = p.x + 4, y = p.y + 14;
+    c.fillStyle = 'rgba(60,35,10,.22)'; c.beginPath(); c.ellipse(x + 3, y, 12, 3.5, 0, 0, 7); c.fill();
+    c.fillStyle = '#5E2E10'; c.beginPath(); c.ellipse(x, y - 13, 10, 3.5, 0, 0, 7); c.fill(); c.fillStyle = '#8A4A1C'; for (let k = 0; k < 6; k++) { c.beginPath(); c.ellipse(x - 6 + k * 2.4, y - 14 - (k % 2) * 1.5, 2, 2.6, 0, 0, 7); c.fill(); }
+    c.fillStyle = '#C98A3A'; c.beginPath(); c.moveTo(x - 10, y - 13); c.lineTo(x - 8, y); c.lineTo(x + 8, y); c.lineTo(x + 10, y - 13); c.closePath(); c.fill();
+    c.strokeStyle = 'rgba(110,60,20,.55)'; c.lineWidth = .8; [-9, -5, -1].forEach(o => { c.beginPath(); c.moveTo(x - 10, y + o); c.lineTo(x + 10, y + o); c.stroke(); }); c.strokeStyle = '#2B1E14'; c.lineWidth = .7; c.strokeRect(x - 10, y - 13, 20, 13);
+  } })) : []; }
 }, at(ST6.harvest, 'harvest', '🧺 سلال التمر'));
 
 /* ═══ ٤٥. استخدام الإحصاء — «استبيان القرية» ═══ */

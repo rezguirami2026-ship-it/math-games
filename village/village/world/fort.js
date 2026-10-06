@@ -31,7 +31,7 @@ export function fortColliders(open) {
   if (!open) c.push({ x: GATE3.x0, y: WALL_Y - 4, w: GATE3.x1 - GATE3.x0, h: 20 });
   return c;
 }
-const H_B = 86, CAST = '#D2B47E', K_H = 96;
+export const H_B = 86; const CAST = '#D2B47E', K_H = 96;
 const PALMS_F = [{ x: 200, y: 1800 }, { x: 1680, y: 2120 }, { x: 2560, y: 2300 }, { x: 160, y: 2480 }, { x: 1250, y: 2500 }];
 
 export function drawFortGround(ctx, t) {
