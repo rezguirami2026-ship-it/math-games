@@ -51,7 +51,7 @@ const R = rng(7), PATCHES = Array.from({ length: 70 }, () => ({ x: R() * 3000, y
 export function drawGround(ctx, view) {   // الأرض ثابتة: تُرسم في قطع ٥١٢×٥١٢ محفوظة، وتُنسخ في كل إطار
   const CH = 512;
   for (let cy = Math.floor(view.y / CH); cy * CH < view.y + view.h; cy++) for (let cx = Math.floor(view.x / CH); cx * CH < view.x + view.w; cx++)
-    if (cx >= 0 && cy >= 0) sprite(ctx, `ground|${cx}|${cy}`, cx * CH, cy * CH, CH, CH, c => paintGround(c, { x: cx * CH, y: cy * CH, w: CH, h: CH }), 2);
+    if (cx >= 0 && cy >= 0) sprite(ctx, `ground|${cx}|${cy}`, cx * CH - 1, cy * CH - 1, CH + 2, CH + 2, c => paintGround(c, { x: cx * CH, y: cy * CH, w: CH, h: CH }), 2);   // تداخل وحدة واحدة يمنع ظهور خط بين القطع
 }
 function paintGround(ctx, view) {
   const v = view, m = 40;
