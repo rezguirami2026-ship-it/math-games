@@ -44,8 +44,10 @@ async function until(cond, what, ms = 15000) {
 // يغلق الحوارات وبطاقات الفصول حتى تعود اللعبة حرة.
 // quiet: مدة الهدوء المطلوبة، لأن بعض الدروس تفتح حوار الختام بعد انتظار قصير
 async function settle(ms = 20000, quiet = 0) {
-  const t0 = Date.now(); let idle = 0;
+  const t0 = Date.now(); let idle = 0; const trail = [];   // سجل التحولات لتشخيص التعليق
   while (Date.now() - t0 < ms) {
+    const tx = await G(() => { const d = document.getElementById('dialog'); return `${d.className}|${window.__game.game.busy ? 'B' : '-'}|${(d.textContent || '').trim().slice(0, 40)}`; });
+    if (trail[trail.length - 1]?.s !== tx) trail.push({ t: Date.now() - t0, s: tx });
     const st = await G(() => ({ dialog: document.getElementById('dialog').classList.contains('on'), chapter: document.getElementById('screen').classList.contains('chapter'), busy: window.__game.game.busy, panel: document.getElementById('panel').classList.contains('on') }));
     if (st.dialog) await G(() => document.getElementById('dialog').click());
     else if (st.chapter) await G(() => { const s = document.getElementById('screen'); if (s.onclick) s.onclick(); });
@@ -54,7 +56,7 @@ async function settle(ms = 20000, quiet = 0) {
     await sleep(120);
   }
   const why = await G(() => ({ busy: window.__game.game.busy, dialog: document.getElementById('dialog').className, panel: document.getElementById('panel').className, screen: document.getElementById('screen').className, stones: !!window.__game.W.stones }));
-  throw new Error('اللعبة بقيت مشغولة ' + JSON.stringify(why));
+  throw new Error('اللعبة بقيت مشغولة ' + JSON.stringify(why) + ' — آخر التحولات: ' + trail.slice(-12).map(e => `${e.t}ms ${e.s}`).join(' ‖ '));
 }
 // ينقل البطل مباشرة إلى نقطة (بدل المشي) ثم ينتظر أن تُرسم الأزرار
 async function goTo(x, y) {
