@@ -26,14 +26,14 @@ export const SOUTH = [
   { x: 420, y: 1180, w: 180, h: 100, wall: '#E9D8BC', door: '#9E3B2F', sign: 'مكتب البريد', ac: 1 },
   { x: 1120, y: 1180, w: 180, h: 100, wall: '#E2D2B6', door: '#4E5A66', sign: 'ورشة راشد', tank: 1 }
 ];
-const PALMS = [{ x: 55, y: 560 }, { x: 610, y: 515 }, { x: 1470, y: 560 }, { x: 40, y: 1010 }, { x: 640, y: 1090 }, { x: 590, y: 300 }, { x: 640, y: 420 }, { x: 1470, y: 110 }, { x: 40, y: 1500 }, { x: 1460, y: 1450 }, { x: 380, y: 1600 }, { x: 1180, y: 1620 }];
-const SIDRS = [{ x: 60, y: 330 }, { x: 1462, y: 440 }, { x: 800, y: 1010 }, { x: 90, y: 1150 }];   // أشجار سدر بتيجان مستديرة
-const MINARET = { x: 1060 + 190 - 34, y: 110 + 140 - 34, s: 30, H: 116 };   // المئذنة على ركن السطح الأمامي الأيمن (المسجد عند حافة العالم الشمالية)
-const FARM_PALMS = [{ x: 905, y: 1080 }, { x: 1440, y: 1080 }, { x: 1440, y: 800 }, { x: 1170, y: 1085 }];
-const H_HOUSE = 96, H_WARE = 104, H_SOUTH = 90;
+export const PALMS = [{ x: 55, y: 560 }, { x: 610, y: 515 }, { x: 1470, y: 560 }, { x: 40, y: 1010 }, { x: 640, y: 1090 }, { x: 590, y: 300 }, { x: 640, y: 420 }, { x: 1470, y: 110 }, { x: 40, y: 1500 }, { x: 1460, y: 1450 }, { x: 380, y: 1600 }, { x: 1180, y: 1620 }];
+export const SIDRS = [{ x: 60, y: 330 }, { x: 1462, y: 440 }, { x: 800, y: 1010 }, { x: 90, y: 1150 }];   // أشجار سدر بتيجان مستديرة
+export const MINARET = { x: 1060 + 190 - 34, y: 110 + 140 - 34, s: 30, H: 116 };   // المئذنة على ركن السطح الأمامي الأيمن (المسجد عند حافة العالم الشمالية)
+export const FARM_PALMS = [{ x: 905, y: 1080 }, { x: 1440, y: 1080 }, { x: 1440, y: 800 }, { x: 1170, y: 1085 }];
+export const H_HOUSE = 96, H_WARE = 104, H_SOUTH = 90;
 // تفاصيل الشارع: إنارة على الرصيف الشمالي، شجيرات جهنمية أمام البيوت، مقعد في ساحة البئر، ولافتة إرشاد عند التقاطع
-const LAMPS = [{ x: 40, y: 594 }, { x: 612, y: 594 }, { x: 870, y: 594 }, { x: 1220, y: 594 }, { x: 790, y: 300 }];
-const SHRUBS = [{ x: 838, y: 282, f: '#D9478C' }, { x: 992, y: 282, f: null }, { x: 1068, y: 262, f: '#D9478C' }, { x: 1308, y: 302, f: '#E8A33D' }, { x: 868, y: 452, f: null }, { x: 1248, y: 472, f: '#D9478C' }, { x: 118, y: 222, f: '#D9478C' }, { x: 560, y: 242, f: null }];
+export const LAMPS = [{ x: 40, y: 594 }, { x: 612, y: 594 }, { x: 870, y: 594 }, { x: 1220, y: 594 }, { x: 790, y: 300 }];
+export const SHRUBS = [{ x: 838, y: 282, f: '#D9478C' }, { x: 992, y: 282, f: null }, { x: 1068, y: 262, f: '#D9478C' }, { x: 1308, y: 302, f: '#E8A33D' }, { x: 868, y: 452, f: null }, { x: 1248, y: 472, f: '#D9478C' }, { x: 118, y: 222, f: '#D9478C' }, { x: 560, y: 242, f: null }];
 
 /* المصادمات: مستطيلات لا يعبرها البطل (أرضية المباني كما هي، الرسم وحده تغيّر) */
 export function staticColliders() {
@@ -190,8 +190,13 @@ export function drawPalm(ctx, x, y, sc, dry, t) { if (sc >= 1) palmCached(ctx, x
 
 /* ── عناصر لها عمق (تُرتّب مع الشخصيات حسب y). المبنى الذي يقف البطل خلفه يصبح شفافاً ── */
 const behind = (pl, b, H) => pl && pl.x > b.x - 8 && pl.x < b.x + b.w + 8 && pl.y < b.y + b.h - 4 && pl.y > b.y - H - 10;
-export function staticDrawables(state, t, pl) {
+export function staticDrawables(state, t, pl, opts = {}) {
   const out = [];
+  if (opts.three) {   // العرض ثلاثي الأبعاد يرسم المباني والنخيل والإنارة مجسّمة؛ يبقى هنا ما لم يُحوَّل بعد
+    out.push({ y: FI.y + 226, x: FI.x + 480, draw: c => farmShed(c, t, !!state.world.delivered) });
+    out.push({ y: 586, x: 784, draw: c => wayfinding(c, 784, 586) });
+    return out;
+  }
   // المباني مجسّمة حسب موضعها من الكاميرا (أوجهها من ذاكرة الصور)، وشفافة إن وقف البطل خلفها
   const solid = (b, H, draw) => c => { if (behind(pl, b, H)) c.globalAlpha = .42; draw(c); c.globalAlpha = 1; };
   HOUSES.forEach((b, i) => { const H = b.H || H_HOUSE, B = Object.assign({}, b, { H }); out.push({ y: b.y + b.h, draw: solid(b, H, c => { building3d(c, 'house' + i, B); if (b.mosque) mosqueTop(c, b); }) }); });

@@ -62,13 +62,17 @@ const TILES = {
 };
 
 /* ── الظلال الملقاة ── */
+/* في العرض ثلاثي الأبعاد: الظلال الحقيقية من الشمس، والميل من الكاميرا، فلا ظلال مرسومة ولا ميل ثنائي الأبعاد */
+export const FLAGS = { three: false };
 export function boxShadow(ctx, x, y, w, d, H) {   // ظل صندوق أرضيته (x,y,w,d) وارتفاعه H
+  if (FLAGS.three) return;
   const dx = SUN.dx * H, dy = SUN.dy * H;
   const poly = k => { ctx.beginPath(); ctx.moveTo(x + w, y + 2); ctx.lineTo(x + w + dx * k, y + dy * k); ctx.lineTo(x + w + dx * k, y + d + dy * k); ctx.lineTo(x + dx * k, y + d + dy * k); ctx.lineTo(x, y + d); ctx.closePath(); ctx.fill(); };
   ctx.fillStyle = SUN.soft; poly(1.12); ctx.fillStyle = SUN.color; poly(1);
   ctx.fillStyle = 'rgba(60,35,15,.22)'; ctx.fillRect(x - 2, y + d - 1, w + 4, 4);   // ظل التلامس (Ambient Occlusion) عند القاعدة
 }
 export function blobShadow(ctx, x, y, r, H) {   // ظل جسم مستدير (شجرة، عمود)
+  if (FLAGS.three) return;
   ctx.fillStyle = SUN.soft; ctx.beginPath(); ctx.ellipse(x + SUN.dx * H * .55, y + SUN.dy * H * .4, r * 1.25, r * .5, .35, 0, 7); ctx.fill();
   ctx.fillStyle = SUN.color; ctx.beginPath(); ctx.ellipse(x + SUN.dx * H * .45, y + SUN.dy * H * .32, r, r * .38, .35, 0, 7); ctx.fill();
 }
@@ -110,7 +114,7 @@ export function banner(ctx, a, b, sag, text) {   // لافتة قماشية مع
    CAM يُحدَّث في كل إطار. lean لكل وحدة ارتفاع: lx إزاحة أفقية، ly نسبة قِصَر الارتفاع (جنوب الكاميرا أقصر) */
 export const CAM = { x: 0, y: 0 };
 const PK = .00065, PKY = .0005;
-export const leanAt = (x, y) => ({ lx: (x - CAM.x) * PK, ly: (y - CAM.y) * PKY });
+export const leanAt = (x, y) => FLAGS.three ? { lx: 0, ly: 0 } : ({ lx: (x - CAM.x) * PK, ly: (y - CAM.y) * PKY });
 /* يرسم جسماً قائماً (شخصية، نخلة، عمود، شاحنة) مائلاً حول قاعدته حسب موضعه من الكاميرا.
    k يخفّف الميل: الشخصيات بنصفه لأن العين حساسة لوقفة الإنسان */
 export function upright(ctx, bx, by, draw, k = 1) {

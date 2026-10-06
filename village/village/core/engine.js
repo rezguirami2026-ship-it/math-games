@@ -26,8 +26,9 @@ export function createEngine(canvas, world) {
   }
   window.addEventListener('resize', resize); resize();
   const z = () => E.zoom * (1 + E.punch * .06);
-  E.toWorld = (sx, sy) => ({ x: (sx - E.w / 2) / z() + E.cam.x, y: (sy - E.h / 2) / z() + E.cam.y });
-  E.toScreen = (x, y) => { const r = canvas.getBoundingClientRect(); return { x: r.left + (x - E.cam.x) * z() + E.w / 2, y: r.top + (y - E.cam.y) * z() + E.h / 2 }; };   // لفقاعات الكلام فوق الرؤوس
+  // E.l3: طبقة العرض ثلاثية الأبعاد إن وُجدت (renderer3d)؛ عندها يمر النقر والإسقاط عبر كاميرتها
+  E.toWorld = (sx, sy) => E.l3 ? E.l3.pick(sx, sy) : ({ x: (sx - E.w / 2) / z() + E.cam.x, y: (sy - E.h / 2) / z() + E.cam.y });
+  E.toScreen = (x, y, h) => { const r = canvas.getBoundingClientRect(); if (E.l3) { const p = E.l3.project(x, y, h || 0); return { x: r.left + p.x, y: r.top + p.y }; } return { x: r.left + (x - E.cam.x) * z() + E.w / 2, y: r.top + (y - (h || 0) - E.cam.y) * z() + E.h / 2 }; };   // لفقاعات الكلام فوق الرؤوس
   canvas.addEventListener('pointerdown', e => { if (!E.onTap) return; const r = canvas.getBoundingClientRect(); E.onTap(E.toWorld(e.clientX - r.left, e.clientY - r.top)); });
   const KEYS = { ArrowLeft: 'left', a: 'left', ArrowRight: 'right', d: 'right', ArrowUp: 'up', w: 'up', ArrowDown: 'down', s: 'down' };
   window.addEventListener('keydown', e => { const k = KEYS[e.key]; if (k && !(e.target && e.target.tagName === 'INPUT')) { E.keys[k] = true; e.preventDefault(); } });
@@ -54,6 +55,12 @@ export function createEngine(canvas, world) {
       E.punch = Math.max(0, E.punch - dt * 2.4); E.quake = Math.max(0, E.quake - dt * 3);
       const Z = z(), hw = E.w / 2 / Z, hh = E.h / 2 / Z;
       E.cam.x = clamp(E.cam.x, hw, Math.max(hw, world.w - hw)); E.cam.y = clamp(E.cam.y, hh, Math.max(hh, world.h - hh));
+      if (E.l3) {   // ثلاثي الأبعاد: المشهد في canvas خلفي، وهذا الـcanvas شفاف يرسم فوقه الشخصيات وعناصر الدروس
+        let v = null; try { v = E.l3.frame(E, E.t, E.state()); } catch (err) { if (!E._err3) { E._err3 = 1; console.error('render3d', err); } }
+        ctx.setTransform(1, 0, 0, 1, 0, 0); ctx.clearRect(0, 0, canvas.width, canvas.height); ctx.setTransform(E.dpr, 0, 0, E.dpr, 0, 0);
+        try { E.render(ctx, v || E.l3.view, E.t); } catch (err) { if (!E._errR) { E._errR = 1; console.error('render', err); } }
+        requestAnimationFrame(frame); return;
+      }
       const qx = E.quake ? (Math.random() - .5) * 6 * E.quake : 0, qy = E.quake ? (Math.random() - .5) * 6 * E.quake : 0;
       ctx.setTransform(E.dpr, 0, 0, E.dpr, 0, 0); ctx.fillStyle = '#E6CF9E'; ctx.fillRect(0, 0, E.w, E.h);
       ctx.setTransform(E.dpr * Z, 0, 0, E.dpr * Z, E.dpr * (E.w / 2 - E.cam.x * Z + qx), E.dpr * (E.h / 2 - E.cam.y * Z + qy));

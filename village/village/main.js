@@ -26,7 +26,7 @@ import { T2U3 } from './missions/t2u3.js';
 import { T2U4 } from './missions/t2u4.js';
 import { T2U5 } from './missions/t2u5.js';
 import { workshopColliders, drawWorkshopGround, workshopDrawables, STAGE } from './world/workshop.js';
-import { signboard, upright, CAM, SEASON } from './world/art.js';
+import { signboard, upright, CAM, SEASON, FLAGS } from './world/art.js';
 import { ramadanOn } from './core/season.js';
 import { caravanColliders, drawCaravanGround, caravanDrawables } from './world/caravan.js';
 import { coopColliders, drawCoopGround, coopDrawables } from './world/coop.js';
@@ -156,7 +156,8 @@ async function start(state) {
   W = buildWorld(state); resetGates();
   hud.init({ drawMini, questLog, anchor: speakerAnchor });
   hud.show(true); hud.good(); hud.objective(objective());
-  eng.snap(W.player); eng.follow = W.player; eng.onTap = onTap;
+  eng.snap(W.player); eng.follow = W.player; eng.onTap = onTap; eng.state = () => game.state;
+  if (want3d()) await init3D();
   eng.run(update, render);
   saveNow(state);
   if (!state.story.introDone) {
@@ -165,6 +166,52 @@ async function start(state) {
     state.story.introDone = true; saveNow(state);
   }
 }
+/* ── العرض ثلاثي الأبعاد (renderer3d): يُحمَّل فقط عند طلبه، ويرجع إلى الرسم الحالي إن لم يدعم الجهاز WebGL أو فشل التحميل ── */
+function want3d() { try { const q = new URLSearchParams(location.search); if (q.has('2d')) return false; return q.has('3d') || localStorage.getItem('ramimath_3d') === '1'; } catch (e) { return false; } }
+function loadingScreen() {
+  const el = document.createElement('div'); el.className = 'load3d';
+  el.innerHTML = '<div class="lbox"><b>🏡 قرية الخير</b><small>تجهيز العالم ثلاثي الأبعاد…</small><div class="lbar"><i></i></div></div>';
+  document.body.appendChild(el); const bar = el.querySelector('i');
+  return { set: k => { bar.style.width = Math.round(k * 100) + '%'; }, done: () => { el.classList.add('out'); setTimeout(() => el.remove(), 500); } };
+}
+async function init3D() {
+  let load = null;
+  try {
+    const R = await import('./renderer3d/index.js');
+    if (!R.webglOK()) return;
+    load = loadingScreen(); FLAGS.three = true;
+    let q = 'high'; try { q = localStorage.getItem('ramimath_q') || 'high'; } catch (e) {}
+    eng.l3 = await R.create3D({ quality: q, world: WORLD, paintGround: paintStaticGround, onProgress: k => load.set(k) });
+    eng.l3.ground = paintDynamicGround;
+  } catch (e) { console.error('[قرية الخير] تعذّر العرض ثلاثي الأبعاد، نكمل بالرسم الحالي', e); FLAGS.three = false; eng.l3 = null; const c = document.getElementById('game3d'); if (c) c.remove(); }
+  if (load) load.done();
+}
+/* الأرض الثابتة لقطع الأرض في 3D: نفس رسم الأرض ثنائي الأبعاد (الطرق والساحات والحقول) */
+function paintStaticGround(ctx, v) {
+  drawGround(ctx, v);
+  const near = (x0, y0, x1, y1) => v.x < x1 + 60 && v.x + v.w > x0 - 60 && v.y < y1 + 60 && v.y + v.h > y0 - 60;
+  const t = 0;
+  if (near(1500, 0, 2930, 1750)) drawMarketGround(ctx);
+  if (near(2290, 0, 3400, 6600)) drawHarborGround(ctx, t);
+  if (near(0, 1600, 2930, 2620)) drawFortGround(ctx, t);
+  if (near(0, 2580, 2930, 3520)) drawFestivalGround(ctx, t);
+  if (near(0, 3480, 2930, 4520)) drawCoopGround(ctx);
+  if (near(0, 4480, 2930, 5520)) drawCaravanGround(ctx, t);
+  if (near(0, 5480, 2930, 6600)) drawWorkshopGround(ctx);
+}
+/* الأرض المتغيرة: كل ما كان يُرسم على الأرض فوق الطبقة الثابتة (المزرعة، البركة، رسومات الدروس، علامة النقر) */
+function paintGroundLayer(ctx, t) {
+  const s = game.state, now = Date.now();
+  drawFarm(ctx, s.world.delivered ? clamp((now - s.world.delivered) / 2600, 0, 1) : 0, t);
+  TREE_SPOTS.forEach((sp, i) => drawSpot(ctx, sp, s.world.delivered && !s.world.trees[i]));
+  drawGarden(ctx, quests.isDone('decimalAdd'));
+  const mods = ALLMODS().filter(md => quests.isStarted(md.id) || quests.isDone(md.id));
+  if (!mods.includes(UNIT1.sequences)) UNIT1.sequences.ground(ctx, {}, false, false, t);   // البركة والبستان جزء من العالم دائماً
+  if (!mods.includes(UNIT1.factorsMultiples)) UNIT1.factorsMultiples.ground(ctx, {}, false, false, t);
+  mods.forEach(md => { const d = quests.data(md.id), done = quests.isDone(md.id); try { if (md.ground) md.ground(ctx, d, !done, done, t); } catch (e) { report('رسم الأرض', md.id, e); } });
+  if (W.tapMark) { const k = W.tapMark.t / .6; ctx.strokeStyle = `rgba(255,255,255,${1 - k})`; ctx.lineWidth = 3; ctx.beginPath(); ctx.ellipse(W.tapMark.x, W.tapMark.y, 8 + k * 16, 4 + k * 7, 0, 0, 7); ctx.stroke(); }
+}
+function paintDynamicGround(ctx) { paintGroundLayer(ctx, eng.t); }
 function buildWorld(st) {
   const w = { player: createPlayer(st), trucks: makeTrucks(st), npcs: makeNpcs(), signalGreen: !!st.world.delivered, tapMark: null, savedAt: 0, stones: false };
   w.statics = staticColliders().concat(
@@ -185,7 +232,7 @@ function speakerAnchor(who, person) {
   if (who === 'narrator' || !W) return null;
   const p = who === 'hero' ? Object.assign({}, hero(), { x: W.player.x, y: W.player.y }) : person;
   if (!p || p.x === undefined) return null;
-  const s = eng.toScreen(p.x, p.y - heightOf(p) - 6);
+  const s = eng.toScreen(p.x, p.y, heightOf(p) + 6);
   return s.x < 0 || s.x > innerWidth || s.y < 40 || s.y > innerHeight ? null : s;
 }
 function people() { const P = { narrator: { name: 'الراوي' }, pax: W.paxInfo || { name: 'مسافر', kind: 'man' } }; W.npcs.forEach(n => { P[n.id] = n; }); P.hero = hero(); return P; }
@@ -352,6 +399,7 @@ function update(dt) {
 
 /* ── الرسم ── */
 function render(ctx, view, t) {
+  if (eng.l3) return render3d(ctx, view, t);
   CAM.x = view.x + view.w / 2; CAM.y = view.y + view.h / 2;   // منظور الكاميرا: ما ارتفع يبتعد عن مركز الشاشة
   SEASON.ramadan = ramadanOn(); eng.mood = SEASON.ramadan ? 'dusk' : 'day';   // أجواء رمضان: غروب دافئ وفوانيس
   const s = game.state, m = s.missions.convoy, now = Date.now(), c = cur();
@@ -365,15 +413,43 @@ function render(ctx, view, t) {
   if (near(0, 3480, 2930, 4520)) drawCoopGround(ctx);
   if (near(0, 4480, 2930, 5520)) drawCaravanGround(ctx, t);
   if (near(0, 5480, 2930, 6600)) drawWorkshopGround(ctx);
-  drawFarm(ctx, s.world.delivered ? clamp((now - s.world.delivered) / 2600, 0, 1) : 0, t);
-  TREE_SPOTS.forEach((sp, i) => drawSpot(ctx, sp, s.world.delivered && !s.world.trees[i]));
-  drawGarden(ctx, quests.isDone('decimalAdd'));
+  const mw = W.tapMark; W.tapMark = null; paintGroundLayer(ctx, t); W.tapMark = mw;   // علامة النقر تُرسم بعد العناصر
+  const list = worldItems(view, t, false);
+  ordered(ctx, list);
+  heroExtras(ctx);
+  if (W.tapMark) { const k = W.tapMark.t / .6; ctx.strokeStyle = `rgba(255,255,255,${1 - k})`; ctx.lineWidth = 3; ctx.beginPath(); ctx.ellipse(W.tapMark.x, W.tapMark.y, 8 + k * 16, 4 + k * 7, 0, 0, 7); ctx.stroke(); }
+  ramadanDecor(ctx, view, t);
+  drawFx(ctx);
+  drawGuide(ctx, view, t);
+}
+/* العرض ثلاثي الأبعاد: المشهد رُسم في canvas الخلفي؛ هنا العناصر القائمة (الشخصيات، أدوات الدروس، الفقاعات) فوقه */
+function render3d(ctx, view, t) {
+  const L = eng.l3, dpr = eng.dpr, setT = m => ctx.setTransform(dpr * m[0], dpr * m[1], dpr * m[2], dpr * m[3], dpr * m[4], dpr * m[5]);
+  SEASON.ramadan = ramadanOn(); eng.mood = SEASON.ramadan ? 'dusk' : 'day';
+  const list = worldItems(view, t, true);
+  list.sort((a, b) => a.y - b.y).forEach(d => { setT(L.itemTransform(d.y)); d.draw(ctx); });
+  setT(L.itemTransform(W.player.y)); heroExtras(ctx);
+  drawFx(ctx);
+  ctx.setTransform(dpr, 0, 0, dpr, 0, 0); drawGuide3d(ctx, t);
+}
+/* السهم إلى الهدف على حافة الشاشة (بإحداثيات الشاشة في 3D) */
+function drawGuide3d(ctx, t) {
+  if (game.busy || W.stones) return;
+  const g = objectiveTarget(); if (!g) return;
+  const p = eng.l3.project(g.x, g.y, 0), m = 46, W2 = eng.w, H2 = eng.h;
+  if (p.x > m && p.x < W2 - m && p.y > m + 90 && p.y < H2 - m - 70) return;
+  const cx = W2 / 2, cy = H2 / 2, a = Math.atan2(p.y - cy, p.x - cx), rx = W2 / 2 - m, ry = H2 / 2 - m - 70, k = Math.min(rx / Math.abs(Math.cos(a) || 1e-6), ry / Math.abs(Math.sin(a) || 1e-6));
+  ctx.save(); ctx.translate(cx + Math.cos(a) * k, cy + Math.sin(a) * k); ctx.rotate(a); const pz = 1 + Math.sin(t * 6) * .08; ctx.scale(pz * 1.3, pz * 1.3);
+  ctx.fillStyle = '#FFC23D'; ctx.strokeStyle = '#fff'; ctx.lineWidth = 3;
+  ctx.beginPath(); ctx.moveTo(18, 0); ctx.lineTo(-10, -13); ctx.lineTo(-4, 0); ctx.lineTo(-10, 13); ctx.closePath(); ctx.fill(); ctx.stroke();
+  ctx.restore();
+}
+/* كل العناصر القائمة في العالم (مرتبة لاحقاً حسب y). three: المباني المحوّلة تُرسم مجسّمة فتُستثنى هنا */
+function worldItems(view, t, three) {
+  const s = game.state, m = s.missions.convoy, now = Date.now(), c = cur();
   const mods = ALLMODS().filter(md => quests.isStarted(md.id) || quests.isDone(md.id));
-  if (!mods.includes(UNIT1.sequences)) UNIT1.sequences.ground(ctx, {}, false, false, t);   // البركة والبستان جزء من العالم دائماً
-  if (!mods.includes(UNIT1.factorsMultiples)) UNIT1.factorsMultiples.ground(ctx, {}, false, false, t);
-  mods.forEach(md => { const d = quests.data(md.id), done = quests.isDone(md.id); try { if (md.ground) md.ground(ctx, d, !done, done, t); } catch (e) { report('رسم الأرض', md.id, e); } });
   const g = gateState();
-  const list = staticDrawables(s, t, W.player).concat(...REGIONS.map((r, i) => r.draw(gateOpenness(i, g[i], view), t))).filter(d => d.y > view.y - 60 && d.y < view.y + view.h + 200);
+  const list = staticDrawables(s, t, W.player, { three }).concat(...REGIONS.map((r, i) => r.draw(gateOpenness(i, g[i], view), t))).filter(d => d.y > view.y - 60 && d.y < view.y + view.h + 200);
   mods.forEach(md => { const d = quests.data(md.id), done = quests.isDone(md.id); try { if (md.draw) list.push(...md.draw(d, t, !done, done)); } catch (e) { report('الرسم', md.id, e); } });
   TREE_SPOTS.forEach((sp, i) => { const pt = s.world.trees[i]; if (pt) { const k = clamp((now - pt) / 2200, .05, 1); list.push({ y: sp.y, x: sp.x, draw: cc => drawPalm(cc, sp.x, sp.y, .2 + .8 * easeOut(k), false, t) }); } });
   W.trucks.forEach(tr => list.push({ y: tr.y + 4, x: tr.x, draw: cc => drawTruck(cc, tr, m.loads[tr.i], convoyActive()) }));
@@ -384,20 +460,20 @@ function render(ctx, view, t) {
   if (tanksOn) tanks.TANKS.forEach((tk, i) => list.push({ y: tk.y, x: tk.x, draw: cc => tanks.drawTank(cc, i, T.levels[i], T.targets ? T.targets[i] : { t: 'd', s: '؟' }, T.done[i], t) }));
   tanks.TANKS.forEach((tk, i) => { if (T.done[i]) { const hs = HOUSES[tk.house]; list.push({ y: hs.y + hs.h + 9, draw: cc => tanks.drawFlowers(cc, hs) }); } });
   list.push({ y: SHOP.y - 42, x: SHOP.x, draw: cc => drawShopBack(cc) }, { y: SHOP.y, x: SHOP.x, draw: cc => drawShop(cc) });
-  list.push({ y: HERO_DOOR.y - 13, draw: cc => signboard(cc, HERO_DOOR.x + 52, HERO_DOOR.y - 66, '🚪 خزانة البطل') });   // لافتة على جدار بيت البطل
+  if (!three) list.push({ y: HERO_DOOR.y - 13, draw: cc => signboard(cc, HERO_DOOR.x + 52, HERO_DOOR.y - 66, '🚪 خزانة البطل') });   // لافتة على جدار بيت البطل (في 3D على الواجهة نفسها)
   const giverMark = n => c && c.ready && MODS[c.id] && c.giver === n.id && !quests.isStarted(c.id) ? '!' : null;
   // الشخصيات خارج الشاشة لا تُرسم (كانت كلها تُرسم في كل إطار)
   W.npcs.filter(n => npcVisible(n, s) && n.x > view.x - 60 && n.x < view.x + view.w + 60 && n.y > view.y - 20 && n.y < view.y + view.h + 110).forEach(n => list.push({ y: n.y, x: n.x, lean: .5, draw: cc => drawNpc(cc, n, giverMark(n)) }));
   const pl = W.player, mod = curMod(), hand = mod && mod.hand && c && quests.isStarted(c.id) ? mod.hand(quests.data(c.id)) : null;
   const pa = pl.anim ? pl.anim.name : pl.moving ? (pl.speed > 160 ? 'run' : 'walk') : 'idle';
   list.push({ y: pl.y, x: pl.x, lean: .5, draw: cc => drawHuman(cc, Object.assign(hero(), { x: pl.x, y: pl.y, dir: pl.dir, phase: pl.phase, moving: pl.moving, carry: hand ? Math.min(hand.n, 6) : s.carry, bend: pl.act === 'plant', anim: pa, animT: pl.anim ? pl.anim.t : 0 })) });
-  list.sort((a, b) => a.y - b.y).forEach(d => d.x !== undefined ? upright(ctx, d.x, d.y, d.draw, d.lean) : d.draw(ctx));   // القائم يميل مع منظور الكاميرا
+  return list;
+}
+const ordered = (ctx, list) => list.sort((a, b) => a.y - b.y).forEach(d => d.x !== undefined ? upright(ctx, d.x, d.y, d.draw, d.lean) : d.draw(ctx));   // القائم يميل مع منظور الكاميرا
+function heroExtras(ctx) {   // ما في يد البطل: لافتة العدد، ورسم الدرس الخاص
+  const pl = W.player, c = cur(), mod = curMod(), hand = mod && mod.hand && c && quests.isStarted(c.id) ? mod.hand(quests.data(c.id)) : null;
   if (hand && hand.label && hand.label.trim()) bubble(ctx, pl.x, pl.y - 78 - Math.min(hand.n, 6) * 8, hand.label, '#2A1B66');
   if (mod && mod.handDraw && c && quests.isStarted(c.id)) try { mod.handDraw(ctx, pl.x, pl.y - 112, quests.data(c.id)); } catch (e) { report('ما في اليد', c.id, e); }
-  if (W.tapMark) { const k = W.tapMark.t / .6; ctx.strokeStyle = `rgba(255,255,255,${1 - k})`; ctx.lineWidth = 3; ctx.beginPath(); ctx.ellipse(W.tapMark.x, W.tapMark.y, 8 + k * 16, 4 + k * 7, 0, 0, 7); ctx.stroke(); }
-  ramadanDecor(ctx, view, t);
-  drawFx(ctx);
-  drawGuide(ctx, view, t);
 }
 function drawVan(ctx, load) {
   const v = convoy.VAN;

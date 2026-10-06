@@ -208,3 +208,12 @@ button:focus-visible,input:focus-visible{outline:3px solid var(--sun);outline-of
 .region.new b{font-size:30px}
 @keyframes regionIn{0%{opacity:0;transform:translate(-50%,-10px) scale(.92)}12%{opacity:1;transform:translate(-50%,0) scale(1)}80%{opacity:1}100%{opacity:0;transform:translate(-50%,-6px)}}
 @media (max-width:420px){.region b{font-size:21px}.region.new b{font-size:24px}.region small{font-size:11px}}
+
+/* شاشة تحميل العالم ثلاثي الأبعاد */
+.load3d{position:fixed;inset:0;z-index:60;display:flex;align-items:center;justify-content:center;background:radial-gradient(circle at 50% 40%,#F6E7C6,#D9B97E);transition:opacity .5s}
+.load3d.out{opacity:0;pointer-events:none}
+.load3d .lbox{display:flex;flex-direction:column;align-items:center;gap:8px;font-family:Cairo,sans-serif}
+.load3d b{font:900 30px Cairo,sans-serif;color:#2A1B66}
+.load3d small{font:700 14px Cairo,sans-serif;color:#5B4636}
+.load3d .lbar{width:min(280px,70vw);height:12px;border-radius:8px;background:rgba(42,27,102,.15);overflow:hidden;box-shadow:inset 0 1px 2px rgba(0,0,0,.15)}
+.load3d .lbar i{display:block;height:100%;width:0;background:linear-gradient(90deg,#FFC23D,#E3A21A);border-radius:8px;transition:width .25s}
