@@ -167,7 +167,7 @@ async function start(state) {
   }
 }
 /* ── العرض ثلاثي الأبعاد (renderer3d): يُحمَّل فقط عند طلبه، ويرجع إلى الرسم الحالي إن لم يدعم الجهاز WebGL أو فشل التحميل ── */
-const V3D = 'نسخة 3D · ٤';   // تُعرض في شاشة التحميل وفي الزاوية: للتأكد أن المتصفح حمّل آخر نسخة
+const V3D = 'نسخة 3D · ٥';   // تُعرض في شاشة التحميل وفي الزاوية: للتأكد أن المتصفح حمّل آخر نسخة
 function want3d() { try { const q = new URLSearchParams(location.search); if (q.has('2d')) return false; return q.has('3d') || localStorage.getItem('ramimath_3d') === '1'; } catch (e) { return false; } }
 function loadingScreen() {
   const el = document.createElement('div'); el.className = 'load3d';

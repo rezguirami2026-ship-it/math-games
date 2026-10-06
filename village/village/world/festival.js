@@ -1,7 +1,7 @@
 // «ساحة المهرجان»: منطقة الفصل الدراسي الثاني جنوب القلعة، تُفتح بإنهاء الفصل الأول
 // الرسم بأسلوب القرية (world/art.js): بوابة مشتركة، مبانٍ مجسّمة، برج ساعة، ألواح، كشك الدوّار، وحبال زينة معلّقة
 import { rr, shade, ar } from '../core/util.js';
-import { INK, PAL, SUN, pattern, sprite, boxShadow, blobShadow, building3d, box3d, palmCached, gateEW, gateEWShadows, workTable, signboard, leanAt, elev, stall, bench, shrub, solid } from './art.js';
+import { FLAGS, INK, PAL, SUN, pattern, sprite, boxShadow, blobShadow, building3d, box3d, palmCached, gateEW, gateEWShadows, workTable, signboard, leanAt, elev, stall, bench, shrub, solid } from './art.js';
 export const WALL4_Y = 2600, GATE4 = { x0: 1190, x1: 1290 };
 export const KITCHEN = { x: 360, y: 2680, w: 440, h: 150 };
 export const ST5 = { scale: { x: 480, y: 2876 }, recipe: { x: 680, y: 2876 }, clock: { x: 1100, y: 2904 }, calls: { x: 1550, y: 2856 }, guest: { x: 2200, y: 2944 } };
@@ -12,6 +12,22 @@ export const GUEST = { x: 2000, y: 2690, w: 400, h: 200 };
 export const ST6 = { graph: { x: 420, y: 3196 }, pie: { x: 800, y: 3266 }, harvest: { x: 1160, y: 3266 }, survey: { x: 1660, y: 3196 }, spinner: { x: 2350, y: 3266 } };
 export const PIEFIELD = { x: 800, y: 3150, r: 72 };
 export const PALMS6 = [1060, 1110, 1160, 1210, 1260].map(x => ({ x, y: 3150 }));
+/* مدينة الألعاب (شرق الساحة): سياج بمدخل من جهة الساحة، دولاب هواء، دوّامة خيل، برج زحليقة، أراجيح، وكشك تذاكر.
+   البطل يدخلها ويمشي بين الألعاب (العوائق: السياج وقواعد الألعاب فقط) */
+export const FUNPARK = { x: 2500, y: 2680, w: 390, h: 760, gate: [3000, 3100] };
+export const RIDES = { wheel: { x: 2790, y: 2810, r: 112 }, carousel: { x: 2660, y: 3170, r: 60 }, slide: { x: 2815, y: 3320 }, swings: { x: 2650, y: 3375 }, kiosk: { x: 2560, y: 2960 } };
+export function funparkColliders() {
+  const F = FUNPARK, T = 8, [g0, g1] = F.gate, W = RIDES.wheel, C = RIDES.carousel, S = RIDES.slide, Q = RIDES.swings, K = RIDES.kiosk;
+  return [
+    { x: F.x, y: F.y, w: F.w, h: T }, { x: F.x, y: F.y + F.h - T, w: F.w, h: T }, { x: F.x + F.w - T, y: F.y, w: T, h: F.h },   // السياج
+    { x: F.x, y: F.y, w: T, h: g0 - F.y }, { x: F.x, y: g1, w: T, h: F.y + F.h - g1 },                                          // الضلع الغربي بمدخل
+    { x: W.x - 56, y: W.y - 18, w: 112, h: 30 },                                                                                 // قاعدة الدولاب
+    { x: C.x - C.r, y: C.y - C.r * .75, w: C.r * 2, h: C.r * 1.5 },                                                              // الدوّامة
+    { x: S.x - 26, y: S.y - 26, w: 52, h: 46 }, { x: S.x + 24, y: S.y - 12, w: 40, h: 16 },                                     // برج الزحليقة
+    { x: Q.x - 70, y: Q.y - 18, w: 10, h: 34 }, { x: Q.x + 60, y: Q.y - 18, w: 10, h: 34 },                                    // قوائم الأراجيح
+    { x: K.x - 24, y: K.y - 20, w: 48, h: 26 }                                                                                    // كشك التذاكر
+  ];
+}
 export const VISITORS = [[1450, 3070], [1560, 3330], [1720, 3060], [1830, 3400], [1960, 3110], [2060, 3330], [1500, 3230], [1890, 3240]].map(([x, y]) => ({ x, y }));
 export function festivalColliders(open) {
   const c = [
@@ -22,21 +38,34 @@ export function festivalColliders(open) {
     { x: ST6.graph.x - 50, y: ST6.graph.y - 70, w: 100, h: 20 }, { x: ST6.survey.x - 50, y: ST6.survey.y - 70, w: 100, h: 20 }, { x: ST6.spinner.x - 60, y: ST6.spinner.y - 120, w: 120, h: 70 },
     ...PALMS6.map(p => ({ x: p.x - 8, y: p.y - 8, w: 16, h: 10 })),
     ...PALMS_X.map(p => solid.trunk(p.x, p.y)), ...STALLS.map(([x, y]) => solid.stall(x, y)), ...BENCHES.map(([x, y]) => solid.bench(x, y)), ...SHRUBS.map(([x, y]) => solid.shrub(x, y)),
-    ...BUNTING.flatMap(([x1, x2, y]) => [solid.post(x1, y), solid.post(x2, y)])
+    ...BUNTING.flatMap(([x1, x2, y]) => [solid.post(x1, y), solid.post(x2, y)]),
+    ...funparkColliders()
   ];
   if (!open) c.push({ x: GATE4.x0, y: WALL4_Y - 4, w: GATE4.x1 - GATE4.x0, h: 20 });
   return c;
 }
 const H_K = 88, H_C = 84, TW = { s: 64, H: 190 };
-const PALMS_X = [{ x: 150, y: 2960 }, { x: 1320, y: 2700 }, { x: 2600, y: 2760 }, { x: 2700, y: 3150 }, { x: 260, y: 3420 }, { x: 1050, y: 3420 }];
+const PALMS_X = [{ x: 150, y: 2960 }, { x: 1320, y: 2700 }, { x: 260, y: 3420 }, { x: 1050, y: 3420 }];   // (شرق الساحة صار مدينة الألعاب)
 // حبال الرايات: [x1, x2, y، ارتفاع الطرفين]
 const BUNTING = [[200, 760, 2900, 70], [870, 1360, 2980, 70], [1420, 2280, 2960, 70], [460, 1300, 3330, 60]];
 // زينة بلا تصادم في أطراف الساحة: بسطات المهرجان ومقاعد وشجيرات
-const STALLS = [[2560, 3000, '#E85D75'], [2600, 3380, '#2F6FB2'], [620, 3420, '#2E8B57'], [1700, 3420, '#9C6BFF']];
+const STALLS = [[620, 3420, '#2E8B57'], [1700, 3420, '#9C6BFF']];
 const BENCHES = [[960, 3010], [1240, 3010], [1500, 3430], [2450, 3430]];
-const SHRUBS = [[300, 3000], [2480, 2950], [1380, 3420], [2200, 3430], [900, 3430]];
+const SHRUBS = [[300, 3000], [1380, 3420], [2200, 3430], [900, 3430]];
 
+/* أرضية مدينة الألعاب: بلاط مطاطي ملون داخل السياج، وممر من المدخل */
+function funparkGround(ctx) {
+  const F = FUNPARK;
+  sprite(ctx, 'funpark-floor', F.x - 4, F.y - 4, F.w + 8, F.h + 8, c => {
+    const cols = ['#4FA3D9', '#F2B33D', '#E85D75', '#5DBB63'];
+    for (let y = F.y; y < F.y + F.h; y += 24) for (let x = F.x; x < F.x + F.w; x += 24) { c.fillStyle = cols[((x - F.x) / 24 + (y - F.y) / 24 * 3) % 4 | 0]; c.fillRect(x, y, 24, 24); }
+    c.fillStyle = 'rgba(255,255,255,.18)'; for (let y = F.y; y < F.y + F.h; y += 24) c.fillRect(F.x, y, F.w, 1.5); for (let x = F.x; x < F.x + F.w; x += 24) c.fillRect(x, F.y, 1.5, F.h);
+    c.fillStyle = '#F2E6C9'; c.fillRect(F.x, F.gate[0] + 10, 130, F.gate[1] - F.gate[0] - 20);   // ممر المدخل
+    c.strokeStyle = INK; c.lineWidth = 1; c.strokeRect(F.x, F.y, F.w, F.h);
+  });
+}
 export function drawFestivalGround(ctx, t) {
+  funparkGround(ctx);
   gateEWShadows(ctx, WALL4_Y, GATE4.x0, GATE4.x1);
   // أرض الساحة: بلاط واسع حول برج الساعة، وممر من البوابة
   sprite(ctx, 'fest-plaza', 860, WALL4_Y + 10, 520, 360, c => {
@@ -94,6 +123,13 @@ export function festivalDrawables(open, t) {
   BENCHES.forEach(([x, y]) => out.push({ y, draw: c => bench(c, x, y) }));
   SHRUBS.forEach(([x, y]) => out.push({ y, draw: c => shrub(c, x, y, 14, true) }));
   BUNTING.forEach(([x1, x2, y, h]) => [x1, x2].forEach(x => out.push({ y, x, draw: c => { c.fillStyle = PAL.wood; c.fillRect(x - 2, y - h, 4, h); c.strokeStyle = INK; c.lineWidth = .7; c.strokeRect(x - 2, y - h, 4, h); } })));   // أعمدة الحبال
+  if (!FLAGS.three) {   // البديل ثنائي الأبعاد لمدينة الألعاب (في 3D تُبنى مجسّمة)
+    const W = RIDES.wheel, C = RIDES.carousel;
+    out.push({ y: W.y + 12, x: W.x, draw: c => { c.strokeStyle = '#C9D3DA'; c.lineWidth = 4; c.beginPath(); c.arc(W.x, W.y - W.r - 20, W.r, 0, 7); c.stroke(); c.lineWidth = 2; for (let i = 0; i < 12; i++) { const a = i / 12 * 6.283 + t * .12; c.beginPath(); c.moveTo(W.x, W.y - W.r - 20); c.lineTo(W.x + Math.cos(a) * W.r, W.y - W.r - 20 + Math.sin(a) * W.r); c.stroke(); c.fillStyle = ['#E2475C', '#2F6FB2', '#FFC23D', '#5DBB63'][i % 4]; c.fillRect(W.x + Math.cos(a) * W.r - 8, W.y - W.r - 20 + Math.sin(a) * W.r, 16, 14); } c.strokeStyle = '#8E99A5'; c.lineWidth = 6; c.beginPath(); c.moveTo(W.x - 50, W.y); c.lineTo(W.x, W.y - W.r - 20); c.lineTo(W.x + 50, W.y); c.stroke(); } });
+    out.push({ y: C.y + C.r * .6, x: C.x, draw: c => stall(c, C.x, C.y + C.r * .6, '#E2475C') });
+    out.push({ y: RIDES.kiosk.y, x: RIDES.kiosk.x, draw: c => stall(c, RIDES.kiosk.x, RIDES.kiosk.y, '#2F6FB2') });
+  }
+  out.push({ y: FUNPARK.gate[0] - 20, x: FUNPARK.x, draw: c => signboard(c, FUNPARK.x, FUNPARK.gate[0] - 60, '🎡 مدينة الألعاب') });
   BUNTING.forEach(([x1, x2, y, h]) => out.push({ y: y + 40, draw: c => bunting(c, elev(x1, y, h), elev(x2, y, h), t) }));   // معلّقة في الهواء: تُرسم بعد ما تحتها
   return out;
 }

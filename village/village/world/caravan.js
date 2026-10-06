@@ -1,7 +1,7 @@
 // «طريق القافلة»: منطقة وحدة القياس (٢) في الفصل الثاني جنوب سوق الجمعية، تُفتح بإنهاء وحدة العدد
 // الرسم بأسلوب القرية: كثبان، طريق إسفلتي، مدرج وطائرة، واحة بنخيل، ومحطة وقود
 import { rr, shade } from '../core/util.js';
-import { INK, PAL, pattern, sprite, kiosk3d, kioskShadow, gateEW, gateEWShadows, palmCached, blobShadow, upright, shrub, solid } from './art.js';
+import { FLAGS, box3d, INK, PAL, pattern, sprite, kiosk3d, kioskShadow, gateEW, gateEWShadows, palmCached, blobShadow, upright, shrub, solid } from './art.js';
 export const WALL6_Y = 4500, GATE6 = { x0: 1190, x1: 1290 };
 export const ST8 = {
   fuel: { x: 380, y: 4790, sign: 'محطة الوقود', col: '#C0392B' }, signs: { x: 800, y: 4790, sign: 'دليل القافلة', col: '#8B5A2B' },
@@ -9,10 +9,16 @@ export const ST8 = {
   rects: { x: 2120, y: 4790, sign: 'بستان وفاء', col: '#2E8B57' }, oasis: { x: 1240, y: 5230, sign: 'أرض الواحة', col: '#1FC8B5' }
 };
 export const OASIS = { x: 1240, y: 5100 };
+/* ميناء حاويات على الساحل: رصيف، صفوف حاويات بممرات بينها، ورافعة جسرية على حافة الماء (والسفينة في البحر) */
+export const PORT = { x: 2300, y: 4980, w: 630, h: 470 };
+export const STACKS = [[2340, 5030, 3, '#C0392B'], [2520, 5030, 2, '#2F6FB2'], [2340, 5150, 2, '#2E8B57'], [2520, 5150, 4, '#E3B04B'], [2340, 5270, 4, '#7B3F98'], [2520, 5270, 1, '#D35400'], [2340, 5370, 2, '#16A085'], [2520, 5370, 3, '#5E6874']];   // [x, y, الطبقات, اللون] كل كومة حاويتان متجاورتان
+export const CRANE = { x: 2800, y: 5200, span: 180 };
+const portColliders = () => STACKS.map(([x, y]) => ({ x, y, w: 150, h: 74 })).concat([[-1, -1], [1, -1], [-1, 1], [1, 1]].map(([a, b]) => ({ x: CRANE.x + a * 70 - 6, y: CRANE.y + b * CRANE.span / 2 - 6, w: 12, h: 12 })));
 export function caravanColliders(open) {
   const c = [{ x: 0, y: WALL6_Y, w: GATE6.x0, h: 12 }, { x: GATE6.x1, y: WALL6_Y, w: 2930 - GATE6.x1, h: 12 },
     { x: OASIS.x - 120, y: OASIS.y - 50, w: 240, h: 90 }];
   Object.values(ST8).forEach(s => c.push({ x: s.x - 52, y: s.y - 56, w: 104, h: 24 }));
+  c.push(...portColliders());
   c.push(...PALMS.map(p => solid.trunk(p.x, p.y)), ...PUMPS.map(x => solid.pump(x, 4800)), ...OSHRUBS.map(([x, y]) => solid.shrub(x, y, 12)));
   if (!open) c.push({ x: GATE6.x0, y: WALL6_Y - 4, w: GATE6.x1 - GATE6.x0, h: 20 });
   return c;
@@ -23,7 +29,7 @@ const DUNES = Array.from({ length: 34 }, (_, i) => [(i * 337) % 2900, WALL6_Y + 
 const PUMPS = [ST8.fuel.x - 90, ST8.fuel.x + 90];
 const OSHRUBS = [[OASIS.x - 160, 5130], [OASIS.x + 165, 5120], [OASIS.x - 95, 5168]];
 const PALMS = [[-150, 5080], [150, 5090], [-240, 5110], [235, 5100], [-190, 5030], [190, 5020]].map(([dx, y]) => ({ x: OASIS.x + dx, y }))
-  .concat([{ x: 180, y: 4650 }, { x: 2500, y: 4650 }, { x: 2650, y: 5100 }, { x: 420, y: 5150 }, { x: 2000, y: 5300 }]);
+  .concat([{ x: 180, y: 4650 }, { x: 2500, y: 4650 }, { x: 420, y: 5150 }, { x: 2000, y: 5300 }]);   // (الساحل الجنوبي الشرقي صار ميناءً)
 function oasisPath(c, k) {   // حافة ناعمة: منحنيات بين منتصفات الأضلاع
   const P = OPTS.map(([dx, dy]) => [OASIS.x + dx * k, OASIS.y + dy * k]), n = P.length, m = i => [(P[i % n][0] + P[(i + 1) % n][0]) / 2, (P[i % n][1] + P[(i + 1) % n][1]) / 2];
   c.beginPath(); c.moveTo(...m(0)); for (let i = 1; i <= n; i++) c.quadraticCurveTo(P[i % n][0], P[i % n][1], ...m(i)); c.closePath();
@@ -52,6 +58,11 @@ export function drawCaravanGround(ctx, t) {
   // ساحة محطة الوقود
   ctx.fillStyle = pattern(ctx, 'pavers'); rr(ctx, ST8.fuel.x - 140, 4740, 280, 90, 10); ctx.fill(); ctx.strokeStyle = INK; ctx.lineWidth = 1; rr(ctx, ST8.fuel.x - 140, 4740, 280, 90, 10); ctx.stroke();
   Object.values(ST8).forEach(s => kioskShadow(ctx, s));
+  // رصيف الميناء: خرسانة بفواصل، خطوط صفراء للممرات، وحافة على الماء
+  const P = PORT; ctx.fillStyle = '#B9B4A8'; ctx.fillRect(P.x, P.y, P.w, P.h);
+  ctx.strokeStyle = 'rgba(70,65,60,.25)'; ctx.lineWidth = 1; for (let x = P.x; x < P.x + P.w; x += 60) { ctx.beginPath(); ctx.moveTo(x, P.y); ctx.lineTo(x, P.y + P.h); ctx.stroke(); } for (let y = P.y; y < P.y + P.h; y += 60) { ctx.beginPath(); ctx.moveTo(P.x, y); ctx.lineTo(P.x + P.w, y); ctx.stroke(); }
+  ctx.fillStyle = '#E3B04B'; STACKS.forEach(([x, y]) => { ctx.fillRect(x - 6, y - 6, 162, 3); ctx.fillRect(x - 6, y + 77, 162, 3); });
+  ctx.fillStyle = '#3D3A3A'; ctx.fillRect(P.x + P.w - 10, P.y, 10, P.h);
   PALMS.forEach(p => blobShadow(ctx, p.x, p.y, 22, 70));
   const px = 1180 + Math.sin(t / 3) * 4; ctx.fillStyle = 'rgba(40,30,20,.18)'; ctx.beginPath(); ctx.ellipse(px + 6, 4632, 46, 9, 0, 0, 7); ctx.fill();   // ظل الطائرة
 }
@@ -59,6 +70,7 @@ export function caravanDrawables(open, t) {
   const out = [{ y: WALL6_Y + 12, draw: c => gateEW(c, 'caravangate', WALL6_Y, GATE6.x0, GATE6.x1, open, 'طريق القافلة') }];
   Object.entries(ST8).forEach(([k, s]) => out.push({ y: s.y - 32, draw: c => kiosk3d(c, k, s, GOODS[k]) }));
   out.push({ y: 4626, x: 1180, draw: c => plane(c, 1180 + Math.sin(t / 3) * 4, 4612) });
+  if (!FLAGS.three) STACKS.forEach(([x, y, n, col], i) => out.push({ y: y + 74, draw: c => box3d(c, 'stack' + i, { x, y, w: 150, h: 74, H: 26 * n }, col, r => { r.fillStyle = col; r.fillRect(x, y - 26 * n, 150, 74); }, f => { f.fillStyle = col; f.fillRect(x, y + 74 - 26 * n, 150, 26 * n); f.fillStyle = 'rgba(0,0,0,.2)'; for (let k = x + 6; k < x + 150; k += 8) f.fillRect(k, y + 74 - 26 * n, 2, 26 * n); }) }));   // البديل ثنائي الأبعاد للحاويات
   PUMPS.forEach(x => out.push({ y: 4800, x, draw: c => pump(c, x, 4800) }));
   PALMS.forEach(p => out.push({ y: p.y, draw: c => palmCached(c, p.x, p.y, 1, false, t) }));
   OSHRUBS.forEach(([x, y]) => out.push({ y, draw: c => shrub(c, x, y, 12, false) }));

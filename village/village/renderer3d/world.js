@@ -22,7 +22,7 @@ const TOWERS = { 0: 'left', 4: 'right', 6: 'left' };
 /* المبنى الذي يقف البطل خلفه يصير شبه شفاف (بانتقال ناعم)، فلا يحجب الشخصية أبداً */
 const fadeCache = new Map();
 function fadedOf(m) { if (Array.isArray(m)) return m.map(fadedOf); if (!fadeCache.has(m)) { const f = m.clone(); f.transparent = true; f.depthWrite = false; f.userData.baseOpacity = m.opacity ?? 1; fadeCache.set(m, f); } return fadeCache.get(m); }
-function fader(obj, foot, H) {
+export function fader(obj, foot, H) {
   const meshes = []; obj.traverse(o => { if (o.isMesh) meshes.push({ o, base: o.material }); });
   let a = 1;
   return pl => {

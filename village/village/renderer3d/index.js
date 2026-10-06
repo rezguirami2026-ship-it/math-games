@@ -6,7 +6,7 @@ import { RoomEnvironment } from '../lib/three/addons/RoomEnvironment.js';
 import { material, setAniso } from './textures.js';
 import { wind, sky, mountains, sea, palmGrove, clouds } from './nature.js';
 import { makeComposer } from './post.js';
-import { cityBlocks, containerPort, amusementPark } from './city.js';
+import { residential, funpark, port } from './city.js';
 import { buildVillage } from './world.js';
 import { buildPerson, animatePerson } from './people.js';
 
@@ -50,10 +50,9 @@ export async function create3D(opts) {
   scene.add(mountains(bounds));
   scene.add(palmGrove(bounds));
   const cl = clouds(bounds); scene.add(cl);
-  // المدينة الحديثة حول القرية (خارج منطقة اللعب): عمارات شمالاً، ميناء حاويات شمال شرق على البحر، ومدينة ألعاب شمال غرب
-  scene.add(cityBlocks(-150, -820, 1700, -200));
-  scene.add(containerPort(1720, -760, 2930, -140, 2930));
-  const park = amusementPark(-500, -380); scene.add(park);
+  // الأحياء الحديثة داخل العالم: حيّ العمارات (سوق الجمعية)، مدينة الألعاب (ساحة المهرجان)، ميناء الحاويات (طريق القافلة)
+  const resi = residential(), prt = port(); scene.add(resi, prt);
+  const park = funpark(); scene.add(park);
   const seaM = sea(2930, -2000, W.h + 2000); scene.add(seaM);
   // رمل خارج العالم حتى الجبال
   const outer = new THREE.Mesh(new THREE.PlaneGeometry(14000, 14000), material('sand', '#fff', { repeat: [60, 60] }));
@@ -172,7 +171,7 @@ export async function create3D(opts) {
         }
       dropFar(q === 'high' ? 30 : 18);
       wind.value = t; seaM.userData.tick(t);
-      village.update(state, t, E.follow);
+      village.update(state, t, E.follow); if (E.follow) { resi.userData.fade(E.follow); prt.userData.fade(E.follow); }
       if (L.people) try { syncPeople(L.people(), t); } catch (e) { if (!L._pErr) { L._pErr = 1; console.error('people', e); } }
       if (L.ground) try { paintDecal(t, L.ground); } catch (e) { if (!L._gErr) { L._gErr = 1; console.error('ground layer', e); } }
       cl.userData.tick(t, camera); park.userData.tick(t);
