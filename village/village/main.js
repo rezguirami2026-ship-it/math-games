@@ -1,7 +1,7 @@
 // نقطة الدخول: تربط الأنظمة ببعضها، واللعبة كلها تسير على ترتيب دروس المنهج
 import { game, fresh, upgrade, CARRY_MAX, TREE_COST } from './core/state.js';
 import { bus } from './core/events.js';
-import { ambient, sfx } from './core/sound.js';
+import { ambience, sfx } from './core/sound.js';
 import { ar, clamp } from './core/util.js';
 import { createEngine } from './core/engine.js';
 import { loadSave, saveSoon, saveNow, wipeSave } from './save/save.js';
@@ -343,7 +343,7 @@ function update(dt) {
   // شبكة أمان: انشغال بلا حوار ولا لوحة ولا شاشة لأكثر من ١٥ ثانية يعني خللاً؛ نحرّر اللاعب ونسجّل الخطأ
   const uiOpen = ['dialog', 'panel', 'screen'].some(id => document.getElementById(id).classList.contains('on'));
   if (game.busy && !uiOpen && !W.stones) { if ((W.busyT = (W.busyT || 0) + dt) > 15) { game.busy = false; W.busyT = 0; report('انشغال عالق', cur() ? cur().id : '-', new Error('game.busy بقي true بلا نافذة مفتوحة')); } } else W.busyT = 0;
-  if ((W.birds = (W.birds || 9) - dt) <= 0) { W.birds = 8 + Math.random() * 9; ambient(); }   // تغريد خافت بين حين وآخر
+  ambience(W.area ? W.area.id : 'village', dt);   // أصوات المنطقة: ريح، موج، همهمة، طيور، أجراس…
   if (W.tapMark) { W.tapMark.t += dt; if (W.tapMark.t > .6) W.tapMark = null; }
   hud.actions(currentActions());
   W.savedAt += dt;
