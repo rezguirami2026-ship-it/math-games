@@ -76,3 +76,31 @@ body:has(.dialog.on) .region{opacity:0!important;animation:none!important}
   background:radial-gradient(circle,rgba(255,255,255,.18),rgba(42,27,102,.18));border:2.5px solid rgba(255,255,255,.75);box-shadow:0 0 0 2px rgba(227,176,75,.6),0 8px 22px rgba(30,20,60,.3)}
 .stick.on{opacity:1}
 .stick i{position:absolute;left:50%;top:50%;width:46px;height:46px;margin:-23px 0 0 -23px;border-radius:50%;background:linear-gradient(160deg,#FFE08A,#F2A922);box-shadow:0 4px 10px rgba(60,35,0,.35),inset 0 2px 0 rgba(255,255,255,.6)}
+/* «تحدي الشخصية» (missions/challenge.js): المرحلة الثانية من كل درس */
+.sheet.chSheet{display:flex;flex-direction:column;gap:10px;max-width:520px}
+.chHead{display:flex;align-items:center;gap:10px}.chHead>div{flex:1}.chHead b{font:900 18px Cairo,sans-serif;color:#2A1B66}.chHead small{font-weight:900;color:#8A7A5A}
+.chFace{width:46px;height:46px;border-radius:50%;background:linear-gradient(160deg,#FFE7A8,#FFC23D);display:grid;place-items:center;font-size:26px;box-shadow:0 4px 10px rgba(200,120,10,.3)}
+.chDots{display:flex;gap:5px;margin-top:4px}.chDots i{width:22px;height:7px;border-radius:4px;background:#E8E2D6}.chDots i.ok{background:#2E9E5B}.chDots i.now{background:#FFC23D;box-shadow:0 0 0 2px rgba(255,194,61,.35)}
+.chOut{font-size:12px;font-weight:800;color:#5B3FD0;background:#F1E9FB;border-radius:10px;padding:5px 10px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.chArt{display:flex;justify-content:center}.chArt svg{max-width:100%;height:auto}
+.chQ{font:800 18px/1.7 Cairo,sans-serif;color:#2A1B66;background:#fff;border-radius:16px;padding:12px 14px;box-shadow:0 4px 14px rgba(60,40,10,.08)}
+.chQ b{color:#C2410C}.chTail{font-size:14px;color:#8A7A5A;margin-top:4px}
+.chExpr{direction:rtl;unicode-bidi:isolate;text-align:center;font-size:24px;font-weight:900;margin-top:6px;letter-spacing:1px}
+.chOpts{display:grid;grid-template-columns:1fr 1fr;gap:8px}.chOpts.multi{grid-template-columns:repeat(4,1fr)}
+.chOpt{min-height:52px;border-radius:14px;background:linear-gradient(180deg,#FFFFFF,#F4EBD6);border:2px solid #E6D6B4;font:900 17px Cairo,sans-serif;color:#2A1B66;padding:6px 8px;box-shadow:0 3px 0 #D9C59C;transition:transform .1s}
+.chOpt:active{transform:translateY(2px);box-shadow:0 1px 0 #D9C59C}
+.chOpt.on{background:linear-gradient(180deg,#DDF6E8,#BDECD2);border-color:#2E9E5B;box-shadow:0 3px 0 #1F7A44}
+.chOpt.no{background:#FBE4E4;border-color:#E2475C;color:#9A2433;opacity:.75}
+.chOpt:disabled{opacity:.35}
+.chOrder{min-height:50px;border-radius:14px;border:2px dashed #C9B48A;display:flex;flex-wrap:wrap;align-items:center;justify-content:center;gap:6px;padding:8px;font-weight:900;font-size:17px;color:#2A1B66}
+.chOrder .ph{color:#A89670;font-size:14px}.chOrder em{font-style:normal;color:#A89670}
+.chSheet .row2{display:flex;gap:8px}.chSheet .row2 .act{flex:1}
+.chLine{width:320px}
+.chEnd{display:flex;flex-direction:column;align-items:center;gap:8px;text-align:center;padding:10px 4px}
+.chEnd h3{margin:0;font:900 22px Cairo,sans-serif;color:#2A1B66}
+.chStars{display:flex;gap:6px;font-size:52px;line-height:1}.chStars span{color:#E2DCCD;transition:transform .3s}.chStars span.on{color:#FFC23D;text-shadow:0 4px 0 #C77A0A,0 0 18px rgba(255,194,61,.6);animation:chPop .5s backwards}
+.chStars span.on:nth-child(2){animation-delay:.15s}.chStars span.on:nth-child(3){animation-delay:.3s}
+@keyframes chPop{0%{transform:scale(0) rotate(-40deg)}70%{transform:scale(1.25)}100%{transform:scale(1)}}
+@media (max-width:400px){.chOpts.multi{grid-template-columns:repeat(3,1fr)}.chQ{font-size:16px}}
+.sheet.shake{animation:chShake .4s}
+@keyframes chShake{20%{transform:translateX(-7px)}40%{transform:translateX(6px)}60%{transform:translateX(-4px)}80%{transform:translateX(2px)}}

@@ -17,6 +17,8 @@ import { plant } from './missions/planting.js';
 import * as tanks from './missions/tanks.js';
 import { SHOP, openCounter, drawShop, drawShopBack, drawGarden } from './missions/shop.js';
 import { UNIT1, POND } from './missions/unit1.js';
+import { stage2 } from './missions/challenge.js';
+import { CH } from './content/challenges1.js';
 import { UNIT2 } from './missions/unit2.js';
 import { UNIT3 } from './missions/unit3.js';
 import { UNIT4 } from './missions/unit4.js';
@@ -171,7 +173,7 @@ async function start(state) {
   }
 }
 /* ── العرض ثلاثي الأبعاد (renderer3d): يُحمَّل فقط عند طلبه، ويرجع إلى الرسم الحالي إن لم يدعم الجهاز WebGL أو فشل التحميل ── */
-const V3D = 'نسخة 3D · ١٤';   // تُعرض في شاشة التحميل وفي الزاوية: للتأكد أن المتصفح حمّل آخر نسخة
+const V3D = 'نسخة 3D · ١٥';   // تُعرض في شاشة التحميل وفي الزاوية: للتأكد أن المتصفح حمّل آخر نسخة
 const want3d = () => gfx.d3();
 function loadingScreen() {
   const el = document.createElement('div'); el.className = 'load3d';
@@ -324,6 +326,8 @@ function nearest(list, r) { const p = W.player; let best = null, bd = r; list.fo
 function currentActions() {
   if (game.busy) return [];
   const s = game.state, m = s.missions.convoy, out = [], c = cur(), mod = curMod();
+  if (mod && mod.challenge && quests.isStarted(c.id) && quests.data(c.id).chStage === 2)   // المرحلة الثانية: تحدي الشخصية (يُستأنف من أي مكان)
+    return [{ key: 'challenge', label: '🎯 ' + mod.challenge.title, kind: 'go', run: () => stage2(W, quests.data(c.id), mod) }];
   if (W.stones && mod && mod.actions) return mod.actions(W, quests.data(c.id));
   const npc = nearest(W.npcs.filter(n => npcVisible(n, s)), 72);
   if (npc) out.push({ key: npc.id, label: `💬 ${npc.name}`, run: () => talkTo(npc) });
@@ -369,11 +373,12 @@ function objective() {
   if (!c) return '🎓 أكملتَ الدروس الـ٦٩ كلها! منصة التخرّج تنتظرك جنوب الورشة';
   if (!mod) return `✨ الوحدة ${ar(UNITS[c.u].n)} (${UNITS[c.u].title}) قريباً — ${c.mission}`;
   if (!quests.isStarted(c.id)) { const n = W.npcs.find(x => x.id === c.giver); return `💬 ${n ? n.name : ''} ينتظرك: «${c.mission}»`; }
+  if (mod.challenge && quests.data(c.id).chStage === 2) return '🎯 ' + mod.challenge.title + ': اضغط الزر لتكمل أسئلته';
   try { return mod.goal(quests.data(c.id)); } catch (e) { report('الهدف', c.id, e); return '🎯 ' + c.mission; }   // نص الهدف لا يُوقف اللعبة أبداً
 }
 function objectiveTarget() {
   const c = cur(), mod = curMod();
-  if (mod) { try { return quests.isStarted(c.id) ? mod.target(quests.data(c.id), W) : npcPos(c.giver); } catch (e) { report('سهم الهدف', c.id, e); return null; } }
+  if (mod) { try { if (mod.challenge && quests.isStarted(c.id) && quests.data(c.id).chStage === 2) return null; return quests.isStarted(c.id) ? mod.target(quests.data(c.id), W) : npcPos(c.giver); } catch (e) { report('سهم الهدف', c.id, e); return null; } }
   if (!c) return { x: STAGE.x, y: STAGE.y - 40 };   // بعد الدروس كلها: السهم إلى منصة التخرّج
   const s = game.state, i = s.world.trees.findIndex(v => !v);
   return s.world.delivered && i >= 0 ? { x: TREE_SPOTS[i].x, y: TREE_SPOTS[i].y } : null;
@@ -563,6 +568,13 @@ bus.on('save', () => { if (game.state) saveSoon(game.state); });
 bus.on('good', () => hud.good());
 bus.on('mission', () => hud.objective(objective()));
 bus.on('achievement', a => setTimeout(() => hud.toast(`${a.icon} إنجاز جديد: ${a.name}`), 400));
+Object.entries(CH).forEach(([id, c]) => { if (MODS[id]) MODS[id].challenge = c; });
+quests.gate.has = id => !!(MODS[id] && MODS[id].challenge);
+bus.on('challenge', id => {   // انتهت مهمة العالم: يُفتح التحدي وحده بعد آخر حوار
+  const go = () => { if (!W || game.busy) return setTimeout(go, 300);
+    const c = cur(); if (c && c.id === id && quests.data(id).chStage === 2) stage2(W, quests.data(id), MODS[id]); };
+  setTimeout(go, 500);
+});
 bus.on('lessonDone', id => {
   const before = gateState().slice(); resetGates();   // قد تُفتح بوابة الآن: حركتها تبدأ حين تظهر على الشاشة
   gateState().forEach((o, i) => { if (o && !before[i]) gateAnim.pending[i] = true; });

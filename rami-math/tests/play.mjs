@@ -90,6 +90,40 @@ async function talk(giver) {
 }
 const panelClick = sel => G(sel => { const b = document.querySelector('#panel ' + sel); if (!b) throw new Error('غير موجود: ' + sel); b.click(); }, sel);
 
+/* ── «تحدي الشخصية» (المرحلة الثانية): حل عام من بيانات الجولات نفسها، ومحاولة خاطئة في كل جولة ── */
+const chClick = (sel, k) => G(([sel, k]) => { const b = document.querySelectorAll('#panel ' + sel)[k]; if (!b) throw new Error('غير موجود: ' + sel + ' #' + k); b.click(); }, [sel, k]);
+async function chPad(v) {
+  const s = String(+(+v).toFixed(3)).replace('-', '−');
+  for (const k of [...s, 'go']) await G(k => { const b = document.querySelector(`#panel #chPad [data-k="${k}"]`); if (!b) throw new Error('مفتاح غير موجود: ' + k); b.click(); }, k);
+}
+async function solveChallenge(id) {
+  await until(async () => (await isDone(id)) || (await data(id)).chStage === 2, 'إنهاء مهمة العالم', 60000);
+  if (await isDone(id)) return false;
+  await until(async () => { const st = await G(() => ({ ch: !!document.querySelector('#panel .chSheet'), dialog: document.getElementById('dialog').classList.contains('on') }));
+    if (st.dialog) await G(() => document.getElementById('dialog').click()); return st.ch; }, 'فتح التحدي', 30000);
+  const items = (await data(id)).ch.items;
+  for (let i = (await data(id)).ch.i; i < items.length; i++) {
+    const it = items[i];
+    // محاولة خاطئة: يجب أن تعطي تلميحاً ولا تتقدم
+    if (it.type === 'choice' || it.type === 'tf') await chClick('.chOpt', it.ans === 0 ? 1 : 0);
+    else if (it.type === 'multi') { await chClick('.chOpt', it.opts.findIndex((_, k) => !it.ans.includes(k))); await panelClick('#chGo'); await chClick('.chOpt', it.opts.findIndex((_, k) => !it.ans.includes(k))); }
+    else if (it.type === 'order') { for (const k of it.ans.slice().reverse()) await chClick('.chOpt', k); await panelClick('#chGo'); for (const _ of it.ans) await panelClick('#chUndo'); }
+    else if (it.type === 'num') await chPad(it.ans + 1);
+    await until(() => G(() => document.getElementById('benchMsg')?.classList.contains('bad')), `تلميح الخطأ في الجولة ${i + 1}`, 5000);
+    expect((await data(id)).ch.i === i, `الخطأ قدّم الجولة ${i + 1}`);
+    // الحل
+    if (it.type === 'choice' || it.type === 'tf') await chClick('.chOpt', it.ans);
+    else if (it.type === 'multi') { for (const k of it.ans) await chClick('.chOpt', k); await panelClick('#chGo'); }
+    else if (it.type === 'order') { for (const k of it.ans) await chClick('.chOpt', k); await panelClick('#chGo'); }
+    else if (it.type === 'num') await chPad(it.ans);
+    await until(async () => (await data(id)).ch.i === i + 1, `حل الجولة ${i + 1} (${it.type}: ${it.q.replace(/<[^>]+>/g, '').slice(0, 50)})`, 5000);
+  }
+  await until(() => G(() => !!document.querySelector('#panel #chFin')), 'شاشة النجوم', 5000);
+  expect((await data(id)).stars === 1, 'النجوم مع خطأ في كل جولة يجب أن تكون نجمة واحدة');
+  await sleep(150); await panelClick('#chFin');
+  return true;
+}
+
 /* ── حلول الدروس: wrong() محاولة خاطئة، right() الحل ── */
 const W = {};   // مواضع من ملفات العالم، تُقرأ من اللعبة نفسها
 const S = {};
@@ -904,10 +938,11 @@ try {
     try {
       await talk(l.giver);
       await S[l.id]();
+      const ch = await solveChallenge(l.id);
       await until(() => isDone(l.id), 'إنهاء الدرس', 60000);
       await settle(60000, 2000);
       if (errors.length > e0) throw new Error('أخطاء في الكونسول: ' + errors.slice(e0).join(' / '));
-      console.log(`✅ ${l.title} (${((Date.now() - t0) / 1000).toFixed(1)} ث)`);
+      console.log(`✅ ${l.title}${ch ? ' + التحدي' : ''} (${((Date.now() - t0) / 1000).toFixed(1)} ث)`);
       played++;
     } catch (e) {
       failures++; console.log(`❌ ${l.title} (${l.id}): ${e.message}`);

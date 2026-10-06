@@ -9,5 +9,8 @@ export const isStarted = id => !!Q().started[id];
 export const data = id => { const q = Q(); return (q.data[id] = q.data[id] || {}); };
 export const unitOf = l => UNITS[l.u];
 export function start(id) { Q().started[id] = Date.now(); bus.emit('mission'); bus.emit('save'); }
-export function complete(id) { const q = Q(); if (q.done[id]) return; q.done[id] = Date.now(); bus.emit('lessonDone', id); bus.emit('mission'); bus.emit('save'); }
+export const gate = { has: null };   // main.js: هل للدرس «تحدي شخصية»؟ إن كان فإنهاء مهمة العالم يفتح المرحلة الثانية بدل إنهاء الدرس
+export function complete(id) { const q = Q(); if (q.done[id]) return;
+  if (gate.has && gate.has(id) && !data(id).chDone) { if (data(id).chStage !== 2) { data(id).chStage = 2; bus.emit('challenge', id); } bus.emit('mission'); bus.emit('save'); return; }
+  q.done[id] = Date.now(); bus.emit('lessonDone', id); bus.emit('mission'); bus.emit('save'); }
 export function progress() { const q = Q(); return { done: LESSONS.filter(l => q.done[l.id]).length, total: LESSONS.length }; }
