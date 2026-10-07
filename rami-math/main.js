@@ -13,6 +13,7 @@ import { makeTrucks, truckColliders, drawTruck, drawPile, drawSignal, drawSpot, 
 import { makeNpcs, npcVisible, updateNpc, drawNpc } from './npc/npc.js';
 import { updateKids, kidsItems, kidsPeople3d } from './world/school.js';
 import { decorItems, initGems } from './world/decor.js';
+import { treasureItems, nearTreasure, openTreasure, TREASURES } from './world/treasure.js';
 import { CHAPTER, introLines, npcLines } from './story/dialogues.js';
 import * as convoy from './missions/convoy.js';
 import { plant } from './missions/planting.js';
@@ -188,7 +189,7 @@ async function start(state) {
   }
 }
 /* ── العرض ثلاثي الأبعاد (renderer3d): يُحمَّل فقط عند طلبه، ويرجع إلى الرسم الحالي إن لم يدعم الجهاز WebGL أو فشل التحميل ── */
-const V3D = 'نسخة 3D · ٣٥';   // تُعرض في شاشة التحميل وفي الزاوية: للتأكد أن المتصفح حمّل آخر نسخة
+const V3D = 'نسخة 3D · ٣٦';   // تُعرض في شاشة التحميل وفي الزاوية: للتأكد أن المتصفح حمّل آخر نسخة
 const want3d = () => gfx.d3();
 function loadingScreen() {
   const el = document.createElement('div'); el.className = 'load3d';
@@ -347,6 +348,7 @@ function currentActions() {
   if (W.stones && mod && mod.actions) return mod.actions(W, quests.data(c.id));
   const npc = nearest(W.npcs.filter(n => npcVisible(n, s)), 72);
   if (npc) out.push({ key: npc.id, label: `💬 ${npc.name}`, run: () => talkTo(npc) });
+  const tr = nearTreasure(W.player, gateState()); if (tr) out.push({ key: 'treasure', label: '🎁 افتح الكنز', kind: 'go', run: () => openTreasure(W, tr, MODS, quests) });
   if (mod && mod.actions && quests.isStarted(c.id)) out.push(...mod.actions(W, quests.data(c.id)));
   if (convoyActive()) {
     if (nearest([{ x: PILE.x, y: PILE.y + 20 }], 80)) {
@@ -512,7 +514,7 @@ function worldItems(view, t, three) {
   if (!three) list.push({ y: HERO_DOOR.y - 13, draw: cc => signboard(cc, HERO_DOOR.x + 52, HERO_DOOR.y - 66, '🚪 خزانة البطل') });   // لافتة على جدار بيت البطل (في 3D على الواجهة نفسها)
   const giverMark = n => c && c.ready && MODS[c.id] && c.giver === n.id && !quests.isStarted(c.id) ? '!' : null;
   // الشخصيات خارج الشاشة لا تُرسم (كانت كلها تُرسم في كل إطار)
-  list.push(...kidsItems(drawNpc, view, three), ...decorItems(view));
+  list.push(...kidsItems(drawNpc, view, three), ...decorItems(view), ...treasureItems(view, gateState(), t));
   if (!three) W.npcs.filter(n => npcVisible(n, s) && n.x > view.x - 60 && n.x < view.x + view.w + 60 && n.y > view.y - 20 && n.y < view.y + view.h + 110).forEach(n => list.push({ y: n.y, x: n.x, lean: .5, draw: cc => drawNpc(cc, n, giverMark(n)) }));   // في 3D: الشخصيات مجسّمة (people3d)
   const pl = W.player, mod = curMod(), hand = mod && mod.hand && c && quests.isStarted(c.id) ? mod.hand(quests.data(c.id)) : null;
   const pa = pl.anim ? pl.anim.name : pl.moving ? (pl.speed > 160 ? 'run' : 'walk') : 'idle';
@@ -616,5 +618,5 @@ bus.on('lessonDone', id => {
   if (allDone()) { unlock('all69'); setTimeout(() => hud.toast('🎓 أكملتَ الدروس الـ٦٩ كلها! اذهب إلى منصة التخرّج'), 4500); }
   if (id === 'mixedNumbers') setTimeout(() => hud.toast('💧 أم خالد تنتظرك في القرية: خزانات البيوت عطشى!'), 3500);   // الدرس التالي في القرية لا في السوق
 });
-window.__game = { get state() { return game.state; }, get W() { return W; }, eng, game, quests, MODS, activity: id => openActivity(W, id, MODS[id]), finale: u => openFinale(W, u, MODS), expert: id => openExpert(W, id, MODS[id]), findPath: (a, b) => findPath(a.x, a.y, b.x, b.y, blocked) };
+window.__game = { get state() { return game.state; }, get W() { return W; }, eng, game, quests, MODS, activity: id => openActivity(W, id, MODS[id]), finale: u => openFinale(W, u, MODS), expert: id => openExpert(W, id, MODS[id]), TREASURES, findPath: (a, b) => findPath(a.x, a.y, b.x, b.y, blocked) };
 boot();

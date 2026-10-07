@@ -115,6 +115,7 @@ export const hud = {
       body = `<h3>🎒 حقيبة ${s.hero.name}</h3>
         <div class="bagrow"><span>📦 صناديق بين يديك</span><b>${ar(s.carry)}</b></div>
         <div class="bagrow"><span>💚 نقاط الخير</span><b>${ar(s.good)}</b></div>
+        <div class="bagrow"><span>🎁 الكنوز المكتشفة</span><b>${ar(Object.keys(s.treasure || {}).length)} / ١٦</b></div>
         <div class="bagrow"><span>${levelOf(s).icon} المستوى</span><b>${ar(levelOf(s).n)}: ${levelOf(s).title}</b></div>
         ${(() => { const c = {}; (s.inventory || []).forEach(k => c[k] = (c[k] || 0) + 1); const I = { seeds: '🌱 بذور', bucket: '🪣 دلو', shovel: '⛏️ مجرفة', fert: '🧴 سماد', pot: '🪴 أصيص' };
           return Object.keys(c).length ? Object.keys(c).map(k => `<div class="bagrow"><span>${I[k] || k}</span><b>${ar(c[k])}</b></div>`).join('') : '<div class="bagrow muted"><span>🧰 الأدوات</span><b>تشتريها من دكان العم ناصر</b></div>'; })()}

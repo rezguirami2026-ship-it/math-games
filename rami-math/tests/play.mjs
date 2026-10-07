@@ -993,6 +993,11 @@ try {
         await until(() => G(() => !!document.querySelector('#panel #acEnd')), 'نهاية الخبير', 8000);
         expect(await G(id => window.__game.state.expert[id].plays === 1, l.id), 'سجل الخبير'); await panelClick('#acEnd'); await settle();
         console.log('⚡ تحدي الخبير: ٦ جولات صعبة');
+        const T1 = await G(() => window.__game.TREASURES[0]); await goTo(T1.x, T1.y + 14); await press('🎁 افتح الكنز');   // كنز القرية الأول
+        await until(() => G(() => !!document.querySelector('#panel #acGo')), 'صندوق الكنز', 5000); await panelClick('#acGo');
+        await solveRounds(() => G(() => { const r = window.__game.state.treasureRun; return r ? r.ch : { i: 1 }; }));
+        await until(() => G(() => !!document.querySelector('#panel #acEnd')), 'فتح الكنز', 8000); await panelClick('#acEnd'); await settle();
+        expect(await G(() => !!window.__game.state.treasure.t1), 'لم يُسجل الكنز'); console.log('🎁 كنز مخفي فُتح بلغز');
       }
       played++;
     } catch (e) {
