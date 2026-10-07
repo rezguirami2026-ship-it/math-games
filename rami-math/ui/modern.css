@@ -227,3 +227,22 @@ body:has(.dialog.on) .region{opacity:0!important;animation:none!important}
 .panel .sheet.chSheet>.chBurst.why{width:310px}
 .panel .sheet.chSheet{justify-content:safe center}
 .panel .sheet.chSheet>.chBurst{background:rgba(255,253,246,.97);box-shadow:0 18px 50px rgba(30,20,80,.35),0 0 0 3px #BDECD2}
+.qstars s{text-decoration:none;color:#CFC3AC}
+/* ── الشريط العلوي بطراز الألعاب (ui/hudicons.js): إطارات مثمنة كحلية بحافة ذهبية مزدوجة، وأيقونات مرسومة ── */
+:root{--oct:polygon(29% 0,71% 0,100% 29%,100% 71%,71% 100%,29% 100%,0 71%,0 29%)}
+.oct{position:relative;display:grid;place-items:center;width:54px;height:54px;clip-path:var(--oct);
+  background:linear-gradient(160deg,#FFF0B8 0%,#E8B33A 30%,#9C6512 55%,#F7CF63 78%,#8A5A10 100%)}
+.oct>b{display:grid;place-items:center;width:calc(100% - 7px);height:calc(100% - 7px);clip-path:var(--oct);
+  background:radial-gradient(120% 90% at 50% 15%,#2E56A8 0%,#173A82 45%,#0B1E4F 100%);box-shadow:inset 0 0 0 2px rgba(255,214,120,.35)}
+.oct>b::after{content:'';position:absolute;inset:4px 4px 50%;clip-path:var(--oct);background:linear-gradient(180deg,rgba(255,255,255,.22),rgba(255,255,255,0))}
+.oct svg{width:72%;height:72%;filter:drop-shadow(0 2px 2px rgba(0,0,0,.45));position:relative;z-index:1}
+.oct.sm{width:40px;height:40px}.oct.sm>b{width:calc(100% - 6px);height:calc(100% - 6px)}
+#hud .tools{gap:6px}
+#hud .tools button{width:auto;height:auto;padding:0;border:0;border-radius:0;background:none;box-shadow:none;backdrop-filter:none;-webkit-backdrop-filter:none;filter:drop-shadow(0 4px 6px rgba(10,15,45,.45));transition:transform .12s}
+#hud .tools button:hover{transform:translateY(-2px) scale(1.04);box-shadow:none}#hud .tools button:active{transform:scale(.92)}
+#hud .pills{display:flex;align-items:center;gap:4px;padding:4px 10px 4px 6px;border-radius:14px;
+  background:linear-gradient(180deg,#1F3F86,#0D2155);border:2px solid #D9A63A;box-shadow:0 0 0 2px #6B4510,0 6px 14px rgba(10,15,45,.4),inset 0 1px 0 rgba(255,255,255,.25)}
+#hud .pills .pill{display:flex;align-items:center;gap:5px;padding:0 4px;background:none;border:0;box-shadow:none;backdrop-filter:none;-webkit-backdrop-filter:none;color:#FFE7A0;font:900 17px Cairo,sans-serif;text-shadow:0 2px 0 rgba(0,0,0,.45)}
+#hud .pills .pill + .pill{border-inline-start:1px solid rgba(217,166,58,.45);padding-inline-start:8px}
+#hud .pills .pill b{color:#FFE7A0;min-width:14px;text-align:center}
+.oct>b{position:relative}

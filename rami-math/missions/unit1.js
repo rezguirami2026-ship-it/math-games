@@ -262,6 +262,7 @@ export const oddEven = {
       c.fillStyle = '#1E1E24'; rr(c, p.x - 9, p.y - 58, 18, 4, 2); c.fill();
       c.fillStyle = '#FFFDF6'; rr(c, p.x - 13, p.y - 47, 26, 13, 3); c.fill(); c.fillStyle = shade(col, -30); c.font = '900 10px Cairo, sans-serif'; c.textAlign = 'center'; c.fillText(t, p.x, p.y - 37);
       c.fillStyle = '#E3B04B'; c.fillRect(p.x + 15, p.y - 64, 2, 16); c.fillRect(p.x + 17, p.y - 64, 8, 6);
+      tag(c, p.x, p.y - 72, t, { fs: 18, bg: col, fg: '#fff', line: '#fff' });   // لافتة كبيرة واضحة فوق الصندوق
     } });
     return [box(BOX_ODD, '#D63B3B', 'فردي'), box(BOX_EVEN, '#2F6FB2', 'زوجي')];
   }

@@ -5,6 +5,7 @@ import { drawHuman } from '../character/human.js';
 import { ACH } from '../achievements/achievements.js';
 import { LEVELS, levelOf } from '../core/levels.js';
 import { BADGES } from '../achievements/badges.js';
+import { mountHudIcons } from './hudicons.js';
 import { sound, sfx } from '../core/sound.js';
 /* إعدادات العرض (تُحفظ على الجهاز): ثلاثي الأبعاد أو عادي، والجودة */
 /* تثبيت التطبيق: زر المتصفح إن وُجد (أندرويد والحاسوب)، وتعليمات «إضافة إلى الشاشة الرئيسية» في آيفون */
@@ -28,13 +29,13 @@ const $ = id => document.getElementById(id);
 window.addEventListener('pointerup', () => clearInterval(hud._hold));
 export const hud = {
   init(api) {
-    this.api = api;
+    this.api = api; mountHudIcons();
     $('bBag').onclick = () => this.panel('bag'); $('bMap').onclick = () => this.panel('map'); $('bAch').onclick = () => this.panel('ach'); $('lvlPill').onclick = () => this.panel('level');
     // الضغط خارج اللوحة يغلق نوافذ المعلومات فقط؛ لوحات الدروس والدكان والخزانة تُغلق بزر «رجوع» الذي يحرّر اللعب
     $('panel').onclick = e => { const lesson = $('panel').querySelector('.bench, .shop, .wardrobe'); if ((e.target.id === 'panel' && !lesson) || e.target.closest('[data-close]')) this.closePanel(); };
   },
   show(on) { $('hud').classList.toggle('on', on); },
-  level(up) { const L = levelOf(game.state); $('lvlI').textContent = L.icon; $('lvlN').textContent = ar(L.n); if (up) { const p = $('lvlPill'); p.classList.remove('pulse'); void p.offsetWidth; p.classList.add('pulse'); } return L; },
+  level(up) { const L = levelOf(game.state); $('lvlPill').title = L.icon + ' ' + L.title; $('lvlN').textContent = ar(L.n); if (up) { const p = $('lvlPill'); p.classList.remove('pulse'); void p.offsetWidth; p.classList.add('pulse'); } return L; },
   good() { $('goodN').textContent = ar(game.state.good); const p = $('goodPill'); p.classList.remove('pulse'); void p.offsetWidth; p.classList.add('pulse'); },
   objective(t) {   // مؤشر المهمة: يظهر واضحاً حين يتغير ثم يخفت بعد خمس ثوانٍ
     if (this._o === t) return;

@@ -21,7 +21,7 @@ function animate(canvases) {
   let ph = 0;
   const loop = () => {
     ph += .14;
-    canvases.forEach(({ c, h }) => { const x = c.getContext('2d'); x.setTransform(1, 0, 0, 1, 0, 0); x.clearRect(0, 0, c.width, c.height); drawHuman(x, Object.assign({ x: c.width / 2, y: c.height - 14, s: 2.2, dir: 'down', moving: true, phase: ph }, h())); });
+    canvases.forEach(({ c, h }) => { const x = c.getContext('2d'); x.setTransform(1, 0, 0, 1, 0, 0); x.clearRect(0, 0, c.width, c.height); drawHuman(x, Object.assign({ x: c.width / 2, y: c.height - 14, s: 2.2 * c.width / 190, dir: 'down', moving: true, phase: ph }, h())); });
     anim = requestAnimationFrame(loop);
   };
   loop();

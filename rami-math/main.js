@@ -186,7 +186,7 @@ async function start(state) {
   }
 }
 /* ── العرض ثلاثي الأبعاد (renderer3d): يُحمَّل فقط عند طلبه، ويرجع إلى الرسم الحالي إن لم يدعم الجهاز WebGL أو فشل التحميل ── */
-const V3D = 'نسخة 3D · ٢٨';   // تُعرض في شاشة التحميل وفي الزاوية: للتأكد أن المتصفح حمّل آخر نسخة
+const V3D = 'نسخة 3D · ٢٩';   // تُعرض في شاشة التحميل وفي الزاوية: للتأكد أن المتصفح حمّل آخر نسخة
 const want3d = () => gfx.d3();
 function loadingScreen() {
   const el = document.createElement('div'); el.className = 'load3d';
@@ -585,7 +585,7 @@ function questLog() {
     const ls = LESSONS.filter(l => l.u === ui), done = ls.filter(l => quests.isDone(l.id)).length;
     return `<div class="qunit"><b>${u.term === 1 ? 'الفصل الأول' : 'الفصل الثاني'} — الوحدة ${ar(u.n)}: ${u.title}</b><small>${u.place} — ${ar(done)} من ${ar(ls.length)}</small>
       ${ls.map(l => { const st = quests.isDone(l.id) ? 'done' : (c && c.id === l.id ? 'now' : 'next'); const stars = quests.data(l.id).stars || 0, act = st === 'done' && hasActivity(l.id, MODS[l.id]);
-        return `<div class="qrow ${st}"><span>${st === 'done' ? '✅' : st === 'now' ? '▶️' : '🔒'}</span><div><b>${l.title}${stars ? ` <em class="qstars">${'★'.repeat(stars)}${'☆'.repeat(3 - stars)}</em>` : ''}</b><small>${l.mission}${l.ready ? '' : ' (قريباً)'}</small></div>${act ? `<button class="act qact" data-act="${l.id}">🎲 نشاط</button>` : ''}</div>`; }).join('')}</div>`;
+        return `<div class="qrow ${st}"><span>${st === 'done' ? '✅' : st === 'now' ? '▶️' : '🔒'}</span><div><b>${l.title}${stars ? ` <em class="qstars">${'★'.repeat(stars)}<s>${'☆'.repeat(3 - stars)}</s></em>` : ''}</b><small>${l.mission}${l.ready ? '' : ' (قريباً)'}</small></div>${act ? `<button class="act qact" data-act="${l.id}">🎲 نشاط</button>` : ''}</div>`; }).join('')}</div>`;
   }).join('');
 }
 
