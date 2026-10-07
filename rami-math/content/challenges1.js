@@ -277,7 +277,7 @@ export const CH = {
 };
 
 /* ── أنواع تفاعلية إضافية (خط أعداد بسهم، ذاكرة، اكتشف الخطأ): جولة تاسعة في بعض الدروس ── */
-const addRound = (id, f) => { const m = CH[id].make; CH[id].make = () => { const it = m(); it.push(f()); return it; }; };
+const addRound = (id, f) => { const m = CH[id].make; CH[id].make = () => { const it = m(); it.push(f(it)); return it; }; };
 
 addRound('compareRound', () => { const v = R(11, 89) * 100;
   return line(`اسحب السهم إلى موضع العدد <b>${N(v)}</b> تقريباً:`, 0, 10000, v, Array.from({ length: 11 }, (_, i) => ({ v: i * 1000, l: i % 5 ? '' : N(i * 1000) })), 400, 'منتصف الخط ٥٠٠٠، وكل علامة ١٠٠٠.', 'Nn13'); });
@@ -289,6 +289,6 @@ addRound('multiplyStrategies', () => { const n = pickN([19, 29, 39, 49], 1)[0], 
 addRound('division1', () => { const d = R(3, 8), q = R(11, 29), r = R(1, d - 1), n = d * q + r, k = R(0, 1);
   const steps = [`${ar(d)} × ${ar(q)} = ${ar(k === 0 ? d * q + d : d * q)}`, `${ar(n)} − ${ar(d * q)} = ${ar(k === 1 ? r + 1 : r)}`, `${ar(n)} ÷ ${ar(d)} = ${ar(q)} والباقي ${ar(r)}`];
   return error(`حلّت أم خالد <b>${ar(n)} ÷ ${ar(d)}</b>. في أي خطوة خطأ؟`, steps, k, 'احسب كل خطوة بنفسك وقارن.', 'Nc10'); });
-addRound('sequences', () => { const v = R(1, 19) / 10;
+addRound('sequences', it => { const used = it.map(x => x.q + (x.opts || []).join(' ')).join(' '); let v; do v = R(1, 19) / 10; while (used.includes(dec(v)) && Math.random() < .97);
   return line(`اسحب السهم إلى العدد <b>${dec(v)}</b>:`, 0, 2, v, Array.from({ length: 21 }, (_, i) => ({ v: i / 10, l: i % 10 ? '' : ar(i / 10) })), .05, 'بين ٠ و١ عشرة أجزاء، كل علامة ٠٫١.', 'Nn1'); });
 

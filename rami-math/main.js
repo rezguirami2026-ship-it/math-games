@@ -13,6 +13,7 @@ import { makeTrucks, truckColliders, drawTruck, drawPile, drawSignal, drawSpot, 
 import { makeNpcs, npcVisible, updateNpc, drawNpc } from './npc/npc.js';
 import { updateKids, kidsItems, kidsPeople3d } from './world/school.js';
 import { decorItems, initGems } from './world/decor.js';
+import { updatePet, petItems } from './world/pet.js';
 import { treasureItems, nearTreasure, openTreasure, TREASURES } from './world/treasure.js';
 import { CHAPTER, introLines, npcLines } from './story/dialogues.js';
 import * as convoy from './missions/convoy.js';
@@ -190,7 +191,7 @@ async function start(state) {
   }
 }
 /* ── العرض ثلاثي الأبعاد (renderer3d): يُحمَّل فقط عند طلبه، ويرجع إلى الرسم الحالي إن لم يدعم الجهاز WebGL أو فشل التحميل ── */
-const V3D = 'نسخة 3D · ٣٩';   // تُعرض في شاشة التحميل وفي الزاوية: للتأكد أن المتصفح حمّل آخر نسخة
+const V3D = 'نسخة 3D · ٤٠';   // تُعرض في شاشة التحميل وفي الزاوية: للتأكد أن المتصفح حمّل آخر نسخة
 const want3d = () => gfx.d3();
 function loadingScreen() {
   const el = document.createElement('div'); el.className = 'load3d';
@@ -420,6 +421,7 @@ const routeLeft = pl => { if (!pl.target) return 0; let d = Math.hypot(pl.target
 /* ── التحديث ── */
 function update(dt) {
   updateKids(dt);   // طلاب المدرسة يلعبون
+  updatePet(dt, W.player);   // الرفيق سهيل يتبع البطل
   const s = game.state, pl = W.player;
   pl.speed = routeLeft(pl) > 280 ? 215 : 150;   // يجري في الطرق الطويلة ويمشي قرب الهدف
   if (pl.anim && (pl.anim.t += dt / pl.anim.dur) >= 1) pl.anim = null;
@@ -515,7 +517,7 @@ function worldItems(view, t, three) {
   if (!three) list.push({ y: HERO_DOOR.y - 13, draw: cc => signboard(cc, HERO_DOOR.x + 52, HERO_DOOR.y - 66, '🚪 خزانة البطل') });   // لافتة على جدار بيت البطل (في 3D على الواجهة نفسها)
   const giverMark = n => c && c.ready && MODS[c.id] && c.giver === n.id && !quests.isStarted(c.id) ? '!' : null;
   // الشخصيات خارج الشاشة لا تُرسم (كانت كلها تُرسم في كل إطار)
-  list.push(...kidsItems(drawNpc, view, three), ...decorItems(view), ...treasureItems(view, gateState(), t));
+  list.push(...kidsItems(drawNpc, view, three), ...decorItems(view), ...treasureItems(view, gateState(), t), ...petItems(view, t));
   if (!three) W.npcs.filter(n => npcVisible(n, s) && n.x > view.x - 60 && n.x < view.x + view.w + 60 && n.y > view.y - 20 && n.y < view.y + view.h + 110).forEach(n => list.push({ y: n.y, x: n.x, lean: .5, draw: cc => drawNpc(cc, n, giverMark(n)) }));   // في 3D: الشخصيات مجسّمة (people3d)
   const pl = W.player, mod = curMod(), hand = mod && mod.hand && c && quests.isStarted(c.id) ? mod.hand(quests.data(c.id)) : null;
   const pa = pl.anim ? pl.anim.name : pl.moving ? (pl.speed > 160 ? 'run' : 'walk') : 'idle';
@@ -594,6 +596,7 @@ bus.on('gems', () => hud.gems());
 bus.on('save', () => { if (game.state) checkBadges(unlock); });
 bus.on('save', () => {   // الارتقاء: يُحتفل به مرة واحدة حين تصبح اللعبة حرة
   if (!game.state || !W) return; const L = hud.level(); if (L.n <= (game.state.levelSeen || 1)) return;
+  if (L.n === 2 && (game.state.levelSeen || 1) < 2) setTimeout(() => hud.toast('🐪 انضم إليك رفيق صغير: الجمل «سهيل» سيتبعك في رحلتك!'), 4500);
   game.state.levelSeen = L.n; sfx('win');
   const show = () => { if (game.busy || document.getElementById('panel').classList.contains('on')) return setTimeout(show, 600); hud.panel('levelup'); };
   setTimeout(show, 900);

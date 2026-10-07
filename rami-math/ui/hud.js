@@ -121,6 +121,7 @@ export const hud = {
           return Object.keys(c).length ? Object.keys(c).map(k => `<div class="bagrow"><span>${I[k] || k}</span><b>${ar(c[k])}</b></div>`).join('') : '<div class="bagrow muted"><span>🧰 الأدوات</span><b>تشتريها من دكان العم ناصر</b></div>'; })()}
         <button class="act ghost" id="sndBtn">${sound.on ? '🔊 الصوت يعمل' : '🔇 الصوت متوقف'}</button>
         <button class="act go" id="decoBtn">🛍️ متجر زينة القرية (💎 ${ar(s.gems || 0)})</button>
+        ${levelOf(s).n >= 2 ? `<button class="act ghost" id="petBtn">${s.pet && s.pet.hidden ? '🐪 أظهر الرفيق سهيل' : '🐪 الرفيق سهيل يرافقك (اضغط لإخفائه)'}</button>` : '<div class="bagrow muted"><span>🐪 رفيق صغير ينضم إليك في المستوى ٢</span></div>'}
         <button class="act ghost" id="musBtn">${music.on ? '🎵 الموسيقى تعمل' : '🔇 الموسيقى متوقفة'}</button>
         <button class="act ghost" id="codeBtn">🔑 رمز حفظ التقدّم</button>
         <button class="act ghost" id="ramBtn">🌙 أجواء رمضان: ${PREF_LABEL[ramadanPref()]}</button>
@@ -144,6 +145,7 @@ export const hud = {
       $('sndBtn').onclick = e => { e.stopPropagation(); sound.on = !sound.on; this.panel('bag'); };
       $('codeBtn').onclick = e => { e.stopPropagation(); this.panel('code'); };
       $('musBtn').onclick = e => { e.stopPropagation(); setMusic(!music.on); this.panel('bag'); };
+      if ($('petBtn')) $('petBtn').onclick = e => { e.stopPropagation(); s.pet = s.pet || {}; s.pet.hidden = !s.pet.hidden; this.panel('bag'); };
       $('decoBtn').onclick = e => { e.stopPropagation(); openDecorShop(); };
       if ($('instBtn')) $('instBtn').onclick = e => { e.stopPropagation(); install(); };
       $('d3Btn').onclick = e => { e.stopPropagation(); gfx.set3d(!gfx.d3()); };   // يُعاد تحميل الصفحة: التقدّم محفوظ
