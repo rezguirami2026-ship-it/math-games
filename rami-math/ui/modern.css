@@ -320,3 +320,19 @@ body:has(.dialog.on) .region{opacity:0!important;animation:none!important}
 .chDance span{animation:chSpin 1.6s linear infinite}.chDance span+span{animation-direction:reverse}
 @keyframes chBob{from{transform:translateY(0) rotate(-8deg)}to{transform:translateY(-10px) rotate(8deg)}}
 @keyframes chSpin{to{transform:rotate(360deg)}}
+/* لوحة «مستواي» بألوان حيّة لكل مستوى */
+.lvCard{position:relative;background:linear-gradient(135deg,#FFF1B8,#FFD45E);border:3px solid #FFE07A;box-shadow:0 5px 0 #E0A21E,0 10px 20px rgba(200,140,20,.25);padding:14px 18px}
+.lvCard span{font-size:52px;filter:drop-shadow(0 4px 4px rgba(0,0,0,.2))}.lvCard small{font-size:14px;color:#6B4A10}.lvCard b{font-size:26px;color:#13245C}
+.lvSp{position:absolute;font-style:normal;color:#FFF7D6;font-size:18px;text-shadow:0 0 8px #fff}.lvSp.a{top:8px;left:12px}.lvSp.b{bottom:8px;left:42px;font-size:13px}
+.lvHow{position:relative;background:linear-gradient(160deg,#EEE8FF,#DCD2FF);border:2px solid #C7B8FF;box-shadow:0 4px 0 #B5A3F5;font-size:14.5px;padding:12px 14px;gap:6px}
+.lvHow b{font-size:18px;color:#13245C}.lvBulb{position:absolute;left:14px;top:10px;font-style:normal;font-size:34px;filter:drop-shadow(0 0 8px rgba(255,214,90,.8))}
+.lvList{gap:9px}
+.lvList div{opacity:1;padding:10px 12px;border-radius:16px;border:2px solid transparent;box-shadow:0 3px 0 rgba(0,0,0,.08)}
+.lvList span{font-size:26px}.lvList b{font-size:14px}.lvList small{font-size:13px}
+.lvList .lv0{background:#FFF4D6;border-color:#FFE3A0}.lvList .lv1{background:#E3F0FF;border-color:#BBD8FF}.lvList .lv2{background:#FFE6DC;border-color:#FFC8B4}
+.lvList .lv3{background:#E3F6E6;border-color:#B6E4BF}.lvList .lv4{background:#DDF5F8;border-color:#A9E3EC}.lvList .lv5{background:#E1F1FF;border-color:#B4D9FA}
+.lvList .lv6{background:#FFE3EE;border-color:#FFBDD5}.lvList .lv7{background:#EEE6FF;border-color:#CFC0FF}.lvList .lv8{background:#FFEBD6;border-color:#FFD2A3}
+.lvList .lv0 small,.lvList .lv2 small,.lvList .lv6 small,.lvList .lv8 small{color:#C2551F}.lvList small{color:#1E4FBF}
+.lvList div.now{background:linear-gradient(135deg,#FFE48A,#FFC23D);border-color:#F5A51E;box-shadow:0 4px 0 #C77A0A,0 0 14px rgba(255,194,61,.6)}
+.lvList div.now b,.lvList div.now small{color:#13245C}
+.lvList div:not(.on) span{filter:saturate(.9)}

@@ -106,10 +106,10 @@ export const hud = {
     if (kind === 'level' || kind === 'levelup') {
       const L = levelOf(s);
       body = `${kind === 'levelup' ? `<div class="lvUp">🎉</div><h3 class="lvUpT">ارتقيتَ إلى المستوى ${ar(L.n)}!</h3>` : '<h3>⭐ مستواي</h3>'}
-        <div class="lvCard"><span>${L.icon}</span><div><small>المستوى ${ar(L.n)} من ${ar(LEVELS.length)}</small><b>${L.title}</b></div></div>
+        <div class="lvCard"><span>${L.icon}</span><div><small>المستوى الحالي: ${ar(L.n)} من ${ar(LEVELS.length)}</small><b>${L.title}</b></div><i class="lvSp a">✦</i><i class="lvSp b">✦</i></div>
         ${L.max ? '<p class="chGot">وصلتَ إلى أعلى مستوى في قرية الخير! 👑</p>' : `<div class="lvBar"><i style="width:${L.pct}%"></i></div><p class="muted">${ar(L.xp)} نقطة خبرة — باقٍ ${ar(L.left)} للمستوى التالي: ${L.nextTitle}</p>`}
-        <div class="lvHow"><b>كيف أرتقي؟</b><span>📚 كل درس تنجزه: ١٠ نقاط</span><span>★ كل نجمة في درس: ٥ نقاط</span><span>🎲 كل نشاط تلعبه: ٣ نقاط (حتى ٥ مرات لكل درس)</span></div>
-        <div class="lvList">${LEVELS.map((l, i) => `<div class="${i < L.n ? 'on' : ''}${i === L.n - 1 ? ' now' : ''}"><span>${l.icon}</span><b>${l.title}</b><small>${ar(l.xp)}</small></div>`).join('')}</div>`;
+        <div class="lvHow"><i class="lvBulb">💡</i><b>كيف أرتقي؟</b><span>📚 كل درس تنجزه: ١٠ نقاط</span><span>★ كل نجمة في درس: ٥ نقاط</span><span>🎲 كل نشاط تلعبه: ٣ نقاط (حتى ٥ مرات لكل درس)</span></div>
+        <div class="lvList">${LEVELS.map((l, i) => `<div class="lv${i % 9}${i < L.n ? ' on' : ''}${i === L.n - 1 ? ' now' : ''}"><span>${l.icon}</span><b>${l.title}</b><small>${ar(l.xp)}</small></div>`).join('')}</div>`;
     }
     if (kind === 'bag') {
       body = `<h3>🎒 حقيبة ${s.hero.name}</h3>
