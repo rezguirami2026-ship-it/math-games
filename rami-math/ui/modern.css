@@ -305,3 +305,5 @@ body:has(.dialog.on) .region{opacity:0!important;animation:none!important}
 .qrow .qexp{padding:5px 10px;min-height:0;font-size:13px;border-radius:14px;background:linear-gradient(180deg,#7EC4FF,#2F7DE0);color:#fff;box-shadow:0 3px 0 #1A4FA3}
 .qrow .qexp.gold{background:linear-gradient(180deg,#FFE07A,#E0A21E);color:#5A3A10;box-shadow:0 3px 0 #9C6B16,0 0 10px rgba(255,214,90,.7)}
 .qbtns .qact{margin:0}
+.act.qdaily{display:flex;flex-direction:column;align-items:center;width:100%;margin-bottom:10px;padding:10px;border-radius:16px;font:900 17px Cairo,sans-serif;background:linear-gradient(180deg,#FFB547,#E07B12);color:#fff;box-shadow:0 4px 0 #8F3D05,0 0 14px rgba(255,170,60,.5)}
+.act.qdaily small{font-size:12.5px;opacity:.95}.act.qdaily.done{background:linear-gradient(180deg,#7BE495,#24A24E);box-shadow:0 4px 0 #0B5223}

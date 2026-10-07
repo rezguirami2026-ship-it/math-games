@@ -123,7 +123,7 @@ async function solveRounds(getCh) {
     else if (it.type === 'memory') { const ps = [...new Set(it.cards.map(c => c.p))]; for (const p of ps) { const [a, b] = it.cards.map((c, k) => c.p === p ? k : -1).filter(k => k >= 0); await chClick('.chMc', a); await chClick('.chMc', b); await sleep(350); } }
     try {
       await until(async () => (await getCh()).i === i + 1 && await G(n => { const s = document.querySelector('#panel .chSheet'); return !s || !s.querySelector('.chBurst') && (+s.dataset.i === n || !!s.querySelector('#chFin, #acEnd')); }, i + 1), `حل الجولة ${i + 1} (${it.type}: ${it.q.replace(/<[^>]+>/g, '').slice(0, 50)})`, 5000);
-    } catch (e) { throw new Error(e.message + ' — الحالة: ' + JSON.stringify(await G(() => ({ busy: window.__game.game.busy, dialog: document.getElementById('dialog').className + ':' + document.getElementById('dialog').textContent.slice(0, 80), screen: document.getElementById('screen').className, panel: document.getElementById('panel').className, msg: document.getElementById('benchMsg')?.textContent, pad: document.getElementById('npd')?.textContent })))); }
+    } catch (e) { throw new Error(e.message + ' — الحالة: ' + JSON.stringify(await G(() => ({ busy: window.__game.game.busy, dialog: document.getElementById('dialog').className + ':' + document.getElementById('dialog').textContent.slice(0, 80), screen: document.getElementById('screen').className, panel: document.getElementById('panel').className, msg: document.getElementById('benchMsg')?.textContent, pad: document.getElementById('npd')?.textContent, head: document.getElementById('panel').textContent.replace(/s+/g, ' ').slice(0, 160), di: (window.__game.state.daily && window.__game.state.daily.run) ? window.__game.state.daily.run.ch.i : null })))); }
   }
 }
 async function solveChallenge(id) {
@@ -998,6 +998,9 @@ try {
         await solveRounds(() => G(() => { const r = window.__game.state.treasureRun; return r ? r.ch : { i: 1 }; }));
         await until(() => G(() => !!document.querySelector('#panel #acEnd')), 'فتح الكنز', 8000); await panelClick('#acEnd'); await settle();
         expect(await G(() => !!window.__game.state.treasure.t1), 'لم يُسجل الكنز'); console.log('🎁 كنز مخفي فُتح بلغز');
+        await settle(); await G(() => window.__game.daily()); await until(() => G(() => !!document.querySelector('#panel .chSheet')), 'فتح مهمة اليوم', 5000); await solveRounds(() => G(() => { const r = window.__game.state.daily.run; return r ? r.ch : { i: 3 }; }));   // مهمة اليوم
+        await until(() => G(() => !!document.querySelector('#panel #acEnd')), 'نهاية مهمة اليوم', 8000); await panelClick('#acEnd'); await settle();
+        expect(await G(() => window.__game.state.daily.streak === 1), 'سلسلة الأيام'); console.log('📅 مهمة اليوم: ٣ جولات مراجعة');
       }
       played++;
     } catch (e) {

@@ -131,3 +131,27 @@ export function openExpert(W, id, mod) {
   };
   intro();
 }
+
+/* ── مهمة اليوم: ٣ جولات مراجعة من الدروس المنجزة، مرة واحدة كل يوم، بشخصية مختلفة. تُحسب الأيام المتتالية ── */
+const dayKey = (d = new Date()) => `${d.getFullYear()}-${d.getMonth() + 1}-${d.getDate()}`;
+export const dailyRec = () => { const s = game.state; return (s.daily = s.daily || { last: null, streak: 0, best: 0, total: 0 }); };
+export const dailyDone = () => dailyRec().last === dayKey();
+export function openDaily(W, MODS) {
+  const D = dailyRec(), done = LESSONS.filter(l => quests.isDone(l.id) && MODS[l.id] && MODS[l.id].challenge);
+  if (!done.length) { sheetOpen(`<div class="chEnd"><div class="chTreasure">📅</div><h3>مهمة اليوم</h3><p class="muted">أنجز أول درس لتبدأ مهام المراجعة اليومية.</p><button class="act" id="acEnd">حسناً</button></div>`); btn('acEnd', () => sheetClose()); return; }
+  if (dailyDone()) { sheetOpen(`<div class="chEnd"><div class="chTreasure">✅</div><h3>أنجزتَ مهمة اليوم!</h3><p class="chGot">🔥 ${ar(D.streak)} ${D.streak === 1 ? 'يوم' : 'أيام'} متتالية</p><p class="muted">عُد غداً لمهمة جديدة.</p><button class="act" id="acEnd">رجوع</button></div>`); btn('acEnd', () => sheetClose()); return; }
+  const today = new Date(), seed = today.getDate() + today.getMonth() * 31, pick = done.slice().sort((a, b) => ((a.id.length * 7 + seed) % 13) - ((b.id.length * 7 + seed) % 13)).slice(0, 3);
+  const items = [0, 1, 2].map(k => pickN(MODS[pick[k % pick.length].id].challenge.make(), 1)[0]),   // ثلاث جولات دائماً
+    who = MODS[pick[0].id].challenge.who;
+  const d = { ch: { items, i: 0, firstTry: 0, tries: 0, gems: 0, streak: 0 } }; D.run = d;
+  runChallenge(W, d, { id: 'daily', who, title: '📅 مهمة اليوم', make: () => items, scene: SCENES.camel.draw,
+    exit: () => { delete D.run; bus.emit('save'); },
+    onDone: () => {
+      delete D.run; const y = new Date(); y.setDate(y.getDate() - 1);
+      D.streak = D.last === dayKey(y) ? D.streak + 1 : 1; D.best = Math.max(D.best, D.streak); D.total++; D.last = dayKey();
+      game.state.gems = (game.state.gems || 0) + 8; bus.emit('gems'); bus.emit('save'); sfx('win');
+      sheetOpen(`<div class="chEnd"><div class="chTreasure">📅</div><h3>أحسنت! أنجزتَ مهمة اليوم</h3><p class="chGot">+٨ 💎 · 🔥 ${ar(D.streak)} ${D.streak === 1 ? 'يوم' : 'أيام'} متتالية</p>
+        <p class="muted">مراجعة: ${pick.map(l => l.title).join('، ')}. عُد غداً لمهمة جديدة!</p><button class="act big go" id="acEnd">رائع!</button></div>`);
+      document.querySelector('#panel .sheet').classList.add('chSheet'); btn('acEnd', () => sheetClose());
+    } });
+}
