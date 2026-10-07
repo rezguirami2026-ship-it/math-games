@@ -54,3 +54,46 @@ export function openActivity(W, id, mod) {
   };
   intro();
 }
+
+/* ── مغامرة ختام الوحدة: تُفتح بعد إنهاء كل دروس الوحدة. ١٠ جولات من دروس الوحدة كلها داخل قصة، ومكافأة كبيرة ── */
+const FINALE = [
+  { who: 'salem', title: 'مهرجان قرية الخير', story: 'القرية تحتفل! جهّز المهرجان بحل ألغاز الأعداد التي تعلمتها.', scene: 'balloons' },
+  { who: 'abdullah', title: 'السوق الكبير', story: 'يوم السوق الكبير: القياسات والمواعيد كلها بين يديك.', scene: 'camel' },
+  { who: 'saif', title: 'سفينة الأشكال', story: 'سفينة كبيرة تنتظر في الميناء: حمّلها بالهندسة الصحيحة.', scene: 'tower' },
+  { who: 'azzan', title: 'حصن الأرقام', story: 'افتح أبواب الحصن العظيم واحداً واحداً بالحساب.', scene: 'tower' },
+  { who: 'safiya', title: 'وليمة المهرجان', story: 'وليمة كبيرة لأهل الساحة: قِس وزن واحسب كالطهاة.', scene: 'balloons' },
+  { who: 'yaqoob', title: 'معرض الإحصاء', story: 'معرض الساحة يحتاج من يقرأ البيانات ويتنبأ.', scene: 'balloons' },
+  { who: 'jamal', title: 'كنز الجمعية', story: 'خزينة الجمعية مقفلة بألغاز الكسور والنسب.', scene: 'tower' },
+  { who: 'sultan', title: 'القافلة الكبرى', story: 'القافلة الكبرى تعبر الصحراء: كن دليلها.', scene: 'camel' },
+  { who: 'jaber', title: 'تاج الكريستال', story: 'اصنع تاج الكريستال من الأشكال والزوايا.', scene: 'tower' }
+];
+export const finaleRec = u => { const s = game.state; s.finales = s.finales || {}; return (s.finales[u] = s.finales[u] || { plays: 0, best: 0 }); };
+export const finaleOpen = u => LESSONS.filter(l => l.u === u).every(l => quests.isDone(l.id));
+export function openFinale(W, u, MODS) {
+  if (!finaleOpen(u)) return;
+  const F = FINALE[u] || FINALE[0], sc = SCENES[F.scene], R = finaleRec(u), ls = LESSONS.filter(l => l.u === u && MODS[l.id] && MODS[l.id].challenge);
+  const intro = () => {
+    sheetOpen(`<div class="chEnd acIntro finaleIntro"><div class="chTreasure">👑</div><h3>مغامرة الختام: ${F.title}</h3><p>${F.story}</p>
+      <p class="muted">١٠ جولات من كل دروس الوحدة، بلا مؤقت. المكافأة: ٥٠ 💚 و١٠ 💎${R.best ? ` — أفضل نتيجة: ${'★'.repeat(R.best)}${'☆'.repeat(3 - R.best)}` : ''}</p>
+      <button class="act big go" id="acGo">ابدأ المغامرة 👑</button><button class="act ghost" id="acBack">رجوع</button></div>`);
+    document.querySelector('#panel .sheet').classList.add('chSheet');
+    btn('acBack', () => sheetClose()); btn('acGo', start);
+  };
+  const start = () => {
+    const items = []; for (let k = 0; items.length < 10 && k < 40; k++) { const l = ls[k % ls.length], pool = MODS[l.id].challenge.make(); const it = pool[Math.floor(Math.random() * pool.length)]; if (it) items.push(it); }
+    const d = { ch: { items: pickN(items, 10), i: 0, firstTry: 0, tries: 0, gems: 0, streak: 0 } };
+    R.run = d;
+    runChallenge(W, d, { id: 'finale' + u, who: F.who, title: `👑 ${F.title}`, make: () => items, scene: sc.draw,
+      exit: () => { delete R.run; bus.emit('save'); },
+      onDone: (stars, C) => {
+        delete R.run; R.plays++; R.best = Math.max(R.best, stars);
+        game.state.good += 50; game.state.gems = (game.state.gems || 0) + 10; bus.emit('good'); bus.emit('gems'); bus.emit('save'); sfx('win');
+        sheetOpen(`<div class="chEnd"><div class="chTreasure">👑</div><div class="chStars">${[1, 2, 3].map(k => `<span class="${k <= stars ? 'on' : ''}">★</span>`).join('')}</div>
+          <h3>أتممتَ ${F.title}!</h3><p class="chGot">+٥٠ 💚 و+١٠ 💎</p><p class="muted">أجبت ${ar(C.firstTry)} من ${ar(C.items.length)} من المحاولة الأولى.</p>
+          <button class="act big go" id="acAgain">العب مرة أخرى 🔁</button><button class="act ghost" id="acEnd">رجوع إلى العالم</button></div>`);
+        document.querySelector('#panel .sheet').classList.add('chSheet');
+        btn('acAgain', start); btn('acEnd', () => sheetClose());
+      } });
+  };
+  intro();
+}

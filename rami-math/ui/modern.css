@@ -284,3 +284,6 @@ body:has(.dialog.on) .region{opacity:0!important;animation:none!important}
 .dsItem .act{min-height:36px;padding:4px 14px;font-size:15px}.dsItem em{font-style:normal;font-weight:900;font-size:13px;color:#2E9E5B}
 .dsItem.own{background:linear-gradient(160deg,#E6F8EC,#BDECD2);border-color:#2E9E5B}
 @media (min-width:600px){.dsGrid{grid-template-columns:repeat(4,1fr)}}
+.qfin{display:block;width:100%;margin-top:8px;padding:10px;border-radius:14px;font:900 16px Cairo,sans-serif;text-align:center}
+.act.qfin{background:linear-gradient(180deg,#9B6BFF,#5B3FD0);color:#fff;box-shadow:0 4px 0 #2E1478,0 0 14px rgba(155,107,255,.5)}
+.qfin.lock{background:#EFE7D6;color:#8A7A5A;font-size:13px}

@@ -951,6 +951,13 @@ try {
       await settle(60000, 2000);
       if (errors.length > e0) throw new Error('أخطاء في الكونسول: ' + errors.slice(e0).join(' / '));
       console.log(`✅ ${l.title}${ch ? ' + التحدي' : ''} (${((Date.now() - t0) / 1000).toFixed(1)} ث)`);
+      if (l.id === 'sequences') {   // مغامرة ختام الوحدة الأولى
+        await settle(); await G(() => window.__game.finale(0)); await until(() => G(() => !!document.querySelector('#panel #acGo')), 'بداية الختام', 5000); await panelClick('#acGo');
+        await solveRounds(() => G(() => { const f = window.__game.state.finales[0]; return f.run ? f.run.ch : { i: 10 }; }));
+        await until(() => G(() => !!document.querySelector('#panel #acEnd')), 'نهاية الختام', 8000);
+        expect(await G(() => window.__game.state.finales[0].plays === 1), 'سجل الختام'); await panelClick('#acEnd'); await settle();
+        console.log('👑 مغامرة ختام الوحدة الأولى: ١٠ جولات');
+      }
       if (played === 2) {   // المستويات: بعد ثلاثة دروس ونشاط واحد يرتقي إلى المستوى ٢، ويُعرض الاحتفال
         await until(() => G(() => window.__game.state.levelSeen >= 2 && document.getElementById('lvlN').textContent === '٢'), 'الارتقاء إلى المستوى ٢', 8000);
         await until(() => G(() => !!document.querySelector('#panel .lvUp')), 'لوحة الارتقاء', 8000);
