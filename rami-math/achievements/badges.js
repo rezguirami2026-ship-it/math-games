@@ -1,6 +1,7 @@
 // الأوسمة: تُكسب بالإتقان والمواظبة والمثابرة (لا بالسرعة). كل وسام له تقدّم ظاهر [الحالي، الهدف]، ويُفتح مرة واحدة عبر unlock().
 // تُحسب من الحفظ نفسه (نجوم الدروس، سجل الأنشطة، المستوى) ومن عدادين في state.stats: persist (جولات أُكملت بعد خطأ) وstreak (أطول سلسلة).
 import { game } from '../core/state.js';
+import { ar } from '../core/util.js';
 import { LESSONS, UNITS } from '../content/lessons.js';
 import { levelOf } from '../core/levels.js';
 
@@ -32,6 +33,14 @@ export const BADGES = [
   ...DOMAIN.map(([k, icon, name, ids]) => ({ id: 'b_' + k, icon, name, desc: `ثلاث نجوم في ${ids.length === 6 ? 'ستة' : ids.length === 5 ? 'خمسة' : ids.length === 8 ? 'ثمانية' : 'تسعة'} دروس من هذا المجال`, prog: s => [full(s, ids), ids.length] })),
   ...UNITS.map((u, i) => { const ids = LESSONS.filter(l => l.u === i).map(l => l.id); return { id: 'b_u' + i, icon: UNIT_ICON[i] || '⭐', name: `نجوم ${u.title}`, desc: `ثلاث نجوم في كل دروس وحدة ${u.title} (${u.term === 1 ? 'الفصل الأول' : 'الفصل الثاني'})`, prog: s => [full(s, ids), ids.length] }; })
 ];
+// ألوان حيّة لكل وسام (تدرّج الميدالية)
+const VIVID = [['#FF6B6B', '#C9184A'], ['#FFB627', '#E36414'], ['#4CC9F0', '#3A0CA3'], ['#7BE495', '#16803A'], ['#C77DFF', '#5A189A'], ['#FF8FAB', '#D6336C'], ['#2EC4B6', '#0B6E69'], ['#FFD60A', '#E85D04'], ['#4895EF', '#1D3557']];
+BADGES.forEach((b, i) => { b.col = VIVID[i % VIVID.length]; });
+/* بطاقة الوسام (تُستعمل في لوحة اللعبة والشاشة الرئيسية) */
+export function badgeCard(b, s) {
+  const [c, g] = b.prog(s), on = !!(s.achievements && s.achievements[b.id]), p = Math.min(1, c / g);
+  return `<div class="bd ${on ? 'on' : ''}" style="--c1:${b.col[0]};--c2:${b.col[1]}"><span class="bdm"><i>${b.icon}</i>${on ? '' : '<em class="bdl">🔒</em>'}</span><b>${b.name}</b><small>${b.desc}</small>${on ? '<em class="bdok">✓ مكتسب</em>' : `<i class="bdp"><u style="width:${Math.round(p * 100)}%"></u></i><em class="bdn">${ar(Math.min(c, g))} / ${ar(g)}</em>`}</div>`;
+}
 /* يفحص كل الأوسمة ويفتح ما اكتمل (unlock يتجاهل المفتوح سابقاً) */
 export function checkBadges(unlock) {
   const s = game.state; if (!s) return;

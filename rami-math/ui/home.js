@@ -4,7 +4,7 @@
 import { LESSONS, UNITS } from '../content/lessons.js';
 import { levelOf } from '../core/levels.js';
 import { ACH } from '../achievements/achievements.js';
-import { BADGES } from '../achievements/badges.js';
+import { BADGES, badgeCard } from '../achievements/badges.js';
 import { ar } from '../core/util.js';
 import { sound } from '../core/sound.js';
 import { ramadanPref, setRamadanPref, PREF_LABEL } from '../core/season.js';
@@ -161,7 +161,7 @@ export function homeSheets(el, saved, gfx) {
       bind();
     },
     ach() { const S = saved || { quests: {}, achievements: {} }; open(`<h3>🏅 الأوسمة <small>${ar(P.badges)} / ${ar(BADGES.length)}</small></h3><div class="bdGrid">` +
-      BADGES.map(b => { const [c, g] = b.prog(S), on = !!(S.achievements && S.achievements[b.id]); return `<div class="bd ${on ? 'on' : ''}"><span>${b.icon}</span><b>${b.name}</b><small>${b.desc}</small>${on ? '<em>✓ مكتسب</em>' : `<i><u style="width:${Math.round(Math.min(1, c / g) * 100)}%"></u></i><em>${ar(Math.min(c, g))} / ${ar(g)}</em>`}</div>`; }).join('') + '</div>' +
+      BADGES.map(b => badgeCard(b, S)).join('') + '</div>' +
       `<h3>🏆 إنجازات المغامرة <small>${ar(P.ach)} / ${ar(ACH.length)}</small></h3><div class="hlist">` + ACH.map(a => `<div class="ach ${saved && saved.achievements && saved.achievements[a.id] ? 'on' : ''}"><span>${a.icon}</span><div><b>${a.name}</b><small>${a.desc}</small></div></div>`).join('') + '</div>'); },
     les() { open(`<h3>📖 رحلة الدروس</h3><div class="hlist">` + UNITS.map((u, ui) => { const ls = LESSONS.filter(l => l.u === ui), d = ls.filter(l => P.done(l.id)).length;
       return `<div class="qunit"><b>الفصل ${u.term === 1 ? 'الأول' : 'الثاني'} · الوحدة ${ar(u.n)}: ${u.title}</b><small>📍 ${u.place} — ${ar(d)} من ${ar(ls.length)} · ★ ${ar(ls.reduce((n, l) => n + P.stars(l.id), 0))} من ${ar(ls.length * 3)}</small>` +
