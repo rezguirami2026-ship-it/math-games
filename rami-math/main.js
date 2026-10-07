@@ -192,7 +192,7 @@ async function start(state) {
   }
 }
 /* ── العرض ثلاثي الأبعاد (renderer3d): يُحمَّل فقط عند طلبه، ويرجع إلى الرسم الحالي إن لم يدعم الجهاز WebGL أو فشل التحميل ── */
-const V3D = 'نسخة 3D · ٤٩';   // تُعرض في شاشة التحميل وفي الزاوية: للتأكد أن المتصفح حمّل آخر نسخة
+const V3D = 'نسخة 3D · ٥٠';   // تُعرض في شاشة التحميل وفي الزاوية: للتأكد أن المتصفح حمّل آخر نسخة
 const want3d = () => gfx.d3();
 function loadingScreen() {
   const el = document.createElement('div'); el.className = 'load3d';
@@ -219,6 +219,15 @@ async function init3D() {
     eng.l3.ground = paintDynamicGround; eng.l3.people = people3d; eng.l3.gates = () => W.gateK; eng.l3.allDone = allDone; eng.l3.ramadan = () => SEASON.ramadan; eng.l3.signal = () => W.signalGreen;
     eng.l3.vehicles = () => { const s = game.state, m = s.missions.convoy, out = W.trucks.map(tr => ({ id: 't' + tr.i, x: tr.x, y: tr.y, load: m.loads[tr.i], covered: tr.covered, shake: tr.shake, sag: tr.sag }));
       if (quests.isStarted('division1') || quests.isDone('division1')) out.push({ id: 'van', x: convoy.VAN.x, y: convoy.VAN.y, load: m.van || 0, covered: !!s.world.delivered, s: .72 }); return out; };
+    // فقد سياق الرسم (الهاتف يحرّر ذاكرة الرسوم حين تُصغَّر اللعبة أو تُقفل الشاشة) يترك المشهد أسود: نحفظ ونعيد التحميل عند العودة،
+    // وإن تكرر الفقد تنخفض الجودة، ثم يُستعمل العرض العادي بدل شاشة سوداء
+    eng.l3.canvas.addEventListener('webglcontextlost', e => {
+      e.preventDefault(); if (game.state) saveNow(game.state);
+      let n = 1; try { n = +(sessionStorage.getItem('ramimath_lost') || 0) + 1; sessionStorage.setItem('ramimath_lost', n); if (n >= 2) localStorage.setItem('ramimath_q', 'low'); if (n >= 4) localStorage.setItem('ramimath_3d', '0'); } catch (er) {}
+      const go = () => { if (document.visibilityState === 'visible') location.reload(); };
+      if (document.visibilityState === 'visible') setTimeout(go, 400); else document.addEventListener('visibilitychange', go);
+    });
+    setTimeout(() => { try { sessionStorage.removeItem('ramimath_lost'); } catch (e) {} }, 180000);
     gfx.onQ = v => { if (v !== 'auto') eng.l3.setQuality(v); else autoQuality(); };
     if (q === 'auto') autoQuality();
     const tag = document.createElement('div'); tag.className = 'ver3d'; tag.textContent = V3D; document.body.appendChild(tag);

@@ -27,8 +27,9 @@ export async function create3D(opts) {
   canvas.style.cssText = 'position:fixed;inset:0;width:100%;height:100%;display:block;z-index:-1';   // تحت كل شيء: الـcanvas ثنائي الأبعاد الشفاف والواجهة فوقه
   document.body.insertBefore(canvas, document.body.firstChild);
   document.body.style.background = 'transparent';   // خلفية الصفحة كانت ستغطي المشهد (هو تحتها)
+  const MOB = (() => { try { return matchMedia('(pointer: coarse)').matches; } catch (e) { return false; } })(), PRH = MOB ? 1.5 : 1.75;   // الهاتف: ذاكرة رسوم أقل، فدقة وظلال أخف حتى لا يفقد المتصفح سياق الرسم (شاشة سوداء)
   const renderer = new THREE.WebGLRenderer({ canvas, antialias: q === 'high', powerPreference: 'high-performance' });
-  renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, q === 'high' ? 1.75 : 1.3));
+  renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, q === 'high' ? PRH : 1.3));
   renderer.outputColorSpace = THREE.SRGBColorSpace;
   renderer.toneMapping = THREE.ACESFilmicToneMapping; renderer.toneMappingExposure = .92;
   renderer.shadowMap.enabled = true; renderer.shadowMap.autoUpdate = false; let SHADOW_EVERY = q === 'high' ? 2 : 3; renderer.shadowMap.type = q === 'high' ? THREE.PCFSoftShadowMap : THREE.PCFShadowMap;
@@ -43,7 +44,7 @@ export async function create3D(opts) {
   // الإضاءة: شمس نهارية دافئة من الشمال الغربي (الظلال نحو الجنوب الشرقي كما في الرسم ثنائي الأبعاد)، وسماء، وبيئة للانعكاسات
   const hemi = new THREE.HemisphereLight('#CFE4FA', '#B08D62', 1.05); scene.add(hemi);
   const sun = new THREE.DirectionalLight('#FFE9C4', 2.7); sun.castShadow = true;
-  const SM = q === 'high' ? 2048 : 1024; sun.shadow.mapSize.set(SM, SM); sun.shadow.bias = -.0004; sun.shadow.normalBias = .6; sun.shadow.radius = 3;
+  const SM = q === 'high' && !MOB ? 2048 : 1024; sun.shadow.mapSize.set(SM, SM); sun.shadow.bias = -.0004; sun.shadow.normalBias = .6; sun.shadow.radius = 3;
   scene.add(sun, sun.target);
   const SUN_DIR = new THREE.Vector3(-.52, 1, -.62).normalize();
   const pmrem = new THREE.PMREMGenerator(renderer); scene.environment = pmrem.fromScene(new RoomEnvironment(), .04).texture; scene.environmentIntensity = .32;
@@ -150,10 +151,10 @@ export async function create3D(opts) {
     /* تبديل الجودة أثناء اللعب (بلا إعادة تحميل): المعالجة اللاحقة، دقة البكسل، الظلال، وطبقة الأرض المتغيرة */
     setQuality(v) {
       if (v === L.quality) return; L.quality = v; const hi = v === 'high';
-      renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, hi ? 1.75 : 1.3));
+      renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, hi ? PRH : 1.3));
       if (hi && !post) post = makeComposer(renderer, scene, camera);
       L.usePost = hi; SHADOW_EVERY = hi ? 2 : 3; DECAL_HZ = hi ? 15 : 8; DECAL_PPU = hi ? .75 : .5; decal.last = -1;
-      const SMv = hi ? 2048 : 1024; if (sun.shadow.mapSize.x !== SMv) { sun.shadow.mapSize.set(SMv, SMv); if (sun.shadow.map) { sun.shadow.map.dispose(); sun.shadow.map = null; } }
+      const SMv = hi && !MOB ? 2048 : 1024; if (sun.shadow.mapSize.x !== SMv) { sun.shadow.mapSize.set(SMv, SMv); if (sun.shadow.map) { sun.shadow.map.dispose(); sun.shadow.map = null; } }
       renderer.shadowMap.needsUpdate = true; resize();
     },
     /* مصدر الشخصيات: () => [{ id, look, lookKey, x, y, moving, phase, run, anim, animT, carry, dir }] */
