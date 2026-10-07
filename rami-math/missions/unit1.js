@@ -121,12 +121,45 @@ export const compareRound = {
       if (d.placed.length >= 4) await finish(W, 'compareRound', [{ who: 'yousef', text: 'وصلت الطرود كلها! كل طرد عند اللافتة الأقرب إليه.' }]);
     } else { sfx('cough'); say(m.x, m.y - 80, `${ar(m.v)} ليست الأقرب إلى ${ar(v)}`, '#C2304A', 2400); }
   },
-  ground(c, d, active, done) {
-    MARKS.forEach(m => post(c, m.x, m.y + 8, ar(m.v), '#2E7D5B'));
-    (d.placed || []).forEach(p => { const m = MARKS.find(x => x.v === p.m); crate(c, m.x + 20, m.y + 14, 16, ''); });
-    if (active) { c.fillStyle = '#C9B48E'; rr(c, DEPOT.x - 34, DEPOT.y - 10, 68, 24, 6); c.fill(); const left = (d.items || []).length - (d.placed || []).length - ((d.hand === null || d.hand === undefined) ? 0 : 1); for (let i = 0; i < left; i++) crate(c, DEPOT.x - 18 + i * 12, DEPOT.y + 8, 15, ''); bubble(c, DEPOT.x, DEPOT.y - 40, 'مخزن الطرود', '#2A1B66'); }
+  // ساحة المخزن على الأرض (بلا كتابة: النص على الأرض يبهت في العرض ثلاثي الأبعاد)
+  ground(c, d, active) {
+    if (!active) return;
+    c.fillStyle = 'rgba(70,45,20,.16)'; rr(c, DEPOT.x - 66, DEPOT.y - 30, 124, 64, 10); c.fill();
+    c.fillStyle = pattern(c, 'pavers'); rr(c, DEPOT.x - 62, DEPOT.y - 34, 118, 60, 9); c.fill(); c.strokeStyle = '#B08A55'; c.lineWidth = 2; rr(c, DEPOT.x - 62, DEPOT.y - 34, 118, 60, 9); c.stroke();
+  },
+  // اللافتات والمخزن قائمة وتُرسم بدقة الشاشة: أرقام كبيرة واضحة
+  draw(d, t, active) {
+    const out = MARKS.map(m => ({ y: m.y + 8, x: m.x, draw: c => roadSign(c, m.x, m.y + 8, ar(m.v)) }));
+    (d.placed || []).forEach(p => { const m = MARKS.find(x => x.v === p.m); out.push({ y: m.y + 16, x: m.x + 24, draw: c => crate(c, m.x + 24, m.y + 16, 18, '') }); });
+    if (active) { const left = (d.items || []).length - (d.placed || []).length - ((d.hand === null || d.hand === undefined) ? 0 : 1); out.push({ y: DEPOT.y + 12, x: DEPOT.x - 4, draw: c => depotShed(c, DEPOT.x - 4, DEPOT.y + 12, left) }); }
+    return out;
   }
 };
+/* لافتة طريق قائمة: عمود ولوح أخضر بحافة بيضاء وعدد كبير */
+function roadSign(c, x, y, text) {
+  c.fillStyle = 'rgba(60,35,10,.25)'; c.beginPath(); c.ellipse(x + 8, y, 14, 4, 0, 0, 7); c.fill();
+  c.fillStyle = '#8A8F98'; c.fillRect(x - 3, y - 62, 6, 62); c.fillStyle = 'rgba(255,255,255,.35)'; c.fillRect(x - 3, y - 62, 2, 62);
+  const w = 74, h = 40, bx = x - w / 2, by = y - 62 - h + 6;
+  c.fillStyle = '#145A3C'; rr(c, bx + 2, by + 3, w, h, 8); c.fill();
+  c.fillStyle = '#1E8A5C'; rr(c, bx, by, w, h, 8); c.fill(); c.strokeStyle = '#fff'; c.lineWidth = 2.5; rr(c, bx + 3, by + 3, w - 6, h - 6, 6); c.stroke();
+  c.fillStyle = '#fff'; c.font = '900 25px Cairo, sans-serif'; c.textAlign = 'center'; c.textBaseline = 'middle'; c.fillText(text, x, by + h / 2 + 2); c.textBaseline = 'alphabetic';
+}
+/* مخزن الطرود: رفّ خشبي بمظلة مخططة ولافتة كبيرة، والصناديق الباقية عليه */
+function depotShed(c, x, y, left) {
+  c.fillStyle = 'rgba(60,35,10,.25)'; c.beginPath(); c.ellipse(x + 10, y + 2, 58, 9, 0, 0, 7); c.fill();
+  const W2 = 100, H2 = 64, x0 = x - W2 / 2;
+  c.fillStyle = '#C9A06A'; c.fillRect(x0, y - H2, W2, H2); c.fillStyle = 'rgba(90,55,20,.25)'; for (let k = 1; k < 5; k++) c.fillRect(x0, y - H2 + k * 13, W2, 1.5);   // الجدار الخلفي
+  c.fillStyle = '#7A4B22'; c.fillRect(x0 - 4, y - 8, W2 + 8, 8); c.fillRect(x0 - 4, y - 38, W2 + 8, 6);   // رفّان
+  c.fillStyle = '#6B4520'; c.fillRect(x0 - 6, y - H2 - 4, 7, H2 + 4); c.fillRect(x0 + W2 - 1, y - H2 - 4, 7, H2 + 4);   // عمودان
+  for (let k = 0; k < Math.min(left, 4); k++) crate(c, x0 + 16 + (k % 2) * 30 + (k > 1 ? 40 : 0) - (k > 1 ? 30 : 0), k < 2 ? y - 8 : y - 38, 22, '');
+  for (let k = 0; k < 6; k++) { c.fillStyle = k % 2 ? '#FFFFFF' : '#E2475C'; c.beginPath(); c.moveTo(x0 - 10 + k * 20, y - H2 - 4); c.lineTo(x0 + 10 + k * 20, y - H2 - 4); c.lineTo(x0 + 14 + k * 20, y - H2 + 10); c.lineTo(x0 - 6 + k * 20, y - H2 + 10); c.closePath(); c.fill(); }   // مظلة مخططة
+  const sw = 138, sh = 32, sy = y - H2 - 42;
+  c.fillStyle = '#1B2E5C'; rr(c, x - sw / 2 + 2, sy + 3, sw, sh, 8); c.fill(); c.fillStyle = '#2A4A9A'; rr(c, x - sw / 2, sy, sw, sh, 8); c.fill();
+  c.strokeStyle = '#FFC23D'; c.lineWidth = 2.5; rr(c, x - sw / 2 + 3, sy + 3, sw - 6, sh - 6, 6); c.stroke();
+  c.fillStyle = '#6B4520'; c.fillRect(x - 40, sy + sh, 4, 10); c.fillRect(x + 36, sy + sh, 4, 10);
+  c.fillStyle = '#fff'; c.font = '900 16px Cairo, sans-serif'; c.textAlign = 'center'; c.textBaseline = 'middle'; c.direction = 'rtl'; c.fillText('📦 مخزن الطرود', x, sy + sh / 2 + 1); c.textBaseline = 'alphabetic'; c.direction = 'inherit';
+}
+
 
 /* ═══ ٣. العوامل والمضاعفات — «صفوف البستان» ═══ */
 export const ORCH = { x: 90, y: 1200, cell: 40, n: 6 };

@@ -27,13 +27,16 @@ const signCache = new Map();
 export function signMesh(text, h = 16) {
   const key = text + '|' + h;
   if (!signCache.has(key)) {
-    const c = document.createElement('canvas'), x = c.getContext('2d'); x.font = '900 44px Cairo, sans-serif';
-    const tw = Math.ceil(x.measureText(text).width) + 56; c.width = tw; c.height = 76;
-    x.font = '900 44px Cairo, sans-serif'; x.direction = 'rtl';
-    const r = 14; x.fillStyle = '#2F6B73'; x.beginPath(); x.roundRect(3, 3, tw - 6, 70, r); x.fill(); x.lineWidth = 5; x.strokeStyle = '#E3B04B'; x.stroke();
-    x.fillStyle = '#FFF6E2'; x.textAlign = 'center'; x.textBaseline = 'middle'; x.fillText(text, tw / 2, 41);
-    const t = new THREE.CanvasTexture(c); t.colorSpace = THREE.SRGBColorSpace; t.anisotropy = 4;
-    signCache.set(key, { mat: new THREE.MeshStandardMaterial({ map: t, roughness: .6 }), aspect: tw / 76 });
+    // دقة مضاعفة (خط ٨٨) حتى يبقى النص حاداً عند التقريب وعلى الشاشات الكثيفة؛ ويُعاد الرسم إذا لم يكن خط Cairo قد حُمّل بعد
+    const S = 2, F = `900 ${44 * S}px Cairo, sans-serif`, c = document.createElement('canvas'), x = c.getContext('2d'); x.font = F;
+    const tw = Math.ceil(x.measureText(text).width * 1.12) + 56 * S; c.width = tw; c.height = 76 * S;   // هامش ١٢٪ احتياطاً لعرض الخط
+    const paint = () => { x.clearRect(0, 0, c.width, c.height); x.font = F; x.direction = 'rtl';
+      x.fillStyle = '#2F6B73'; x.beginPath(); x.roundRect(3 * S, 3 * S, tw - 6 * S, 70 * S, 14 * S); x.fill(); x.lineWidth = 5 * S; x.strokeStyle = '#E3B04B'; x.stroke();
+      x.fillStyle = '#FFF6E2'; x.textAlign = 'center'; x.textBaseline = 'middle'; x.fillText(text, tw / 2, 41 * S); };
+    paint();
+    const t = new THREE.CanvasTexture(c); t.colorSpace = THREE.SRGBColorSpace; t.anisotropy = 16;
+    if (document.fonts && !document.fonts.check(F, text)) document.fonts.load(F, text).then(() => { paint(); t.needsUpdate = true; }).catch(() => {});
+    signCache.set(key, { mat: new THREE.MeshStandardMaterial({ map: t, roughness: .6 }), aspect: tw / (76 * S) });
   }
   const s = signCache.get(key), m = new THREE.Mesh(new THREE.BoxGeometry(h * s.aspect, h, 1.2), [M.wood(), M.wood(), M.wood(), M.wood(), s.mat, M.wood()]);
   m.castShadow = true; return m;

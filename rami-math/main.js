@@ -185,7 +185,7 @@ async function start(state) {
   }
 }
 /* ── العرض ثلاثي الأبعاد (renderer3d): يُحمَّل فقط عند طلبه، ويرجع إلى الرسم الحالي إن لم يدعم الجهاز WebGL أو فشل التحميل ── */
-const V3D = 'نسخة 3D · ٢٣';   // تُعرض في شاشة التحميل وفي الزاوية: للتأكد أن المتصفح حمّل آخر نسخة
+const V3D = 'نسخة 3D · ٢٤';   // تُعرض في شاشة التحميل وفي الزاوية: للتأكد أن المتصفح حمّل آخر نسخة
 const want3d = () => gfx.d3();
 function loadingScreen() {
   const el = document.createElement('div'); el.className = 'load3d';
@@ -206,6 +206,7 @@ async function init3D() {
     const R = await import('./renderer3d/index.js');
     if (!R.webglOK()) { setTimeout(() => hud.toast('⚠️ هذا الجهاز لا يدعم العرض ثلاثي الأبعاد (WebGL)، فتعمل النسخة العادية'), 800); return; }
     load = loadingScreen(); FLAGS.three = true;
+    try { await Promise.race([document.fonts.load('900 88px Cairo', 'مستودع الطرود ٠١٢٣'), new Promise(r => setTimeout(r, 2500))]); } catch (e) {}   // لافتات المباني تُقاس بخط Cairo نفسه (وإلا قُصّ النص)
     let q = 'auto'; try { q = localStorage.getItem('ramimath_q') || 'auto'; } catch (e) {}   // تلقائية: تبدأ عالية وتنخفض وحدها إن كان الجهاز بطيئاً
     eng.l3 = await R.create3D({ quality: q === 'low' ? 'low' : 'high', world: WORLD, paintGround: paintStaticGround, onProgress: k => load.set(k) });
     eng.l3.ground = paintDynamicGround; eng.l3.people = people3d; eng.l3.gates = () => W.gateK; eng.l3.allDone = allDone; eng.l3.ramadan = () => SEASON.ramadan; eng.l3.signal = () => W.signalGreen;
