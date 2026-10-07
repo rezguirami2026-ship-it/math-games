@@ -275,3 +275,12 @@ body:has(.dialog.on) .region{opacity:0!important;animation:none!important}
 .bd .bdp u{background:linear-gradient(90deg,var(--c1),var(--c2))}
 .bd .bdp{height:8px;background:#EEE6D6}
 .bd span.bdm{font-size:32px}
+/* متجر زينة القرية (world/decor.js) */
+.dsGems{margin:0;font:900 18px Cairo,sans-serif;color:#1D3A8A;text-align:center}.dsGems b{color:#3A57D0;font-size:22px}
+.dsMsg{margin:0;text-align:center;font-weight:900;color:#2E9E5B;background:#E6F8EC;border-radius:12px;padding:6px}
+.dsGrid{display:grid;grid-template-columns:repeat(2,1fr);gap:8px}
+.dsItem{display:flex;flex-direction:column;align-items:center;gap:4px;background:#fff;border:2px solid #E6D6B4;border-radius:16px;padding:10px 6px;box-shadow:0 3px 0 #D9C59C}
+.dsItem span{font-size:38px;line-height:1.1}.dsItem b{font:900 14px Cairo,sans-serif;color:#2A1B66;text-align:center}
+.dsItem .act{min-height:36px;padding:4px 14px;font-size:15px}.dsItem em{font-style:normal;font-weight:900;font-size:13px;color:#2E9E5B}
+.dsItem.own{background:linear-gradient(160deg,#E6F8EC,#BDECD2);border-color:#2E9E5B}
+@media (min-width:600px){.dsGrid{grid-template-columns:repeat(4,1fr)}}

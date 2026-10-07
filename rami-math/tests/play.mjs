@@ -961,6 +961,11 @@ try {
         await G(() => document.getElementById('bAch').click()); await until(() => G(() => document.querySelectorAll('#panel .bd.on').length >= 1), 'لوحة الأوسمة', 5000);
         await G(() => document.querySelector('#panel [data-close]').click()); await settle();
         console.log('🏅 وسام «المثابر» مفتوح ويظهر في لوحة الأوسمة');
+        const gm = await G(() => window.__game.state.gems); expect(gm >= 24, 'الجواهر لم تُجمع: ' + gm);   // ٣ تحديات × ٨ + نشاط
+        await G(() => document.getElementById('gemPill').click()); await until(() => G(() => !!document.querySelector('#panel [data-buy="flowers"]')), 'متجر الزينة', 5000);
+        await panelClick('[data-buy="flowers"]'); expect(await G(() => !!window.__game.state.decor.flowers), 'لم تُشترَ الزينة');
+        await G(() => document.querySelector('#panel [data-close]').click()); await settle();
+        console.log(`💎 ${gm} جوهرة، واشترى أصيص زهور لساحة البئر`);
       }
       if (played === 0 && ch) {   // النشاط الاختياري بعد أول درس: من رحلة الدروس، ثم إعادة اللعب
         await G(id => window.__game.activity(id), l.id);

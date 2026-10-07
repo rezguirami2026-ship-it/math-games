@@ -12,6 +12,7 @@ import { WORLD, PILE, SIGNAL, TREE_SPOTS, FARM, HOUSES, WAREHOUSE, ROADS, SOUTH,
 import { makeTrucks, truckColliders, drawTruck, drawPile, drawSignal, drawSpot, updateFx, drawFx, moveAlong, say, bubble, sparkle, dust } from './world/entities.js';
 import { makeNpcs, npcVisible, updateNpc, drawNpc } from './npc/npc.js';
 import { updateKids, kidsItems, kidsPeople3d } from './world/school.js';
+import { decorItems, initGems } from './world/decor.js';
 import { CHAPTER, introLines, npcLines } from './story/dialogues.js';
 import * as convoy from './missions/convoy.js';
 import { plant } from './missions/planting.js';
@@ -174,7 +175,7 @@ async function start(state) {
   game.state = upgrade(state);
   W = buildWorld(state); resetGates();
   hud.init({ drawMini, questLog, anchor: speakerAnchor, activity: id => openActivity(W, id, MODS[id]) });
-  hud.show(true); hud.good(); hud.level(); hud.objective(objective());
+  initGems(state); hud.show(true); hud.good(); hud.gems(); hud.level(); hud.objective(objective());
   if (state.levelSeen == null) state.levelSeen = levelOf(state).n;   // الحفظ القديم: يبدأ من مستواه الحالي بلا احتفال
   eng.snap(W.player); eng.follow = W.player; eng.onTap = onTap; eng.state = () => game.state;
   if (want3d()) await init3D();
@@ -187,7 +188,7 @@ async function start(state) {
   }
 }
 /* ── العرض ثلاثي الأبعاد (renderer3d): يُحمَّل فقط عند طلبه، ويرجع إلى الرسم الحالي إن لم يدعم الجهاز WebGL أو فشل التحميل ── */
-const V3D = 'نسخة 3D · ٣١';   // تُعرض في شاشة التحميل وفي الزاوية: للتأكد أن المتصفح حمّل آخر نسخة
+const V3D = 'نسخة 3D · ٣٢';   // تُعرض في شاشة التحميل وفي الزاوية: للتأكد أن المتصفح حمّل آخر نسخة
 const want3d = () => gfx.d3();
 function loadingScreen() {
   const el = document.createElement('div'); el.className = 'load3d';
@@ -511,7 +512,7 @@ function worldItems(view, t, three) {
   if (!three) list.push({ y: HERO_DOOR.y - 13, draw: cc => signboard(cc, HERO_DOOR.x + 52, HERO_DOOR.y - 66, '🚪 خزانة البطل') });   // لافتة على جدار بيت البطل (في 3D على الواجهة نفسها)
   const giverMark = n => c && c.ready && MODS[c.id] && c.giver === n.id && !quests.isStarted(c.id) ? '!' : null;
   // الشخصيات خارج الشاشة لا تُرسم (كانت كلها تُرسم في كل إطار)
-  list.push(...kidsItems(drawNpc, view, three));
+  list.push(...kidsItems(drawNpc, view, three), ...decorItems(view));
   if (!three) W.npcs.filter(n => npcVisible(n, s) && n.x > view.x - 60 && n.x < view.x + view.w + 60 && n.y > view.y - 20 && n.y < view.y + view.h + 110).forEach(n => list.push({ y: n.y, x: n.x, lean: .5, draw: cc => drawNpc(cc, n, giverMark(n)) }));   // في 3D: الشخصيات مجسّمة (people3d)
   const pl = W.player, mod = curMod(), hand = mod && mod.hand && c && quests.isStarted(c.id) ? mod.hand(quests.data(c.id)) : null;
   const pa = pl.anim ? pl.anim.name : pl.moving ? (pl.speed > 160 ? 'run' : 'walk') : 'idle';
@@ -586,6 +587,7 @@ function questLog() {
 
 bus.on('save', () => { if (game.state) saveSoon(game.state); });
 bus.on('good', () => hud.good());
+bus.on('gems', () => hud.gems());
 bus.on('save', () => { if (game.state) checkBadges(unlock); });
 bus.on('save', () => {   // الارتقاء: يُحتفل به مرة واحدة حين تصبح اللعبة حرة
   if (!game.state || !W) return; const L = hud.level(); if (L.n <= (game.state.levelSeen || 1)) return;

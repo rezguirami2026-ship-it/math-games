@@ -6,6 +6,7 @@ import { ACH } from '../achievements/achievements.js';
 import { LEVELS, levelOf } from '../core/levels.js';
 import { BADGES, badgeCard } from '../achievements/badges.js';
 import { mountHudIcons } from './hudicons.js';
+import { openDecorShop } from '../world/decor.js';
 import { sound, sfx } from '../core/sound.js';
 /* إعدادات العرض (تُحفظ على الجهاز): ثلاثي الأبعاد أو عادي، والجودة */
 /* تثبيت التطبيق: زر المتصفح إن وُجد (أندرويد والحاسوب)، وتعليمات «إضافة إلى الشاشة الرئيسية» في آيفون */
@@ -30,12 +31,13 @@ window.addEventListener('pointerup', () => clearInterval(hud._hold));
 export const hud = {
   init(api) {
     this.api = api; mountHudIcons();
-    $('bBag').onclick = () => this.panel('bag'); $('bMap').onclick = () => this.panel('map'); $('bAch').onclick = () => this.panel('ach'); $('lvlPill').onclick = () => this.panel('level');
+    $('bBag').onclick = () => this.panel('bag'); $('bMap').onclick = () => this.panel('map'); $('bAch').onclick = () => this.panel('ach'); $('lvlPill').onclick = () => this.panel('level'); $('gemPill').onclick = () => openDecorShop();
     // الضغط خارج اللوحة يغلق نوافذ المعلومات فقط؛ لوحات الدروس والدكان والخزانة تُغلق بزر «رجوع» الذي يحرّر اللعب
     $('panel').onclick = e => { const lesson = $('panel').querySelector('.bench, .shop, .wardrobe'); if ((e.target.id === 'panel' && !lesson) || e.target.closest('[data-close]')) this.closePanel(); };
   },
   show(on) { $('hud').classList.toggle('on', on); },
   level(up) { const L = levelOf(game.state); $('lvlPill').title = L.icon + ' ' + L.title; $('lvlN').textContent = ar(L.n); if (up) { const p = $('lvlPill'); p.classList.remove('pulse'); void p.offsetWidth; p.classList.add('pulse'); } return L; },
+  gems() { const n = $('gemN'); if (n) n.textContent = ar(game.state.gems || 0); },
   good() { $('goodN').textContent = ar(game.state.good); const p = $('goodPill'); p.classList.remove('pulse'); void p.offsetWidth; p.classList.add('pulse'); },
   objective(t) {   // مؤشر المهمة: يظهر واضحاً حين يتغير ثم يخفت بعد خمس ثوانٍ
     if (this._o === t) return;
@@ -117,6 +119,7 @@ export const hud = {
         ${(() => { const c = {}; (s.inventory || []).forEach(k => c[k] = (c[k] || 0) + 1); const I = { seeds: '🌱 بذور', bucket: '🪣 دلو', shovel: '⛏️ مجرفة', fert: '🧴 سماد', pot: '🪴 أصيص' };
           return Object.keys(c).length ? Object.keys(c).map(k => `<div class="bagrow"><span>${I[k] || k}</span><b>${ar(c[k])}</b></div>`).join('') : '<div class="bagrow muted"><span>🧰 الأدوات</span><b>تشتريها من دكان العم ناصر</b></div>'; })()}
         <button class="act ghost" id="sndBtn">${sound.on ? '🔊 الصوت يعمل' : '🔇 الصوت متوقف'}</button>
+        <button class="act go" id="decoBtn">🛍️ متجر زينة القرية (💎 ${ar(s.gems || 0)})</button>
         <button class="act ghost" id="codeBtn">🔑 رمز حفظ التقدّم</button>
         <button class="act ghost" id="ramBtn">🌙 أجواء رمضان: ${PREF_LABEL[ramadanPref()]}</button>
         ${installable() ? '<button class="act go" id="instBtn">📲 ثبّت اللعبة كتطبيق</button>' : ''}
@@ -138,6 +141,7 @@ export const hud = {
     if (kind === 'bag') {
       $('sndBtn').onclick = e => { e.stopPropagation(); sound.on = !sound.on; this.panel('bag'); };
       $('codeBtn').onclick = e => { e.stopPropagation(); this.panel('code'); };
+      $('decoBtn').onclick = e => { e.stopPropagation(); openDecorShop(); };
       if ($('instBtn')) $('instBtn').onclick = e => { e.stopPropagation(); install(); };
       $('d3Btn').onclick = e => { e.stopPropagation(); gfx.set3d(!gfx.d3()); };   // يُعاد تحميل الصفحة: التقدّم محفوظ
       if ($('qBtn')) $('qBtn').onclick = e => { e.stopPropagation(); gfx.setQ({ auto: 'high', high: 'low', low: 'auto' }[gfx.q()]); this.panel('bag'); };

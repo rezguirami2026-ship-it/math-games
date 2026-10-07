@@ -24,6 +24,7 @@ export const HUD_ICONS = {
   heart: `<svg viewBox="0 0 48 48"><defs>${G('hhG1', '#B8F28A', '#4CC23A', '#1F8A2A')}</defs>
     <path d="M24 41S7 30 7 18.5C7 12 11.5 8 16.5 8c3.6 0 6 2 7.5 4.5C25.5 10 27.9 8 31.5 8 36.5 8 41 12 41 18.5 41 30 24 41 24 41z" fill="url(#hhG1)" stroke="#145E1C" stroke-width="1.8"/>
     <path d="M14 13c-3 1-4.5 4-4 7" stroke="#fff" stroke-width="3" opacity=".6" stroke-linecap="round" fill="none"/>${shine}</svg>`,
+  gem: `<svg viewBox="0 0 48 48"><defs>${G('hgG1', '#C8F7FF', '#4CC9F0', '#3A57D0')}</defs><path d="M14 8h20l9 11-19 23L5 19z" fill="url(#hgG1)" stroke="#1D3A8A" stroke-width="1.8" stroke-linejoin="round"/><path d="M5 19h38M14 8l5 11 5 23 5-23 5-11" fill="none" stroke="#1D3A8A" stroke-width="1.2" opacity=".7"/><path d="M15 11l3 7" stroke="#fff" stroke-width="2.4" stroke-linecap="round" opacity=".8"/></svg>`,
   star: `<svg viewBox="0 0 48 48"><defs>${G('hsG1', '#FFF4B8', '#FFC23D', '#D98A10')}</defs>
     <path d="M14 30l-4 12 6-3 3 5 3-11M34 30l4 12-6-3-3 5-3-11" fill="#D63B3B" stroke="#7A1F1F" stroke-width="1"/>
     <path d="M24 4l5.6 11.4 12.6 1.8-9.1 8.9 2.1 12.5L24 32.7l-11.2 5.9 2.1-12.5-9.1-8.9 12.6-1.8z" fill="url(#hsG1)" stroke="#8A5A10" stroke-width="1.6" stroke-linejoin="round"/>
@@ -34,5 +35,6 @@ export function mountHudIcons() {
   const put = (id, k) => { const el = document.getElementById(id); if (el) el.innerHTML = `<i class="oct"><b>${HUD_ICONS[k]}</b></i>`; };
   put('bAch', 'trophy'); put('bMap', 'map'); put('bBag', 'bag');
   const lv = document.getElementById('lvlI'); if (lv) lv.outerHTML = `<i class="oct sm" id="lvlI"><b>${HUD_ICONS.star}</b></i>`;
+  const mp = document.getElementById('gemPill'); if (mp && !mp.querySelector('.oct')) mp.innerHTML = `<i class="oct sm"><b>${HUD_ICONS.gem}</b></i> <b id="gemN">${(document.getElementById('gemN') || {}).textContent || '٠'}</b>`;
   const gp = document.getElementById('goodPill'); if (gp && !gp.querySelector('.oct')) gp.innerHTML = `<i class="oct sm"><b>${HUD_ICONS.heart}</b></i> <b id="goodN">${(document.getElementById('goodN') || {}).textContent || '٠'}</b>`;
 }
