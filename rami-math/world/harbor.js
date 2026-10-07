@@ -1,7 +1,7 @@
 // «الميناء»: منطقة الوحدة الثالثة (الهندسة) على البحر شرق السوق، تُفتح بإنهاء الوحدة الثانية
 // الرسم بأسلوب القرية (world/art.js): بحر بعمق وأمواج، أرصفة خشبية، سفن داو عُمانية، مبانٍ مجسّمة، وشاطئ الإحداثيات
 import { rr, shade, ar } from '../core/util.js';
-import { FLAGS, INK, PAL, SUN, pattern, sprite, boxShadow, blobShadow, building3d, palmCached, gateNS, wallNSItems, gateNSShadows, workTable, signboard, box3d, solid } from './art.js';
+import { FLAGS, INK, PAL, SUN, pattern, sprite, boxShadow, blobShadow, building3d, palmCached, gateNS, wallNSItems, gateNSShadows, workTable, signboard, box3d, solid, tag } from './art.js';
 import { crate3d } from './entities.js';
 export const GATE2_X = 2300, SEA_X = 2930;
 export const PIER_Y = [305, 605, 905];
@@ -68,6 +68,7 @@ export function drawHarborGround(ctx, t) {
     const rope = (x1, y1, x2, y2) => { c.strokeStyle = '#6E4A2E'; c.lineWidth = 3.2; c.beginPath(); c.moveTo(x1, y1); c.lineTo(x2, y2); c.stroke(); c.strokeStyle = '#B08350'; c.lineWidth = 1.4; c.setLineDash([3, 3]); c.stroke(); c.setLineDash([]); };
     rope(X0 - 14, B.oy, X0 + GW + 14, B.oy); rope(B.ox, Y0 + GH + 14, B.ox, Y0 - 14);
     [[X0 - 16, B.oy], [X0 + GW + 16, B.oy], [B.ox, Y0 - 16], [B.ox, Y0 + GH + 16]].forEach(([x, y]) => { c.fillStyle = PAL.wood; c.fillRect(x - 2.5, y - 10, 5, 12); c.fillStyle = PAL.woodLight; c.fillRect(x - 2.5, y - 10, 5, 2); });
+    if (FLAGS.three) return;   // في 3D: أرقام المحورين قائمة وواضحة (harborDrawables)
     c.fillStyle = '#6E4A2E'; c.font = '900 12px Cairo, sans-serif'; c.textAlign = 'center';
     for (let i = -B.xr; i <= B.xr; i++) if (i) c.fillText(i < 0 ? '−' + ar(-i) : ar(i), B.ox + i * B.u, B.oy + 17);
     for (let j = -B.yr; j <= B.yr; j++) if (j) c.fillText(j < 0 ? '−' + ar(-j) : ar(j), B.ox - 15, B.oy - j * B.u + 4);
@@ -90,6 +91,11 @@ function pier(c, x, y, w, h) {   // رصيف خشبي: أعمدة في الما�
   c.fillStyle = '#3D3A3A'; [x + w - 8, x + 8].forEach(px => { c.beginPath(); c.arc(px, y + 5, 2.6, 0, 7); c.fill(); });   // أعمدة ربط الحبال
 }
 export function harborDrawables(open, t) {
+  const axis = [];
+  if (FLAGS.three) { const B = BEACH, X0 = B.ox - B.xr * B.u, Y0 = B.oy - B.yr * B.u, GW = 2 * B.xr * B.u, GH = 2 * B.yr * B.u, n = v => v < 0 ? '−' + ar(-v) : ar(v), o = { fs: 15, bg: '#FFF6DE', line: '#6E4A2E', fg: '#4A2E14' };
+    for (let i = -B.xr; i <= B.xr; i++) if (i) axis.push({ y: B.oy + 20, x: B.ox + i * B.u, draw: c => tag(c, B.ox + i * B.u, B.oy + 24, n(i), o) });
+    for (let j = -B.yr; j <= B.yr; j++) if (j) axis.push({ y: B.oy - j * B.u + 6, x: B.ox - 18, draw: c => tag(c, B.ox - 18, B.oy - j * B.u + 10, n(j), o) });
+    axis.push({ y: B.oy + 8, x: X0 + GW + 34, draw: c => tag(c, X0 + GW + 34, B.oy + 12, 'س', { fs: 18, bg: '#E2475C', line: '#fff', fg: '#fff' }) }, { y: Y0 - 16, x: B.ox, draw: c => tag(c, B.ox, Y0 - 12, 'ص', { fs: 18, bg: '#E2475C', line: '#fff', fg: '#fff' }) }); }
   const out = [];
   if (!FLAGS.three) out.push({ y: 700, draw: c => gateNS(c, 'htower', GATE2_X, open, 'الميناء') }, ...wallNSItems('htower', GATE2_X));
   if (!FLAGS.three) out.push({ y: FRAMES.y + FRAMES.h, draw: c => building3d(c, 'frames', Object.assign({}, FRAMES, { H: H_B, wall: '#DCE4EA', door: '#2F6B73', sign: 'ورشة الهياكل', ac: 1 })) });
@@ -100,7 +106,7 @@ export function harborDrawables(open, t) {
   if (!FLAGS.three) out.push({ y: LIGHTHOUSE.y + LIGHTHOUSE.s, draw: c => lighthouse(c, t) });
   if (!FLAGS.three) PALMS_H.forEach(p => out.push({ y: p.y, draw: c => palmCached(c, p.x, p.y, 1, false, t) }));
   if (!FLAGS.three) out.push({ y: 1400, x: 2820, draw: c => umbrella(c, 2820, 1400) });
-  return out;
+  return out.concat(axis);
 }
 /* سفينة داو عُمانية: بدن خشبي منحنٍ بمؤخرة مرتفعة، حزام بلون الفريق، صارٍ مائل وشراع مثلث (لاتيني) */
 function dhow(c, x, y, col, t) {

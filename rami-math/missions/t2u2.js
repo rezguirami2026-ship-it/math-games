@@ -121,7 +121,7 @@ export const statsAverage = Object.assign({
         <div class="row2"><button class="act ghost" id="benchOut">رجوع</button><button class="act go" id="benchGo">🧺 تساوت السلال</button></div>`);
       const cv = panel().querySelector('#bk'), c = hiDPI(cv), X = i => 34 + i * 63;
       const draw = () => { c.clearRect(0, 0, 320, 170); d.bk.forEach((n, i) => { c.fillStyle = d.hand === i ? '#FFE7A0' : '#C98A3A'; rr(c, X(i) - 24, 128, 48, 30, 6); c.fill(); for (let k = 0; k < n; k++) { c.fillStyle = '#7A3E12'; c.beginPath(); c.ellipse(X(i) - 8 + (k % 2) * 16, 122 - Math.floor(k / 2) * 11, 7, 5, 0, 0, 7); c.fill(); } });
-        if (d.hand >= 0) { c.fillStyle = '#2A1B66'; c.font = '900 12px Cairo, sans-serif'; c.textAlign = 'center'; c.fillText('تمرة بيدك ✋', 160, 14); } };
+        if (d.hand >= 0) { c.fillStyle = '#2A1B66'; c.font = '900 15px Cairo, sans-serif'; c.textAlign = 'center'; c.fillText('تمرة بيدك ✋', 160, 16); } };
       draw();
       cv.addEventListener('pointerdown', e => { e.stopPropagation(); const b = cv.getBoundingClientRect(), i = Math.round((e.clientX - b.left - 34) / 63); if (i < 0 || i > 4) return;
         if (d.hand < 0) { if (d.bk[i] > 0) { d.bk[i]--; d.hand = i; sfx('pick'); } } else { d.bk[i]++; d.hand = -1; sfx('drop'); } draw(); });

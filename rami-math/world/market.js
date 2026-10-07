@@ -1,7 +1,7 @@
 // «السوق الأسبوعي»: منطقة الوحدة الثانية (القياس) شرق القرية، تُفتح بوابتها بعد إنهاء الوحدة الأولى
 // الرسم بأسلوب القرية نفسه (world/art.js): مبنى مجسّم، ملعب بعشب، محطة حافلات بمظلة، ساحة مرصوفة، وأرض حظيرة
 import { rr, shade } from '../core/util.js';
-import { FLAGS, INK, PAL, SUN, boxShadow, blobShadow, signboard, pattern, sprite, building3d, leanAt, palmCached, shrub, gateNS, wallNSItems, gateNSShadows, stall, solid } from './art.js';
+import { FLAGS, INK, PAL, SUN, boxShadow, blobShadow, signboard, pattern, sprite, building3d, leanAt, palmCached, shrub, gateNS, wallNSItems, gateNSShadows, stall, solid, bigSign } from './art.js';
 export const GATE_X = 1500;
 export const CARP = { x: 1580, y: 140, w: 200, h: 120 }, BENCH = { x: 1700, y: 332 };
 export const FIELD = { x: 1880, y: 140, w: 380, h: 300 }, BOARD = { x: 1990, y: 478 };
@@ -68,7 +68,7 @@ export function drawMarketGround(ctx) {
     c.strokeStyle = 'rgba(70,45,25,.35)'; c.lineWidth = 1;   // شبكة الأمتار: جزء من رياضيات الدرس
     for (let i = 0; i <= P.n; i++) { c.beginPath(); c.moveTo(P.x + i * P.cell, P.y); c.lineTo(P.x + i * P.cell, P.y + W2); c.moveTo(P.x, P.y + i * P.cell); c.lineTo(P.x + W2, P.y + i * P.cell); c.stroke(); }
     [[P.x - 8, P.y - 8], [P.x + W2 + 4, P.y - 8], [P.x - 8, P.y + W2 + 4], [P.x + W2 + 4, P.y + W2 + 4]].forEach(([x, y]) => { c.fillStyle = PAL.wood; c.fillRect(x, y, 5, 5); });
-    signboard(c, P.x + W2 / 2, P.y + W2 + 26, 'أرض الحظيرة — كل مربع ١ م');
+    if (!FLAGS.three) signboard(c, P.x + W2 / 2, P.y + W2 + 26, 'أرض الحظيرة — كل مربع ١ م');   // في 3D: لافتة قائمة (marketDrawables)
   });
   if (!FLAGS.three) FLOOD.forEach(([x, y]) => { ctx.strokeStyle = SUN.color; ctx.lineWidth = 3; ctx.beginPath(); ctx.moveTo(x, y); ctx.lineTo(x + SUN.dx * 110, y + SUN.dy * 110); ctx.stroke(); });
   PALMS_M.forEach(p => blobShadow(ctx, p.x, p.y, 26, 80));
@@ -86,6 +86,7 @@ export function marketDrawables(open, t) {
   if (!FLAGS.three) FLOOD.forEach(([x, y]) => out.push({ y, x, draw: c => floodlight(c, x, y) }));
   if (!FLAGS.three) out.push({ y: STATION.y + 30, draw: c => canopy(c) });
   if (!FLAGS.three) BAYS.forEach(b => out.push({ y: b.y - 30, x: b.x - 52, draw: c => bayPost(c, b) }));
+  if (FLAGS.three) { const P = PEN, W2 = P.cell * P.n; out.push({ y: P.y + W2 + 30, x: P.x + W2 / 2, draw: c => bigSign(c, P.x + W2 / 2, P.y + W2 + 30, 'أرض الحظيرة — كل مربع ١ م', { fs: 18, h: 30, bg: '#6B4520', line: '#FFC23D' }) }); }
   if (!FLAGS.three) out.push({ y: TIMETABLE.y, x: TIMETABLE.x, draw: c => timetable(c, TIMETABLE.x, TIMETABLE.y) });
   if (!FLAGS.three) out.push({ y: CAL.y, x: CAL.x, draw: c => calendarBoard(c, CAL.x, CAL.y) });
   if (!FLAGS.three) [[SQUARE.x + 50, '#2F6B73'], [SQUARE.x + 220, '#B8613E']].forEach(([x, col]) => out.push({ y: SQUARE.y + 174, x, draw: c => stall(c, x, SQUARE.y + 174, col) }));

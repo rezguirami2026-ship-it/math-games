@@ -6,7 +6,7 @@ import { earn } from '../rewards/goodDeeds.js';
 import { unlock } from '../achievements/achievements.js';
 import { sfx } from '../core/sound.js';
 import { complete, data } from './quests.js';
-import { PAL, INK, pattern, signboard } from '../world/art.js';
+import { PAL, INK, pattern, signboard, FLAGS } from '../world/art.js';
 import { shade } from '../core/util.js';
 
 export const SHOP = { x: 210, y: 1032 };
@@ -139,5 +139,5 @@ export function drawGarden(ctx, done) {   // حوض مرتفع بإطار خشب
       ctx.fillStyle = '#FFE08A'; ctx.beginPath(); ctx.arc(px, py - 2, 1.1, 0, 7); ctx.fill();
     }
   } else { ctx.strokeStyle = 'rgba(60,35,15,.35)'; ctx.lineWidth = 2; for (let r = 0; r < 3; r++) { ctx.beginPath(); ctx.moveTo(g.x + 16, g.y + 20 + r * 16); ctx.lineTo(g.x + g.w - 16, g.y + 20 + r * 16); ctx.stroke(); } }
-  signboard(ctx, g.x + g.w / 2, g.y + g.h + 16, done ? 'حديقة المدرسة 🌼' : 'حديقة المدرسة');
+  if (!FLAGS.three) signboard(ctx, g.x + g.w / 2, g.y + g.h + 16, done ? 'حديقة المدرسة 🌼' : 'حديقة المدرسة');   // في 3D لافتة قائمة (main.js)
 }

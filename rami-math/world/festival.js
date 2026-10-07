@@ -129,7 +129,7 @@ export function festivalDrawables(open, t) {
     out.push({ y: C.y + C.r * .6, x: C.x, draw: c => stall(c, C.x, C.y + C.r * .6, '#E2475C') });
     out.push({ y: RIDES.kiosk.y, x: RIDES.kiosk.x, draw: c => stall(c, RIDES.kiosk.x, RIDES.kiosk.y, '#2F6FB2') });
   }
-  out.push({ y: FUNPARK.gate[0] - 20, x: FUNPARK.x, draw: c => signboard(c, FUNPARK.x, FUNPARK.gate[0] - 60, '🎡 مدينة الألعاب') });
+  if (!FLAGS.three) out.push({ y: FUNPARK.gate[0] - 20, x: FUNPARK.x, draw: c => signboard(c, FUNPARK.x, FUNPARK.gate[0] - 60, '🎡 مدينة الألعاب') });   // في 3D لافتة مجسّمة (city.js)
   if (!FLAGS.three) BUNTING.forEach(([x1, x2, y, h]) => out.push({ y: y + 40, draw: c => bunting(c, elev(x1, y, h), elev(x2, y, h), t) }));   // معلّقة في الهواء: تُرسم بعد ما تحتها
   return out;
 }

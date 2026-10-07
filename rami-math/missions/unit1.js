@@ -2,7 +2,7 @@
 import { game } from '../core/state.js';
 import { bus } from '../core/events.js';
 import { ar, wait, rr, clamp, shade } from '../core/util.js';
-import { PAL, INK, pattern, sprite, signboard, palm, palmCached } from '../world/art.js';
+import { FLAGS, PAL, INK, pattern, sprite, signboard, palm, palmCached, tag, bigSign } from '../world/art.js';
 import { say, puff, floatUp, bubble } from '../world/entities.js';
 import { earn } from '../rewards/goodDeeds.js';
 import { sfx } from '../core/sound.js';
@@ -199,7 +199,7 @@ export const factorsMultiples = {
       k.fillStyle = pattern(k, 'soil'); rr(k, O.x, O.y, W2, W2, 6); k.fill();
       k.strokeStyle = 'rgba(60,35,15,.3)'; k.lineWidth = 1.4; for (let r = 0; r < O.n; r++) { k.beginPath(); k.moveTo(O.x + 6, O.y + O.cell * (r + .5) + 6); k.lineTo(O.x + W2 - 6, O.y + O.cell * (r + .5) + 6); k.stroke(); }
       k.strokeStyle = INK; k.lineWidth = 1; rr(k, O.x - 8, O.y - 8, W2 + 16, W2 + 16, 8); k.stroke();
-      signboard(k, O.x + W2 / 2, O.y + W2 + 24, 'بستان العم حمد');
+      if (!FLAGS.three) signboard(k, O.x + W2 / 2, O.y + W2 + 24, 'بستان العم حمد');   // في 3D لافتة قائمة (main.js)
     });
     const rows = done ? 3 : d.rows || 0, cols = done ? 6 : d.cols || 0;
     for (let r = 0; r < rows; r++) for (let k = 0; k < cols; k++) {
@@ -408,20 +408,25 @@ export const sequences = {
     });
     c.strokeStyle = 'rgba(255,255,255,.35)'; c.lineWidth = 1.2; for (let i = 0; i < 6; i++) { const x = P.x + 50 + i * 72 + (t * 16 % 26), y = P.y + 30 + (i % 3) * 46; c.beginPath(); c.moveTo(x, y); c.quadraticCurveTo(x + 9, y - 3, x + 18, y); c.stroke(); }
     if (!d.rows) return;
-    signboard(c, BANK_N.x, BANK_N.y - 30, `${d.seq.slice(0, 3).map(ar).join('، ')}، …`);
     d.rows.forEach((row, r) => COLS.forEach((x, k) => {   // صخرة مجسّمة: جانب داكن ثم سطح فاتح، والرقم عليها
       const passed = r <= d.row && k === row.ok, y = ROWS[r];
       c.fillStyle = 'rgba(0,30,50,.25)'; c.beginPath(); c.ellipse(x + 3, y + 6, 27, 9, 0, 0, 7); c.fill();
       c.fillStyle = passed ? '#7E6E54' : '#8C7D62'; c.beginPath(); c.ellipse(x, y + 3, 26, 11, 0, 0, 7); c.fill();
       c.fillStyle = passed ? '#A8977A' : '#C4B497'; c.beginPath(); c.ellipse(x, y - 1, 24, 9.5, 0, 0, 7); c.fill();
       c.strokeStyle = INK; c.lineWidth = .8; c.beginPath(); c.ellipse(x, y + 1, 26, 11, 0, 0, 7); c.stroke();
-      c.fillStyle = '#3A2E1E'; c.font = '900 12px Cairo, sans-serif'; c.textAlign = 'center'; c.fillText(ar(row.opts[k]), x, y + 3);
     }));
     // صندوق الكنز على الضفة الجنوبية: يُفتح ويلمع بعد العبور
     const bx = BANK_S.x + 53, by = BANK_S.y + 4;
     c.fillStyle = '#7A4A2A'; rr(c, bx - 13, by - 14, 26, 14, 2); c.fill(); c.fillStyle = done ? '#FFC23D' : '#9C6438'; rr(c, bx - 13, by - 22, 26, 9, 4); c.fill();
     c.fillStyle = '#E3B04B'; c.fillRect(bx - 2, by - 16, 4, 6); c.strokeStyle = INK; c.lineWidth = .8; c.strokeRect(bx - 13, by - 22, 26, 22);
     if (done) { c.fillStyle = 'rgba(255,215,90,.5)'; c.beginPath(); c.arc(bx, by - 22, 10 + Math.sin(t * 4) * 2, 0, 7); c.fill(); }
+  },
+  // لوحة النمط وأرقام الحجارة قائمة وبدقة الشاشة (كانت على الأرض فتبهت في 3D)
+  draw(d, t, active) {
+    if (!d.rows || !active) return [];
+    const out = [{ y: BANK_N.y - 26, x: BANK_N.x, draw: c => bigSign(c, BANK_N.x, BANK_N.y - 26, `${d.seq.slice(0, 3).map(ar).join('، ')}، …`, { fs: 22, h: 44 }) }];
+    d.rows.forEach((row, r) => COLS.forEach((x, k) => out.push({ y: ROWS[r] - 2, x, draw: c => tag(c, x, ROWS[r] + 4, ar(row.opts[k]), { fs: 17, bg: r <= d.row && k === row.ok ? '#DDF6E8' : '#FFFDF6' }) })));
+    return out;
   }
 };
 

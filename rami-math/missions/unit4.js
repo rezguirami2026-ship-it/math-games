@@ -4,7 +4,7 @@ import { say, puff, bubble } from '../world/entities.js';
 import { sfx } from '../core/sound.js';
 import { R, shuffle, near, changed, dec, sg, finish, panel, sheetOpen, sheetClose, hiDPI, msgBox, setMsg, btn, numPad, counters } from './bench.js';
 import { BW, ST4, B4, H_B } from '../world/fort.js';
-import { PAL, INK, onRoof } from '../world/art.js';
+import { PAL, INK, onRoof, bigSign, tag } from '../world/art.js';
 import { rial } from './shop.js';
 
 const nArab = s => String(s).replace(/[٠-٩]/g, d => '٠١٢٣٤٥٦٧٨٩'.indexOf(d)).replace('٫', '.').trim();
@@ -34,10 +34,15 @@ export const numberLineEstimate = {
       if (d.r >= 3) await finish(W, 'numberLineEstimate', [{ who: 'hamdan', text: 'ثلاث رايات في مواضعها! عينك دقيقة في التقدير.' }]); }
     else { sfx('cough'); say(x, BW.y - 70, `هنا نحو ${ar(Math.round(val / 10) * 10)}، والمطلوب ${ar(r.v)}`, '#C2304A', 2400); }
   },
+  // أعمدة الأرقام على طرفي الجسر قائمة وبدقة الشاشة (كانت على الأرض فتبهت في 3D)
+  draw(d, t, active, done) {
+    if (!d.rounds || done) return []; const r = d.rounds[Math.min(d.r, 2)], out = [];
+    const post = (x, v) => out.push({ y: BW.y - 10, x, draw: c => bigSign(c, x, BW.y - 10, v, { fs: 22, h: 40, bg: '#1E8A5C', line: '#fff' }) });
+    post(BW.x0, ar(r.lo)); post(BW.x1, ar(r.hi)); if (r.mid) post((BW.x0 + BW.x1) / 2, ar((r.lo + r.hi) / 2));
+    return out;
+  },
   ground(c, d, active, done) {
-    if (!d.rounds) return; const r = d.rounds[Math.min(d.r, 2)];
-    const post = (x, t) => { c.fillStyle = 'rgba(60,35,10,.22)'; c.beginPath(); c.ellipse(x + 6, BW.y - 10, 9, 3, 0, 0, 7); c.fill(); c.fillStyle = PAL.wood; c.fillRect(x - 3, BW.y - 42, 6, 32); c.fillStyle = 'rgba(255,255,255,.18)'; c.fillRect(x - 3, BW.y - 42, 2, 32); c.fillStyle = '#C9B48E'; rr(c, x - 28, BW.y - 63, 56, 24, 5); c.fill(); c.fillStyle = '#FFFDF6'; rr(c, x - 28, BW.y - 66, 56, 22, 5); c.fill(); c.strokeStyle = INK; c.lineWidth = .9; rr(c, x - 28, BW.y - 66, 56, 25, 5); c.stroke(); c.fillStyle = '#2A1B66'; c.font = '900 13px Cairo, sans-serif'; c.textAlign = 'center'; c.fillText(t, x, BW.y - 50); };   // لافتة خشبية بحافة
-    if (!done) { post(BW.x0, ar(r.lo)); post(BW.x1, ar(r.hi)); if (r.mid) post((BW.x0 + BW.x1) / 2, ar((r.lo + r.hi) / 2)); }
+    if (!d.rounds) return;
     (d.flags || []).forEach(f => { c.fillStyle = 'rgba(60,35,10,.2)'; c.beginPath(); c.ellipse(f.x + 4, BW.y - 10, 6, 2, 0, 0, 7); c.fill(); c.fillStyle = '#5B3A1E'; c.fillRect(f.x - 1.5, BW.y - 46, 3, 36); c.fillStyle = '#E3B04B'; c.beginPath(); c.arc(f.x, BW.y - 47, 2.2, 0, 7); c.fill(); c.fillStyle = '#E2475C'; c.beginPath(); c.moveTo(f.x + 1.5, BW.y - 45); c.quadraticCurveTo(f.x + 12, BW.y - 46, f.x + 24, BW.y - 39); c.quadraticCurveTo(f.x + 12, BW.y - 35, f.x + 1.5, BW.y - 32); c.fill(); c.strokeStyle = 'rgba(0,0,0,.25)'; c.lineWidth = .7; c.stroke(); });
   }
 };

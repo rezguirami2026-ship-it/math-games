@@ -583,3 +583,22 @@ export function onRoof(ctx, b, draw) {
   const { x, w, H } = b, { lx, ly } = leanAt(x + w / 2, b.y + b.h);
   ctx.save(); ctx.translate(lx * H, H * ly); draw(ctx, b.y - H); ctx.restore();
 }
+/* نص واضح قائم (يُرسم من قائمة العناصر القائمة draw لا على الأرض: في 3D يُرسم بدقة الشاشة فلا يبهت).
+   tag: رقم/كلمة على لوحة صغيرة؛ bigSign: لوحة كبيرة على عمود. */
+export function tag(c, x, y, text, o = {}) {
+  const fs = o.fs || 16; c.font = `900 ${fs}px Cairo, sans-serif`; c.direction = 'rtl';
+  const w = Math.max(fs * 1.6, c.measureText(text).width + fs * .9), h = fs * 1.45, y0 = y - (o.lift || 0) - h;
+  c.fillStyle = 'rgba(0,0,0,.22)'; rr(c, x - w / 2 + 1.5, y0 + 2, w, h, h * .35); c.fill();
+  c.fillStyle = o.bg || '#FFFDF6'; rr(c, x - w / 2, y0, w, h, h * .35); c.fill();
+  c.strokeStyle = o.line || '#2A1B66'; c.lineWidth = 1.6; rr(c, x - w / 2, y0, w, h, h * .35); c.stroke();
+  c.fillStyle = o.fg || '#2A1B66'; c.textAlign = 'center'; c.textBaseline = 'middle'; c.fillText(text, x, y0 + h / 2 + 1); c.textBaseline = 'alphabetic'; c.direction = 'inherit';
+}
+export function bigSign(c, x, y, text, o = {}) {
+  const fs = o.fs || 18, H = o.h || 56; c.font = `900 ${fs}px Cairo, sans-serif`; c.direction = 'rtl';
+  const w = c.measureText(text).width + fs * 1.4, h = fs * 1.8, y0 = y - H - h;
+  c.fillStyle = 'rgba(60,35,10,.25)'; c.beginPath(); c.ellipse(x + 8, y, 12, 4, 0, 0, 7); c.fill();
+  c.fillStyle = '#6B4520'; c.fillRect(x - 3, y - H - 2, 6, H + 2);
+  c.fillStyle = shade(o.bg || '#2A4A9A', -30); rr(c, x - w / 2 + 2, y0 + 3, w, h, 8); c.fill();
+  c.fillStyle = o.bg || '#2A4A9A'; rr(c, x - w / 2, y0, w, h, 8); c.fill(); c.strokeStyle = o.line || '#FFC23D'; c.lineWidth = 2.5; rr(c, x - w / 2 + 3, y0 + 3, w - 6, h - 6, 6); c.stroke();
+  c.fillStyle = '#fff'; c.textAlign = 'center'; c.textBaseline = 'middle'; c.fillText(text, x, y0 + h / 2 + 1); c.textBaseline = 'alphabetic'; c.direction = 'inherit';
+}

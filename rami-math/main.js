@@ -15,8 +15,8 @@ import { CHAPTER, introLines, npcLines } from './story/dialogues.js';
 import * as convoy from './missions/convoy.js';
 import { plant } from './missions/planting.js';
 import * as tanks from './missions/tanks.js';
-import { SHOP, openCounter, drawShop, drawShopBack, drawGarden } from './missions/shop.js';
-import { UNIT1, POND } from './missions/unit1.js';
+import { SHOP, GARDEN, openCounter, drawShop, drawShopBack, drawGarden } from './missions/shop.js';
+import { UNIT1, POND, ORCH } from './missions/unit1.js';
 import { stage2 } from './missions/challenge.js';
 import { openActivity, hasActivity } from './missions/activity.js';
 import { levelOf } from './core/levels.js';
@@ -39,7 +39,7 @@ import { T2U3 } from './missions/t2u3.js';
 import { T2U4 } from './missions/t2u4.js';
 import { T2U5 } from './missions/t2u5.js';
 import { workshopColliders, drawWorkshopGround, workshopDrawables, STAGE } from './world/workshop.js';
-import { signboard, upright, CAM, SEASON, FLAGS } from './world/art.js';
+import { signboard, upright, CAM, SEASON, FLAGS, bigSign } from './world/art.js';
 import { ramadanOn } from './core/season.js';
 import { caravanColliders, drawCaravanGround, caravanDrawables } from './world/caravan.js';
 import { coopColliders, drawCoopGround, coopDrawables } from './world/coop.js';
@@ -185,7 +185,7 @@ async function start(state) {
   }
 }
 /* ── العرض ثلاثي الأبعاد (renderer3d): يُحمَّل فقط عند طلبه، ويرجع إلى الرسم الحالي إن لم يدعم الجهاز WebGL أو فشل التحميل ── */
-const V3D = 'نسخة 3D · ٢٥';   // تُعرض في شاشة التحميل وفي الزاوية: للتأكد أن المتصفح حمّل آخر نسخة
+const V3D = 'نسخة 3D · ٢٦';   // تُعرض في شاشة التحميل وفي الزاوية: للتأكد أن المتصفح حمّل آخر نسخة
 const want3d = () => gfx.d3();
 function loadingScreen() {
   const el = document.createElement('div'); el.className = 'load3d';
@@ -498,6 +498,11 @@ function worldItems(view, t, three) {
   if (tanksOn) tanks.TANKS.forEach((tk, i) => list.push({ y: tk.y, x: tk.x, draw: cc => tanks.drawTank(cc, i, T.levels[i], T.targets ? T.targets[i] : { t: 'd', s: '؟' }, T.done[i], t) }));
   tanks.TANKS.forEach((tk, i) => { if (T.done[i]) { const hs = HOUSES[tk.house]; list.push({ y: hs.y + hs.h + 9, draw: cc => tanks.drawFlowers(cc, hs) }); } });
   if (!three) list.push({ y: SHOP.y - 42, x: SHOP.x, draw: cc => drawShopBack(cc) }, { y: SHOP.y, x: SHOP.x, draw: cc => drawShop(cc) });
+  if (three) {   // لافتات أماكن ثابتة كانت مرسومة على الأرض: قائمة وواضحة في 3D
+    const O = ORCH, W2 = O.cell * O.n, G = GARDEN;
+    list.push({ y: O.y + W2 + 28, x: O.x + W2 / 2, draw: cc => bigSign(cc, O.x + W2 / 2, O.y + W2 + 28, 'بستان العم حمد', { fs: 18, h: 30, bg: '#2E7D5B', line: '#FFE7A0' }) },
+      { y: G.y + G.h + 20, x: G.x + G.w / 2, draw: cc => bigSign(cc, G.x + G.w / 2, G.y + G.h + 20, quests.isDone('decimalAdd') ? 'حديقة المدرسة 🌼' : 'حديقة المدرسة', { fs: 18, h: 26, bg: '#B0476A', line: '#FFE7A0' }) });
+  }
   if (!three) list.push({ y: HERO_DOOR.y - 13, draw: cc => signboard(cc, HERO_DOOR.x + 52, HERO_DOOR.y - 66, '🚪 خزانة البطل') });   // لافتة على جدار بيت البطل (في 3D على الواجهة نفسها)
   const giverMark = n => c && c.ready && MODS[c.id] && c.giver === n.id && !quests.isStarted(c.id) ? '!' : null;
   // الشخصيات خارج الشاشة لا تُرسم (كانت كلها تُرسم في كل إطار)
