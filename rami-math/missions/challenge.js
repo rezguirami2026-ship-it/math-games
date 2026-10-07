@@ -31,12 +31,12 @@ function render(W, d, cfg, msg) {
   if (it.type === 'sort') body = `<div class="chBins">${it.bins.map((b, i) => `<div class="chBin b${i}" data-b="${i}"><h4>${b}</h4><div class="chBinIn"></div></div>`).join('')}</div><div class="chPool">${cards(it, 'chCard')}</div><button class="act go" id="chGo">✓ تحقّق</button>`;
   if (it.type === 'match') body = `<div class="chMatch"><div>${it.left.map((o, k) => `<button class="chL" data-k="${k}">${o}</button>`).join('')}</div><div>${it.right.map((o, k) => `<button class="chR" data-k="${k}">${o}</button>`).join('')}</div></div><button class="act go" id="chGo">✓ تحقّق</button>`;
   if (it.type === 'num') body = `<div id="chPad"></div>`;
-  sheetOpen(`<div class="chHead"><span class="chFace">${face}</span><div><b>${cfg.title}</b><small>الجولة ${ar(C.i + 1)} من ${ar(n)}</small></div>
+  sheetOpen(`<div class="chHead"><span class="chFace">${face}</span><div><b>${cfg.title}</b><small>الجولة ${ar(C.i + 1)} من ${ar(n)} · بلا مؤقت 🙂</small></div>
       ${(C.streak || 0) >= 2 ? `<span class="chStreak">🔥 ${ar(C.streak)}</span>` : ''}<span class="chGems">💎 ${ar(C.gems || 0)}</span>${cfg.exit ? '<button class="chExit" id="chExit" aria-label="خروج">✕</button>' : ''}</div>
     ${cfg.scene ? `<div class="acScene">${cfg.scene(C.i, n)}</div>` : `<div class="chTrail">${trail}</div>`}
     ${out}${it.art ? `<div class="chArt">${it.art}</div>` : ''}
     <div class="chQ">${it.q}${it.tail ? `<div class="chTail">${it.tail}</div>` : ''}</div>
-    ${msgBox(msg ? msg.t : 'خذ وقتك، لا يوجد مؤقت 🙂', msg ? msg.k : '')}${body}`);
+    ${msgBox(msg ? msg.t : '', msg ? msg.k : '')}${body}`);
   const el = document.getElementById('panel'), sheet = el.querySelector('.sheet');
   sheet.classList.add('chSheet'); sheet.dataset.i = C.i;
   el.querySelectorAll('canvas[data-draw]').forEach(cv => { try { DRAW[cv.dataset.draw] && DRAW[cv.dataset.draw](cv); } catch (e) { console.warn('رسم التحدي', e); } });
@@ -47,8 +47,9 @@ function render(W, d, cfg, msg) {
     const S = game.state.stats = game.state.stats || {}; if (!first) S.persist = (S.persist || 0) + 1; S.streak = Math.max(S.streak || 0, C.streak);   // للأوسمة: المثابرة وأطول سلسلة
     sfx('good'); changed();
     const praise = PRAISE[Math.floor(Math.random() * PRAISE.length)];
-    sheet.insertAdjacentHTML('beforeend', `<div class="chBurst"><b>💎</b><span>${praise}</span>${'<i></i>'.repeat(10)}</div>`);
-    setTimeout(() => { if (C.i >= n) done(W, d, cfg); else render(W, d, cfg, { t: it.why ? '✓ ' + it.why : '✓ ' + praise, k: 'ok' }); }, 750); };
+    // الإطراء والشرح يظهران بعد الإجابة مباشرة في الاحتفال، والسؤال التالي يبدأ برسالة محايدة
+    sheet.insertAdjacentHTML('beforeend', `<div class="chBurst${it.why ? ' why' : ''}"><b>💎</b><span>${praise}</span>${it.why ? `<p>${it.why}</p>` : ''}${'<i></i>'.repeat(10)}</div>`);
+    setTimeout(() => { if (C.i >= n) done(W, d, cfg); else render(W, d, cfg, null); }, it.why ? 2200 : 850); };
   const bad = extra => { C.tries++; C.streak = 0; sfx('cough'); changed(); setMsg('💡 ' + (extra || it.hint), 'bad'); sheet.classList.add('shake'); setTimeout(() => sheet.classList.remove('shake'), 450); };
   const wrongCount = w => w === 1 ? 'بطاقة واحدة ليست في مكانها. ' : `${ar(w)} بطاقات ليست في مكانها. `;
   if (it.type === 'choice' || it.type === 'tf') el.querySelectorAll('.chOpt').forEach(b => b.onclick = e => { e.stopPropagation(); +b.dataset.k === it.ans ? (b.classList.add('on'), ok()) : (b.classList.add('no'), bad()); });
