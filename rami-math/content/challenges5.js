@@ -1,6 +1,6 @@
 // تحديات الفصل الثاني — الوحدة ١ (القياس ٢ — ساحة المهرجان): ٨ جولات لكل درس. القواعد نفسها.
 import { ar } from '../core/util.js';
-import { choice, multi, order, num, tf, sort, match, pickN, fresh } from '../missions/challenge.js';
+import { choice, multi, order, num, tf, sort, match, pickN, fresh, line, memory, error } from '../missions/challenge.js';
 import { jug, analog, clock24, pad2, dial, rect, lshape, gridShape, dec } from './chArt.js';
 
 const R = (a, b) => a + Math.floor(Math.random() * (b - a + 1));
@@ -131,3 +131,10 @@ export const CH = {
       return it;
     } }
 };
+
+/* ── أنواع تفاعلية إضافية (خط أعداد بسهم، ذاكرة، اكتشف الخطأ): جولة تاسعة في بعض الدروس ── */
+const addRound = (id, f) => { const m = CH[id].make; CH[id].make = () => { const it = m(); it.push(f()); return it; }; };
+
+addRound('timeConvert', () => { const a = R(2, 5), b = R(2, 4), c = R(2, 3);
+  return memory('لعبة الذاكرة: طابق كل مدة بما يساويها:', [[`${ar(a)} دقائق`, `${ar(a * 60)} ثانية`], [`${ar(b)} ساعات`, `${ar(b * 60)} دقيقة`], [`${ar(c)} أيام`, `${ar(c * 24)} ساعة`], ['أسبوعان', '١٤ يوماً']], 'الدقيقة ٦٠ ثانية، والساعة ٦٠ دقيقة، واليوم ٢٤ ساعة.', 'Mt1'); });
+

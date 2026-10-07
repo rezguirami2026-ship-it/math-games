@@ -1,7 +1,7 @@
 // تحديات الوحدة ٤ (الأعداد والحساب — القلعة): ٨ جولات لكل درس تغطي مخرجاته (content/outcomes.js).
 // القواعد نفسها: لا فاصلة آلاف، والسؤال عن قيمة رقم في عدد أرقامه مختلفة، وأعداد جديدة لكل جولة، ولا مؤقت ولا عقاب.
 import { ar } from '../core/util.js';
-import { choice, multi, order, num, tf, build, sort, match, pickN, fresh } from '../missions/challenge.js';
+import { choice, multi, order, num, tf, build, sort, match, pickN, fresh, line, memory, error } from '../missions/challenge.js';
 import { nline, dec } from './chArt.js';
 import { glyphs, GLY } from '../missions/unit4.js';
 
@@ -316,3 +316,12 @@ export const CH = {
       return it;
     } }
 };
+
+/* ── أنواع تفاعلية إضافية (خط أعداد بسهم، ذاكرة، اكتشف الخطأ): جولة تاسعة في بعض الدروس ── */
+const addRound = (id, f) => { const m = CH[id].make; CH[id].make = () => { const it = m(); it.push(f()); return it; }; };
+
+addRound('numberLineEstimate', () => { let v; do v = R(-48, 48); while (v % 10 === 0);
+  return line(`اسحب السهم إلى العدد <b>${N(v)}</b>:`, -50, 50, v, Array.from({ length: 11 }, (_, i) => ({ v: -50 + i * 10, l: i % 5 ? '' : N(-50 + i * 10).replace(/[⁦⁩]/g, '') })), 3, 'يسار الصفر سالب. كل علامة ١٠.', 'Nn11'); });
+addRound('integers', () => { const v = -R(2, 18);
+  return line(`درجة الحرارة <b>${N(v)}°</b>. اسحب السهم إليها على مقياس الحرارة:`, -20, 20, v, Array.from({ length: 9 }, (_, i) => ({ v: -20 + i * 5, l: i % 2 ? '' : N(-20 + i * 5).replace(/[⁦⁩]/g, '') })), 1.2, 'الأعداد السالبة يسار الصفر.', 'Nn11'); });
+

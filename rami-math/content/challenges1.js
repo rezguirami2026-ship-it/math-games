@@ -2,7 +2,7 @@
 // قواعد المعلم: لا فاصلة آلاف في الأعداد الكاملة (الفاصلة للأعداد العشرية فقط)، والسؤال عن قيمة رقم يكون في عدد أرقامه مختلفة،
 // وكل جولة بأعداد جديدة (fresh) لا تتكرر في جولة أخرى من التحدي نفسه. كل make() يولّد تحدياً جديداً في كل مرة.
 import { ar } from '../core/util.js';
-import { choice, multi, order, num, tf, build, sort, match, pickN, fresh } from '../missions/challenge.js';
+import { choice, multi, order, num, tf, build, sort, match, pickN, fresh, line, memory, error } from '../missions/challenge.js';
 
 const R = (a, b) => a + Math.floor(Math.random() * (b - a + 1));
 const N = n => n < 0 ? '⁦−' + ar(-n) + '⁩' : ar(n);                        // عدد كامل بلا فاصلة آلاف
@@ -275,3 +275,20 @@ export const CH = {
       return it;
     } }
 };
+
+/* ── أنواع تفاعلية إضافية (خط أعداد بسهم، ذاكرة، اكتشف الخطأ): جولة تاسعة في بعض الدروس ── */
+const addRound = (id, f) => { const m = CH[id].make; CH[id].make = () => { const it = m(); it.push(f()); return it; }; };
+
+addRound('compareRound', () => { const v = R(11, 89) * 100;
+  return line(`اسحب السهم إلى موضع العدد <b>${N(v)}</b> تقريباً:`, 0, 10000, v, Array.from({ length: 11 }, (_, i) => ({ v: i * 1000, l: i % 5 ? '' : N(i * 1000) })), 400, 'منتصف الخط ٥٠٠٠، وكل علامة ١٠٠٠.', 'Nn13'); });
+addRound('placeValue', () => { const [a, b, c, e] = pickN([1, 2, 3, 4, 5, 6, 7, 8, 9], 4);
+  return memory('لعبة الذاكرة: اقلب بطاقتين متطابقتين (القيمة وما يساويها):', [[`${ar(a)} آلاف`, ar(a * 1000)], [`${ar(b)} مئات`, ar(b * 100)], [`${ar(c)} عشرات`, ar(c * 10)], [`${ar(e)} عشرات آلاف`, ar(e * 10000)]], 'تذكّر مكان كل بطاقة، وطابق الكلمة مع العدد.', 'Nn2'); });
+addRound('multiplyStrategies', () => { const n = pickN([19, 29, 39, 49], 1)[0], m = R(3, 8), base = n + 1, k = R(1, 2);
+  const steps = [`${ar(n)} × ${ar(m)} = ${ar(base)} × ${ar(m)} − ${ar(m)}`, `${ar(base)} × ${ar(m)} = ${ar(k === 1 ? base * m + 10 : base * m)}`, `${ar(base * m)} − ${ar(m)} = ${ar(k === 2 ? base * m + m : base * m - m)}`];
+  return error(`حلّ سعيد <b>${ar(n)} × ${ar(m)}</b> ذهنياً. في أي خطوة أخطأ؟`, steps, k, 'تحقق من كل خطوة على حدة.', 'Nc15'); });
+addRound('division1', () => { const d = R(3, 8), q = R(11, 29), r = R(1, d - 1), n = d * q + r, k = R(0, 1);
+  const steps = [`${ar(d)} × ${ar(q)} = ${ar(k === 0 ? d * q + d : d * q)}`, `${ar(n)} − ${ar(d * q)} = ${ar(k === 1 ? r + 1 : r)}`, `${ar(n)} ÷ ${ar(d)} = ${ar(q)} والباقي ${ar(r)}`];
+  return error(`حلّت أم خالد <b>${ar(n)} ÷ ${ar(d)}</b>. في أي خطوة خطأ؟`, steps, k, 'احسب كل خطوة بنفسك وقارن.', 'Nc10'); });
+addRound('sequences', () => { const v = R(1, 19) / 10;
+  return line(`اسحب السهم إلى العدد <b>${dec(v)}</b>:`, 0, 2, v, Array.from({ length: 21 }, (_, i) => ({ v: i / 10, l: i % 10 ? '' : ar(i / 10) })), .05, 'بين ٠ و١ عشرة أجزاء، كل علامة ٠٫١.', 'Nn1'); });
+

@@ -1,6 +1,6 @@
 // تحديات الفصل الثاني — الوحدة ٣ (الأعداد والكسور — الجمعية): ٨ جولات لكل درس من الدروس الاثني عشر. القواعد نفسها.
 import { ar } from '../core/util.js';
-import { choice, multi, order, num, tf, sort, match, pickN, fresh } from '../missions/challenge.js';
+import { choice, multi, order, num, tf, sort, match, pickN, fresh, line, memory, error } from '../missions/challenge.js';
 import { nline, dec } from './chArt.js';
 
 const R = (a, b) => a + Math.floor(Math.random() * (b - a + 1));
@@ -294,3 +294,12 @@ export const CH = {
       return it;
     } }
 };
+
+/* ── أنواع تفاعلية إضافية (خط أعداد بسهم، ذاكرة، اكتشف الخطأ): جولة تاسعة في بعض الدروس ── */
+const addRound = (id, f) => { const m = CH[id].make; CH[id].make = () => { const it = m(); it.push(f()); return it; }; };
+
+addRound('fractions', () => { const k = pickN([1, 3, 5, 6, 7], 1)[0];
+  return line(`اسحب السهم إلى ${k < 4 ? fr(k, 4) : mx(Math.floor(k / 4), k % 4, 4)}:`, 0, 2, k / 4, Array.from({ length: 9 }, (_, i) => ({ v: i / 4, l: i % 4 ? '' : ar(i / 4) })), .06, 'بين كل عددين كاملين أربعة أرباع.', 'Nn24'); });
+addRound('percentages', () => memory('لعبة الذاكرة: طابق كل كسر بنسبته المئوية:', [[fr(1, 2), pc(50)], [fr(1, 4), pc(25)], [fr(3, 4), pc(75)], [fr(1, 10), pc(10)]], 'النسبة المئوية: كم جزءاً من ١٠٠.', 'Nn28'));
+addRound('decimalFractions', () => memory('لعبة الذاكرة: طابق كل كسر بعدده العشري:', pickN([[fr(1, 2), dec(.5)], [fr(1, 4), dec(.25)], [fr(1, 5), dec(.2)], [fr(3, 10), dec(.3)], [fr(3, 4), dec(.75)]], 4), 'اقسم البسط على المقام.', 'Nn23'));
+

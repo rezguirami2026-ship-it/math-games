@@ -1,6 +1,6 @@
 // تحديات الوحدة ٣ (الهندسة — الميناء): ٨ جولات لكل درس تغطي مخرجاته (content/outcomes.js). القواعد نفسها: أعداد جديدة، لا مؤقت ولا عقاب.
 import { ar } from '../core/util.js';
-import { choice, multi, order, num, tf, sort, match, pickN, fresh } from '../missions/challenge.js';
+import { choice, multi, order, num, tf, sort, match, pickN, fresh, line, memory, error } from '../missions/challenge.js';
 import { shape, solid, net, cubeNet, BAD_NETS, solidNet, triangle, protractor, fan, grid, pt, sg } from './chGeo.js';
 
 const R = (a, b) => a + Math.floor(Math.random() * (b - a + 1));
@@ -214,3 +214,11 @@ export const CH = {
       return it;
     } }
 };
+
+/* ── أنواع تفاعلية إضافية (خط أعداد بسهم، ذاكرة، اكتشف الخطأ): جولة تاسعة في بعض الدروس ── */
+const addRound = (id, f) => { const m = CH[id].make; CH[id].make = () => { const it = m(); it.push(f()); return it; }; };
+
+addRound('triangleAngles', () => { const A = R(35, 75), B = R(35, 75), C = 180 - A - B, k = R(1, 2);
+  const steps = [`مجموع زوايا المثلث = ${ar(180)}°`, `${ar(A)} + ${ar(B)} = ${ar(k === 1 ? A + B + 10 : A + B)}`, `${ar(180)} − ${ar(A + B)} = ${ar(k === 2 ? C + 10 : C)}°`];
+  return error(`حسب علي الزاوية الثالثة في مثلث زاويتاه <b>${ar(A)}°</b> و<b>${ar(B)}°</b>. في أي خطوة أخطأ؟`, steps, k, 'تحقق من الجمع ثم الطرح.', 'Gs6'); });
+

@@ -1,6 +1,6 @@
 // تحديات الفصل الثاني — الوحدة ٢ (الإحصاء والاحتمال): ٨ جولات لكل درس. القواعد نفسها: أعداد جديدة، لا مؤقت ولا عقاب.
 import { ar } from '../core/util.js';
-import { choice, multi, order, num, tf, sort, match, pickN, fresh } from '../missions/challenge.js';
+import { choice, multi, order, num, tf, sort, match, pickN, fresh, line, memory, error } from '../missions/challenge.js';
 import { lineGraph, barChart, pie, table, spinner, COLOR_NAMES } from './chData.js';
 
 const R = (a, b) => a + Math.floor(Math.random() * (b - a + 1));
@@ -132,3 +132,11 @@ export const CH = {
       return it;
     } }
 };
+
+/* ── أنواع تفاعلية إضافية (خط أعداد بسهم، ذاكرة، اكتشف الخطأ): جولة تاسعة في بعض الدروس ── */
+const addRound = (id, f) => { const m = CH[id].make; CH[id].make = () => { const it = m(); it.push(f()); return it; }; };
+
+addRound('statsAverage', () => { const L = [R(4, 9), R(4, 9), R(4, 9), R(4, 9)]; while (L.reduce((a, b) => a + b) % 4) L[0]++; const S = L.reduce((a, b) => a + b), k = R(1, 2);
+  const steps = [`القيم: ${L.map(ar).join('، ')}`, `المجموع = ${ar(k === 1 ? S + 2 : S)}`, `المتوسط = ${ar(S)} ÷ ٤ = ${ar(k === 2 ? S / 4 + 1 : S / 4)}`];
+  return error('حسب خلفان متوسط محصول أربع نخلات. في أي خطوة أخطأ؟', steps, k, 'اجمع القيم بنفسك ثم اقسم على عددها.', 'Dh3'); });
+

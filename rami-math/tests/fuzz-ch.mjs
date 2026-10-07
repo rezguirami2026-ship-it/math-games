@@ -1,16 +1,20 @@
 // فحص مولّدات «تحدي الشخصية»: يولّد كل تحدٍّ مئات المرات ويبحث عن أخطاء المحتوى.
-// الاستعمال (والخادم المحلي يعمل على المنفذ 8000): node fuzz-ch.mjs 4 [عدد المرات]   ← يفحص content/challenges4.js
+// الاستعمال (يشغّل خادماً مؤقتاً بنفسه): node fuzz-ch.mjs 4 [عدد المرات]   ← يفحص content/challenges4.js
 import { chromium } from 'playwright-core';
+import { createServer } from 'node:http'; import { readFile } from 'node:fs/promises'; import { join, extname, dirname } from 'node:path'; import { fileURLToPath } from 'node:url';
+const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..'), TY = { '.js': 'text/javascript', '.css': 'text/css', '.html': 'text/html', '.json': 'application/json', '.svg': 'image/svg+xml', '.png': 'image/png', '.webmanifest': 'application/json', '.woff2': 'font/woff2' };
+const srv = createServer(async (q, r) => { const p = decodeURIComponent(new URL(q.url, 'http://x').pathname).slice(1) || 'index.html'; try { const b = await readFile(join(ROOT, p)); r.writeHead(200, { 'content-type': TY[extname(p)] || 'application/octet-stream' }); r.end(b); } catch { r.writeHead(404); r.end(); } });
+await new Promise(r => srv.listen(0, r));
 const unit = process.argv[2] || '1', times = +(process.argv[3] || 400);
 const b = await chromium.launch({ channel: 'chrome' }); const p = await b.newPage();
 const errs = []; p.on('pageerror', e => errs.push(e.message));
-await p.goto('http://localhost:8000/?2d=1&preview=1'); await p.waitForTimeout(2500);
+await p.goto(`http://localhost:${srv.address().port}/?2d=1&preview=1`); await p.waitForTimeout(2500);
 const r = await p.evaluate(async ([unit, times]) => {
   const { CH } = await import(`./content/challenges${unit}.js?` + Date.now()), { OUT } = await import('./content/outcomes.js'); const ex = {}, cnt = {};
   const nums = s => (s.replace(/<[^>]+>/g, ' ').match(/[٠-٩]+(?:٫[٠-٩]+)?/g) || []);
   for (const [id, c] of Object.entries(CH)) for (let t = 0; t < times; t++) {
     let items; try { items = c.make(); } catch (e) { const k = id + ' THROW'; ex[k] = e.message + ' ' + (e.stack || '').split('\n')[1]; cnt[k] = (cnt[k] || 0) + 1; continue; }
-    if (items.length !== 8) { ex[id + ' len'] = items.length; cnt[id + ' len'] = 1; }
+    if (items.length < 8 || items.length > 9) { ex[id + ' len'] = items.length; cnt[id + ' len'] = 1; }
     const seen = new Map();
     items.forEach((it, k) => {
       const all = [it.q, ...(it.opts || []), ...(it.left || []), ...(it.right || []), ...(it.bins || [])].join(' ').replace(/<[^>]+>/g, '');
@@ -36,4 +40,4 @@ const r = await p.evaluate(async ([unit, times]) => {
 const keys = Object.keys(r.cnt);
 console.log(keys.length ? keys.map(k => `${k} ×${r.cnt[k]}: ${r.ex[k]}`).join('\n') : `✅ لا مشكلات في ${times} توليد لكل تحدٍّ`);
 if (errs.length) console.log('أخطاء الصفحة:', errs);
-await b.close();
+await b.close(); srv.close();

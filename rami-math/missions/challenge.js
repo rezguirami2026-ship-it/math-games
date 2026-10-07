@@ -32,6 +32,10 @@ function render(W, d, cfg, msg) {
   if (it.type === 'sort') body = `<div class="chBins">${it.bins.map((b, i) => `<div class="chBin b${i}" data-b="${i}"><h4>${b}</h4><div class="chBinIn"></div></div>`).join('')}</div><div class="chPool">${cards(it, 'chCard')}</div><button class="act go" id="chGo">✓ تحقّق</button>`;
   if (it.type === 'match') body = `<div class="chMatch"><div>${it.left.map((o, k) => `<button class="chL" data-k="${k}">${o}</button>`).join('')}</div><div>${it.right.map((o, k) => `<button class="chR" data-k="${k}">${o}</button>`).join('')}</div></div><button class="act go" id="chGo">✓ تحقّق</button>`;
   if (it.type === 'num') body = `<div id="chPad"></div>`;
+  if (it.type === 'line') body = `<div class="chNL"><svg viewBox="0 0 320 70" class="chLine"><line x1="20" y1="40" x2="300" y2="40" stroke="#2A1B66" stroke-width="3"/>${it.ticks.map(t => `<line x1="${20 + (t.v - it.lo) / (it.hi - it.lo) * 280}" y1="${t.l ? 30 : 34}" x2="${20 + (t.v - it.lo) / (it.hi - it.lo) * 280}" y2="${t.l ? 50 : 46}" stroke="#2A1B66" stroke-width="${t.l ? 2.2 : 1.2}"/>${t.l ? `<text x="${20 + (t.v - it.lo) / (it.hi - it.lo) * 280}" y="66" text-anchor="middle" font-size="12" font-weight="900" fill="#2A1B66" font-family="Cairo,sans-serif" direction="ltr">${t.l}</text>` : ''}`).join('')}<path id="chNLm" d="M0 30 l-8 -16 h16z" fill="#E2475C"/></svg>
+    <input type="range" id="chNLr" min="0" max="1000" value="500" dir="ltr"></div><button class="act go" id="chGo">📍 هنا</button>`;
+  if (it.type === 'memory') body = `<div class="chMem">${it.cards.map((c, k) => `<button class="chMc" data-k="${k}"><span>❔</span><b>${c.t}</b></button>`).join('')}</div>`;
+  if (it.type === 'error') body = `<div class="chSteps">${it.steps.map((st, k) => `<button class="chStep" data-k="${k}"><em>${ar(k + 1)}</em><span>${st}</span></button>`).join('')}</div>`;
   sheetOpen(`<div class="chHead"><span class="chFace">${face}</span><div><b>${cfg.title}</b><small>الجولة ${ar(C.i + 1)} من ${ar(n)} · بلا مؤقت 🙂</small></div>
       ${(C.streak || 0) >= 2 ? `<span class="chStreak">🔥 ${ar(C.streak)}</span>` : ''}<span class="chGems">💎 ${ar(C.gems || 0)}</span>${cfg.exit ? '<button class="chExit" id="chExit" aria-label="خروج">✕</button>' : ''}</div>
     ${cfg.scene ? `<div class="acScene">${cfg.scene(C.i, n)}</div>` : `<div class="chTrail">${trail}</div>`}
@@ -75,6 +79,17 @@ function render(W, d, cfg, msg) {
     el.querySelectorAll('.chL').forEach(b => b.onclick = e => { e.stopPropagation(); const k = +b.dataset.k; pair[k] = -1; sel = sel === k ? -1 : k; sfx('click'); show(); });
     el.querySelectorAll('.chR').forEach(b => b.onclick = e => { e.stopPropagation(); if (sel < 0) return setMsg('اضغط أولاً بطاقة من العمود الأيمن، ثم ما يناسبها.', ''); const r = +b.dataset.k, old = pair.indexOf(r); if (old >= 0) pair[old] = -1; pair[sel] = r; sel = -1; sfx('click'); show(); });
     btn('chGo', () => { if (pair.includes(-1)) return bad('صِل كل البطاقات أولاً.'); const w = pair.filter((r, k) => r !== it.ans[k]).length; w ? bad(`${w === 1 ? 'وصلة واحدة غير صحيحة' : ar(w) + ' وصلات غير صحيحة'}. ${it.hint}`) : ok(); }); }
+  if (it.type === 'line') { const r = el.querySelector('#chNLr'), m = el.querySelector('#chNLm'), val = () => it.lo + r.value / 1000 * (it.hi - it.lo);
+    const show = () => m.setAttribute('transform', `translate(${20 + r.value / 1000 * 280} 0)`); r.oninput = show; show(); r.onpointerdown = e => e.stopPropagation();
+    btn('chGo', () => Math.abs(val() - it.ans) <= it.tol ? ok() : bad(val() < it.ans ? 'أبعد قليلاً نحو اليمين.' : 'ارجع قليلاً نحو اليسار.')); }
+  if (it.type === 'memory') { let open = [], done = new Set();   // ذاكرة: اقلب بطاقتين متطابقتين
+    el.querySelectorAll('.chMc').forEach(b => b.onclick = e => { e.stopPropagation(); const k = +b.dataset.k; if (done.has(k) || open.includes(k) || open.length >= 2) return;
+      b.classList.add('up'); open.push(k); sfx('click');
+      if (open.length === 2) { const [a, c] = open, same = it.cards[a].p === it.cards[c].p;
+        setTimeout(() => { if (same) { done.add(a); done.add(c); el.querySelectorAll('.chMc').forEach(x => { if (open.includes(+x.dataset.k)) x.classList.add('ok'); }); sfx('good'); if (done.size === it.cards.length) ok(); }
+          else { el.querySelectorAll('.chMc').forEach(x => { if (open.includes(+x.dataset.k)) x.classList.remove('up'); }); C.tries++; setMsg('💡 ' + it.hint, 'bad'); }
+          open = []; }, same ? 250 : 900); } }); }
+  if (it.type === 'error') el.querySelectorAll('.chStep').forEach(b => b.onclick = e => { e.stopPropagation(); +b.dataset.k === it.ans ? (b.classList.add('on'), ok()) : (b.classList.add('no'), bad()); });
   if (it.type === 'num') { const pad = numPad(el.querySelector('#chPad'), 'تحقّق', v => { Math.round(v * 1000) === Math.round(it.ans * 1000) ? ok() : (bad(), pad.clear()); }, { neg: it.neg, dot: it.dot !== false }); }
 }
 // عند الإنهاء تُحذف الأسئلة من الحفظ ويبقى ملخصها فقط (رمز التقدّم أقصر)
@@ -109,6 +124,12 @@ export function sort(q, bins, list, hint, out, extra = {}) { const c = pickN(lis
 // match: pairs = [[يمين, يسار]] — العمود الثاني يُخلط
 export function match(q, pairs, hint, out, extra = {}) { const p = pickN(pairs, pairs.length), right = pickN(p.map(x => String(x[1])), p.length);
   return Object.assign({ type: 'match', q, left: p.map(x => String(x[0])), right, ans: p.map(x => right.indexOf(String(x[1]))), hint, out }, extra); }
+// خط أعداد بسهم يُسحب: ticks = [{ v, l }]، tol = السماح
+export const line = (q, lo, hi, ans, ticks, tol, hint, out, extra = {}) => Object.assign({ type: 'line', q, lo, hi, ans, ticks, tol, hint, out }, extra);
+// ذاكرة: pairs = [[نص، نص مطابق]] تُخلط البطاقات
+export function memory(q, pairs, hint, out, extra = {}) { const cards = pickN(pairs.flatMap((p, i) => [{ t: String(p[0]), p: i }, { t: String(p[1]), p: i }]), pairs.length * 2); return Object.assign({ type: 'memory', q, cards, hint, out }, extra); }
+// اكتشف الخطأ: steps خطوات حل، bad = فهرس الخطوة الخاطئة
+export const error = (q, steps, bad, hint, out, extra = {}) => Object.assign({ type: 'error', q, steps, ans: bad, hint, out }, extra);
 export const num = (q, ans, hint, out, extra = {}) => Object.assign({ type: 'num', q, ans, hint, out }, extra);
 export const tf = (q, isTrue, hint, out, why, extra = {}) => Object.assign({ type: 'tf', q, ans: isTrue ? 0 : 1, hint, out, why }, extra);
 /* أعداد جديدة في كل جولة: لا يتكرر عدد في جولتين من التحدي نفسه */

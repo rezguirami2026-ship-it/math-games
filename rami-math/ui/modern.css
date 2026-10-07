@@ -287,3 +287,17 @@ body:has(.dialog.on) .region{opacity:0!important;animation:none!important}
 .qfin{display:block;width:100%;margin-top:8px;padding:10px;border-radius:14px;font:900 16px Cairo,sans-serif;text-align:center}
 .act.qfin{background:linear-gradient(180deg,#9B6BFF,#5B3FD0);color:#fff;box-shadow:0 4px 0 #2E1478,0 0 14px rgba(155,107,255,.5)}
 .qfin.lock{background:#EFE7D6;color:#8A7A5A;font-size:13px}
+/* أنواع الأسئلة الجديدة: خط الأعداد، الذاكرة، اكتشف الخطأ */
+.chNL{background:#fff;border-radius:16px;padding:6px 10px 10px;box-shadow:0 4px 14px rgba(60,40,10,.08)}
+.chNL svg{width:100%;height:auto;display:block}
+.chNL input[type=range]{width:calc(100% * 280 / 320);margin:2px 0 0 calc(100% * 20 / 320);display:block;accent-color:#E2475C;height:34px;touch-action:none}
+.chMem{display:grid;grid-template-columns:repeat(4,1fr);gap:7px}
+.chMc{position:relative;min-height:62px;border-radius:14px;border:2px solid #C9B48A;background:linear-gradient(160deg,#5B3FD0,#2A1B66);color:#fff;font:900 16px Cairo,sans-serif;box-shadow:0 3px 0 #1A103D;transition:transform .25s}
+.chMc b{display:none}.chMc span{font-size:24px}
+.chMc.up{background:#FFFDF6;color:#2A1B66;transform:rotateY(180deg) scaleX(-1)}.chMc.up b{display:inline}.chMc.up span{display:none}
+.chMc.ok{background:linear-gradient(180deg,#DDF6E8,#BDECD2);border-color:#2E9E5B;color:#1F6A3A}
+.chSteps{display:flex;flex-direction:column;gap:6px}
+.chStep{display:flex;align-items:center;gap:10px;text-align:start;padding:8px 12px;border-radius:14px;border:2px solid #E6D6B4;background:#fff;font:800 16px Cairo,sans-serif;color:#2A1B66;box-shadow:0 3px 0 #D9C59C}
+.chStep em{font-style:normal;width:26px;height:26px;border-radius:50%;display:grid;place-items:center;background:#FFC23D;color:#2A1B66;flex:none}
+.chStep.no{background:#FBE4E4;border-color:#E2475C}.chStep.on{background:#DDF6E8;border-color:#2E9E5B}
+@media (max-width:400px){.chMem{grid-template-columns:repeat(3,1fr)}}

@@ -1,7 +1,7 @@
 // تحديات الوحدة ٢ (القياس — السوق الأسبوعي): المرحلة الثانية لكل درس، ٨ جولات تغطي مخرجاته الرسمية (content/outcomes.js).
 // القواعد نفسها: لا فاصلة آلاف، وأعداد جديدة في كل جولة (fresh)، ولا مؤقت ولا عقاب.
 import { ar } from '../core/util.js';
-import { choice, multi, order, num, tf, build, sort, match, pickN, fresh } from '../missions/challenge.js';
+import { choice, multi, order, num, tf, build, sort, match, pickN, fresh, line, memory, error } from '../missions/challenge.js';
 import { ruler, jug, analog, timetable, clock24, pad2, WEEK, calendar, rect, lshape, gridShape, dec } from './chArt.js';
 
 const R = (a, b) => a + Math.floor(Math.random() * (b - a + 1));
@@ -139,3 +139,10 @@ export const CH = {
       return it;
     } }
 };
+
+/* ── أنواع تفاعلية إضافية (خط أعداد بسهم، ذاكرة، اكتشف الخطأ): جولة تاسعة في بعض الدروس ── */
+const addRound = (id, f) => { const m = CH[id].make; CH[id].make = () => { const it = m(); it.push(f()); return it; }; };
+
+addRound('lengthMeasure', () => { const a = R(2, 9), b = R(11, 49), c = R(2, 6);
+  return memory('لعبة الذاكرة: طابق كل قياس بما يساويه:', [[`${ar(a)} م`, `${ar(a * 100)} سم`], [`${ar(b)} ملم`, `${dec(b / 10)} سم`], [`${ar(c)} كم`, `${ar(c * 1000)} م`], [`${ar(c)} كغم`, `${ar(c * 1000)} غم`]], 'المتر ١٠٠ سم، والسنتيمتر ١٠ ملم، والكيلو ١٠٠٠.', 'Ml2'); });
+

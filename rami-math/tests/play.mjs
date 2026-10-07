@@ -106,6 +106,9 @@ async function solveRounds(getCh) {
     else if (it.type === 'order' || it.type === 'build') { for (const k of it.ans.slice().reverse()) await chClick('.chOpt', k); await panelClick('#chGo'); for (const _ of it.ans) await panelClick('#chUndo'); }
     else if (it.type === 'sort' || it.type === 'match') await panelClick('#chGo');   // قبل التوزيع: تلميح «ضع كل البطاقات»
     else if (it.type === 'num') await chPad(it.ans + 1);
+    else if (it.type === 'error') await chClick('.chStep', it.ans === 0 ? 1 : 0);
+    else if (it.type === 'line') { await G(v => { const r = document.querySelector('#panel #chNLr'); r.value = v; r.dispatchEvent(new Event('input')); }, (it.ans - it.lo) / (it.hi - it.lo) > .5 ? 0 : 1000); await panelClick('#chGo'); }
+    else if (it.type === 'memory') { const a = 0, b = it.cards.findIndex(c => c.p !== it.cards[0].p); await chClick('.chMc', a); await chClick('.chMc', b); await sleep(1000); }
     await until(() => G(() => document.getElementById('benchMsg')?.classList.contains('bad')), `تلميح الخطأ في الجولة ${i + 1}`, 5000);
     expect((await getCh()).i === i, `الخطأ قدّم الجولة ${i + 1}`);
     // الحل
@@ -115,6 +118,9 @@ async function solveRounds(getCh) {
     else if (it.type === 'sort') { for (let k = 0; k < it.ans.length; k++) { await G(k => document.querySelector(`#panel .chCard[data-k="${k}"]`).click(), k); await G(b => document.querySelector(`#panel .chBin[data-b="${b}"]`).click(), it.ans[k]); } await panelClick('#chGo'); }
     else if (it.type === 'match') { for (let k = 0; k < it.ans.length; k++) { await chClick('.chL', k); await chClick('.chR', it.ans[k]); } await panelClick('#chGo'); }
     else if (it.type === 'num') await chPad(it.ans);
+    else if (it.type === 'error') await chClick('.chStep', it.ans);
+    else if (it.type === 'line') { await G(v => { const r = document.querySelector('#panel #chNLr'); r.value = v; r.dispatchEvent(new Event('input')); }, Math.round((it.ans - it.lo) / (it.hi - it.lo) * 1000)); await panelClick('#chGo'); }
+    else if (it.type === 'memory') { const ps = [...new Set(it.cards.map(c => c.p))]; for (const p of ps) { const [a, b] = it.cards.map((c, k) => c.p === p ? k : -1).filter(k => k >= 0); await chClick('.chMc', a); await chClick('.chMc', b); await sleep(350); } }
     try {
       await until(async () => (await getCh()).i === i + 1 && await G(n => { const s = document.querySelector('#panel .chSheet'); return !s || !s.querySelector('.chBurst') && (+s.dataset.i === n || !!s.querySelector('#chFin, #acEnd')); }, i + 1), `حل الجولة ${i + 1} (${it.type}: ${it.q.replace(/<[^>]+>/g, '').slice(0, 50)})`, 5000);
     } catch (e) { throw new Error(e.message + ' — الحالة: ' + JSON.stringify(await G(() => ({ busy: window.__game.game.busy, dialog: document.getElementById('dialog').className + ':' + document.getElementById('dialog').textContent.slice(0, 80), screen: document.getElementById('screen').className, panel: document.getElementById('panel').className, msg: document.getElementById('benchMsg')?.textContent, pad: document.getElementById('npd')?.textContent })))); }
