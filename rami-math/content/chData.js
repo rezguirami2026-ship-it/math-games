@@ -2,15 +2,15 @@
 import { ar } from '../core/util.js';
 
 const INK = '#2A1B66', ACC = '#E2475C', COLORS = ['#3FA3F5', '#FFC23D', '#2E9E5B', '#E2475C', '#8E6CF6', '#F08A24'];
-const T = (x, y, s, o = {}) => `<text x="${x}" y="${y}" text-anchor="${o.a || 'middle'}" font-size="${o.fs || 11}" font-weight="900" fill="${o.c || INK}" font-family="Cairo,sans-serif">${s}</text>`;
+const T = (x, y, s, o = {}) => `<text x="${x}" y="${y}" text-anchor="${o.a || 'middle'}" font-size="${o.fs || 11}" font-weight="900" fill="${o.c || INK}" font-family="Cairo,sans-serif" direction="ltr">${s}</text>`;
 
 /* محوران وشبكة: xs = تسميات المحور الأفقي، yMax/yStep للرأسي، plot(xi, yv) يعيد إحداثيات */
 function axes(xs, yMax, yStep, xTitle, yTitle) {
-  const L = 44, B = 170, W = 260, H = 140, x = i => L + (i + .5) * W / xs.length, y = v => B - v / yMax * H; let s = '';
+  const L = 58, B = 170, W = 250, H = 140, x = i => L + (i + .5) * W / xs.length, y = v => B - v / yMax * H; let s = '';
   for (let v = 0; v <= yMax; v += yStep) s += `<line x1="${L}" y1="${y(v)}" x2="${L + W}" y2="${y(v)}" stroke="#E3E7F0"/>` + T(L - 6, y(v) + 4, ar(v), { a: 'end', fs: 10 });
   s += `<line x1="${L}" y1="${B}" x2="${L + W}" y2="${B}" stroke="${INK}" stroke-width="2"/><line x1="${L}" y1="${B}" x2="${L}" y2="${B - H - 6}" stroke="${INK}" stroke-width="2"/>`;
   xs.forEach((l, i) => s += T(x(i), B + 15, l, { fs: 10 }));
-  s += T(L + W / 2, B + 32, xTitle, { fs: 11, c: '#8A7A5A' }) + T(12, B - H / 2, yTitle, { fs: 11, c: '#8A7A5A' }).replace('<text', `<text transform="rotate(-90 12 ${B - H / 2})"`);
+  s += T(L + W / 2, B + 32, xTitle, { fs: 11, c: '#8A7A5A' }) + T(14, B - H / 2, yTitle, { fs: 11, c: '#8A7A5A' }).replace('<text', `<text transform="rotate(-90 14 ${B - H / 2})"`);
   return { s, x, y };
 }
 export function lineGraph(xs, vals, yMax, yStep, xTitle, yTitle) {
@@ -18,7 +18,7 @@ export function lineGraph(xs, vals, yMax, yStep, xTitle, yTitle) {
   return `<svg viewBox="0 0 320 210" class="chLine">${s}<polyline points="${vals.map((v, i) => `${x(i)},${y(v)}`).join(' ')}" fill="none" stroke="${ACC}" stroke-width="3" stroke-linejoin="round"/>${vals.map((v, i) => `<circle cx="${x(i)}" cy="${y(v)}" r="4" fill="${ACC}"/>`).join('')}</svg>`;
 }
 export function barChart(xs, vals, yMax, yStep, xTitle, yTitle) {
-  const { s, x, y } = axes(xs, yMax, yStep, xTitle, yTitle), bw = 260 / xs.length * .6;
+  const { s, x, y } = axes(xs, yMax, yStep, xTitle, yTitle), bw = 250 / xs.length * .6;
   return `<svg viewBox="0 0 320 210" class="chLine">${s}${vals.map((v, i) => `<rect x="${x(i) - bw / 2}" y="${y(v)}" width="${bw}" height="${170 - y(v)}" fill="${COLORS[i % COLORS.length]}" stroke="${INK}" stroke-width="1"/>`).join('')}</svg>`;
 }
 /* مخطط دائري: parts = [[الاسم، عدد الأجزاء]] من total أجزاء متساوية */

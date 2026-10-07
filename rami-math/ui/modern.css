@@ -132,8 +132,8 @@ body:has(.dialog.on) .region{opacity:0!important;animation:none!important}
 .chL.sel{border-color:#FFC23D;background:#FFF5D6}
 .chL.p0,.chR.p0{background:#DDF0FF;border-color:#3B82F6}.chL.p1,.chR.p1{background:#E6F8EC;border-color:#2E9E5B}
 .chL.p2,.chR.p2{background:#F3E8FF;border-color:#8E6CF6}.chL.p3,.chR.p3{background:#FFEBD9;border-color:#F08A24}
-.chSheet{position:relative;overflow:hidden}
-.chBurst{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;pointer-events:none;background:rgba(255,253,246,.55);animation:chFade .75s ease-out forwards}
+.sheet.chSheet{position:relative;overflow-x:hidden;overflow-y:auto;max-height:calc(100% - 120px)}
+.chBurst{position:fixed;left:50%;top:50%;width:240px;height:180px;margin:-90px 0 0 -120px;border-radius:28px;z-index:20;display:flex;flex-direction:column;align-items:center;justify-content:center;pointer-events:none;background:rgba(255,253,246,.55);animation:chFade .75s ease-out forwards}
 .chBurst b{font-size:54px;animation:chPop .5s}.chBurst span{font:900 26px Cairo,sans-serif;color:#2E9E5B;text-shadow:0 2px 0 #fff}
 .chBurst i{position:absolute;width:10px;height:10px;border-radius:3px;top:50%;left:50%;animation:chConf .75s ease-out forwards}
 .chBurst i:nth-child(odd){background:#FFC23D}.chBurst i:nth-child(even){background:#3FA3F5}.chBurst i:nth-child(3n){background:#E2475C}
@@ -157,3 +157,4 @@ body:has(.dialog.on) .region{opacity:0!important;animation:none!important}
 .chCard .chShape,.chL .chShape{width:40px;height:40px}
 .chHiero{display:inline-flex;flex-wrap:wrap;gap:1px;color:#7A4A12;vertical-align:middle}.chHiero svg{width:16px;height:28px}
 .chOpt .chHiero svg{width:13px;height:24px}
+.chBin.b2{background:#EEF8EE;border-color:#7BC47F}.chBin.b3{background:#F5EEFF;border-color:#B49CF0}
