@@ -12,6 +12,8 @@ export function createEngine(canvas, world) {
     canvas.width = Math.round(E.w * E.dpr); canvas.height = Math.round(E.h * E.dpr);
     // التقريب: البطل نحو ١٥٪ من ارتفاع الشاشة، مع رؤية ٣٣٠ وحدة عرضاً على الأقل في الهاتف
     E.zoom = clamp(Math.min(E.w / 330, E.h / 470), 1, 2);
+    // الهاتف عمودياً: لقطة جوية أوسع (نحو ٤٧٠ وحدة عرضاً) حتى تظهر الأماكن حول البطل كأنها مصوّرة من فوق
+    if (E.w < E.h && E.w < 700) E.zoom = clamp(Math.min(E.w / 470, E.h / 640), .72, 2);
     // طبقة الضوء: شمس دافئة من أعلى اليسار، وظل بارد خفيف في الزاوية المقابلة، وتعتيم الأطراف لتركيز النظر
     light = ctx.createLinearGradient(0, 0, E.w, E.h);
     light.addColorStop(0, 'rgba(255,214,150,.16)'); light.addColorStop(.5, 'rgba(255,214,150,0)'); light.addColorStop(1, 'rgba(40,30,90,.14)');

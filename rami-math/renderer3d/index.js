@@ -28,7 +28,7 @@ export async function create3D(opts) {
   document.body.insertBefore(canvas, document.body.firstChild);
   document.body.style.background = 'transparent';   // خلفية الصفحة كانت ستغطي المشهد (هو تحتها)
   const renderer = new THREE.WebGLRenderer({ canvas, antialias: q === 'high', powerPreference: 'high-performance' });
-  renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, q === 'high' ? 1.75 : 1));
+  renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, q === 'high' ? 1.75 : 1.3));
   renderer.outputColorSpace = THREE.SRGBColorSpace;
   renderer.toneMapping = THREE.ACESFilmicToneMapping; renderer.toneMappingExposure = .92;
   renderer.shadowMap.enabled = true; renderer.shadowMap.autoUpdate = false; let SHADOW_EVERY = q === 'high' ? 2 : 3; renderer.shadowMap.type = q === 'high' ? THREE.PCFSoftShadowMap : THREE.PCFShadowMap;
@@ -150,7 +150,7 @@ export async function create3D(opts) {
     /* تبديل الجودة أثناء اللعب (بلا إعادة تحميل): المعالجة اللاحقة، دقة البكسل، الظلال، وطبقة الأرض المتغيرة */
     setQuality(v) {
       if (v === L.quality) return; L.quality = v; const hi = v === 'high';
-      renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, hi ? 1.75 : 1));
+      renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, hi ? 1.75 : 1.3));
       if (hi && !post) post = makeComposer(renderer, scene, camera);
       L.usePost = hi; SHADOW_EVERY = hi ? 2 : 3; DECAL_HZ = hi ? 15 : 8; DECAL_PPU = hi ? .75 : .5; decal.last = -1;
       const SMv = hi ? 2048 : 1024; if (sun.shadow.mapSize.x !== SMv) { sun.shadow.mapSize.set(SMv, SMv); if (sun.shadow.map) { sun.shadow.map.dispose(); sun.shadow.map = null; } }
