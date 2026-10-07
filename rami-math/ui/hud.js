@@ -68,7 +68,7 @@ export const hud = {
         const L = lines[i], a = this.api.anchor && this.api.anchor(L.who, people[L.who]);
         box.classList.toggle('caption', !a);
         if (a) {
-          const w = box.offsetWidth, h = box.offsetHeight, x = Math.max(8, Math.min(innerWidth - w - 8, a.x - w / 2)), y = Math.max(70, a.y - h - 16);
+          const w = box.offsetWidth, h = box.offsetHeight, x = Math.max(8, Math.min(innerWidth - w - 8, a.x - w / 2)), y = Math.max(86, a.y - h - 18);
           box.style.left = x + 'px'; box.style.top = y + 'px'; box.style.setProperty('--tail', Math.max(16, Math.min(w - 16, a.x - x)) + 'px');
         } else { box.style.left = ''; box.style.top = ''; }
         raf = requestAnimationFrame(place);
