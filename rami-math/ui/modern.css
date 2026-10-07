@@ -369,3 +369,10 @@ body:has(.dialog.on) .region{opacity:0!important;animation:none!important}
   .dialog .dbody p{font-size:15.5px}}
 .dialog.caption{border:3px solid transparent;backdrop-filter:none;
   background:linear-gradient(180deg,#FFFCF3 0%,#FBF3E1 60%,#F3E6CA 100%) padding-box,var(--gold) border-box}
+/* الشريط العلوي على الهاتف: إطارات أصغر حتى تتسع الأيقونات والعدادات في عرض الشاشة دون قطع */
+@media (max-width:480px){#hud .top{left:8px;right:8px;gap:6px}#hud .tools{gap:4px}
+  .oct{width:42px;height:42px}.oct.sm{width:30px;height:30px}.oct.sm>b{width:calc(100% - 5px);height:calc(100% - 5px)}
+  #hud .pills{gap:2px;padding:3px 8px 3px 4px;border-radius:12px}#hud .pills .pill{gap:3px;padding:0 2px;font-size:14px}
+  #hud .pills .pill + .pill{padding-inline-start:5px}}
+@media (max-width:370px){.oct{width:38px;height:38px}.oct.sm{width:27px;height:27px}#hud .pills .pill{font-size:13px}}
+@media (max-width:480px){#hud .obj{font-size:13px;line-height:1.5;padding:5px 12px;max-width:calc(100vw - 24px)}}
