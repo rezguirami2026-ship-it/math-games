@@ -115,3 +115,17 @@
 .h2hero .hbrand{flex:none}
 .h2hero canvas{width:clamp(150px,19vw,270px)}
 @media (max-width:820px){.h2hero canvas{width:clamp(120px,33vw,170px)}}
+/* المقاسات حسب ارتفاع الشاشة أيضاً: لا قصّ في الشاشات العريضة القصيرة */
+.home2{min-height:100dvh;justify-content:space-between;gap:clamp(6px,1.6vh,18px)}
+.h2hero canvas{width:auto;height:clamp(140px,31vh,300px)}
+.h2hero .hlogo{font-size:clamp(38px,min(7vw,10vh),96px)}
+.h2hero .hribbon{font-size:clamp(15px,min(2.2vw,3vh),26px)}
+.h2hero .htag{font-size:clamp(13px,min(1.6vw,2.3vh),20px)}
+.h2cards{margin-top:0}
+.hcard{padding:clamp(8px,1.6vh,16px) 12px clamp(26px,3.8vh,36px);gap:clamp(3px,.7vh,6px)}
+.hcard .ci{width:auto;max-width:100%;height:clamp(64px,16vh,150px);aspect-ratio:160/120}
+.hcard b{font-size:clamp(16px,min(2.2vw,3.3vh),28px)}
+.hcard small{font-size:clamp(11px,min(1.15vw,1.8vh),15px)}
+.h2more{margin-top:clamp(14px,2.4vh,22px)}
+@media (max-width:820px){.h2hero canvas{width:auto;height:clamp(120px,22vh,190px)}.hcard .ci{height:clamp(60px,11vh,110px)}}
+@media (max-width:820px){.home2{gap:6px}.h2cards{row-gap:24px}.hcard .ci{height:clamp(56px,9.5vh,100px)}.h2hero canvas{height:clamp(110px,19vh,170px)}.h2more{margin-top:12px}}

@@ -130,7 +130,9 @@ export const hud = {
         <textarea id="codeBox" class="codebox" readonly dir="ltr">…</textarea>
         <button class="act go" id="copyBtn">📋 انسخ الرمز</button>`;
     }
-    if (kind === 'map') body = `<h3>🗺️ قرية الخير</h3><canvas id="mini" width="320" height="363"></canvas><p class="muted">الأحمر: أنت — الأخضر: مهمتك — الأصفر: أهل القرية</p><h3>📜 رحلة الدروس</h3><div id="qlog"></div>`;
+    if (kind === 'map') body = `<h3>🗺️ خريطة العالم</h3><div class="wmap" id="wmap"><canvas id="mini"></canvas></div>
+        <div class="wlegend"><span><i class="lg-me"></i>أنت</span><span><i class="lg-goal">★</i>مهمتك</span><span><i class="lg-wait">!</i>ينتظرك</span><span><i class="lg-npc"></i>أهل القرية</span><span>🔒 منطقة مقفلة</span></div>
+        <h3>📜 رحلة الدروس</h3><div id="qlog"></div>`;
     el.innerHTML = `<div class="sheet">${body}<button class="act" data-close>رجوع إلى العالم</button></div>`;
     el.classList.add('on');
     if (kind === 'bag') {
@@ -150,6 +152,6 @@ export const hud = {
         $('copyBtn').textContent = ok ? '✓ نُسخ الرمز' : 'حدّد الرمز وانسخه يدوياً';
       };
     }
-    if (kind === 'map') { this.api.drawMini($('mini')); $('qlog').innerHTML = this.api.questLog(); $('qlog').querySelectorAll('[data-act]').forEach(b => b.onclick = e => { e.stopPropagation(); this.closePanel(); this.api.activity(b.dataset.act); }); const now = $('qlog').querySelector('.now'); if (now) setTimeout(() => now.scrollIntoView({ block: 'center' }), 50); }
+    if (kind === 'map') { const mp = this.api.drawMini($('mini')); if (mp) requestAnimationFrame(() => { const w = $('wmap'); w.scrollTop = Math.max(0, mp.y * w.scrollHeight - w.clientHeight / 2); }); $('qlog').innerHTML = this.api.questLog(); $('qlog').querySelectorAll('[data-act]').forEach(b => b.onclick = e => { e.stopPropagation(); this.closePanel(); this.api.activity(b.dataset.act); });  }
   }
 };

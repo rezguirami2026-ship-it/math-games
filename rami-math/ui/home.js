@@ -45,7 +45,7 @@ const SCENE = `<svg class="hscene" viewBox="0 0 1600 900" preserveAspectRatio="x
   <path d="M0 520 L160 420 L300 480 L460 380 L620 470 L780 400 L960 490 L1120 410 L1300 470 L1460 400 L1600 450 V620 H0Z" fill="url(#hsM2)" opacity=".9"/>
   ${[[420, 560, .55], [520, 575, .5], [980, 560, .55], [1080, 570, .5], [610, 585, .45]].map(([x, y, s]) => PALM(x, y, s, 1)).join('')}
   <!-- القلعة على اليمين -->
-  <g transform="translate(1180 230)">
+  <g transform="translate(1060 262)">
     <rect x="0" y="150" width="380" height="330" fill="url(#hsWall2)"/>
     <rect x="-40" y="90" width="120" height="390" rx="10" fill="url(#hsWall)"/><rect x="300" y="60" width="130" height="420" rx="10" fill="url(#hsWall)"/>
     <rect x="130" y="40" width="150" height="160" fill="url(#hsWall)"/>
@@ -139,6 +139,8 @@ export function homeHTML(saved) {
 
 /* اللوحات الصغيرة داخل الشاشة الرئيسية (قراءة فقط، ما عدا الإعدادات المحفوظة على الجهاز) */
 export function homeSheets(el, saved, gfx) {
+  const sc = el.querySelector('.hscene'), fit = () => sc && sc.setAttribute('preserveAspectRatio', innerHeight > innerWidth * 1.1 ? 'xMaxYMax slice' : 'xMidYMid slice');   // الهاتف عمودياً: القلعة والعلم في الصورة
+  fit(); addEventListener('resize', fit);
   const P = progressOf(saved), sh = el.querySelector('#hSheet'), box = sh.querySelector('.hsbox');
   const open = html => { box.innerHTML = html + '<button class="act" data-x>رجوع</button>'; sh.hidden = false; box.querySelector('[data-x]').onclick = () => { sh.hidden = true; }; };
   sh.onclick = e => { if (e.target === sh) sh.hidden = true; };

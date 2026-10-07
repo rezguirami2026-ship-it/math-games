@@ -10,7 +10,7 @@ export function previewHero(canvas, look, opts = {}) {
   const W = canvas.width, H = canvas.height;
   const r = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: true });
   r.setPixelRatio(Math.min(2, devicePixelRatio || 1)); r.setSize(W, H, false);
-  canvas.style.width = W + 'px'; canvas.style.height = H + 'px';
+  if (!opts.hero) { canvas.style.width = W + 'px'; canvas.style.height = H + 'px'; }   // hero: المقاس من CSS (الشاشة الرئيسية)
   r.outputColorSpace = THREE.SRGBColorSpace; r.toneMapping = THREE.ACESFilmicToneMapping; r.toneMappingExposure = 1;
   r.shadowMap.enabled = true; r.shadowMap.type = THREE.PCFSoftShadowMap;
   const sc = new THREE.Scene();
@@ -20,7 +20,8 @@ export function previewHero(canvas, look, opts = {}) {
   const rimL = new THREE.DirectionalLight('#9FD6FF', 1.4); rimL.position.set(60, 50, -60); sc.add(rimL);   // إضاءة خلفية زرقاء تفصل الشخصية
   const base = new THREE.Mesh(new THREE.CylinderGeometry(26, 28, 4, 40), new THREE.MeshStandardMaterial({ color: '#F2E3C0', roughness: .7 })); base.position.y = -2; base.receiveShadow = true; sc.add(base);
   const ring = new THREE.Mesh(new THREE.TorusGeometry(27, 1.2, 8, 48), new THREE.MeshStandardMaterial({ color: '#E3B04B', metalness: .8, roughness: .3 })); ring.rotation.x = Math.PI / 2; sc.add(ring);
-  if (opts.bust) { base.visible = ring.visible = false; }   // الشاشة الرئيسية: البطل من الخصر للأعلى بلا قاعدة
+  if (opts.bust || opts.hero) { base.visible = ring.visible = false; }
+  if (opts.hero) { const sh = new THREE.Mesh(new THREE.CircleGeometry(18, 32), new THREE.MeshBasicMaterial({ color: '#3A2410', transparent: true, opacity: .28 })); sh.rotation.x = -Math.PI / 2; sh.scale.set(1, .55, 1); sh.position.y = .2; sc.add(sh); }   // الشاشة الرئيسية: البطل من الخصر للأعلى بلا قاعدة
   const cam = new THREE.PerspectiveCamera(26, W / H, 1, 1000); if (opts.bust) { cam.position.set(0, 50, 112); cam.lookAt(0, 40, 0); } else { cam.position.set(0, 44, 140); cam.lookAt(0, 33, 0); }
   let P = null, lk = '', t = 0, last = performance.now(), raf = 0, waveT = 2 + Math.random() * 2;
   const loop = now => {

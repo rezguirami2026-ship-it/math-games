@@ -8,7 +8,7 @@ import { loadSave, saveSoon, saveNow, wipeSave, PREVIEW } from './save/save.js';
 import { createPlayer, updatePlayer } from './player/player.js';
 import { findPath } from './world/nav.js';
 import { drawHuman, heightOf } from './character/human.js';
-import { WORLD, PILE, SIGNAL, TREE_SPOTS, FARM, HOUSES, WAREHOUSE, ROADS, SOUTH, SCHOOL, staticColliders, drawGround, drawFarm, drawPalm, staticDrawables, ramadanDecor } from './world/village.js';
+import { WORLD, PILE, SIGNAL, TREE_SPOTS, FARM, HOUSES, WAREHOUSE, ROADS, SOUTH, SCHOOL, WELL, staticColliders, drawGround, drawFarm, drawPalm, staticDrawables, ramadanDecor } from './world/village.js';
 import { makeTrucks, truckColliders, drawTruck, drawPile, drawSignal, drawSpot, updateFx, drawFx, moveAlong, say, bubble, sparkle, dust } from './world/entities.js';
 import { makeNpcs, npcVisible, updateNpc, drawNpc } from './npc/npc.js';
 import { updateKids, kidsItems, kidsPeople3d } from './world/school.js';
@@ -44,9 +44,10 @@ import { signboard, upright, CAM, SEASON, FLAGS, bigSign } from './world/art.js'
 import { ramadanOn } from './core/season.js';
 import { caravanColliders, drawCaravanGround, caravanDrawables } from './world/caravan.js';
 import { coopColliders, drawCoopGround, coopDrawables } from './world/coop.js';
-import { festivalColliders, drawFestivalGround, festivalDrawables } from './world/festival.js';
-import { fortColliders, drawFortGround, fortDrawables } from './world/fort.js';
-import { harborColliders, drawHarborGround, harborDrawables } from './world/harbor.js';
+import { festivalColliders, drawFestivalGround, festivalDrawables, FUNPARK } from './world/festival.js';
+import { fortColliders, drawFortGround, fortDrawables, CASTLE, MOAT } from './world/fort.js';
+import { harborColliders, drawHarborGround, harborDrawables, PIER_Y } from './world/harbor.js';
+import { drawWorldMap } from './ui/worldmap.js';
 import { marketColliders, drawMarketGround, marketDrawables } from './world/market.js';
 import * as quests from './missions/quests.js';
 import { LESSONS, UNITS } from './content/lessons.js';
@@ -186,7 +187,7 @@ async function start(state) {
   }
 }
 /* ── العرض ثلاثي الأبعاد (renderer3d): يُحمَّل فقط عند طلبه، ويرجع إلى الرسم الحالي إن لم يدعم الجهاز WebGL أو فشل التحميل ── */
-const V3D = 'نسخة 3D · ٢٩';   // تُعرض في شاشة التحميل وفي الزاوية: للتأكد أن المتصفح حمّل آخر نسخة
+const V3D = 'نسخة 3D · ٣٠';   // تُعرض في شاشة التحميل وفي الزاوية: للتأكد أن المتصفح حمّل آخر نسخة
 const want3d = () => gfx.d3();
 function loadingScreen() {
   const el = document.createElement('div'); el.className = 'load3d';
@@ -566,18 +567,12 @@ function drawGuide(ctx, view, t) {
 }
 
 /* ── الخريطة المصغّرة وسجل الدروس ── */
-function drawMini(cv) {
-  const x = cv.getContext('2d'), sc = Math.min(cv.width / WORLD.w, cv.height / WORLD.h), s = game.state;
-  x.fillStyle = '#EAD6A6'; x.fillRect(0, 0, cv.width, cv.height); x.save(); x.scale(sc, sc);
-  x.fillStyle = '#5E6274'; ROADS.forEach(r => x.fillRect(r.x, r.y, r.w, r.h));
-  x.fillStyle = s.world.delivered ? '#7CB35A' : '#C9A46B'; x.fillRect(FARM.x, FARM.y, FARM.w, FARM.h);
-  x.fillStyle = '#3FA9F5'; x.fillRect(POND.x, POND.y, POND.w, POND.h);
-  x.fillStyle = '#D9C6A0'; HOUSES.concat(SOUTH, [SCHOOL]).forEach(b => x.fillRect(b.x, b.y, b.w, b.h));
-  x.fillStyle = '#8FA0B5'; x.fillRect(WAREHOUSE.x, WAREHOUSE.y, WAREHOUSE.w, WAREHOUSE.h);
-  x.fillStyle = '#FFC23D'; W.npcs.filter(n => npcVisible(n, s)).forEach(n => { x.beginPath(); x.arc(n.x, n.y, 20, 0, 7); x.fill(); });
-  const g = objectiveTarget(); if (g) { x.fillStyle = '#2E9E5B'; x.beginPath(); x.arc(g.x, g.y, 30, 0, 7); x.fill(); }
-  x.fillStyle = '#C2304A'; x.beginPath(); x.arc(W.player.x, W.player.y, 28, 0, 7); x.fill();
-  x.restore();
+function drawMini(cv) {   // خريطة العالم المرسومة (ui/worldmap.js)
+  const s = game.state, c = cur(), waitingId = c && !quests.isStarted(c.id) ? c.giver : null, a = AREAS.find(r => r.in(W.player.x, W.player.y));
+  return drawWorldMap(cv, { player: W.player, target: objectiveTarget(), place: a ? a.id : 'village', open: gateState(),
+    npcs: W.npcs.filter(n => npcVisible(n, s)).map(n => ({ x: n.x, y: n.y, waiting: n.id === waitingId })),
+    village: { houses: HOUSES.concat(SOUTH), warehouse: WAREHOUSE, school: SCHOOL, farm: FARM, farmGreen: !!s.world.delivered, pond: POND, well: WELL },
+    castle: CASTLE, moat: MOAT, funpark: FUNPARK, piers: PIER_Y });
 }
 function questLog() {
   const c = cur();

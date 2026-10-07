@@ -15,7 +15,7 @@ function animate(canvases) {
   cancelAnimationFrame(anim); if (P3) P3.stopPreviews();
   if (use3d()) {   // كل canvas يُستبدل بنسخة جديدة (السياق ثنائي الأبعاد لا يتحول إلى WebGL)
     const fresh = canvases.map(({ c, h }) => { const n = document.createElement('canvas'); n.width = c.width; n.height = c.height; n.className = c.className; n.id = c.id; c.replaceWith(n); return { c: n, h }; });
-    import('../renderer3d/preview.js').then(m => { P3 = m; fresh.forEach(({ c, h }) => { if (c.isConnected) m.previewHero(c, h, { bust: c.id === 'tHero' }); }); }).catch(() => {});
+    import('../renderer3d/preview.js').then(m => { P3 = m; fresh.forEach(({ c, h }) => { if (c.isConnected) m.previewHero(c, h, { hero: c.id === 'tHero' }); }); }).catch(() => {});
     return;
   }
   let ph = 0;
