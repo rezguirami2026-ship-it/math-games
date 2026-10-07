@@ -33,6 +33,7 @@ export function pattern(ctx, key) {
 /* ── ذاكرة الصور (Sprite cache): ما هو ثابت يُرسم مرة واحدة بدقة الشاشة الحالية ثم يُنسخ في كل إطار ──
    (bx, by, bw, bh) مستطيل الصورة بإحداثيات العالم، وpaint يرسم بإحداثيات العالم نفسها. maxScale يحدّ الذاكرة. */
 const sprites = new Map();
+let spritePx = 0; const SPRITE_BUDGET = (() => { try { const m = navigator.deviceMemory || 4, mob = matchMedia('(pointer: coarse)').matches; return (mob ? (m <= 3 ? 14 : 24) : 60) * 1e6; } catch (e) { return 24e6; } })();
 export function sprite(ctx, key, bx, by, bw, bh, paint, maxScale = 3) {
   const m = ctx.getTransform(), s = Math.max(1, Math.min(maxScale, Math.floor(Math.hypot(m.a, m.b) * 2) / 2));
   const k = key + '@' + s;
@@ -41,8 +42,8 @@ export function sprite(ctx, key, bx, by, bw, bh, paint, maxScale = 3) {
   else {
     c = document.createElement('canvas'); c.width = Math.ceil(bw * s); c.height = Math.ceil(bh * s);
     const x = c.getContext('2d'); x.scale(s, s); x.translate(-bx, -by); paint(x);
-    sprites.set(k, c);
-    while (sprites.size > 140) sprites.delete(sprites.keys().next().value);   // حدّ للذاكرة على الأجهزة الضعيفة
+    sprites.set(k, c); spritePx += c.width * c.height;
+    while (sprites.size > 1 && (sprites.size > 140 || spritePx > SPRITE_BUDGET)) { const [k0, c0] = sprites.entries().next().value; spritePx -= c0.width * c0.height; sprites.delete(k0); }   // حدّ للذاكرة بعدد البكسلات: الهاتف الضعيف يسودّ إن امتلأت ذاكرة الصور
   }
   ctx.drawImage(c, bx, by, bw, bh);
 }

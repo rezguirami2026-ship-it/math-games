@@ -5,10 +5,11 @@ import { LESSONS } from '../content/lessons.js';
 import { ar } from '../core/util.js';
 import { homeHTML, homeSheets, SCENE } from './home.js';
 import { gfx } from './hud.js';
+import { WEAK } from './hud.js';
 const $ = id => document.getElementById(id);
 let anim = 0;
 /* البطل في شاشات البداية: مجسّماً إن كان العرض ثلاثي الأبعاد مفعّلاً ومدعوماً، وإلا بالرسم ثنائي الأبعاد */
-const use3d = () => { try { const q = new URLSearchParams(location.search); if (q.has('2d') || localStorage.getItem('ramimath_3d') === '0') return false; const c = document.createElement('canvas'); return !!(c.getContext('webgl2') || c.getContext('webgl')); } catch (e) { return false; } };
+const use3d = () => { try { const q = new URLSearchParams(location.search); const v = localStorage.getItem('ramimath_3d'); if (q.has('2d') || v === '0' || (v !== '1' && WEAK)) return false; const c = document.createElement('canvas'); return !!(c.getContext('webgl2') || c.getContext('webgl')); } catch (e) { return false; } };
 let P3 = null;
 const stopAll = () => { cancelAnimationFrame(anim); if (P3) P3.stopPreviews(); };   // عند مغادرة الشاشة: لا رسم في الخلفية
 function animate(canvases) {

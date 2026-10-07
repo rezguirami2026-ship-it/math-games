@@ -61,6 +61,16 @@ import { hud, gfx } from './ui/hud.js';
 import { screens } from './ui/screens.js';
 
 const eng = createEngine(document.getElementById('game'), WORLD);
+// فقد سياق الرسم (الهاتف يحرّر ذاكرة الرسوم حين تُصغَّر اللعبة أو تمتلئ ذاكرته) يترك الشاشة سوداء: نحفظ ونعيد التحميل عند العودة.
+// وإن تكرر الفقد في العرض ثلاثي الأبعاد تنخفض الجودة، ثم يُستعمل العرض العادي بدل شاشة سوداء
+function gfxLost(is3d) {
+  if (game.state) saveNow(game.state);
+  try { const n = +(sessionStorage.getItem('ramimath_lost') || 0) + 1; sessionStorage.setItem('ramimath_lost', n);
+    if (is3d && n >= 2) localStorage.setItem('ramimath_q', 'low'); if (is3d && n >= 3) localStorage.setItem('ramimath_3d', '0'); } catch (e) {}
+  const go = () => { if (document.visibilityState === 'visible') location.reload(); };
+  if (document.visibilityState === 'visible') setTimeout(go, 400); else document.addEventListener('visibilitychange', go);
+}
+document.getElementById('game').addEventListener('contextlost', e => { e.preventDefault(); gfxLost(false); });
 let W = null;
 const npcPos = id => { const n = W.npcs.find(n => n.id === id); return { x: n.x, y: n.y - 30 }; };
 
@@ -192,7 +202,7 @@ async function start(state) {
   }
 }
 /* ── العرض ثلاثي الأبعاد (renderer3d): يُحمَّل فقط عند طلبه، ويرجع إلى الرسم الحالي إن لم يدعم الجهاز WebGL أو فشل التحميل ── */
-const V3D = 'نسخة 3D · ٥٠';   // تُعرض في شاشة التحميل وفي الزاوية: للتأكد أن المتصفح حمّل آخر نسخة
+const V3D = 'نسخة 3D · ٥١';   // تُعرض في شاشة التحميل وفي الزاوية: للتأكد أن المتصفح حمّل آخر نسخة
 const want3d = () => gfx.d3();
 function loadingScreen() {
   const el = document.createElement('div'); el.className = 'load3d';
@@ -204,8 +214,16 @@ function loadingScreen() {
 function autoQuality() {
   eng.l3.setQuality('high'); let n = 0, t0 = 0;
   const tick = now => { if (!t0) t0 = now; n++; if (now - t0 < 5000) return requestAnimationFrame(tick); const fps = n * 1000 / (now - t0);
-    if (fps < 26 && (localStorage.getItem('ramimath_q') || 'auto') === 'auto') { eng.l3.setQuality('low'); hud.toast('⚙️ خُفّضت جودة الرسوم تلقائياً لتبقى اللعبة سلسة على هذا الجهاز'); } };
+    if (fps < 26 && (localStorage.getItem('ramimath_q') || 'auto') === 'auto') { eng.l3.setQuality('low'); hud.toast('⚙️ خُفّضت جودة الرسوم تلقائياً لتبقى اللعبة سلسة على هذا الجهاز'); if (fps < 20) slowCheck(); } };
   setTimeout(() => requestAnimationFrame(tick), 2500);
+}
+/* بعد خفض الجودة: إن بقي العرض ثلاثي الأبعاد بطيئاً جداً (أقل من ١٥ إطاراً) ولم يختره الطالب بنفسه، ننتقل إلى العرض العادي */
+function slowCheck() {
+  let n = 0, t0 = 0;
+  const tick = now => { if (!t0) t0 = now; n++; if (now - t0 < 5000) return requestAnimationFrame(tick);
+    let chosen = false; try { chosen = localStorage.getItem('ramimath_3d') === '1'; } catch (e) {}
+    if (n * 1000 / (now - t0) < 15 && !chosen && !game.busy) { if (game.state) saveNow(game.state); try { localStorage.setItem('ramimath_3d', '0'); } catch (e) {} hud.toast('⚙️ هذا الجهاز أبطأ من العرض ثلاثي الأبعاد، فننتقل إلى العرض العادي'); setTimeout(() => gfx.set3d(false), 2500); } };
+  setTimeout(() => requestAnimationFrame(tick), 1500);
 }
 async function init3D() {
   let load = null;
@@ -221,12 +239,7 @@ async function init3D() {
       if (quests.isStarted('division1') || quests.isDone('division1')) out.push({ id: 'van', x: convoy.VAN.x, y: convoy.VAN.y, load: m.van || 0, covered: !!s.world.delivered, s: .72 }); return out; };
     // فقد سياق الرسم (الهاتف يحرّر ذاكرة الرسوم حين تُصغَّر اللعبة أو تُقفل الشاشة) يترك المشهد أسود: نحفظ ونعيد التحميل عند العودة،
     // وإن تكرر الفقد تنخفض الجودة، ثم يُستعمل العرض العادي بدل شاشة سوداء
-    eng.l3.canvas.addEventListener('webglcontextlost', e => {
-      e.preventDefault(); if (game.state) saveNow(game.state);
-      let n = 1; try { n = +(sessionStorage.getItem('ramimath_lost') || 0) + 1; sessionStorage.setItem('ramimath_lost', n); if (n >= 2) localStorage.setItem('ramimath_q', 'low'); if (n >= 4) localStorage.setItem('ramimath_3d', '0'); } catch (er) {}
-      const go = () => { if (document.visibilityState === 'visible') location.reload(); };
-      if (document.visibilityState === 'visible') setTimeout(go, 400); else document.addEventListener('visibilitychange', go);
-    });
+    eng.l3.canvas.addEventListener('webglcontextlost', e => { e.preventDefault(); gfxLost(true); });
     setTimeout(() => { try { sessionStorage.removeItem('ramimath_lost'); } catch (e) {} }, 180000);
     gfx.onQ = v => { if (v !== 'auto') eng.l3.setQuality(v); else autoQuality(); };
     if (q === 'auto') autoQuality();

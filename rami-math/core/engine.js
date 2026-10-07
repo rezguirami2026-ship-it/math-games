@@ -7,7 +7,7 @@ export function createEngine(canvas, world) {
   let light = null, vignette = null, dusk = null, duskVig = null;
   E.mood = 'day';   // 'dusk' لأجواء رمضان: غروب دافئ
   function resize() {
-    E.dpr = Math.min(window.devicePixelRatio || 1, 2.5);
+    E.dpr = Math.min(window.devicePixelRatio || 1, (navigator.deviceMemory && navigator.deviceMemory <= 3) ? 2 : 2.5);   // الهاتف الضعيف: ذاكرة صور أقل
     E.w = canvas.clientWidth; E.h = canvas.clientHeight;
     canvas.width = Math.round(E.w * E.dpr); canvas.height = Math.round(E.h * E.dpr);
     // التقريب: البطل نحو ١٥٪ من ارتفاع الشاشة، مع رؤية ٣٣٠ وحدة عرضاً على الأقل في الهاتف

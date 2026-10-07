@@ -18,7 +18,7 @@ function install() {
   hud.toast('📲 في آيفون: اضغط زر المشاركة ⬆️ ثم «إضافة إلى الشاشة الرئيسية»');
 }
 export const gfx = {
-  d3() { try { const q = new URLSearchParams(location.search); if (q.has('2d')) return false; return q.has('3d') || localStorage.getItem('ramimath_3d') !== '0'; } catch (e) { return true; } },   // ثلاثي الأبعاد هو الافتراضي؛ والجهاز بلا WebGL يرجع وحده إلى العادي
+  d3() { try { const q = new URLSearchParams(location.search); if (q.has('2d')) return false; const v = localStorage.getItem('ramimath_3d'); return q.has('3d') || v === '1' || (v !== '0' && !WEAK);  } catch (e) { return true; } },   // ثلاثي الأبعاد هو الافتراضي؛ والجهاز بلا WebGL يرجع وحده إلى العادي
   set3d(on) { try { localStorage.setItem('ramimath_3d', on ? '1' : '0'); } catch (e) {} const u = new URL(location.href); u.searchParams.delete('3d'); u.searchParams.delete('2d'); if (!on) u.searchParams.set('2d', '1'); location.href = u.toString(); },
   q() { try { return localStorage.getItem('ramimath_q') || 'auto'; } catch (e) { return 'auto'; } },
   setQ(v) { try { localStorage.setItem('ramimath_q', v); } catch (e) {} if (gfx.onQ) gfx.onQ(v); }
@@ -26,6 +26,8 @@ export const gfx = {
 import { exportCode } from '../save/save.js';
 import { progress } from '../missions/quests.js';
 import { ramadanPref, setRamadanPref, PREF_LABEL } from '../core/season.js';
+// جهاز ضعيف (ذاكرة ٣ غيغا أو أقل، أو هاتف بأربع أنوية أو أقل): العرض العادي افتراضياً، ويبقى ثلاثي الأبعاد متاحاً من زر «العرض» في الحقيبة
+export const WEAK = (() => { try { const n = navigator, mob = matchMedia('(pointer: coarse)').matches; return (n.deviceMemory && n.deviceMemory <= 3) || (mob && n.hardwareConcurrency && n.hardwareConcurrency <= 4); } catch (e) { return false; } })();
 const $ = id => document.getElementById(id);
 window.addEventListener('pointerup', () => clearInterval(hud._hold));
 export const hud = {
