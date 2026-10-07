@@ -185,3 +185,12 @@
 .load3d .lbar{width:min(300px,70vw);height:14px;border-radius:8px;background:#E8E2D6;overflow:hidden;box-shadow:inset 0 2px 3px rgba(0,0,0,.15)}
 .load3d .lbar i{display:block;height:100%;background:linear-gradient(90deg,#FFC23D,#2E9E5B);border-radius:8px;transition:width .2s}
 .p2logo b{-webkit-text-stroke:3px #2A1B66;paint-order:stroke fill}
+/* اختيار البطل يتسع في الشاشة دون تمرير: البطاقات تُحسب من الارتفاع المتاح، وزر الانطلاق ملتصق بأسفل الشاشة دائماً */
+.pcard{width:clamp(110px,min(19vw,calc((100dvh - 470px) * .78)),220px)}
+.p2t{margin-top:clamp(50px,6vh,70px)}
+.heroes2{margin-bottom:clamp(12px,1.6vh,14px)}
+.screen.p2on .pgo{position:sticky;bottom:calc(var(--safeB) + 6px);z-index:3;flex:none}
+@media (max-height:820px){.p2t h2{font-size:clamp(26px,4.6vh,44px)}.p2t{margin-top:clamp(46px,5vh,60px)}.p2sub{font-size:14px}
+  .p2on .sw button{width:30px;height:30px}.sw2{padding:3px 12px}.p2on #hname{padding:5px 4px;font-size:18px}.pgo{min-height:52px}}
+@media (max-height:820px){.pcard{width:clamp(110px,min(19vw,calc((100dvh - 430px) * .78)),220px)}}
+@media (max-width:600px){.pcard{width:clamp(110px,min(40vw,calc((100dvh - 430px) * .78)),190px)}}
