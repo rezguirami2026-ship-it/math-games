@@ -55,6 +55,7 @@ import { marketColliders, drawMarketGround, marketDrawables } from './world/mark
 import * as quests from './missions/quests.js';
 import { LESSONS, UNITS } from './content/lessons.js';
 import { openWardrobe, heroLookWorn } from './ui/wardrobe.js';
+import { SCENE } from './ui/home.js';
 import { unlock } from './achievements/achievements.js';
 import { hud, gfx } from './ui/hud.js';
 import { screens } from './ui/screens.js';
@@ -191,11 +192,11 @@ async function start(state) {
   }
 }
 /* ── العرض ثلاثي الأبعاد (renderer3d): يُحمَّل فقط عند طلبه، ويرجع إلى الرسم الحالي إن لم يدعم الجهاز WebGL أو فشل التحميل ── */
-const V3D = 'نسخة 3D · ٤٠';   // تُعرض في شاشة التحميل وفي الزاوية: للتأكد أن المتصفح حمّل آخر نسخة
+const V3D = 'نسخة 3D · ٤١';   // تُعرض في شاشة التحميل وفي الزاوية: للتأكد أن المتصفح حمّل آخر نسخة
 const want3d = () => gfx.d3();
 function loadingScreen() {
   const el = document.createElement('div'); el.className = 'load3d';
-  el.innerHTML = '<div class="lbox"><b>🏡 قرية الخير</b><small>تجهيز العالم ثلاثي الأبعاد…</small><div class="lbar"><i></i></div><small class="lver">' + V3D + '</small></div>';
+  el.innerHTML = SCENE + '<div class="lbox"><div class="hlogo">قرية الخير</div><div class="hribbon">مغامرة رامي ماث</div><small>تجهيز العالم…</small><div class="lbar"><i></i></div><small class="lver">' + V3D + '</small></div>';
   document.body.appendChild(el); const bar = el.querySelector('i');
   return { set: k => { bar.style.width = Math.round(k * 100) + '%'; }, done: () => { el.classList.add('out'); setTimeout(() => el.remove(), 500); } };
 }

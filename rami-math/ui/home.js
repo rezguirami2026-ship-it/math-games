@@ -28,7 +28,7 @@ const PALM = (x, y, s, f = 1) => `<g transform="translate(${x} ${y}) scale(${s *
   ${[[-150, 60], [-110, 30], [-60, 10], [0, 0], [50, 15], [100, 40], [150, 70], [-30, -20], [25, -25]].map(([dx, dy], i) => `<path d="M18 -250 Q${18 + dx * .5} ${-300 + dy * .3} ${18 + dx} ${-240 + dy}" stroke="${i % 2 ? '#2F8A3A' : '#46A845'}" stroke-width="20" fill="none" stroke-linecap="round"/>
   <path d="M18 -250 Q${18 + dx * .5} ${-300 + dy * .3} ${18 + dx} ${-240 + dy}" stroke="#7FD06A" stroke-width="3" fill="none" stroke-dasharray="2 7"/>`).join('')}
   <g fill="#D98A10">${[[8, -238], [26, -236], [16, -228], [2, -226]].map(([a, b]) => `<circle cx="${a}" cy="${b}" r="7"/>`).join('')}</g></g>`;
-const SCENE = `<svg class="hscene" viewBox="0 0 1600 900" preserveAspectRatio="xMidYMid slice" aria-hidden="true">
+export const SCENE = `<svg class="hscene" viewBox="0 0 1600 900" preserveAspectRatio="xMidYMid slice" aria-hidden="true">
   <defs>
     <linearGradient id="hsSky" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#3E9BE6"/><stop offset=".55" stop-color="#9FD3F5"/><stop offset="1" stop-color="#FFE9C2"/></linearGradient>
     <radialGradient id="hsSun" cx=".55" cy=".2" r=".5"><stop offset="0" stop-color="#FFF6D0" stop-opacity=".95"/><stop offset="1" stop-color="#FFF6D0" stop-opacity="0"/></radialGradient>
