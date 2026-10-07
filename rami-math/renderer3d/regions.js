@@ -30,7 +30,7 @@ function gateEW([Y, x0, x1, label]) {
   });
   P.add(WALLTOP(), box(x1 - x0 + 30, 16, 16, (x0 + x1) / 2, 84, Y + 6));   // العتبة فوق الممر
   g.add(P.build());
-  const s = signMesh(label, 16); s.position.set((x0 + x1) / 2, 84, Y + 15); g.add(s);
+  const s = signMesh(label, 19); s.position.set((x0 + x1) / 2, 84, Y + 15); g.add(s);
   const leafW = (x1 - x0) / 2, leaves = [-1, 1].map(sd => {   // المصراعان على مفصلين عند طرفي الممر
     const pv = new THREE.Group(); pv.position.set(sd < 0 ? x0 : x1, 0, Y + 6);
     const lp = new Parts(); lp.add(material('wood', '#7A4A2A'), box(leafW, 66, 5, -sd * leafW / 2, 33, 0), { scale: 1 / 50 });
@@ -64,7 +64,7 @@ function kiosk(s) {
   [34, 54].forEach((y, r) => { P.add(material('wood', '#7A4A2A'), box(w - 14, 2.4, 10, s.x, y, z0 + 11)); for (let k = 0; k < 8; k++) P.add(flat(G[(k + r) % G.length], .6), sphere(4, x0 + 14 + k * 11, y + 4.5, z0 + 11, 8, 6)); });
   P.add(material('wood', '#9C6438'), box(w + 4, 5, 14, s.x, 30, zf + 5)); P.add(flat(col, .7), box(w, 26, 12, s.x, 14, zf + 5));
   for (let k = 0; k < 6; k++) P.add(flat('#FFFFFF', .7), box(2, 22, .6, x0 + 12 + k * 16, 14, zf + 11.3));
-  const g = P.build(); const sg = signMesh(s.sign, 13); sg.position.set(s.x, H - 22, zf + 8); g.add(sg);
+  const g = P.build(); const sg = signMesh(s.sign, 17); sg.position.set(s.x, H - 22, zf + 8); g.add(sg);
   return g;
 }
 

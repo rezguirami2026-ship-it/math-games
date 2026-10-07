@@ -98,7 +98,7 @@ export function lessonProps() {
   const [pa, pb] = POLES; rope(g, new THREE.Vector3(pa[0], 120, pa[1]), new THREE.Vector3(STAGE.x - 146, 170, ST.y + 14), 22, 6, 'lantern'); rope(g, new THREE.Vector3(STAGE.x + 146, 170, ST.y + 14), new THREE.Vector3(pb[0], 120, pb[1]), 22, 6, 'lantern');
   TABLES.forEach(([x, y, k]) => table(P, x, y, k));
   // القرية: لافتة إرشادية والإشارة الضوئية
-  P.add(WD(), box(4, 70, 4, 784, 35, 586)); [['المستودع', -1, 58], ['المزرعة', 1, 70]].forEach(([t, sd, h]) => { const s = signMesh(t + (sd < 0 ? ' ←' : ' →'), 12); s.position.set(784 + sd * 34, h, 586); g.add(s); });
+  P.add(WD(), box(6, 112, 6, 784, 56, 586)); [['المستودع', -1, 78], ['المزرعة', 1, 104]].forEach(([t, sd, h]) => { const s = signMesh(t + (sd < 0 ? ' ←' : ' →'), 22); s.position.set(784 + sd * 50, h, 588); g.add(s); });   // لافتتا الاتجاه أكبر بكثير لتُقرأ من بعيد
   P.add(flat('#3D3A3A', .5, .5), cyl(2, 2, 60, SIGNAL.x, 30, SIGNAL.y - 4, 8)); P.add(flat('#2B2B2B', .5), box(14, 30, 10, SIGNAL.x, 70, SIGNAL.y - 4));
   const red = new THREE.Mesh(new THREE.SphereGeometry(4, 12, 8), new THREE.MeshStandardMaterial({ color: '#E2475C' })), green = new THREE.Mesh(new THREE.SphereGeometry(4, 12, 8), new THREE.MeshStandardMaterial({ color: '#3BE07A' }));
   red.position.set(SIGNAL.x, 78, SIGNAL.y + 1.5); green.position.set(SIGNAL.x, 63, SIGNAL.y + 1.5); g.add(red, green);

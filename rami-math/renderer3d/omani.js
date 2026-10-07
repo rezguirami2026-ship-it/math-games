@@ -194,7 +194,7 @@ export function omaniHouse(b, opts = {}) {
     jar(P, x0 + 16, H + 1, z0 + d - 18, .9); jar(P, x0 + 27, H + 1, z0 + d - 15, .7, '#C27A48');
   }
   const g = P.build();
-  if (b.sign) { const s = signMesh(b.sign, 15); s.position.set(x0 + w / 2, dh + 31, zf + 2.2); g.add(s); }
+  if (b.sign) { const s = signMesh(b.sign, 19); s.position.set(x0 + w / 2, dh + 31, zf + 2.2); g.add(s); }
   g.userData = { H, foot: { x: x0, z: z0, w, d } };
   return g;
 }
@@ -240,7 +240,7 @@ export function warehouse(b, H0) {
   door(P, x0 + 44, zf, 30, 74, '#6B4520', material('plaster', '#E6DFD2'));
   P.add(M.stone(), box(52, 34, 3, x0 + w - 50, 70, zf + 1)); P.add(M.glass(), box(44, 26, 1, x0 + w - 50, 70, zf + 2.8));
   P.add(material('stone', '#9C9484'), box(w + 10, 8, 14, x0 + w / 2, 4, zf + 7));
-  const g = P.build(); const s = signMesh('المستودع', 15); s.position.set(dx, H - 30, zf + 2.6); g.add(s);
+  const g = P.build(); const s = signMesh('المستودع', 20); s.position.set(dx, H - 30, zf + 2.6); g.add(s);
   return g;
 }
 

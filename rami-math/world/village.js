@@ -1,7 +1,7 @@
 // قرية الخير: تخطيط العالم ورسمه. المزرعة والبئر والنخيل تتغير حسب حالة العالم.
 // الرسم بأسلوب 2.5D مشترك (world/art.js): مبانٍ بجدران وأسطح، ظلال نحو الأسفل يميناً، أرصفة بحواف، وأنسجة مواد.
 import { rng, shade, mix, rr, clamp } from '../core/util.js';
-import { PAL, SUN, INK, CAM, leanAt, pattern, sprite, boxShadow, blobShadow, building3d, box3d, minaret, sidrCached, palm, palmCached, shrub, streetLamp, bench, signboard, SEASON, elev, lantern, lanternString, banner, solid } from './art.js';
+import { FLAGS, PAL, SUN, INK, CAM, leanAt, pattern, sprite, boxShadow, blobShadow, building3d, box3d, minaret, sidrCached, palm, palmCached, shrub, streetLamp, bench, signboard, SEASON, elev, lantern, lanternString, banner, solid } from './art.js';
 
 export const WORLD = { w: 3200, h: 6500 };   // القرية في الشمال، ثم السوق والميناء شرقاً، والقلعة والمهرجان والجمعية والقافلة والورشة جنوباً
 export const ROADS = [{ x: 0, y: 600, w: 2930, h: 80 }, { x: 700, y: 0, w: 70, h: 600 }];
@@ -145,7 +145,7 @@ function paintFarm(ctx, g) {
   wallSeg(F.x + 4, F.y + 4, gate[0], F.y + 4); wallSeg(gate[1], F.y + 4, F.x + F.w - 4, F.y + 4);
   wallSeg(F.x + 4, F.y + 4, F.x + 4, F.y + F.h - 4); wallSeg(F.x + F.w - 4, F.y + 4, F.x + F.w - 4, F.y + F.h - 4); wallSeg(F.x + 4, F.y + F.h - 4, F.x + F.w - 4, F.y + F.h - 4);
   ctx.fillStyle = '#B79766'; [gate[0], gate[1]].forEach(x => { ctx.fillRect(x - 5, F.y - 8, 10, 14); ctx.fillStyle = '#D6BA8A'; ctx.fillRect(x - 5, F.y - 10, 10, 4); ctx.fillStyle = '#B79766'; });
-  signboard(ctx, F.x + F.w / 2, F.y - 18, g > .5 ? 'مزرعة القرية 🌾' : 'مزرعة القرية');
+  if (!FLAGS.three) signboard(ctx, F.x + F.w / 2, F.y - 18, g > .5 ? 'مزرعة القرية 🌾' : 'مزرعة القرية');   // في 3D لافتة مجسّمة كبيرة (renderer3d/world.js)
 }
 function channel(ctx, x, y, len, horiz, flow, t) {   // قناة الفلج: حجارة على الحافتين، وماء متدفق بقدر flow
   const W = 10;

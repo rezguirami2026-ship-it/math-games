@@ -1,7 +1,9 @@
 // تجميع قلب القرية مجسّماً من ثوابت اللعبة نفسها (قراءة فقط): كل مبنى فوق أرضية تصادمه تماماً، فالمسارات لا تتغير.
 import * as THREE from '../lib/three/three.module.min.js';
 import { HOUSES, SOUTH, WAREHOUSE, WELL, PALMS, SIDRS, FARM_PALMS, LAMPS, SHRUBS, MINARET, H_SOUTH, H_WARE } from '../world/village.js';
-import { omaniHouse, omaniMosque, warehouse } from './omani.js';
+import { omaniHouse, omaniMosque, warehouse, signMesh } from './omani.js';
+import { material } from './textures.js';
+import { box } from './geom.js';
 import { palms, sidrTree, shrubs, groundScatter } from './nature.js';
 import { ROADS, FARM, PARK } from '../world/village.js';
 import { POND } from '../missions/unit1.js';
@@ -47,7 +49,11 @@ export function buildVillage({ quality }) {
   group.add(shrubs(SHRUBS.map(s => ({ x: s.x, y: s.y, f: s.f, r: 11 }))));
   const lamps = streetLamps(LAMPS); group.add(lamps.group);
   // (أُزيلت الحصى والعشب المبعثر بطلب المستخدم: الأرض أنظف)
-  const P = new Parts(); bench(P, 1196, 548); group.add(P.build());
+  const P = new Parts(); bench(P, 1196, 548);
+  // لافتة المزرعة: كبيرة على عمودين عند بوابتها (كانت مرسومة على الأرض فتظهر صغيرة باهتة)
+  const fx = FARM.x + FARM.w / 2, WDm = material('wood', '#7A4A2A'); [-66, 66].forEach(dx => P.add(WDm, box(7, 124, 7, fx + dx, 62, FARM.y - 14)));
+  group.add(P.build());
+  const fs = signMesh('🌾 مزرعة القرية', 30); fs.position.set(fx, 126, FARM.y - 12); group.add(fs);
   let forced = false;
   return {
     group, forceLamps(v) { forced = v; },

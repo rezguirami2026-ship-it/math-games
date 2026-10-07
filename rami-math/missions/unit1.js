@@ -129,6 +129,7 @@ export const compareRound = {
   },
   // اللافتات والمخزن قائمة وتُرسم بدقة الشاشة: أرقام كبيرة واضحة
   draw(d, t, active) {
+    if (!active) return [];   // اللافتات والمخزن للدرس فقط: بعده يعود الطريق نظيفاً وتظهر لافتة المزرعة كاملة
     const out = MARKS.map(m => ({ y: m.y + 8, x: m.x, draw: c => roadSign(c, m.x, m.y + 8, ar(m.v)) }));
     (d.placed || []).forEach(p => { const m = MARKS.find(x => x.v === p.m); out.push({ y: m.y + 16, x: m.x + 24, draw: c => crate(c, m.x + 24, m.y + 16, 18, '') }); });
     if (active) { const left = (d.items || []).length - (d.placed || []).length - ((d.hand === null || d.hand === undefined) ? 0 : 1); out.push({ y: DEPOT.y + 12, x: DEPOT.x - 4, draw: c => depotShed(c, DEPOT.x - 4, DEPOT.y + 12, left) }); }

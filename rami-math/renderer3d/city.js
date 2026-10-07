@@ -51,7 +51,7 @@ function apartment(b, i) {
   P.add(flat('#D9DEE2'), box(26, 14, 18, x + w / 4, H + 7, z - d / 4));
   P.add(flat('#E85D75', .6), box(46, 2, 14, x, 26, b.y + d + 7)); P.add(rail, box(1.2, 24, 1.2, x - 21, 13, b.y + d + 13)); P.add(rail, box(1.2, 24, 1.2, x + 21, 13, b.y + d + 13));   // مظلة المدخل
   g.add(P.build());
-  const s = signMesh('عمارة ' + ['النخيل', 'الوادي', 'الريم', 'السلام', 'الأمل', 'الخير'][i % 6], 12); s.position.set(x, 34, b.y + d + 1); g.add(s);
+  const s = signMesh('عمارة ' + ['النخيل', 'الوادي', 'الريم', 'السلام', 'الأمل', 'الخير'][i % 6], 16); s.position.set(x, 34, b.y + d + 1); g.add(s);
   return g;
 }
 /* سيارة: جسم بزوايا ناعمة، زجاج، عجلات، ومصابيح */

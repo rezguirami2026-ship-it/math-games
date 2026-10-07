@@ -55,7 +55,7 @@ export function shop3d() {
   [-62, 58].forEach(dx => P.add(wd, box(6, 108, 6, x + dx, 54, z - 4)));
   for (let k = 0; k < 7; k++) P.add(k % 2 ? flat('#F4E3B8', .7) : flat('#2F6B73', .6), box(20, 2.4, 52, 0, 0, 0).rotateX(.32).translate(x - 64 + (k + .5) * 18.6, 104, z - 20));
   P.add(material('wood', '#9C6438'), box(124, 6, 22, x, 32, z - 4)); P.add(flat('#2F6B73', .7), box(120, 28, 18, x, 15, z - 4));
-  const g = P.build(); const s = signMesh('دكان ناصر', 16); s.position.set(x, 120, z + 6); g.add(s); return g;
+  const g = P.build(); const s = signMesh('دكان ناصر', 20); s.position.set(x, 120, z + 6); g.add(s); return g;
 }
 
 /* ── محطة الحافلات: سقف مسطح على قوائم، مقاعد، وحافة زرقاء ── */
@@ -64,7 +64,7 @@ export function busStation() {
   [S.x + 10, S.x + S.w / 2, S.x + S.w - 10].forEach(x => P.add(steel, cyl(3, 3, H, x, H / 2, S.y + 30, 10)));
   P.add(flat('#E2DDD2', .6), box(S.w + 20, 6, 50, S.x + S.w / 2, H + 3, S.y + 14)); P.add(flat('#2F6B73', .6), box(S.w + 22, 8, 2, S.x + S.w / 2, H - 2, S.y + 39.5));
   [S.x + 75, S.x + S.w - 85].forEach(x => { P.add(material('wood', '#9C6438'), box(70, 3, 14, x, 16, S.y + 22)); P.add(material('wood', '#9C6438'), box(70, 12, 2, x, 26, S.y + 16)); [-30, 30].forEach(dx => P.add(steel, box(2, 16, 12, x + dx, 8, S.y + 22))); });
-  const g = P.build(); const s = signMesh('محطة الحافلات', 15); s.position.set(S.x + S.w / 2, H - 4, S.y + 42); g.add(s); return g;
+  const g = P.build(); const s = signMesh('محطة الحافلات', 19); s.position.set(S.x + S.w / 2, H - 4, S.y + 42); g.add(s); return g;
 }
 
 /* ── المراكب الراسية: بدن خشبي مقوّس، سطح، صاري وشراع مثلث بلون كل سفينة (ألوان درس تمييز الأشكال) ── */
