@@ -54,9 +54,11 @@ function render(W, d, cfg, msg) {
     sfx('good'); changed();
     const praise = PRAISE[Math.floor(Math.random() * PRAISE.length)];
     // الإطراء والشرح يظهران بعد الإجابة مباشرة في الاحتفال، والسؤال التالي يبدأ برسالة محايدة
-    sheet.insertAdjacentHTML('beforeend', `<div class="chBurst${it.why ? ' why' : ''}"><b>💎</b><span>${praise}</span>${it.why ? `<p>${it.why}</p>` : ''}${'<i></i>'.repeat(10)}</div>`);
+    const fc = sheet.querySelector('.chFace'); if (fc) { fc.classList.remove('cheer'); void fc.offsetWidth; fc.classList.add('cheer'); }   // الشخصية تقفز فرحاً
+    sheet.insertAdjacentHTML('beforeend', `<div class="chBurst${it.why ? ' why' : ''}"><div class="chCheer"><i>${face}</i><em>👏</em></div><b>💎</b><span>${praise}</span>${it.why ? `<p>${it.why}</p>` : ''}${'<i></i>'.repeat(10)}</div>`);
     setTimeout(() => { if (C.i >= n) done(W, d, cfg); else render(W, d, cfg, null); }, it.why ? 2200 : 850); };
-  const bad = extra => { C.tries++; C.streak = 0; sfx('cough'); changed(); setMsg('💡 ' + (extra || it.hint), 'bad'); sheet.classList.add('shake'); setTimeout(() => sheet.classList.remove('shake'), 450); };
+  const bad = extra => { const fc = sheet.querySelector('.chFace'); if (fc) { fc.classList.remove('think'); void fc.offsetWidth; fc.classList.add('think'); }   // تفكّر معك، لا تغضب
+    C.tries++; C.streak = 0; sfx('cough'); changed(); setMsg('💡 ' + (extra || it.hint), 'bad'); sheet.classList.add('shake'); setTimeout(() => sheet.classList.remove('shake'), 450); };
   const wrongCount = w => w === 1 ? 'بطاقة واحدة ليست في مكانها. ' : `${ar(w)} بطاقات ليست في مكانها. `;
   if (it.type === 'choice' || it.type === 'tf') el.querySelectorAll('.chOpt').forEach(b => b.onclick = e => { e.stopPropagation(); +b.dataset.k === it.ans ? (b.classList.add('on'), ok()) : (b.classList.add('no'), bad()); });
   if (it.type === 'multi') { const sel = new Set(); el.querySelectorAll('.chOpt').forEach(b => b.onclick = e => { e.stopPropagation(); const k = +b.dataset.k; sel.has(k) ? sel.delete(k) : sel.add(k); b.classList.toggle('on'); sfx('click'); });
@@ -97,7 +99,7 @@ async function done(W, d, cfg) {
   const C = d.ch, n = C.items.length, stars = C.firstTry >= n ? 3 : C.firstTry >= n - 2 ? 2 : 1;
   if (cfg.onDone) return cfg.onDone(stars, C);   // نشاط اختياري: له شاشة نهاية خاصة
   d.stars = Math.max(d.stars || 0, stars); changed();
-  sheetOpen(`<div class="chEnd"><div class="chTreasure">🎁</div><div class="chStars">${[1, 2, 3].map(k => `<span class="${k <= stars ? 'on' : ''}">★</span>`).join('')}</div>
+  sheetOpen(`<div class="chEnd"><div class="chDance"><i>${PEOPLE_ICON[cfg.who] || '🧑🏽'}</i><span>🎉</span><span>🎊</span></div><div class="chTreasure">🎁</div><div class="chStars">${[1, 2, 3].map(k => `<span class="${k <= stars ? 'on' : ''}">★</span>`).join('')}</div>
     <h3>أنجزتَ ${cfg.title}!</h3><p class="chGot">جمعتَ <b>${ar(C.gems || n)}</b> 💎</p><p class="muted">أجبت ${ar(C.firstTry)} من ${ar(n)} من المحاولة الأولى. ${stars < 3 ? 'تستطيع لعب «نشاط الدرس» لاحقاً من الخريطة 🗺️ لتجمع النجوم الثلاث.' : 'إتقان كامل! 🌟'}</p>
     <button class="act big" id="chFin">متابعة</button></div>`);
   document.querySelector('#panel .sheet').classList.add('chSheet');
