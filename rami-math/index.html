@@ -30,8 +30,13 @@
 
 <div id="dialog" class="dialog" role="dialog">
   <canvas id="portrait" width="96" height="96"></canvas>
+  <span class="dbulb" aria-hidden="true"><svg viewBox="0 0 64 64"><defs><radialGradient id="dbG" cx=".4" cy=".35" r=".7"><stop offset="0" stop-color="#FFF8C4"/><stop offset=".55" stop-color="#FFD54A"/><stop offset="1" stop-color="#F0A21E"/></radialGradient><linearGradient id="dbB" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#7A9CFF"/><stop offset="1" stop-color="#3550C8"/></linearGradient></defs>
+    <g stroke="#FFD54A" stroke-width="4" stroke-linecap="round"><path d="M32 3v6M10 12l4 4M54 12l-4 4M4 30h6M60 30h-6"/></g>
+    <path d="M32 12c-10 0-17 7.5-17 16.5 0 6.5 3.6 10.2 6.6 13.3 1.8 1.9 2.4 3.6 2.4 5.2h16c0-1.6.6-3.3 2.4-5.2 3-3.1 6.6-6.8 6.6-13.3C49 19.5 42 12 32 12z" fill="url(#dbG)" stroke="#C97F0E" stroke-width="1.5"/>
+    <path d="M25 22c2-4 6-5 9-4.5" stroke="#fff" stroke-width="3" stroke-linecap="round" fill="none" opacity=".8"/><path d="M28 47V35l4 4 4-4v12" stroke="#C97F0E" stroke-width="1.6" fill="none"/>
+    <rect x="23" y="47" width="18" height="5" rx="2.5" fill="url(#dbB)"/><rect x="24" y="52" width="16" height="4.5" rx="2.2" fill="url(#dbB)"/><rect x="27" y="56.5" width="10" height="4" rx="2" fill="#2A3FA8"/></svg></span>
   <div class="dbody"><b id="dName"></b><p id="dText"></p></div>
-  <span class="dnext">▸</span>
+  <span class="dnext">◀</span>
 </div>
 <div id="panel" class="panel"></div>
 <div id="toast" class="toast"></div>

@@ -336,3 +336,29 @@ body:has(.dialog.on) .region{opacity:0!important;animation:none!important}
 .lvList div.now{background:linear-gradient(135deg,#FFE48A,#FFC23D);border-color:#F5A51E;box-shadow:0 4px 0 #C77A0A,0 0 14px rgba(255,194,61,.6)}
 .lvList div.now b,.lvList div.now small{color:#13245C}
 .lvList div:not(.on) span{filter:saturate(.9)}
+/* صندوق الراوي بطراز الألعاب: كحلي لامع بحافة ذهبية، مصباح متوهج، خط ذهبي تحت النص، وزر التالي */
+.dialog .dbulb{display:none}
+.dialog.caption{width:min(760px,94vw);max-width:none;align-items:center;gap:14px;padding:14px 18px 16px 14px;border-radius:999px 36px 36px 999px;border:0;
+  background:linear-gradient(180deg,#2F63D6 0%,#1C44A8 45%,#0F2A78 100%);backdrop-filter:none;
+  box-shadow:inset 0 2px 0 rgba(255,255,255,.35),inset 0 -3px 0 rgba(0,0,0,.25),0 0 0 3px #4F86F0,0 6px 0 #E8A81C,0 9px 0 #8A5A10,0 18px 34px rgba(10,20,70,.45)}
+.dialog.caption::before{display:block;content:'';position:absolute;inset:4px 40px auto 90px;height:38%;border-radius:999px;background:linear-gradient(180deg,rgba(255,255,255,.22),rgba(255,255,255,0));border:0;transform:none;left:auto}
+.dialog.caption .dbulb{display:grid;place-items:center;flex:none;width:clamp(58px,8vw,78px);height:clamp(58px,8vw,78px);border-radius:50%;
+  background:radial-gradient(circle,#2B5BCB 0%,#173B93 70%);box-shadow:inset 0 0 0 3px rgba(120,170,255,.45),0 0 18px rgba(255,214,90,.45);animation:dbGlow 2.4s ease-in-out infinite}
+.dialog.caption .dbulb svg{width:80%;height:80%;filter:drop-shadow(0 0 6px rgba(255,214,90,.8))}
+@keyframes dbGlow{50%{box-shadow:inset 0 0 0 3px rgba(120,170,255,.45),0 0 28px rgba(255,214,90,.8)}}
+.dialog.caption .dbody{flex:1;position:relative;padding-bottom:10px}
+.dialog.caption .dbody p{font:800 clamp(16px,2vw,21px)/1.7 Cairo,sans-serif;color:#fff;text-shadow:0 2px 3px rgba(0,0,0,.3)}
+.dialog.caption .dbody::after{content:'';position:absolute;right:8%;bottom:0;width:min(220px,45%);height:6px;border-radius:50%;background:linear-gradient(90deg,rgba(255,194,61,0),#FFC23D 40%,#FFD54A);transform:rotate(-2deg)}
+.dialog.caption .dnext{flex:none;width:44px;height:44px;border-radius:50%;display:grid;place-items:center;font-size:18px;color:#FFD54A;background:#1A3D99;box-shadow:inset 0 0 0 2px rgba(120,170,255,.5),0 3px 0 #0B1F5C;animation:dnPulse 1.4s ease-in-out infinite}
+@keyframes dnPulse{50%{transform:translateX(-4px)}}
+/* فقاعات كلام الشخصيات: اسم المتكلم على شريط أزرق، وحافة ذهبية */
+.dialog:not(.caption){border:2px solid #F2C14E;box-shadow:0 4px 0 #D9A63A,0 10px 22px rgba(30,20,60,.25)}
+.dialog:not(.caption) #dName{display:inline-block;background:linear-gradient(180deg,#4FA9FF,#1E6FE0);color:#fff;border-radius:12px;padding:0 10px 2px;margin-bottom:3px;font-size:13px;box-shadow:0 2px 0 #0E3577}
+.dialog:not(.caption) #dName:empty{display:none}
+.dialog:not(.caption)::before{border-top-color:#F2C14E}
+.dialog.caption{border-radius:40px}
+.dialog.caption::before{inset:4px 60px auto 60px}
+.dialog.caption::before{inset:3px 26px auto 26px;height:30%;background:linear-gradient(180deg,rgba(255,255,255,.16),rgba(255,255,255,0))}
+@media (max-width:600px){.dialog.caption{gap:8px;padding:10px 10px 12px}
+  .dialog.caption .dbulb{width:44px;height:44px}.dialog.caption .dnext{width:34px;height:34px;font-size:14px}
+  .dialog.caption .dbody p{font-size:15.5px;line-height:1.6}}
