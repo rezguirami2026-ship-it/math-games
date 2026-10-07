@@ -38,7 +38,11 @@
 <div id="screen" class="screen"></div>
 <script>
 /* تطبيق يُثبَّت ويعمل بلا إنترنت (sw.js). لا يُسجَّل على الجهاز المحلي حتى لا يحفظ نسخاً قديمة أثناء التطوير والاختبار */
-if ('serviceWorker' in navigator && !/^(localhost|127\.0\.0\.1)$/.test(location.hostname)) addEventListener('load', () => navigator.serviceWorker.register('sw.js').catch(() => {}));
+if ('serviceWorker' in navigator && !/^(localhost|127\.0\.0\.1)$/.test(location.hostname)) {
+  const had = !!navigator.serviceWorker.controller; let reloaded = false;
+  navigator.serviceWorker.addEventListener('controllerchange', () => { if (had && !reloaded) { reloaded = true; location.reload(); } });   // وصلت نسخة جديدة: تُفتح مباشرة
+  addEventListener('load', () => navigator.serviceWorker.register('sw.js', { updateViaCache: 'none' }).then(r => r.update()).catch(() => {}));
+}
 addEventListener('beforeinstallprompt', e => { e.preventDefault(); window.__install = e; });
 </script>
 <script type="module" src="main.js"></script>
