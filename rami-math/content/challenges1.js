@@ -207,7 +207,7 @@ export const CH = {
     } },
 
   /* ٨. جمع الأعداد العشرية: Nc1، Nc11، Pt3، Pt5، Ps6 */
-  decimalAdd: { who: 'naser', title: 'تحدي الحساب العشري', lines: [{ who: 'yousef', text: 'وصلت الأدوات! انظر، زرعنا حديقة المدرسة قرب الطريق.' }],
+  decimalAdd: { who: 'naser', title: 'تحدي الحساب العشري', lines: [{ who: 'yousef', text: 'وصلت الأدوات! انظر، زرعنا حديقة المدرسة في ساحة المدرسة جنوب القرية.' }],
     make() {
       const f0 = fresh(), f = (a, b, div) => { const z = f0(a, b, z => !f0.has('d' + z / div)); f0.mark('d' + z / div); return z; }, it = [], pairs = shuffle([1, 2, 3, 4]), side = p => R(0, 1) ? p : 10 - p;   // أزواج الأجزاء من عشرة: ١ و٩، ٢ و٨…
       { const t = side(pairs[0]);

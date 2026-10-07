@@ -199,7 +199,7 @@ export const factorsMultiples = {
       k.fillStyle = pattern(k, 'soil'); rr(k, O.x, O.y, W2, W2, 6); k.fill();
       k.strokeStyle = 'rgba(60,35,15,.3)'; k.lineWidth = 1.4; for (let r = 0; r < O.n; r++) { k.beginPath(); k.moveTo(O.x + 6, O.y + O.cell * (r + .5) + 6); k.lineTo(O.x + W2 - 6, O.y + O.cell * (r + .5) + 6); k.stroke(); }
       k.strokeStyle = INK; k.lineWidth = 1; rr(k, O.x - 8, O.y - 8, W2 + 16, W2 + 16, 8); k.stroke();
-      if (!FLAGS.three) signboard(k, O.x + W2 / 2, O.y + W2 + 24, 'بستان العم حمد');   // في 3D لافتة قائمة (main.js)
+      if (!FLAGS.three) signboard(k, O.x + W2 / 2, O.y + 2, 'بستان العم حمد');   // في 3D لافتة قائمة (main.js)
     });
     const rows = done ? 3 : d.rows || 0, cols = done ? 6 : d.cols || 0;
     for (let r = 0; r < rows; r++) for (let k = 0; k < cols; k++) {

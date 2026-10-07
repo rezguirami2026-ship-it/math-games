@@ -26,7 +26,10 @@ export const SOUTH = [
   { x: 420, y: 1180, w: 180, h: 100, wall: '#E9D8BC', door: '#9E3B2F', sign: 'مكتب البريد', ac: 1 },
   { x: 1120, y: 1180, w: 180, h: 100, wall: '#E2D2B6', door: '#4E5A66', sign: 'ورشة راشد', tank: 1 }
 ];
-export const PALMS = [{ x: 55, y: 560 }, { x: 610, y: 515 }, { x: 1470, y: 560 }, { x: 40, y: 1010 }, { x: 640, y: 1090 }, { x: 590, y: 300 }, { x: 640, y: 420 }, { x: 1470, y: 110 }, { x: 40, y: 1500 }, { x: 1460, y: 1450 }, { x: 380, y: 1600 }, { x: 1180, y: 1620 }];
+/* مدرسة القرية (جنوب الغرب، بين بستان العم حمد وسور القلعة): مبنى بطابقين، وساحة فيها ملعب كرة وحديقة المدرسة */
+export const SCHOOL = { x: 70, y: 1462, w: 300, h: 112, wall: '#F3E9D3', door: '#2F6B73', sign: '🏫 مدرسة قرية الخير', ac: 1, H: 122 };
+export const YARD = { x: 60, y: 1590, w: 470, h: 112 }, PITCH = { x: 72, y: 1600, w: 220, h: 92 };
+export const PALMS = [{ x: 55, y: 560 }, { x: 610, y: 515 }, { x: 1470, y: 560 }, { x: 40, y: 1010 }, { x: 640, y: 1090 }, { x: 590, y: 300 }, { x: 640, y: 420 }, { x: 1470, y: 110 }, { x: 40, y: 1500 }, { x: 1460, y: 1450 }, { x: 26, y: 1660 }, { x: 1180, y: 1620 }];
 export const SIDRS = [{ x: 60, y: 330 }, { x: 1462, y: 440 }, { x: 800, y: 1010 }, { x: 90, y: 1150 }];   // أشجار سدر بتيجان مستديرة
 export const MINARET = { x: 1060 + 190 - 34, y: 110 + 140 - 34, s: 30, H: 116 };   // المئذنة على ركن السطح الأمامي الأيمن (المسجد عند حافة العالم الشمالية)
 export const FARM_PALMS = [{ x: 905, y: 1080 }, { x: 1440, y: 1080 }, { x: 1440, y: 800 }, { x: 1170, y: 1085 }];
@@ -39,7 +42,7 @@ export const SHRUBS = [{ x: 838, y: 282, f: '#D9478C' }, { x: 992, y: 282, f: nu
 export function staticColliders() {
   const pad = 2;
   return [
-    ...HOUSES.concat(SOUTH).map(b => ({ x: b.x - pad, y: b.y + 10, w: b.w + pad * 2, h: b.h - 6 })),
+    ...HOUSES.concat(SOUTH, [SCHOOL]).map(b => ({ x: b.x - pad, y: b.y + 10, w: b.w + pad * 2, h: b.h - 6 })),
     { x: WAREHOUSE.x, y: WAREHOUSE.y + 10, w: WAREHOUSE.w, h: WAREHOUSE.h - 6 },
     { x: WELL.x - WELL.r, y: WELL.y - WELL.r, w: WELL.r * 2, h: WELL.r * 2 },
     { x: SIGNAL.x - 5, y: SIGNAL.y - 6, w: 10, h: 10 },
@@ -92,10 +95,19 @@ function paintGround(ctx, view) {
   ctx.fillStyle = 'rgba(246,242,230,.9)';
   for (let k = 0; k < 7; k++) ctx.fillRect(784 + k * 11, H.y + 6, 6, H.h - 12);       // ممر مشاة نحو المزرعة
   for (let k = 0; k < 6; k++) ctx.fillRect(V.x + 6 + k * 10.5, H.y - 52, 6, 40);     // ممر مشاة عند التقاطع
+  // ساحة المدرسة: بلاط فاتح، وملعب كرة بخطوط بيضاء ومرميين
+  { const Y = YARD, P = PITCH; ctx.fillStyle = shade(PAL.stone, -24); rr(ctx, Y.x - 4, Y.y - 2, Y.w + 8, Y.h + 6, 10); ctx.fill(); ctx.fillStyle = pattern(ctx, 'pavers'); rr(ctx, Y.x, Y.y, Y.w, Y.h, 9); ctx.fill();
+    ctx.fillStyle = pattern(ctx, 'pavers'); ctx.fillRect(SCHOOL.x + SCHOOL.w / 2 - 22, SCHOOL.y + SCHOOL.h, 44, Y.y - SCHOOL.y - SCHOOL.h);   // ممر من باب المدرسة
+    ctx.fillStyle = '#5BA552'; rr(ctx, P.x, P.y, P.w, P.h, 6); ctx.fill(); ctx.fillStyle = 'rgba(255,255,255,.08)'; for (let k = 0; k < 8; k += 2) ctx.fillRect(P.x + k * P.w / 8, P.y, P.w / 8, P.h);
+    ctx.strokeStyle = 'rgba(255,255,255,.9)'; ctx.lineWidth = 2; ctx.strokeRect(P.x + 4, P.y + 4, P.w - 8, P.h - 8); ctx.beginPath(); ctx.moveTo(P.x + P.w / 2, P.y + 4); ctx.lineTo(P.x + P.w / 2, P.y + P.h - 4); ctx.stroke();
+    ctx.beginPath(); ctx.arc(P.x + P.w / 2, P.y + P.h / 2, 16, 0, 7); ctx.stroke(); ctx.strokeRect(P.x + 4, P.y + P.h / 2 - 18, 22, 36); ctx.strokeRect(P.x + P.w - 26, P.y + P.h / 2 - 18, 22, 36);
+    ctx.strokeStyle = '#EEE'; ctx.lineWidth = 3; [[P.x + 2, -1], [P.x + P.w - 2, 1]].forEach(([gx, sd]) => { ctx.beginPath(); ctx.moveTo(gx, P.y + P.h / 2 - 12); ctx.lineTo(gx - sd * 8, P.y + P.h / 2 - 12); ctx.lineTo(gx - sd * 8, P.y + P.h / 2 + 12); ctx.lineTo(gx, P.y + P.h / 2 + 12); ctx.stroke(); });
+    ctx.strokeStyle = INK; ctx.lineWidth = 1; rr(ctx, Y.x, Y.y, Y.w, Y.h, 9); ctx.stroke(); }
   // ظلال الأجسام على الأرض (كلها من الشمس نفسها)
   HOUSES.forEach(b => { const H = b.H || H_HOUSE; if (boxInView(v, b.x, b.y - H, b.w + 90, b.h + H + 50, 40)) boxShadow(ctx, b.x, b.y, b.w, b.h, H); });
   boxShadow(ctx, MINARET.x, MINARET.y, MINARET.s, MINARET.s, HOUSES[1].H + MINARET.H);
   SIDRS.forEach(p => { if (inView(v, p.x, p.y, 120)) blobShadow(ctx, p.x, p.y, 40, 100); });
+  if (boxInView(v, SCHOOL.x, SCHOOL.y - SCHOOL.H, SCHOOL.w + 80, SCHOOL.h + SCHOOL.H + 40, 40)) boxShadow(ctx, SCHOOL.x, SCHOOL.y, SCHOOL.w, SCHOOL.h, SCHOOL.H);
   SOUTH.forEach(b => { if (boxInView(v, b.x, b.y - H_SOUTH, b.w + 80, b.h + H_SOUTH + 40, 40)) boxShadow(ctx, b.x, b.y, b.w, b.h, H_SOUTH); });
   boxShadow(ctx, WAREHOUSE.x, WAREHOUSE.y, WAREHOUSE.w, WAREHOUSE.h, H_WARE);
   PALMS.concat(FARM_PALMS).forEach(p => { if (inView(v, p.x, p.y, 90)) blobShadow(ctx, p.x, p.y, 26, 80); });
@@ -199,6 +211,7 @@ export function staticDrawables(state, t, pl, opts = {}) {
   const solid = (b, H, draw) => c => { if (behind(pl, b, H)) c.globalAlpha = .42; draw(c); c.globalAlpha = 1; };
   HOUSES.forEach((b, i) => { const H = b.H || H_HOUSE, B = Object.assign({}, b, { H }); out.push({ y: b.y + b.h, draw: solid(b, H, c => { building3d(c, 'house' + i, B); if (b.mosque) mosqueTop(c, b); }) }); });
   SOUTH.forEach((b, i) => { const B = Object.assign({}, b, { H: H_SOUTH, style: 'shop' }); out.push({ y: b.y + b.h, draw: solid(b, H_SOUTH, c => building3d(c, 'south' + i, B)) }); });
+  out.push({ y: SCHOOL.y + SCHOOL.h, draw: solid(SCHOOL, SCHOOL.H, c => building3d(c, 'school', SCHOOL)) });
   const WB = Object.assign({}, WAREHOUSE, { H: H_WARE });
   out.push({ y: WAREHOUSE.y + WAREHOUSE.h, draw: solid(WAREHOUSE, H_WARE, c => box3d(c, 'warehouse', WB, '#C9C0AE', warehouseRoof, warehouseFront)) });
   out.push({ y: WELL.y + WELL.r, x: WELL.x, draw: c => drawWell(c, state.world.delivered, t) });

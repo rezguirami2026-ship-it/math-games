@@ -10,7 +10,7 @@ import { PAL, INK, pattern, signboard, FLAGS } from '../world/art.js';
 import { shade } from '../core/util.js';
 
 export const SHOP = { x: 210, y: 1032 };
-export const GARDEN = { x: 380, y: 1040, w: 220, h: 80 };
+export const GARDEN = { x: 305, y: 1604, w: 220, h: 80 };   // حديقة المدرسة: في ساحة المدرسة (world/village.js: SCHOOL)
 const ITEMS = {
   seeds: { icon: '🌱', name: 'كيس بذور', price: 1250 },
   bucket: { icon: '🪣', name: 'دلو', price: 2500 },
@@ -79,7 +79,7 @@ export function openCounter(W, lesson) {
         earn(40, W.player.x, W.player.y - 80);
         if (lesson === 'decimalAdd') {
           game.state.missions.shop.status = 'done'; game.state.gear.owned.shovel = Date.now(); unlock('trader'); complete(lesson);
-          await W.talk('yousef', [{ who: 'yousef', text: 'وصلت الأدوات! انظر، زرعنا حديقة المدرسة قرب الطريق.' }]);
+          await W.talk('yousef', [{ who: 'yousef', text: 'وصلت الأدوات! انظر، زرعنا حديقة المدرسة في ساحة المدرسة جنوب القرية.' }]);
           W.toast('⛏️ حصلت على مجرفة المزارع، جرّبها في خزانة البطل');
         } else { complete(lesson); await W.talk('naser', [{ who: 'naser', text: 'حساب سريع وذكي! مضاعفة هنا وتنصيف هناك، والمبلغ صحيح.' }]); }
         return;

@@ -1,6 +1,6 @@
 // تجميع قلب القرية مجسّماً من ثوابت اللعبة نفسها (قراءة فقط): كل مبنى فوق أرضية تصادمه تماماً، فالمسارات لا تتغير.
 import * as THREE from '../lib/three/three.module.min.js';
-import { HOUSES, SOUTH, WAREHOUSE, WELL, PALMS, SIDRS, FARM_PALMS, LAMPS, SHRUBS, MINARET, H_SOUTH, H_WARE } from '../world/village.js';
+import { HOUSES, SOUTH, WAREHOUSE, WELL, PALMS, SIDRS, FARM_PALMS, LAMPS, SHRUBS, MINARET, H_SOUTH, H_WARE, SCHOOL } from '../world/village.js';
 import { omaniHouse, omaniMosque, warehouse, signMesh } from './omani.js';
 import { material } from './textures.js';
 import { box } from './geom.js';
@@ -40,7 +40,8 @@ export function buildVillage({ quality }) {
   HOUSES.forEach((b, i) => put(b.mosque ? omaniMosque(b, MINARET) : omaniHouse(i === 2 ? Object.assign({}, b, { sign: '🚪 خزانة البطل' }) : b, { tower: TOWERS[i] }), b, (b.H || 96) * 1.6));   // بيت البطل: لافتة الخزانة على واجهته
   SOUTH.forEach(b => put(omaniHouse(Object.assign({}, b, { H: H_SOUTH, style: 'shop' })), b, H_SOUTH * 1.6));
   put(warehouse(WAREHOUSE, H_WARE), WAREHOUSE, H_WARE * 1.6);
-  HOUSES.concat(SOUTH, [WAREHOUSE]).forEach(b => group.add(contactShadow(b.x, b.y, b.w, b.h)));
+  put(omaniHouse(SCHOOL), SCHOOL, SCHOOL.H * 1.6);   // مدرسة القرية
+  HOUSES.concat(SOUTH, [WAREHOUSE, SCHOOL]).forEach(b => group.add(contactShadow(b.x, b.y, b.w, b.h)));
   const wl = well(WELL.x, WELL.y, WELL.r + 4, false); group.add(wl);
   group.add(palms(PALMS));
   const farmGreen = palms(FARM_PALMS.map(p => ({ ...p, s: .95 }))), farmDry = palms(FARM_PALMS.map(p => ({ ...p, s: .95 })), { dry: true });

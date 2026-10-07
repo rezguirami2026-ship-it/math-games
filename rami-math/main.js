@@ -8,9 +8,10 @@ import { loadSave, saveSoon, saveNow, wipeSave, PREVIEW } from './save/save.js';
 import { createPlayer, updatePlayer } from './player/player.js';
 import { findPath } from './world/nav.js';
 import { drawHuman, heightOf } from './character/human.js';
-import { WORLD, PILE, SIGNAL, TREE_SPOTS, FARM, HOUSES, WAREHOUSE, ROADS, SOUTH, staticColliders, drawGround, drawFarm, drawPalm, staticDrawables, ramadanDecor } from './world/village.js';
+import { WORLD, PILE, SIGNAL, TREE_SPOTS, FARM, HOUSES, WAREHOUSE, ROADS, SOUTH, SCHOOL, staticColliders, drawGround, drawFarm, drawPalm, staticDrawables, ramadanDecor } from './world/village.js';
 import { makeTrucks, truckColliders, drawTruck, drawPile, drawSignal, drawSpot, updateFx, drawFx, moveAlong, say, bubble, sparkle, dust } from './world/entities.js';
 import { makeNpcs, npcVisible, updateNpc, drawNpc } from './npc/npc.js';
+import { updateKids, kidsItems, kidsPeople3d } from './world/school.js';
 import { CHAPTER, introLines, npcLines } from './story/dialogues.js';
 import * as convoy from './missions/convoy.js';
 import { plant } from './missions/planting.js';
@@ -185,7 +186,7 @@ async function start(state) {
   }
 }
 /* ── العرض ثلاثي الأبعاد (renderer3d): يُحمَّل فقط عند طلبه، ويرجع إلى الرسم الحالي إن لم يدعم الجهاز WebGL أو فشل التحميل ── */
-const V3D = 'نسخة 3D · ٢٧';   // تُعرض في شاشة التحميل وفي الزاوية: للتأكد أن المتصفح حمّل آخر نسخة
+const V3D = 'نسخة 3D · ٢٨';   // تُعرض في شاشة التحميل وفي الزاوية: للتأكد أن المتصفح حمّل آخر نسخة
 const want3d = () => gfx.d3();
 function loadingScreen() {
   const el = document.createElement('div'); el.className = 'load3d';
@@ -413,6 +414,7 @@ const routeLeft = pl => { if (!pl.target) return 0; let d = Math.hypot(pl.target
 
 /* ── التحديث ── */
 function update(dt) {
+  updateKids(dt);   // طلاب المدرسة يلعبون
   const s = game.state, pl = W.player;
   pl.speed = routeLeft(pl) > 280 ? 215 : 150;   // يجري في الطرق الطويلة ويمشي قرب الهدف
   if (pl.anim && (pl.anim.t += dt / pl.anim.dur) >= 1) pl.anim = null;
@@ -502,12 +504,13 @@ function worldItems(view, t, three) {
   if (!three) list.push({ y: SHOP.y - 42, x: SHOP.x, draw: cc => drawShopBack(cc) }, { y: SHOP.y, x: SHOP.x, draw: cc => drawShop(cc) });
   if (three) {   // لافتات أماكن ثابتة كانت مرسومة على الأرض: قائمة وواضحة في 3D
     const O = ORCH, W2 = O.cell * O.n, G = GARDEN;
-    list.push({ y: O.y + W2 + 28, x: O.x + W2 / 2, draw: cc => bigSign(cc, O.x + W2 / 2, O.y + W2 + 28, 'بستان العم حمد', { fs: 18, h: 30, bg: '#2E7D5B', line: '#FFE7A0' }) },
+    list.push({ y: O.y - 14, x: O.x + W2 / 2, draw: cc => bigSign(cc, O.x + W2 / 2, O.y - 14, 'بستان العم حمد', { fs: 18, h: 30, bg: '#2E7D5B', line: '#FFE7A0' }) },
       { y: G.y + G.h + 20, x: G.x + G.w / 2, draw: cc => bigSign(cc, G.x + G.w / 2, G.y + G.h + 20, quests.isDone('decimalAdd') ? 'حديقة المدرسة 🌼' : 'حديقة المدرسة', { fs: 18, h: 26, bg: '#B0476A', line: '#FFE7A0' }) });
   }
   if (!three) list.push({ y: HERO_DOOR.y - 13, draw: cc => signboard(cc, HERO_DOOR.x + 52, HERO_DOOR.y - 66, '🚪 خزانة البطل') });   // لافتة على جدار بيت البطل (في 3D على الواجهة نفسها)
   const giverMark = n => c && c.ready && MODS[c.id] && c.giver === n.id && !quests.isStarted(c.id) ? '!' : null;
   // الشخصيات خارج الشاشة لا تُرسم (كانت كلها تُرسم في كل إطار)
+  list.push(...kidsItems(drawNpc, view, three));
   if (!three) W.npcs.filter(n => npcVisible(n, s) && n.x > view.x - 60 && n.x < view.x + view.w + 60 && n.y > view.y - 20 && n.y < view.y + view.h + 110).forEach(n => list.push({ y: n.y, x: n.x, lean: .5, draw: cc => drawNpc(cc, n, giverMark(n)) }));   // في 3D: الشخصيات مجسّمة (people3d)
   const pl = W.player, mod = curMod(), hand = mod && mod.hand && c && quests.isStarted(c.id) ? mod.hand(quests.data(c.id)) : null;
   const pa = pl.anim ? pl.anim.name : pl.moving ? (pl.speed > 160 ? 'run' : 'walk') : 'idle';
@@ -521,6 +524,7 @@ function people3d() {
     anim: pl.act === 'plant' ? 'pickup' : pl.anim ? pl.anim.name : null, animT: pl.act === 'plant' ? .5 : pl.anim ? pl.anim.t : 0, carry: hand ? Math.min(hand.n, 6) : s.carry }];
   W.npcs.forEach(n => { if (npcVisible(n, s) && n.x > v.x - 80 && n.x < v.x + v.w + 80 && n.y > v.y - 60 && n.y < v.y + v.h + 80)
     out.push({ id: n.id, look: n, lookKey: n.id, x: n.x, y: n.y, moving: n.moving, phase: n.phase, dir: n.dir, anim: n.anim && !n.moving ? n.anim.name : null, animT: n.anim ? n.anim.t : 0, carry: 0, face: Math.hypot(n.x - pl.x, n.y - pl.y) < 150 ? pl : null }); });
+  out.push(...kidsPeople3d(v));   // طلاب المدرسة
   return out;
 }
 /* علامة المهمة فوق رأس من ينتظر البطل (فوق المجسّم، على الشاشة) */
@@ -568,7 +572,7 @@ function drawMini(cv) {
   x.fillStyle = '#5E6274'; ROADS.forEach(r => x.fillRect(r.x, r.y, r.w, r.h));
   x.fillStyle = s.world.delivered ? '#7CB35A' : '#C9A46B'; x.fillRect(FARM.x, FARM.y, FARM.w, FARM.h);
   x.fillStyle = '#3FA9F5'; x.fillRect(POND.x, POND.y, POND.w, POND.h);
-  x.fillStyle = '#D9C6A0'; HOUSES.concat(SOUTH).forEach(b => x.fillRect(b.x, b.y, b.w, b.h));
+  x.fillStyle = '#D9C6A0'; HOUSES.concat(SOUTH, [SCHOOL]).forEach(b => x.fillRect(b.x, b.y, b.w, b.h));
   x.fillStyle = '#8FA0B5'; x.fillRect(WAREHOUSE.x, WAREHOUSE.y, WAREHOUSE.w, WAREHOUSE.h);
   x.fillStyle = '#FFC23D'; W.npcs.filter(n => npcVisible(n, s)).forEach(n => { x.beginPath(); x.arc(n.x, n.y, 20, 0, 7); x.fill(); });
   const g = objectiveTarget(); if (g) { x.fillStyle = '#2E9E5B'; x.beginPath(); x.arc(g.x, g.y, 30, 0, 7); x.fill(); }
