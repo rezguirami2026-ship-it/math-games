@@ -6,6 +6,7 @@
 import { ar } from '../core/util.js';
 import { sfx } from '../core/sound.js';
 import { OUT } from '../content/outcomes.js';
+import { game } from '../core/state.js';
 import { changed, finish, sheetOpen, sheetClose, msgBox, setMsg, numPad, btn } from './bench.js';
 
 const PEOPLE_ICON = { salem: '🧔🏽', yousef: '👦🏽', hamad: '👨🏽‍🌾', saeed: '📮', umkhalid: '👩🏽', rashed: '👨🏽‍🔧', naser: '🧔🏽', mubarak: '🪚', khalid: '🧑🏽‍🏫', abdullah: '👨🏽‍✈️', shaikha: '👵🏽', juma: '🐑', saif: '⚓', reem: '👷🏽‍♀️', layla: '🎁', ali: '🧱', badr: '🎣', hind: '🎨', sulaiman: '🌬️', majid: '🗺️', hamdan: '🌉', muna: '🏺', zaid: '💍', aisha: '🍮', fahad: '🎒', harith: '🪣', qais: '🔔', mariam: '🏪', khamis: '🌾', saleh: '🌴', murad: '🧱', zahra: '🍬', azzan: '🛡️', safiya: '🍲', umsaid: '👵🏽', mudhaffar: '🕰️', nawal: '📞', tariq: '🏠', hamid: '🚌', sara: '🌱', khalfan: '🌴', noor: '🎪', yaqoob: '🎡', jamal: '🏦', ruqaya: '📜', saud: '🛒', obaid: '🐟', hessa: '🎲', adil: '⚙️', latifa: '🎂', ghanim: '🏷️', shamsa: '🥣', raya: '🍫', humaid: '🛢️', mansour: '⛽', sultan: '🐪', lubna: '✈️', faisal: '📅', wafa: '🌷', buthaina: '🏜️', hamood: '🔲', amna: '🚩', mohsen: '📐', zainab: '📦', jaber: '💎' };
@@ -42,7 +43,9 @@ function render(W, d, cfg, msg) {
   if (cfg.exit) btn('chExit', () => { sheetClose(); cfg.exit(); });   // النشاط اختياري: يخرج منه متى شاء بلا خسارة
   let locked = false;
   const ok = () => { if (locked) return; locked = true;
-    const first = C.tries === 0; C.firstTry += first ? 1 : 0; C.streak = first ? (C.streak || 0) + 1 : 0; C.gems = (C.gems || 0) + 1; C.tries = 0; C.i++; sfx('good'); changed();
+    const first = C.tries === 0; C.firstTry += first ? 1 : 0; C.streak = first ? (C.streak || 0) + 1 : 0; C.gems = (C.gems || 0) + 1; C.tries = 0; C.i++;
+    const S = game.state.stats = game.state.stats || {}; if (!first) S.persist = (S.persist || 0) + 1; S.streak = Math.max(S.streak || 0, C.streak);   // للأوسمة: المثابرة وأطول سلسلة
+    sfx('good'); changed();
     const praise = PRAISE[Math.floor(Math.random() * PRAISE.length)];
     sheet.insertAdjacentHTML('beforeend', `<div class="chBurst"><b>💎</b><span>${praise}</span>${'<i></i>'.repeat(10)}</div>`);
     setTimeout(() => { if (C.i >= n) done(W, d, cfg); else render(W, d, cfg, { t: it.why ? '✓ ' + it.why : '✓ ' + praise, k: 'ok' }); }, 750); };

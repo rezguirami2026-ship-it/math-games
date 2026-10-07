@@ -4,6 +4,7 @@ import { ar } from '../core/util.js';
 import { drawHuman } from '../character/human.js';
 import { ACH } from '../achievements/achievements.js';
 import { LEVELS, levelOf } from '../core/levels.js';
+import { BADGES } from '../achievements/badges.js';
 import { sound, sfx } from '../core/sound.js';
 /* إعدادات العرض (تُحفظ على الجهاز): ثلاثي الأبعاد أو عادي، والجودة */
 /* تثبيت التطبيق: زر المتصفح إن وُجد (أندرويد والحاسوب)، وتعليمات «إضافة إلى الشاشة الرئيسية» في آيفون */
@@ -94,8 +95,10 @@ export const hud = {
     sfx('talk');
     const s = game.state, el = $('panel'); let body = '';
     if (kind === 'ach') {
-      const got = ACH.filter(a => s.achievements[a.id]).length;
-      body = `<h3>🏆 الإنجازات <small>${ar(got)} / ${ar(ACH.length)}</small></h3>` + ACH.map(a => `<div class="ach ${s.achievements[a.id] ? 'on' : ''}"><span>${a.icon}</span><div><b>${a.name}</b><small>${a.desc}</small></div></div>`).join('');
+      const got = ACH.filter(a => s.achievements[a.id]).length, bg = BADGES.filter(b => s.achievements[b.id]).length;
+      body = `<h3>🏅 الأوسمة <small>${ar(bg)} / ${ar(BADGES.length)}</small></h3><p class="muted">تُكسب بالإتقان والمواظبة والمثابرة — لا بالسرعة.</p><div class="bdGrid">` +
+        BADGES.map(b => { const [c, g] = b.prog(s), on = !!s.achievements[b.id], p = Math.min(1, c / g); return `<div class="bd ${on ? 'on' : ''}"><span>${b.icon}</span><b>${b.name}</b><small>${b.desc}</small>${on ? '<em>✓ مكتسب</em>' : `<i><u style="width:${Math.round(p * 100)}%"></u></i><em>${ar(Math.min(c, g))} / ${ar(g)}</em>`}</div>`; }).join('') +
+        `</div><h3>🏆 إنجازات المغامرة <small>${ar(got)} / ${ar(ACH.length)}</small></h3>` + ACH.map(a => `<div class="ach ${s.achievements[a.id] ? 'on' : ''}"><span>${a.icon}</span><div><b>${a.name}</b><small>${a.desc}</small></div></div>`).join('');
     }
     if (kind === 'level' || kind === 'levelup') {
       const L = levelOf(s);

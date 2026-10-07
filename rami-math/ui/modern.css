@@ -190,3 +190,11 @@ body:has(.dialog.on) .region{opacity:0!important;animation:none!important}
 .lvList{display:grid;grid-template-columns:1fr 1fr;gap:6px}
 .lvList div{display:flex;align-items:center;gap:6px;background:#F4EBD6;border-radius:12px;padding:6px 8px;opacity:.45}.lvList div.on{opacity:1}
 .lvList div.now{background:#FFE3A3;box-shadow:0 0 0 2px #FFC23D}.lvList span{font-size:18px}.lvList b{flex:1;font-size:12.5px;color:#2A1B66}.lvList small{font-weight:900;color:#8A7A5A;font-size:11px}
+/* الأوسمة (achievements/badges.js) */
+.bdGrid{display:grid;grid-template-columns:repeat(2,1fr);gap:8px}
+.bd{display:flex;flex-direction:column;align-items:center;gap:3px;text-align:center;background:#F4EBD6;border-radius:16px;padding:10px 8px;filter:grayscale(.85);opacity:.75}
+.bd.on{filter:none;opacity:1;background:linear-gradient(160deg,#FFF3D6,#FFE3A3);box-shadow:0 4px 12px rgba(200,140,20,.25)}
+.bd span{font-size:34px;line-height:1.1}.bd b{font:900 14px Cairo,sans-serif;color:#2A1B66}.bd small{font-size:11px;font-weight:700;color:#8A7A5A;line-height:1.4}
+.bd i{display:block;width:100%;height:7px;border-radius:4px;background:#E2D8C2;overflow:hidden;margin-top:2px}.bd i u{display:block;height:100%;background:linear-gradient(90deg,#FFC23D,#2E9E5B);text-decoration:none}
+.bd em{font-style:normal;font-weight:900;font-size:11.5px;color:#5B3FD0}.bd.on em{color:#2E9E5B}
+@media (min-width:600px){.bdGrid{grid-template-columns:repeat(3,1fr)}}

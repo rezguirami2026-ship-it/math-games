@@ -20,6 +20,7 @@ import { UNIT1, POND } from './missions/unit1.js';
 import { stage2 } from './missions/challenge.js';
 import { openActivity, hasActivity } from './missions/activity.js';
 import { levelOf } from './core/levels.js';
+import { BADGES, checkBadges } from './achievements/badges.js';
 import { CH as CH1 } from './content/challenges1.js';
 import { CH as CH2 } from './content/challenges2.js';
 import { CH as CH3 } from './content/challenges3.js';
@@ -184,7 +185,7 @@ async function start(state) {
   }
 }
 /* ── العرض ثلاثي الأبعاد (renderer3d): يُحمَّل فقط عند طلبه، ويرجع إلى الرسم الحالي إن لم يدعم الجهاز WebGL أو فشل التحميل ── */
-const V3D = 'نسخة 3D · ٢١';   // تُعرض في شاشة التحميل وفي الزاوية: للتأكد أن المتصفح حمّل آخر نسخة
+const V3D = 'نسخة 3D · ٢٢';   // تُعرض في شاشة التحميل وفي الزاوية: للتأكد أن المتصفح حمّل آخر نسخة
 const want3d = () => gfx.d3();
 function loadingScreen() {
   const el = document.createElement('div'); el.className = 'load3d';
@@ -578,6 +579,7 @@ function questLog() {
 
 bus.on('save', () => { if (game.state) saveSoon(game.state); });
 bus.on('good', () => hud.good());
+bus.on('save', () => { if (game.state) checkBadges(unlock); });
 bus.on('save', () => {   // الارتقاء: يُحتفل به مرة واحدة حين تصبح اللعبة حرة
   if (!game.state || !W) return; const L = hud.level(); if (L.n <= (game.state.levelSeen || 1)) return;
   game.state.levelSeen = L.n; sfx('win');
@@ -585,7 +587,7 @@ bus.on('save', () => {   // الارتقاء: يُحتفل به مرة واحد�
   setTimeout(show, 900);
 });
 bus.on('mission', () => hud.objective(objective()));
-bus.on('achievement', a => setTimeout(() => hud.toast(`${a.icon} إنجاز جديد: ${a.name}`), 400));
+bus.on('achievement', a => setTimeout(() => hud.toast(`${a.icon} ${a.id && a.id.startsWith('b_') ? 'وسام جديد' : 'إنجاز جديد'}: ${a.name}`), 400));
 Object.entries(Object.assign({}, CH1, CH2, CH3, CH4, CH5, CH6, CH7, CH8, CH9)).forEach(([id, c]) => { if (MODS[id]) MODS[id].challenge = c; });
 quests.gate.has = id => !!(MODS[id] && MODS[id].challenge);
 bus.on('challenge', id => {   // انتهت مهمة العالم: يُفتح التحدي وحده بعد آخر حوار

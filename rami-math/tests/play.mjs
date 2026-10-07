@@ -956,6 +956,11 @@ try {
         await until(() => G(() => !!document.querySelector('#panel .lvUp')), 'لوحة الارتقاء', 8000);
         await G(() => document.querySelector('#panel [data-close]').click()); await settle();
         console.log('⭐ ارتقى إلى المستوى ٢ وظهر الاحتفال');
+        const ach = await G(() => window.__game.state.achievements), stats = await G(() => window.__game.state.stats);   // الأوسمة: المثابرة تُكسب من المحاولات الخاطئة المقصودة
+        expect(ach.b_persist && stats.persist >= 20, 'وسام المثابر لم يُفتح: ' + JSON.stringify(stats));
+        await G(() => document.getElementById('bAch').click()); await until(() => G(() => document.querySelectorAll('#panel .bd.on').length >= 1), 'لوحة الأوسمة', 5000);
+        await G(() => document.querySelector('#panel [data-close]').click()); await settle();
+        console.log('🏅 وسام «المثابر» مفتوح ويظهر في لوحة الأوسمة');
       }
       if (played === 0 && ch) {   // النشاط الاختياري بعد أول درس: من رحلة الدروس، ثم إعادة اللعب
         await G(id => window.__game.activity(id), l.id);
