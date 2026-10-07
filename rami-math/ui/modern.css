@@ -179,3 +179,14 @@ body:has(.dialog.on) .region{opacity:0!important;animation:none!important}
 .acBalloons .basket{font-size:30px}.acBalloons.fly{transform:translateY(-14px)}
 @keyframes acPuff{0%{transform:scale(.4)}70%{transform:scale(1.2)}100%{transform:scale(1)}}
 .acIntro p{margin:0}
+/* المستويات (core/levels.js) */
+.pills{display:flex;gap:6px;align-items:center}
+.lvlPill{display:flex;align-items:center;gap:4px;color:#2A1B66;cursor:pointer}
+.lvUp{font-size:56px;text-align:center;animation:chPop .6s}.lvUpT{text-align:center;color:#2E9E5B}
+.lvCard{display:flex;align-items:center;gap:12px;background:linear-gradient(135deg,#FFF3D6,#FFE3A3);border-radius:18px;padding:12px 14px;box-shadow:0 4px 12px rgba(200,140,20,.2)}
+.lvCard span{font-size:40px}.lvCard small{display:block;color:#8A7A5A;font-weight:800}.lvCard b{font:900 20px Cairo,sans-serif;color:#2A1B66}
+.lvBar{height:14px;border-radius:8px;background:#E8E2D6;overflow:hidden}.lvBar i{display:block;height:100%;border-radius:8px;background:linear-gradient(90deg,#FFC23D,#2E9E5B);transition:width .6s}
+.lvHow{display:flex;flex-direction:column;gap:3px;background:#F1E9FB;border-radius:14px;padding:10px 12px;font-weight:800;font-size:13px;color:#5B3FD0}.lvHow b{color:#2A1B66}
+.lvList{display:grid;grid-template-columns:1fr 1fr;gap:6px}
+.lvList div{display:flex;align-items:center;gap:6px;background:#F4EBD6;border-radius:12px;padding:6px 8px;opacity:.45}.lvList div.on{opacity:1}
+.lvList div.now{background:#FFE3A3;box-shadow:0 0 0 2px #FFC23D}.lvList span{font-size:18px}.lvList b{flex:1;font-size:12.5px;color:#2A1B66}.lvList small{font-weight:900;color:#8A7A5A;font-size:11px}

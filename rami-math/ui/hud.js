@@ -3,6 +3,7 @@ import { game } from '../core/state.js';
 import { ar } from '../core/util.js';
 import { drawHuman } from '../character/human.js';
 import { ACH } from '../achievements/achievements.js';
+import { LEVELS, levelOf } from '../core/levels.js';
 import { sound, sfx } from '../core/sound.js';
 /* إعدادات العرض (تُحفظ على الجهاز): ثلاثي الأبعاد أو عادي، والجودة */
 /* تثبيت التطبيق: زر المتصفح إن وُجد (أندرويد والحاسوب)، وتعليمات «إضافة إلى الشاشة الرئيسية» في آيفون */
@@ -27,11 +28,12 @@ window.addEventListener('pointerup', () => clearInterval(hud._hold));
 export const hud = {
   init(api) {
     this.api = api;
-    $('bBag').onclick = () => this.panel('bag'); $('bMap').onclick = () => this.panel('map'); $('bAch').onclick = () => this.panel('ach');
+    $('bBag').onclick = () => this.panel('bag'); $('bMap').onclick = () => this.panel('map'); $('bAch').onclick = () => this.panel('ach'); $('lvlPill').onclick = () => this.panel('level');
     // الضغط خارج اللوحة يغلق نوافذ المعلومات فقط؛ لوحات الدروس والدكان والخزانة تُغلق بزر «رجوع» الذي يحرّر اللعب
     $('panel').onclick = e => { const lesson = $('panel').querySelector('.bench, .shop, .wardrobe'); if ((e.target.id === 'panel' && !lesson) || e.target.closest('[data-close]')) this.closePanel(); };
   },
   show(on) { $('hud').classList.toggle('on', on); },
+  level(up) { const L = levelOf(game.state); $('lvlI').textContent = L.icon; $('lvlN').textContent = ar(L.n); if (up) { const p = $('lvlPill'); p.classList.remove('pulse'); void p.offsetWidth; p.classList.add('pulse'); } return L; },
   good() { $('goodN').textContent = ar(game.state.good); const p = $('goodPill'); p.classList.remove('pulse'); void p.offsetWidth; p.classList.add('pulse'); },
   objective(t) {   // مؤشر المهمة: يظهر واضحاً حين يتغير ثم يخفت بعد خمس ثوانٍ
     if (this._o === t) return;
@@ -95,10 +97,19 @@ export const hud = {
       const got = ACH.filter(a => s.achievements[a.id]).length;
       body = `<h3>🏆 الإنجازات <small>${ar(got)} / ${ar(ACH.length)}</small></h3>` + ACH.map(a => `<div class="ach ${s.achievements[a.id] ? 'on' : ''}"><span>${a.icon}</span><div><b>${a.name}</b><small>${a.desc}</small></div></div>`).join('');
     }
+    if (kind === 'level' || kind === 'levelup') {
+      const L = levelOf(s);
+      body = `${kind === 'levelup' ? `<div class="lvUp">🎉</div><h3 class="lvUpT">ارتقيتَ إلى المستوى ${ar(L.n)}!</h3>` : '<h3>⭐ مستواي</h3>'}
+        <div class="lvCard"><span>${L.icon}</span><div><small>المستوى ${ar(L.n)} من ${ar(LEVELS.length)}</small><b>${L.title}</b></div></div>
+        ${L.max ? '<p class="chGot">وصلتَ إلى أعلى مستوى في قرية الخير! 👑</p>' : `<div class="lvBar"><i style="width:${L.pct}%"></i></div><p class="muted">${ar(L.xp)} نقطة خبرة — باقٍ ${ar(L.left)} للمستوى التالي: ${L.nextTitle}</p>`}
+        <div class="lvHow"><b>كيف أرتقي؟</b><span>📚 كل درس تنجزه: ١٠ نقاط</span><span>★ كل نجمة في درس: ٥ نقاط</span><span>🎲 كل نشاط تلعبه: ٣ نقاط (حتى ٥ مرات لكل درس)</span></div>
+        <div class="lvList">${LEVELS.map((l, i) => `<div class="${i < L.n ? 'on' : ''}${i === L.n - 1 ? ' now' : ''}"><span>${l.icon}</span><b>${l.title}</b><small>${ar(l.xp)}</small></div>`).join('')}</div>`;
+    }
     if (kind === 'bag') {
       body = `<h3>🎒 حقيبة ${s.hero.name}</h3>
         <div class="bagrow"><span>📦 صناديق بين يديك</span><b>${ar(s.carry)}</b></div>
         <div class="bagrow"><span>💚 نقاط الخير</span><b>${ar(s.good)}</b></div>
+        <div class="bagrow"><span>${levelOf(s).icon} المستوى</span><b>${ar(levelOf(s).n)}: ${levelOf(s).title}</b></div>
         ${(() => { const c = {}; (s.inventory || []).forEach(k => c[k] = (c[k] || 0) + 1); const I = { seeds: '🌱 بذور', bucket: '🪣 دلو', shovel: '⛏️ مجرفة', fert: '🧴 سماد', pot: '🪴 أصيص' };
           return Object.keys(c).length ? Object.keys(c).map(k => `<div class="bagrow"><span>${I[k] || k}</span><b>${ar(c[k])}</b></div>`).join('') : '<div class="bagrow muted"><span>🧰 الأدوات</span><b>تشتريها من دكان العم ناصر</b></div>'; })()}
         <button class="act ghost" id="sndBtn">${sound.on ? '🔊 الصوت يعمل' : '🔇 الصوت متوقف'}</button>

@@ -951,6 +951,12 @@ try {
       await settle(60000, 2000);
       if (errors.length > e0) throw new Error('أخطاء في الكونسول: ' + errors.slice(e0).join(' / '));
       console.log(`✅ ${l.title}${ch ? ' + التحدي' : ''} (${((Date.now() - t0) / 1000).toFixed(1)} ث)`);
+      if (played === 2) {   // المستويات: بعد ثلاثة دروس ونشاط واحد يرتقي إلى المستوى ٢، ويُعرض الاحتفال
+        await until(() => G(() => window.__game.state.levelSeen >= 2 && document.getElementById('lvlN').textContent === '٢'), 'الارتقاء إلى المستوى ٢', 8000);
+        await until(() => G(() => !!document.querySelector('#panel .lvUp')), 'لوحة الارتقاء', 8000);
+        await G(() => document.querySelector('#panel [data-close]').click()); await settle();
+        console.log('⭐ ارتقى إلى المستوى ٢ وظهر الاحتفال');
+      }
       if (played === 0 && ch) {   // النشاط الاختياري بعد أول درس: من رحلة الدروس، ثم إعادة اللعب
         await G(id => window.__game.activity(id), l.id);
         await until(() => G(() => !!document.querySelector('#panel #acGo')), 'شاشة بداية النشاط', 5000); await panelClick('#acGo');

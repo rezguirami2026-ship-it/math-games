@@ -2,6 +2,7 @@
 // بطاقتا «مغامرة جديدة» و«رمز التقدّم»، أربع أدوات (الإعدادات، الإنجازات، الدروس، تقدّمي)، بطاقة الرحلة الحالية، وشريط سفلي.
 // كل ما يُعرض قراءة من الحفظ الموجود (لا نقاط ولا مستويات جديدة). المعرّفات bCont/bNew/bCode كما هي.
 import { LESSONS, UNITS } from '../content/lessons.js';
+import { levelOf } from '../core/levels.js';
 import { ACH } from '../achievements/achievements.js';
 import { ar } from '../core/util.js';
 import { sound } from '../core/sound.js';
@@ -55,7 +56,7 @@ export function homeHTML(saved) {
   <div class="home">
     <header class="htop">
       <button class="hbtn" id="hSet" aria-label="الإعدادات"><svg viewBox="0 0 24 24"><path d="M4 6h16M4 12h16M4 18h16" stroke="#fff" stroke-width="2.6" stroke-linecap="round"/></svg></button>
-      ${saved ? `<div class="hlevel"><span>⭐</span>الوحدة ${ar(P.unitIdx + 1)} من ${ar(UNITS.length)}</div>` : '<div></div>'}
+      ${saved ? (() => { const L = levelOf(saved); return `<div class="hlevel"><span>${L.icon}</span>المستوى ${ar(L.n)}: ${L.title}</div>`; })() : '<div></div>'}
     </header>
     <section class="hhero">
       <div class="hbrand">
