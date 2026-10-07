@@ -131,7 +131,7 @@ export const CH = {
       { const W = f(8, 12), H = f(6, 9), w = R(2, W - 4), h = R(2, H - 3);
         it.push(num('ما محيط هذه الحظيرة (طول السياج كله)؟', 2 * (W + H), 'اجمع أطوال كل الأضلاع الستة. الأضلاع الناقصة تستنتجها من الأطوال المعطاة.', 'Ma3', { dot: false, art: lshape(W, H, w, h) })); }
       { const X = f(20, 40), list = []; let big = 0, small = 0;
-        while (list.length < 6) { const a = R(3, 9), b = R(3, 9), A = a * b; if (A === X || f.has(A)) continue; if (A > X && big < 3) { big++; f.mark(A); list.push({ label: `${ar(a)} م × ${ar(b)} م`, bin: 0 }); } else if (A < X && small < 3) { small++; f.mark(A); list.push({ label: `${ar(a)} م × ${ar(b)} م`, bin: 1 }); } }
+        const seenA = new Set(); for (let t = 0; list.length < 6 && t < 2000; t++) { const a = R(3, 9), b = R(3, 9), A = a * b; if (A === X || seenA.has(A)) continue; seenA.add(A); if (A > X && big < 3) { big++; list.push({ label: `${ar(a)} م × ${ar(b)} م`, bin: 0 }); } else if (A < X && small < 3) { small++; list.push({ label: `${ar(a)} م × ${ar(b)} م`, bin: 1 }); } }
         it.push(sort(`صنّف المراعي حسب مساحتها مقارنة بـ <b>${ar(X)}</b> م²:`, [`أكبر من ${ar(X)} م²`, `أصغر من ${ar(X)} م²`], list, 'احسب المساحة: الطول × العرض.', 'Ma1')); }
       { const s = pickN([['مستطيلان لهما المساحة نفسها، لا بد أن يكون لهما المحيط نفسه.', false, 'مثلاً ٢ × ١٢ و٤ × ٦ مساحتهما ٢٤، لكن محيطهما ٢٨ و٢٠.'], ['إذا ضاعفنا طول المستطيل وبقي عرضه كما هو، تتضاعف مساحته.', true, 'المساحة = الطول × العرض، فإذا تضاعف الطول تضاعف الناتج.'],
           ['مساحة المستطيل = الطول + العرض.', false, 'المساحة = الطول × العرض.'], ['المربع الذي طول ضلعه ٤ م محيطه ١٦ م ومساحته ١٦ م².', true, 'المحيط ٤ × ٤ = ١٦، والمساحة ٤ × ٤ = ١٦.']], 1)[0];

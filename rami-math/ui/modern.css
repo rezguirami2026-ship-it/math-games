@@ -149,3 +149,11 @@ body:has(.dialog.on) .region{opacity:0!important;animation:none!important}
 .chTable th,.chTable td{padding:5px 9px;border-bottom:1px solid #EFE6D6;text-align:center}.chTable tr:first-child th{background:#2F6FB2;color:#fff}.chTable th{background:#EAF2FB}
 .chCal caption{font-weight:900;color:#8E3B5E;padding:4px}.chCal th{background:#8E3B5E;color:#fff;font-size:10.5px;padding:4px 2px}.chCal td{width:34px;height:26px;text-align:center;border:1px solid #F1E6EC;font-size:13px}
 .chCal td.mk{background:#FFD866;color:#2A1B66}
+/* رسوم تحديات الهندسة (content/chGeo.js) */
+.chShape{width:44px;height:44px;vertical-align:middle}.chBig .chShape{width:110px;height:110px}
+.chGrid{width:min(100%,280px);height:auto}.chOpt .chGrid{width:100%;max-width:150px}
+.chOpt .chNet{max-width:100%;height:auto}.chOpts:has(.chGrid) .chOpt,.chOpts:has(.chNet) .chOpt{padding:6px}
+.chSolid{display:block;margin:0 auto}
+.chCard .chShape,.chL .chShape{width:40px;height:40px}
+.chHiero{display:inline-flex;flex-wrap:wrap;gap:1px;color:#7A4A12;vertical-align:middle}.chHiero svg{width:16px;height:28px}
+.chOpt .chHiero svg{width:13px;height:24px}

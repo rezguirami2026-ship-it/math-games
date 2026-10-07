@@ -8,7 +8,8 @@ import { sfx } from '../core/sound.js';
 import { OUT } from '../content/outcomes.js';
 import { changed, finish, sheetOpen, sheetClose, msgBox, setMsg, numPad, btn } from './bench.js';
 
-const PEOPLE_ICON = { salem: '🧔🏽', yousef: '👦🏽', hamad: '👨🏽‍🌾', saeed: '📮', umkhalid: '👩🏽', rashed: '👨🏽‍🔧', naser: '🧔🏽', mubarak: '🪚', khalid: '🧑🏽‍🏫', abdullah: '👨🏽‍✈️', shaikha: '👵🏽', juma: '🐑' };
+const PEOPLE_ICON = { salem: '🧔🏽', yousef: '👦🏽', hamad: '👨🏽‍🌾', saeed: '📮', umkhalid: '👩🏽', rashed: '👨🏽‍🔧', naser: '🧔🏽', mubarak: '🪚', khalid: '🧑🏽‍🏫', abdullah: '👨🏽‍✈️', shaikha: '👵🏽', juma: '🐑', saif: '⚓', reem: '👷🏽‍♀️', layla: '🎁', ali: '🧱', badr: '🎣', hind: '🎨', sulaiman: '🌬️', majid: '🗺️', hamdan: '🌉', muna: '🏺', zaid: '💍', aisha: '🍮', fahad: '🎒', harith: '🪣', qais: '🔔', mariam: '🏪', khamis: '🌾', saleh: '🌴', murad: '🧱', zahra: '🍬', azzan: '🛡️', safiya: '🍲', umsaid: '👵🏽', mudhaffar: '🕰️', nawal: '📞', tariq: '🏠' };
+export const DRAW = {};   // رسوم canvas داخل السؤال: <canvas data-draw="اسم"> تملؤها DRAW[اسم](canvas) بعد العرض
 const PRAISE = ['أحسنت!', 'رائع!', 'ممتاز!', 'عبقري!', 'بطل!', 'إجابة ذكية!', 'هكذا تماماً!', 'تفكير جميل!'];
 
 /* يبدأ التحدي (أو يستأنفه) بعد مهمة العالم. d: بيانات الدرس (يُحفظ فيها التقدّم d.ch) */
@@ -37,6 +38,7 @@ function render(W, d, cfg, msg) {
     ${msgBox(msg ? msg.t : 'خذ وقتك، لا يوجد مؤقت 🙂', msg ? msg.k : '')}${body}`);
   const el = document.getElementById('panel'), sheet = el.querySelector('.sheet');
   sheet.classList.add('chSheet'); sheet.dataset.i = C.i;
+  el.querySelectorAll('canvas[data-draw]').forEach(cv => { try { DRAW[cv.dataset.draw] && DRAW[cv.dataset.draw](cv); } catch (e) { console.warn('رسم التحدي', e); } });
   let locked = false;
   const ok = () => { if (locked) return; locked = true;
     const first = C.tries === 0; C.firstTry += first ? 1 : 0; C.streak = first ? (C.streak || 0) + 1 : 0; C.gems = (C.gems || 0) + 1; C.tries = 0; C.i++; sfx('good'); changed();

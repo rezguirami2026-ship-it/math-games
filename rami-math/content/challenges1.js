@@ -76,7 +76,7 @@ export const CH = {
       const f = fresh(), it = [], LIST = [24, 36, 48, 30, 40, 42, 60, 72, 56, 54, 64, 84, 90, 96];
       { const n = f.take(LIST), cand = [1].concat(pickN([2, 3, 4, 5, 6, 7, 8, 9, 10, 12, 15, 16].filter(k => k !== n), 8));
         it.push(multi(`اختر <b>كل</b> عوامل العدد <b>${ar(n)}</b>:`, cand, k => n % k === 0, `العامل يقسم ${ar(n)} بلا باقٍ. جرّب: ${ar(n)} ÷ العدد.`, 'Nn6')); }
-      { const n = f.take(LIST), small = []; for (let k = 2; k * k < n; k++) if (n % k === 0) small.push(k);
+      { const n = f.take(LIST.filter(z => z !== 64)), small = []; for (let k = 2; k * k < n; k++) if (n % k === 0) small.push(k);
         it.push(match(`صِل كل ضرب بالعدد الناقص ليكون الناتج <b>${ar(n)}</b>:`, pickN(small, 4).map(k => [`${ar(k)} × ؟`, ar(n / k)]), `اقسم ${ar(n)} على العدد المعطى.`, 'Nn6')); }
       const PAIRS = shuffle([[4, 5], [3, 4], [4, 6], [6, 8], [3, 5], [2, 7], [6, 9], [5, 6]]), lcm = (p, q) => { for (let k = 1; ; k++) if ((p * k) % q === 0) return p * k; };
       { const [p, q] = PAIRS[0];

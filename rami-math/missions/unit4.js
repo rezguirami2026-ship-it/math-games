@@ -43,13 +43,13 @@ export const numberLineEstimate = {
 };
 
 /* ═══ ٢٥. تاريخ الأعداد (الهيروغليفية) — «نقوش المتحف» ═══ */
-const GLY = {
+export const GLY = {
   1000: '<svg viewBox="0 0 24 40"><path d="M12 38V14" stroke="currentColor" stroke-width="3"/><path d="M12 14C4 12 3 4 7 2c2 6 4 8 5 12 1-4 3-6 5-12 4 2 3 10-5 12z" fill="currentColor"/></svg>',
   100: '<svg viewBox="0 0 24 40"><path d="M12 30c-6 0-8-6-6-10s8-5 11-2 2 9-3 9-5-4-3-6 5-1 5 1" fill="none" stroke="currentColor" stroke-width="2.6"/><path d="M12 30v8" stroke="currentColor" stroke-width="2.6"/></svg>',
   10: '<svg viewBox="0 0 24 40"><path d="M5 38V18C5 8 19 8 19 18v20" fill="none" stroke="currentColor" stroke-width="3.2"/></svg>',
   1: '<svg viewBox="0 0 24 40"><path d="M12 4v32" stroke="currentColor" stroke-width="3.6" stroke-linecap="round"/></svg>'
 };
-const glyphs = n => [1000, 100, 10, 1].map(v => GLY[v].repeat(Math.floor(n / v) % 10)).join('');
+export const glyphs = n => [1000, 100, 10, 1].map(v => GLY[v].repeat(Math.floor(n / v) % 10)).join('');
 export const hieroNumbers = Object.assign({
   id: 'hieroNumbers', giver: 'muna',
   intro: n => [{ who: 'muna', text: `أهلاً يا ${n}! أنا منى أمينة المتحف. أبواب قاعة المصريين القدماء مغلقة بأقفال من نقوش.` },

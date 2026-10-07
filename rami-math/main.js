@@ -20,6 +20,9 @@ import { UNIT1, POND } from './missions/unit1.js';
 import { stage2 } from './missions/challenge.js';
 import { CH as CH1 } from './content/challenges1.js';
 import { CH as CH2 } from './content/challenges2.js';
+import { CH as CH3 } from './content/challenges3.js';
+import { CH as CH4 } from './content/challenges4.js';
+import { CH as CH5 } from './content/challenges5.js';
 import { UNIT2 } from './missions/unit2.js';
 import { UNIT3 } from './missions/unit3.js';
 import { UNIT4 } from './missions/unit4.js';
@@ -174,7 +177,7 @@ async function start(state) {
   }
 }
 /* ── العرض ثلاثي الأبعاد (renderer3d): يُحمَّل فقط عند طلبه، ويرجع إلى الرسم الحالي إن لم يدعم الجهاز WebGL أو فشل التحميل ── */
-const V3D = 'نسخة 3D · ١٧';   // تُعرض في شاشة التحميل وفي الزاوية: للتأكد أن المتصفح حمّل آخر نسخة
+const V3D = 'نسخة 3D · ١٨';   // تُعرض في شاشة التحميل وفي الزاوية: للتأكد أن المتصفح حمّل آخر نسخة
 const want3d = () => gfx.d3();
 function loadingScreen() {
   const el = document.createElement('div'); el.className = 'load3d';
@@ -569,7 +572,7 @@ bus.on('save', () => { if (game.state) saveSoon(game.state); });
 bus.on('good', () => hud.good());
 bus.on('mission', () => hud.objective(objective()));
 bus.on('achievement', a => setTimeout(() => hud.toast(`${a.icon} إنجاز جديد: ${a.name}`), 400));
-Object.entries(Object.assign({}, CH1, CH2)).forEach(([id, c]) => { if (MODS[id]) MODS[id].challenge = c; });
+Object.entries(Object.assign({}, CH1, CH2, CH3, CH4, CH5)).forEach(([id, c]) => { if (MODS[id]) MODS[id].challenge = c; });
 quests.gate.has = id => !!(MODS[id] && MODS[id].challenge);
 bus.on('challenge', id => {   // انتهت مهمة العالم: يُفتح التحدي وحده بعد آخر حوار
   const go = () => { if (!W || game.busy) return setTimeout(go, 300);

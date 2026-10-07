@@ -67,3 +67,15 @@ export function gridShape(cols, rows, full, half) {
   for (let r = 0; r <= rows; r++) g += `<line x1="${X}" y1="${4 + r * s}" x2="${X + cols * s}" y2="${4 + r * s}" stroke="#9AA3B8" stroke-width=".8"/>`;
   return g + '</svg>';
 }
+/* خط أعداد من lo إلى hi بعلامات كل step، وسهم عند v (labels: أي العلامات تُكتب) */
+export function nline(lo, hi, v, step, every = 1) {
+  const x = t => 20 + (t - lo) / (hi - lo) * 280, sgn = n => n < 0 ? '−' + ar(-n) : ar(n); let s = `<svg viewBox="0 0 320 72" class="chLine"><line x1="14" y1="40" x2="306" y2="40" stroke="${INK}" stroke-width="3"/>`;
+  for (let t = lo, i = 0; t <= hi + 1e-9; t += step, i++) { s += `<line x1="${x(t)}" y1="32" x2="${x(t)}" y2="48" stroke="${INK}" stroke-width="2"/>`; if (i % every === 0) s += `<text x="${x(t)}" y="66" text-anchor="middle" font-size="12" font-weight="900" fill="${INK}" font-family="Cairo,sans-serif" direction="ltr">${sgn(+t.toFixed(3)).replace('.', '٫')}</text>`; }
+  return s + (v != null ? `<path d="M${x(v)} 30 l-7 -14 h14z" fill="${ACC}"/>` : '') + '</svg>';
+}
+/* ميزان بقرص دائري من ٠ إلى max كغم، كل كيلوغرام ١٠ أقسام، والمؤشر عند v */
+export function dial(max, v) {
+  const c = [110, 110], r = 88, ang = t => (-120 + t / max * 240) * Math.PI / 180; let s = `<svg viewBox="0 0 220 200" class="chClock" style="width:180px;height:165px"><circle cx="110" cy="110" r="100" fill="#FFFDF6" stroke="${INK}" stroke-width="4"/>`;
+  for (let i = 0; i <= max * 10; i++) { const a = ang(i / 10), r1 = i % 10 ? (i % 5 ? 80 : 76) : 70; s += `<line x1="${c[0] + Math.sin(a) * r1}" y1="${c[1] - Math.cos(a) * r1}" x2="${c[0] + Math.sin(a) * r}" y2="${c[1] - Math.cos(a) * r}" stroke="${INK}" stroke-width="${i % 10 ? .9 : 2.2}"/>`; if (i % 10 === 0) s += T(c[0] + Math.sin(a) * 56, c[1] - Math.cos(a) * 56 + 5, ar(i / 10), { fs: 15 }); }
+  const a = ang(v); return s + T(110, 160, 'كغم', { fs: 13 }) + `<line x1="110" y1="110" x2="${c[0] + Math.sin(a) * 84}" y2="${c[1] - Math.cos(a) * 84}" stroke="${ACC}" stroke-width="3.5" stroke-linecap="round"/><circle cx="110" cy="110" r="6" fill="${ACC}"/></svg>`;
+}
