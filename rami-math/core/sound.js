@@ -44,6 +44,7 @@ function makeBed() {   // ضجيج بني متكرر يغذّي مرشحين: م
 }
 export function ambience(area, dt) {
   if (!AC) return;   // لم يلمس اللاعب الشاشة بعد
+  musicTick(area);
   try {
     bed = bed || makeBed(); bed.t += dt;
     const P = AMB[area] || AMB.village, on = sound.on && !document.hidden, now = AC.currentTime, [wl, wf, wp, wd] = P.wind;
@@ -84,4 +85,43 @@ export function sfx(k) {
   if (k === 'region') [587, 784, 988].forEach((f, i) => tone(f, .5, 'sine', .06, i * .16));   // نغمة دخول منطقة
   if (k === 'newRegion') [523, 659, 784, 1046, 1318].forEach((f, i) => tone(f, .45, 'triangle', .08, i * .13));   // أول زيارة
   if (k === 'bird') { const b = 2200 + Math.random() * 900; [0, .09, .2].forEach((w, i) => tone(b + i * 160, .07, 'sine', .022, w)); }   // تغريد خافت في الخلفية
+}
+
+/* ── الموسيقى الخلفية: ألحان شرقية هادئة مولّدة (مقام الحجاز ومقام الراست)، عود مقطوف وطبلة خفيفة، لكل منطقة طابعها.
+   مستوى منخفض جداً، وزر إيقاف منفصل عن المؤثرات (يُحفظ على الجهاز: ramimath_music) ── */
+export const music = { on: (() => { try { return localStorage.getItem('ramimath_music') !== 'off'; } catch (e) { return true; } })() };
+export function setMusic(v) { music.on = v; try { localStorage.setItem('ramimath_music', v ? 'on' : 'off'); } catch (e) {} }
+const SCALES = { hijaz: [0, 1, 4, 5, 7, 8, 10, 12], rast: [0, 2, 3.5, 5, 7, 9, 10.5, 12], nahawand: [0, 2, 3, 5, 7, 8, 11, 12] };
+const MUS = {   // [المقام، الأساس (هرتز)، الإيقاع (نبضة/دقيقة)، طبلة؟]
+  village: ['rast', 196, 84, false], market: ['hijaz', 220, 104, true], harbor: ['nahawand', 174.6, 76, false], fort: ['hijaz', 146.8, 88, true],
+  festival: ['rast', 220, 112, true], coop: ['nahawand', 196, 92, true], caravan: ['hijaz', 164.8, 80, true], workshop: ['rast', 174.6, 96, false]
+};
+let M = null;
+function phrase(seed) { let a = seed, x = 3; const r = () => (a = (a * 9301 + 49297) % 233280) / 233280; return Array.from({ length: 16 }, (_, i) => { if (i % 4 === 3 && r() < .4) return null; x = Math.max(0, Math.min(7, x + Math.round((r() - .5) * 3))); return x; }); }
+function pluck(f, t, vol, dur) {
+  const o = AC.createOscillator(), o2 = AC.createOscillator(), g = AC.createGain(), lp = AC.createBiquadFilter();
+  o.type = 'triangle'; o2.type = 'sine'; o.frequency.setValueAtTime(f, t); o2.frequency.setValueAtTime(f * 2, t); lp.type = 'lowpass'; lp.frequency.setValueAtTime(2200, t); lp.frequency.exponentialRampToValueAtTime(500, t + dur);
+  g.gain.setValueAtTime(.0001, t); g.gain.exponentialRampToValueAtTime(vol, t + .012); g.gain.exponentialRampToValueAtTime(.0001, t + dur);
+  o.connect(lp); o2.connect(lp); lp.connect(g); g.connect(M.out); o.start(t); o2.start(t); o.stop(t + dur + .05); o2.stop(t + dur + .05);
+}
+function drum(t, low) { const o = AC.createOscillator(), g = AC.createGain(); o.type = low ? 'sine' : 'triangle'; o.frequency.setValueAtTime(low ? 120 : 420, t); o.frequency.exponentialRampToValueAtTime(low ? 55 : 260, t + .12);
+  g.gain.setValueAtTime(low ? .5 : .22, t); g.gain.exponentialRampToValueAtTime(.0001, t + (low ? .25 : .08)); o.connect(g); g.connect(M.out); o.start(t); o.stop(t + .3); }
+export function musicTick(area) {
+  if (!AC) return;
+  try {
+    if (!M) { M = { out: AC.createGain(), next: 0, step: 0, area: null, mel: null }; M.out.gain.value = 0; M.out.connect(AC.destination); }
+    const on = sound.on && music.on && !document.hidden, now = AC.currentTime;
+    M.out.gain.setTargetAtTime(on ? .085 : 0, now, .8);
+    if (!on) { M.next = 0; return; }
+    const [sc, root, bpm, drums] = MUS[area] || MUS.village;
+    if (M.area !== area) { M.area = area; M.mel = phrase(area.length * 97 + bpm); M.step = 0; }
+    const beat = 60 / bpm / 2; if (M.next < now) M.next = now + .1;
+    while (M.next < now + .35) {   // جدولة استباقية خفيفة
+      const s = M.step % 32, deg = M.mel[s % 16], oct = s >= 16 && s % 4 === 0 ? 2 : 1;
+      if (deg != null) pluck(root * Math.pow(2, SCALES[sc][deg] / 12) * oct, M.next, .16, beat * 2.6);
+      if (s % 8 === 0) pluck(root / 2, M.next, .14, beat * 7);   // نغمة قرار
+      if (drums) { if (s % 8 === 0 || s % 8 === 3) drum(M.next, true); if (s % 8 === 6 || s % 4 === 2) drum(M.next, false); }
+      M.next += beat; M.step++;
+    }
+  } catch (e) {}
 }

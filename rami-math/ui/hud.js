@@ -7,7 +7,7 @@ import { LEVELS, levelOf } from '../core/levels.js';
 import { BADGES, badgeCard } from '../achievements/badges.js';
 import { mountHudIcons } from './hudicons.js';
 import { openDecorShop } from '../world/decor.js';
-import { sound, sfx } from '../core/sound.js';
+import { sound, sfx, music, setMusic } from '../core/sound.js';
 /* إعدادات العرض (تُحفظ على الجهاز): ثلاثي الأبعاد أو عادي، والجودة */
 /* تثبيت التطبيق: زر المتصفح إن وُجد (أندرويد والحاسوب)، وتعليمات «إضافة إلى الشاشة الرئيسية» في آيفون */
 const standalone = () => matchMedia('(display-mode: standalone)').matches || matchMedia('(display-mode: fullscreen)').matches || navigator.standalone;
@@ -121,6 +121,7 @@ export const hud = {
           return Object.keys(c).length ? Object.keys(c).map(k => `<div class="bagrow"><span>${I[k] || k}</span><b>${ar(c[k])}</b></div>`).join('') : '<div class="bagrow muted"><span>🧰 الأدوات</span><b>تشتريها من دكان العم ناصر</b></div>'; })()}
         <button class="act ghost" id="sndBtn">${sound.on ? '🔊 الصوت يعمل' : '🔇 الصوت متوقف'}</button>
         <button class="act go" id="decoBtn">🛍️ متجر زينة القرية (💎 ${ar(s.gems || 0)})</button>
+        <button class="act ghost" id="musBtn">${music.on ? '🎵 الموسيقى تعمل' : '🔇 الموسيقى متوقفة'}</button>
         <button class="act ghost" id="codeBtn">🔑 رمز حفظ التقدّم</button>
         <button class="act ghost" id="ramBtn">🌙 أجواء رمضان: ${PREF_LABEL[ramadanPref()]}</button>
         ${installable() ? '<button class="act go" id="instBtn">📲 ثبّت اللعبة كتطبيق</button>' : ''}
@@ -142,6 +143,7 @@ export const hud = {
     if (kind === 'bag') {
       $('sndBtn').onclick = e => { e.stopPropagation(); sound.on = !sound.on; this.panel('bag'); };
       $('codeBtn').onclick = e => { e.stopPropagation(); this.panel('code'); };
+      $('musBtn').onclick = e => { e.stopPropagation(); setMusic(!music.on); this.panel('bag'); };
       $('decoBtn').onclick = e => { e.stopPropagation(); openDecorShop(); };
       if ($('instBtn')) $('instBtn').onclick = e => { e.stopPropagation(); install(); };
       $('d3Btn').onclick = e => { e.stopPropagation(); gfx.set3d(!gfx.d3()); };   // يُعاد تحميل الصفحة: التقدّم محفوظ

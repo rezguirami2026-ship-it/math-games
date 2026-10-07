@@ -6,7 +6,7 @@ import { levelOf } from '../core/levels.js';
 import { ACH } from '../achievements/achievements.js';
 import { BADGES, badgeCard } from '../achievements/badges.js';
 import { ar } from '../core/util.js';
-import { sound } from '../core/sound.js';
+import { sound, music, setMusic } from '../core/sound.js';
 import { ramadanPref, setRamadanPref, PREF_LABEL } from '../core/season.js';
 
 const QUOTES = ['كل خطوة صغيرة… تقرّبك من هدفك الكبير', 'الرياضيات مفتاح كل مغامرة', 'من حاول تعلّم، ومن تعلّم نجح', 'أهل القرية ينتظرون مساعدتك!'];
@@ -148,12 +148,14 @@ export function homeSheets(el, saved, gfx) {
     set() {
       const draw = () => open(`<h3>⚙️ الإعدادات</h3>
         <button class="act ghost" id="sSnd">${sound.on ? '🔊 الصوت يعمل' : '🔇 الصوت متوقف'}</button>
+        <button class="act ghost" id="sMus">${music.on ? '🎵 الموسيقى تعمل' : '🔇 الموسيقى متوقفة'}</button>
         <button class="act ghost" id="sD3">🎮 العرض: ${gfx.d3() ? 'ثلاثي الأبعاد' : 'عادي'}</button>
         ${gfx.d3() ? `<button class="act ghost" id="sQ">✨ الجودة: ${{ auto: 'تلقائية', high: 'عالية', low: 'منخفضة' }[gfx.q()]}</button>` : ''}
         <button class="act ghost" id="sRam">🌙 أجواء رمضان: ${PREF_LABEL[ramadanPref()]}</button>`);
       draw();
       const bind = () => {
         box.querySelector('#sSnd').onclick = () => { sound.on = !sound.on; draw(); bind(); };
+        box.querySelector('#sMus').onclick = () => { setMusic(!music.on); draw(); bind(); };
         box.querySelector('#sD3').onclick = () => gfx.set3d(!gfx.d3());
         if (box.querySelector('#sQ')) box.querySelector('#sQ').onclick = () => { gfx.setQ({ auto: 'high', high: 'low', low: 'auto' }[gfx.q()]); draw(); bind(); };
         box.querySelector('#sRam').onclick = () => { setRamadanPref({ auto: 'on', on: 'off', off: 'auto' }[ramadanPref()]); draw(); bind(); };
