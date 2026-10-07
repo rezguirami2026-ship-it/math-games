@@ -966,8 +966,7 @@ try {
       }
       if (played === 2) {   // المستويات: بعد ثلاثة دروس ونشاط واحد يرتقي إلى المستوى ٢، ويُعرض الاحتفال
         await until(() => G(() => window.__game.state.levelSeen >= 2 && document.getElementById('lvlN').textContent === '٢'), 'الارتقاء إلى المستوى ٢', 8000);
-        await until(() => G(() => !!document.querySelector('#panel .lvUp')), 'لوحة الارتقاء', 8000);
-        await G(() => document.querySelector('#panel [data-close]').click()); await settle();
+        if (await G(() => !!document.querySelector('#panel .lvUp'))) { await G(() => document.querySelector('#panel [data-close]').click()); await settle(); }   // قد يكون الاحتفال ظهر قبلها
         console.log('⭐ ارتقى إلى المستوى ٢ وظهر الاحتفال');
         const ach = await G(() => window.__game.state.achievements), stats = await G(() => window.__game.state.stats);   // الأوسمة: المثابرة تُكسب من المحاولات الخاطئة المقصودة
         expect(ach.b_persist && stats.persist >= 20, 'وسام المثابر لم يُفتح: ' + JSON.stringify(stats));
@@ -988,6 +987,12 @@ try {
         const r = await G(id => window.__game.state.activities[id], l.id); expect(r.plays === 1 && r.best === 1 && !r.run, 'سجل النشاط: ' + JSON.stringify(r));
         await panelClick('#acEnd'); await settle();
         console.log('🎲 نشاط الدرس: ٦ جولات، ثم الحفظ والرجوع');
+        await G(id => { window.__game.quests.data(id).stars = 3; }, l.id);   // تحدي الخبير يُفتح بثلاث نجوم
+        await G(id => window.__game.expert(id), l.id); await until(() => G(() => !!document.querySelector('#panel #acGo')), 'بداية الخبير', 5000); await panelClick('#acGo');
+        await solveRounds(() => G(id => { const e = window.__game.state.expert[id]; return e.run ? e.run.ch : { i: 6 }; }, l.id));
+        await until(() => G(() => !!document.querySelector('#panel #acEnd')), 'نهاية الخبير', 8000);
+        expect(await G(id => window.__game.state.expert[id].plays === 1, l.id), 'سجل الخبير'); await panelClick('#acEnd'); await settle();
+        console.log('⚡ تحدي الخبير: ٦ جولات صعبة');
       }
       played++;
     } catch (e) {

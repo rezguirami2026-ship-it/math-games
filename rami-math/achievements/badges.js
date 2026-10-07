@@ -28,6 +28,8 @@ export const BADGES = [
   { id: 'b_act40', icon: '🏅', name: 'المتدرب المجتهد', desc: 'العب ٤٠ نشاطاً', prog: s => [plays(s), 40] },
   { id: 'b_persist', icon: '💪', name: 'المثابر', desc: 'أكمل ٢٠ جولة بعد محاولة خاطئة (الخطأ طريق التعلم!)', prog: s => [st(s).persist || 0, 20] },
   { id: 'b_streak8', icon: '🔥', name: 'سلسلة النار', desc: '٨ إجابات صحيحة متتالية من المحاولة الأولى', prog: s => [Math.min(8, st(s).streak || 0), 8] },
+  { id: 'b_expert1', icon: '🌟', name: 'الخبير', desc: 'انل أول نجمة ذهبية في تحدي الخبير', prog: s => [Math.min(1, Object.values(s.expert || {}).filter(e => e.gold).length), 1] },
+  { id: 'b_expert10', icon: '⚡', name: 'الخبير الكبير', desc: '١٠ نجوم ذهبية في تحدي الخبير', prog: s => [Object.values(s.expert || {}).filter(e => e.gold).length, 10] },
   { id: 'b_lvl5', icon: '🛤️', name: 'نصف الطريق', desc: 'صل إلى المستوى ٥', prog: s => [Math.min(5, levelOf(s).n), 5] },
   { id: 'b_lvl10', icon: '👑', name: 'حكيم القرية', desc: 'صل إلى المستوى ١٠', prog: s => [levelOf(s).n, 10] },
   ...DOMAIN.map(([k, icon, name, ids]) => ({ id: 'b_' + k, icon, name, desc: `ثلاث نجوم في ${ids.length === 6 ? 'ستة' : ids.length === 5 ? 'خمسة' : ids.length === 8 ? 'ثمانية' : 'تسعة'} دروس من هذا المجال`, prog: s => [full(s, ids), ids.length] })),

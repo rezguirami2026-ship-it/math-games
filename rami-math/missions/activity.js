@@ -97,3 +97,37 @@ export function openFinale(W, u, MODS) {
   };
   intro();
 }
+
+/* ── تحدي الخبير: يُفتح بعد ثلاث نجوم في الدرس. ٦ جولات من الأنواع التي لا تُخمَّن (كتابة، ترتيب، تصنيف، وصل، خط أعداد…)،
+   والنجمة الذهبية 🌟 لمن يجيب ٥ من ٦ من المحاولة الأولى. بلا مؤقت ولا عقاب، والإعادة متاحة ── */
+const HARD = ['num', 'build', 'order', 'sort', 'match', 'multi', 'line', 'memory', 'error'];
+export const expertRec = id => { const s = game.state; s.expert = s.expert || {}; return (s.expert[id] = s.expert[id] || { plays: 0, gold: false }); };
+export const expertOpen = id => (quests.data(id).stars || 0) >= 3;
+export function openExpert(W, id, mod) {
+  if (!mod || !mod.challenge || !expertOpen(id)) return;
+  const ch = mod.challenge, R = expertRec(id), title = LESSONS.find(l => l.id === id).title;
+  const intro = () => {
+    sheetOpen(`<div class="chEnd acIntro expIntro"><div class="chTreasure">⚡</div><h3>تحدي الخبير</h3><p>${title}</p>
+      <p class="muted">٦ جولات أصعب: لا اختيار من متعدد، بل كتابة وترتيب وتصنيف. أجب ٥ منها من المحاولة الأولى لتنال النجمة الذهبية 🌟</p>
+      ${R.gold ? '<p class="chGot">🌟 نلتَ النجمة الذهبية في هذا الدرس</p>' : ''}<button class="act big go" id="acGo">ابدأ ⚡</button><button class="act ghost" id="acBack">رجوع</button></div>`);
+    document.querySelector('#panel .sheet').classList.add('chSheet');
+    btn('acBack', () => sheetClose()); btn('acGo', start);
+  };
+  const start = () => {
+    let pool = []; for (let k = 0; k < 6 && pool.length < 12; k++) pool = pool.concat(ch.make().filter(it => HARD.includes(it.type)));
+    const items = pickN(pool, 6), d = { ch: { items, i: 0, firstTry: 0, tries: 0, gems: 0, streak: 0 } };
+    R.run = d;
+    runChallenge(W, d, { id, who: ch.who, title: `⚡ تحدي الخبير`, make: () => items, scene: SCENES.tower.draw,
+      exit: () => { delete R.run; bus.emit('save'); },
+      onDone: (stars, C) => {
+        delete R.run; R.plays++; const gold = C.firstTry >= 5, first = gold && !R.gold; if (gold) R.gold = true;
+        game.state.gems = (game.state.gems || 0) + (gold ? 6 : 3); bus.emit('gems'); bus.emit('save'); sfx('win');
+        sheetOpen(`<div class="chEnd"><div class="chTreasure">${gold ? '🌟' : '⚡'}</div><h3>${gold ? 'النجمة الذهبية لك!' : 'تحدٍّ قوي، أحسنت!'}</h3>
+          <p class="chGot">+${ar(gold ? 6 : 3)} 💎</p><p class="muted">أجبت ${ar(C.firstTry)} من ${ar(C.items.length)} من المحاولة الأولى.${gold ? (first ? ' 🎉 أول نجمة ذهبية في هذا الدرس!' : '') : ' تحتاج ٥ من ٦ للنجمة الذهبية — حاول مرة أخرى متى شئت.'}</p>
+          <button class="act big go" id="acAgain">العب مرة أخرى 🔁</button><button class="act ghost" id="acEnd">رجوع إلى العالم</button></div>`);
+        document.querySelector('#panel .sheet').classList.add('chSheet');
+        btn('acAgain', start); btn('acEnd', () => sheetClose());
+      } });
+  };
+  intro();
+}

@@ -301,3 +301,7 @@ body:has(.dialog.on) .region{opacity:0!important;animation:none!important}
 .chStep em{font-style:normal;width:26px;height:26px;border-radius:50%;display:grid;place-items:center;background:#FFC23D;color:#2A1B66;flex:none}
 .chStep.no{background:#FBE4E4;border-color:#E2475C}.chStep.on{background:#DDF6E8;border-color:#2E9E5B}
 @media (max-width:400px){.chMem{grid-template-columns:repeat(3,1fr)}}
+.qbtns{display:flex;flex-direction:column;gap:4px;margin-inline-start:auto;flex:none}
+.qrow .qexp{padding:5px 10px;min-height:0;font-size:13px;border-radius:14px;background:linear-gradient(180deg,#7EC4FF,#2F7DE0);color:#fff;box-shadow:0 3px 0 #1A4FA3}
+.qrow .qexp.gold{background:linear-gradient(180deg,#FFE07A,#E0A21E);color:#5A3A10;box-shadow:0 3px 0 #9C6B16,0 0 10px rgba(255,214,90,.7)}
+.qbtns .qact{margin:0}

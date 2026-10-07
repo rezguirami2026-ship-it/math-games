@@ -20,7 +20,7 @@ import * as tanks from './missions/tanks.js';
 import { SHOP, GARDEN, openCounter, drawShop, drawShopBack, drawGarden } from './missions/shop.js';
 import { UNIT1, POND, ORCH } from './missions/unit1.js';
 import { stage2 } from './missions/challenge.js';
-import { openActivity, hasActivity, openFinale, finaleOpen, finaleRec } from './missions/activity.js';
+import { openActivity, hasActivity, openFinale, finaleOpen, finaleRec, openExpert, expertOpen, expertRec } from './missions/activity.js';
 import { levelOf } from './core/levels.js';
 import { BADGES, checkBadges } from './achievements/badges.js';
 import { CH as CH1 } from './content/challenges1.js';
@@ -174,7 +174,7 @@ function boot() {
 async function start(state) {
   game.state = upgrade(state);
   W = buildWorld(state); resetGates();
-  hud.init({ drawMini, questLog, anchor: speakerAnchor, activity: id => openActivity(W, id, MODS[id]), finale: u => openFinale(W, u, MODS) });
+  hud.init({ drawMini, questLog, anchor: speakerAnchor, activity: id => openActivity(W, id, MODS[id]), finale: u => openFinale(W, u, MODS), expert: id => openExpert(W, id, MODS[id]) });
   initGems(state); hud.show(true); hud.good(); hud.gems(); hud.level(); hud.objective(objective());
   if (state.levelSeen == null) state.levelSeen = levelOf(state).n;   // الحفظ القديم: يبدأ من مستواه الحالي بلا احتفال
   eng.snap(W.player); eng.follow = W.player; eng.onTap = onTap; eng.state = () => game.state;
@@ -188,7 +188,7 @@ async function start(state) {
   }
 }
 /* ── العرض ثلاثي الأبعاد (renderer3d): يُحمَّل فقط عند طلبه، ويرجع إلى الرسم الحالي إن لم يدعم الجهاز WebGL أو فشل التحميل ── */
-const V3D = 'نسخة 3D · ٣٤';   // تُعرض في شاشة التحميل وفي الزاوية: للتأكد أن المتصفح حمّل آخر نسخة
+const V3D = 'نسخة 3D · ٣٥';   // تُعرض في شاشة التحميل وفي الزاوية: للتأكد أن المتصفح حمّل آخر نسخة
 const want3d = () => gfx.d3();
 function loadingScreen() {
   const el = document.createElement('div'); el.className = 'load3d';
@@ -581,7 +581,7 @@ function questLog() {
     const ls = LESSONS.filter(l => l.u === ui), done = ls.filter(l => quests.isDone(l.id)).length;
     return `<div class="qunit"><b>${u.term === 1 ? 'الفصل الأول' : 'الفصل الثاني'} — الوحدة ${ar(u.n)}: ${u.title}</b><small>${u.place} — ${ar(done)} من ${ar(ls.length)}</small>
       ${ls.map(l => { const st = quests.isDone(l.id) ? 'done' : (c && c.id === l.id ? 'now' : 'next'); const stars = quests.data(l.id).stars || 0, act = st === 'done' && hasActivity(l.id, MODS[l.id]);
-        return `<div class="qrow ${st}"><span>${st === 'done' ? '✅' : st === 'now' ? '▶️' : '🔒'}</span><div><b>${l.title}${stars ? ` <em class="qstars">${'★'.repeat(stars)}<s>${'☆'.repeat(3 - stars)}</s></em>` : ''}</b><small>${l.mission}${l.ready ? '' : ' (قريباً)'}</small></div>${act ? `<button class="act qact" data-act="${l.id}">🎲 نشاط</button>` : ''}</div>`; }).join('')}${finaleOpen(ui) ? `<button class="act qfin" data-fin="${ui}">👑 مغامرة الختام${finaleRec(ui).best ? ` <em class="qstars">${'★'.repeat(finaleRec(ui).best)}</em>` : ''}</button>` : `<div class="qfin lock">🔒 مغامرة الختام تُفتح بعد إنهاء دروس الوحدة</div>`}</div>`;
+        return `<div class="qrow ${st}"><span>${st === 'done' ? '✅' : st === 'now' ? '▶️' : '🔒'}</span><div><b>${l.title}${stars ? ` <em class="qstars">${'★'.repeat(stars)}<s>${'☆'.repeat(3 - stars)}</s></em>` : ''}</b><small>${l.mission}${l.ready ? '' : ' (قريباً)'}</small></div>${act ? `<span class="qbtns"><button class="act qact" data-act="${l.id}">🎲 نشاط</button>${expertOpen(l.id) ? `<button class="act qexp ${expertRec(l.id).gold ? 'gold' : ''}" data-exp="${l.id}">${expertRec(l.id).gold ? '🌟' : '⚡'} خبير</button>` : ''}</span>` : ''}</div>`; }).join('')}${finaleOpen(ui) ? `<button class="act qfin" data-fin="${ui}">👑 مغامرة الختام${finaleRec(ui).best ? ` <em class="qstars">${'★'.repeat(finaleRec(ui).best)}</em>` : ''}</button>` : `<div class="qfin lock">🔒 مغامرة الختام تُفتح بعد إنهاء دروس الوحدة</div>`}</div>`;
   }).join('');
 }
 
@@ -616,5 +616,5 @@ bus.on('lessonDone', id => {
   if (allDone()) { unlock('all69'); setTimeout(() => hud.toast('🎓 أكملتَ الدروس الـ٦٩ كلها! اذهب إلى منصة التخرّج'), 4500); }
   if (id === 'mixedNumbers') setTimeout(() => hud.toast('💧 أم خالد تنتظرك في القرية: خزانات البيوت عطشى!'), 3500);   // الدرس التالي في القرية لا في السوق
 });
-window.__game = { get state() { return game.state; }, get W() { return W; }, eng, game, quests, MODS, activity: id => openActivity(W, id, MODS[id]), finale: u => openFinale(W, u, MODS), findPath: (a, b) => findPath(a.x, a.y, b.x, b.y, blocked) };
+window.__game = { get state() { return game.state; }, get W() { return W; }, eng, game, quests, MODS, activity: id => openActivity(W, id, MODS[id]), finale: u => openFinale(W, u, MODS), expert: id => openExpert(W, id, MODS[id]), findPath: (a, b) => findPath(a.x, a.y, b.x, b.y, blocked) };
 boot();
