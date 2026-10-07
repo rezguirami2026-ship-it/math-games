@@ -185,7 +185,7 @@ async function start(state) {
   }
 }
 /* ── العرض ثلاثي الأبعاد (renderer3d): يُحمَّل فقط عند طلبه، ويرجع إلى الرسم الحالي إن لم يدعم الجهاز WebGL أو فشل التحميل ── */
-const V3D = 'نسخة 3D · ٢٦';   // تُعرض في شاشة التحميل وفي الزاوية: للتأكد أن المتصفح حمّل آخر نسخة
+const V3D = 'نسخة 3D · ٢٧';   // تُعرض في شاشة التحميل وفي الزاوية: للتأكد أن المتصفح حمّل آخر نسخة
 const want3d = () => gfx.d3();
 function loadingScreen() {
   const el = document.createElement('div'); el.className = 'load3d';
@@ -462,7 +462,9 @@ function render3d(ctx, view, t) {
   const L = eng.l3, dpr = eng.dpr, setT = m => ctx.setTransform(dpr * m[0], dpr * m[1], dpr * m[2], dpr * m[3], dpr * m[4], dpr * m[5]);
   SEASON.ramadan = ramadanOn(); eng.mood = SEASON.ramadan ? 'dusk' : 'day';
   const list = worldItems(view, t, true);
-  list.sort((a, b) => a.y - b.y).forEach(d => { setT(L.itemTransform(d.y)); d.draw(ctx); });
+  // يُرسم فقط ما أمام الكاميرا وبمقياس معقول: الصفوف خلف الكاميرا أو قريبة منها جداً كانت تُرسم مقلوبة وضخمة (مستطيلات كبيرة تتحرك على الشاشة)
+  const ok = m => m[0] > 0 && m[3] > 0 && m[0] < 4 && m[3] < 4 && isFinite(m[4]) && isFinite(m[5]), V = L.view;
+  list.filter(d => !V || (d.y > V.y - 400 && d.y < V.y + V.h + 260)).sort((a, b) => a.y - b.y).forEach(d => { const m = L.itemTransform(d.y); if (!ok(m)) return; setT(m); d.draw(ctx); });
   setT(L.itemTransform(W.player.y)); heroExtras(ctx);
   drawFx(ctx);
   ctx.setTransform(dpr, 0, 0, dpr, 0, 0); drawMarks3d(ctx, t); drawGuide3d(ctx, t);

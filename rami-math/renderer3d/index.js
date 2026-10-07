@@ -171,18 +171,19 @@ export async function create3D(opts) {
       const qx = E.quake ? (Math.random() - .5) * 6 * E.quake : 0, qy = E.quake ? (Math.random() - .5) * 6 * E.quake : 0;
       camera.position.set(target.x + qx, Math.sin(PITCH) * dist + qy, target.z + Math.cos(PITCH) * dist);
       camera.lookAt(target.x + qx, 0, target.z); camera.updateMatrixWorld();
-      // الظل يتبع ما تراه الكاميرا
-      const ext = Math.min(1700, Math.max(520, dist * .75)), sc = sun.shadow.camera;
-      if (sc.right !== ext) { sc.left = -ext; sc.right = ext; sc.top = ext; sc.bottom = -ext; sc.near = 10; sc.far = 4200; sc.updateProjectionMatrix(); }
-      // الظل: مركزه مثبّت على شبكة ٦٤ (لا يرتجف)، ويُعاد رسمه عند انتقاله أو كل بضعة إطارات (للشخصيات المتحركة) بدل كل إطار
-      const snap = new THREE.Vector3(Math.round(target.x / 64) * 64, 0, Math.round(target.z / 64) * 64);
-      if (!L._sunAt || !L._sunAt.equals(snap)) { L._sunAt = snap; renderer.shadowMap.needsUpdate = true; }
-      if (frame % SHADOW_EVERY === 0) renderer.shadowMap.needsUpdate = true;
-      sun.position.copy(snap).addScaledVector(SUN_DIR, 1800); sun.target.position.copy(snap); sun.target.updateMatrixWorld();
-      // ما يُرى من الأرض (للاستبعاد في الرسم فوقها)
+      // ما يُرى من الأرض (للاستبعاد في الرسم فوقها، ولصندوق الظل)
       const pts = [[0, 0], [W2, 0], [0, H2], [W2, H2]].map(([a, b]) => groundAt(a, b) || { x: target.x, y: target.z - 2000 });
       const xs = pts.map(p => p.x), ys = pts.map(p => p.y);
       view = { x: Math.min(...xs), y: Math.min(...ys), w: Math.max(...xs) - Math.min(...xs), h: Math.max(...ys) - Math.min(...ys) };
+      // الظل يغطي كل ما تراه الكاميرا (لا مربعاً ثابتاً حول اللاعب): وإلا ظهرت حافة الظل مربعاً يتحرك على الأرض في الشاشات العريضة
+      // الحجم بخطوات ١٢٨ والمركز على شبكة ٦٤ حتى لا يرتجف
+      const ext = Math.min(2600, Math.max(520, Math.ceil((Math.hypot(view.w, view.h) / 2 + 120) / 128) * 128)), sc = sun.shadow.camera;
+      if (sc.right !== ext) { sc.left = -ext; sc.right = ext; sc.top = ext; sc.bottom = -ext; sc.near = 10; sc.far = 6000; sc.updateProjectionMatrix(); renderer.shadowMap.needsUpdate = true; }
+      // الظل: مركزه مثبّت على شبكة ٦٤ (لا يرتجف)، ويُعاد رسمه عند انتقاله أو كل بضعة إطارات (للشخصيات المتحركة) بدل كل إطار
+      const snap = new THREE.Vector3(Math.round((view.x + view.w / 2) / 64) * 64, 0, Math.round((view.y + view.h / 2) / 64) * 64);
+      if (!L._sunAt || !L._sunAt.equals(snap)) { L._sunAt = snap; renderer.shadowMap.needsUpdate = true; }
+      if (frame % SHADOW_EVERY === 0) renderer.shadowMap.needsUpdate = true;
+      sun.position.copy(snap).addScaledVector(SUN_DIR, 2400); sun.target.position.copy(snap); sun.target.updateMatrixWorld();
       // قطع الأرض المطلوبة: الظاهرة وحولها، قطعتان جديدتان في كل إطار على الأكثر حتى لا يتقطع اللعب
       let made = 0;
       for (let ty = Math.floor((view.y - 200) / TILE); ty <= Math.floor((view.y + view.h + 200) / TILE); ty++)
