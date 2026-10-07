@@ -18,6 +18,7 @@ import * as tanks from './missions/tanks.js';
 import { SHOP, openCounter, drawShop, drawShopBack, drawGarden } from './missions/shop.js';
 import { UNIT1, POND } from './missions/unit1.js';
 import { stage2 } from './missions/challenge.js';
+import { openActivity, hasActivity } from './missions/activity.js';
 import { CH as CH1 } from './content/challenges1.js';
 import { CH as CH2 } from './content/challenges2.js';
 import { CH as CH3 } from './content/challenges3.js';
@@ -168,7 +169,7 @@ function boot() {
 async function start(state) {
   game.state = upgrade(state);
   W = buildWorld(state); resetGates();
-  hud.init({ drawMini, questLog, anchor: speakerAnchor });
+  hud.init({ drawMini, questLog, anchor: speakerAnchor, activity: id => openActivity(W, id, MODS[id]) });
   hud.show(true); hud.good(); hud.objective(objective());
   eng.snap(W.player); eng.follow = W.player; eng.onTap = onTap; eng.state = () => game.state;
   if (want3d()) await init3D();
@@ -181,7 +182,7 @@ async function start(state) {
   }
 }
 /* ── العرض ثلاثي الأبعاد (renderer3d): يُحمَّل فقط عند طلبه، ويرجع إلى الرسم الحالي إن لم يدعم الجهاز WebGL أو فشل التحميل ── */
-const V3D = 'نسخة 3D · ١٩';   // تُعرض في شاشة التحميل وفي الزاوية: للتأكد أن المتصفح حمّل آخر نسخة
+const V3D = 'نسخة 3D · ٢٠';   // تُعرض في شاشة التحميل وفي الزاوية: للتأكد أن المتصفح حمّل آخر نسخة
 const want3d = () => gfx.d3();
 function loadingScreen() {
   const el = document.createElement('div'); el.className = 'load3d';
@@ -568,7 +569,8 @@ function questLog() {
   return UNITS.map((u, ui) => {
     const ls = LESSONS.filter(l => l.u === ui), done = ls.filter(l => quests.isDone(l.id)).length;
     return `<div class="qunit"><b>${u.term === 1 ? 'الفصل الأول' : 'الفصل الثاني'} — الوحدة ${ar(u.n)}: ${u.title}</b><small>${u.place} — ${ar(done)} من ${ar(ls.length)}</small>
-      ${ls.map(l => { const st = quests.isDone(l.id) ? 'done' : (c && c.id === l.id ? 'now' : 'next'); return `<div class="qrow ${st}"><span>${st === 'done' ? '✅' : st === 'now' ? '▶️' : '🔒'}</span><div><b>${l.title}</b><small>${l.mission}${l.ready ? '' : ' (قريباً)'}</small></div></div>`; }).join('')}</div>`;
+      ${ls.map(l => { const st = quests.isDone(l.id) ? 'done' : (c && c.id === l.id ? 'now' : 'next'); const stars = quests.data(l.id).stars || 0, act = st === 'done' && hasActivity(l.id, MODS[l.id]);
+        return `<div class="qrow ${st}"><span>${st === 'done' ? '✅' : st === 'now' ? '▶️' : '🔒'}</span><div><b>${l.title}${stars ? ` <em class="qstars">${'★'.repeat(stars)}${'☆'.repeat(3 - stars)}</em>` : ''}</b><small>${l.mission}${l.ready ? '' : ' (قريباً)'}</small></div>${act ? `<button class="act qact" data-act="${l.id}">🎲 نشاط</button>` : ''}</div>`; }).join('')}</div>`;
   }).join('');
 }
 
@@ -595,5 +597,5 @@ bus.on('lessonDone', id => {
   if (allDone()) { unlock('all69'); setTimeout(() => hud.toast('🎓 أكملتَ الدروس الـ٦٩ كلها! اذهب إلى منصة التخرّج'), 4500); }
   if (id === 'mixedNumbers') setTimeout(() => hud.toast('💧 أم خالد تنتظرك في القرية: خزانات البيوت عطشى!'), 3500);   // الدرس التالي في القرية لا في السوق
 });
-window.__game = { get state() { return game.state; }, get W() { return W; }, eng, game, quests, MODS, findPath: (a, b) => findPath(a.x, a.y, b.x, b.y, blocked) };
+window.__game = { get state() { return game.state; }, get W() { return W; }, eng, game, quests, MODS, activity: id => openActivity(W, id, MODS[id]), findPath: (a, b) => findPath(a.x, a.y, b.x, b.y, blocked) };
 boot();

@@ -135,6 +135,6 @@ export const hud = {
         $('copyBtn').textContent = ok ? '✓ نُسخ الرمز' : 'حدّد الرمز وانسخه يدوياً';
       };
     }
-    if (kind === 'map') { this.api.drawMini($('mini')); $('qlog').innerHTML = this.api.questLog(); const now = $('qlog').querySelector('.now'); if (now) setTimeout(() => now.scrollIntoView({ block: 'center' }), 50); }
+    if (kind === 'map') { this.api.drawMini($('mini')); $('qlog').innerHTML = this.api.questLog(); $('qlog').querySelectorAll('[data-act]').forEach(b => b.onclick = e => { e.stopPropagation(); this.closePanel(); this.api.activity(b.dataset.act); }); const now = $('qlog').querySelector('.now'); if (now) setTimeout(() => now.scrollIntoView({ block: 'center' }), 50); }
   }
 };

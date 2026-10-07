@@ -96,13 +96,9 @@ async function chPad(v) {
   const s = String(+(+v).toFixed(3)).replace('-', '−');
   for (const k of [...s, 'go']) await G(k => { const b = document.querySelector(`#panel #chPad [data-k="${k}"]`); if (!b) throw new Error('مفتاح غير موجود: ' + k); b.click(); }, k);
 }
-async function solveChallenge(id) {
-  await until(async () => (await isDone(id)) || (await data(id)).chStage === 2, 'إنهاء مهمة العالم', 60000);
-  if (await isDone(id)) return false;
-  await until(async () => { const st = await G(() => ({ ch: !!document.querySelector('#panel .chSheet'), dialog: document.getElementById('dialog').classList.contains('on') }));
-    if (st.dialog) await G(() => document.getElementById('dialog').click()); return st.ch; }, 'فتح التحدي', 30000);
-  const items = (await data(id)).ch.items;
-  for (let i = (await data(id)).ch.i; i < items.length; i++) {
+async function solveRounds(getCh) {
+  const items = (await getCh()).items;
+  for (let i = (await getCh()).i; i < items.length; i++) {
     const it = items[i];
     // محاولة خاطئة: يجب أن تعطي تلميحاً ولا تتقدم
     if (it.type === 'choice' || it.type === 'tf') await chClick('.chOpt', it.ans === 0 ? 1 : 0);
@@ -111,7 +107,7 @@ async function solveChallenge(id) {
     else if (it.type === 'sort' || it.type === 'match') await panelClick('#chGo');   // قبل التوزيع: تلميح «ضع كل البطاقات»
     else if (it.type === 'num') await chPad(it.ans + 1);
     await until(() => G(() => document.getElementById('benchMsg')?.classList.contains('bad')), `تلميح الخطأ في الجولة ${i + 1}`, 5000);
-    expect((await data(id)).ch.i === i, `الخطأ قدّم الجولة ${i + 1}`);
+    expect((await getCh()).i === i, `الخطأ قدّم الجولة ${i + 1}`);
     // الحل
     if (it.type === 'choice' || it.type === 'tf') await chClick('.chOpt', it.ans);
     else if (it.type === 'multi') { for (const k of it.ans) await chClick('.chOpt', k); await panelClick('#chGo'); }
@@ -120,9 +116,16 @@ async function solveChallenge(id) {
     else if (it.type === 'match') { for (let k = 0; k < it.ans.length; k++) { await chClick('.chL', k); await chClick('.chR', it.ans[k]); } await panelClick('#chGo'); }
     else if (it.type === 'num') await chPad(it.ans);
     try {
-      await until(async () => (await data(id)).ch.i === i + 1 && await G(n => { const s = document.querySelector('#panel .chSheet'); return !s || !s.querySelector('.chBurst') && (+s.dataset.i === n || !!s.querySelector('#chFin')); }, i + 1), `حل الجولة ${i + 1} (${it.type}: ${it.q.replace(/<[^>]+>/g, '').slice(0, 50)})`, 5000);
+      await until(async () => (await getCh()).i === i + 1 && await G(n => { const s = document.querySelector('#panel .chSheet'); return !s || !s.querySelector('.chBurst') && (+s.dataset.i === n || !!s.querySelector('#chFin, #acEnd')); }, i + 1), `حل الجولة ${i + 1} (${it.type}: ${it.q.replace(/<[^>]+>/g, '').slice(0, 50)})`, 5000);
     } catch (e) { throw new Error(e.message + ' — الحالة: ' + JSON.stringify(await G(() => ({ busy: window.__game.game.busy, dialog: document.getElementById('dialog').className + ':' + document.getElementById('dialog').textContent.slice(0, 80), screen: document.getElementById('screen').className, panel: document.getElementById('panel').className, msg: document.getElementById('benchMsg')?.textContent, pad: document.getElementById('npd')?.textContent })))); }
   }
+}
+async function solveChallenge(id) {
+  await until(async () => (await isDone(id)) || (await data(id)).chStage === 2, 'إنهاء مهمة العالم', 60000);
+  if (await isDone(id)) return false;
+  await until(async () => { const st = await G(() => ({ ch: !!document.querySelector('#panel .chSheet'), dialog: document.getElementById('dialog').classList.contains('on') }));
+    if (st.dialog) await G(() => document.getElementById('dialog').click()); return st.ch; }, 'فتح التحدي', 30000);
+  await solveRounds(async () => (await data(id)).ch);
   await until(() => G(() => !!document.querySelector('#panel #chFin')), 'شاشة النجوم', 5000);
   expect((await data(id)).stars === 1, 'النجوم مع خطأ في كل جولة يجب أن تكون نجمة واحدة');
   await sleep(150); await panelClick('#chFin');
@@ -948,6 +951,15 @@ try {
       await settle(60000, 2000);
       if (errors.length > e0) throw new Error('أخطاء في الكونسول: ' + errors.slice(e0).join(' / '));
       console.log(`✅ ${l.title}${ch ? ' + التحدي' : ''} (${((Date.now() - t0) / 1000).toFixed(1)} ث)`);
+      if (played === 0 && ch) {   // النشاط الاختياري بعد أول درس: من رحلة الدروس، ثم إعادة اللعب
+        await G(id => window.__game.activity(id), l.id);
+        await until(() => G(() => !!document.querySelector('#panel #acGo')), 'شاشة بداية النشاط', 5000); await panelClick('#acGo');
+        await solveRounds(() => G(id => { const a = window.__game.state.activities[id]; return a.run ? a.run.ch : { i: 6 }; }, l.id));
+        await until(() => G(() => !!document.querySelector('#panel #acEnd')), 'نهاية النشاط', 8000);
+        const r = await G(id => window.__game.state.activities[id], l.id); expect(r.plays === 1 && r.best === 1 && !r.run, 'سجل النشاط: ' + JSON.stringify(r));
+        await panelClick('#acEnd'); await settle();
+        console.log('🎲 نشاط الدرس: ٦ جولات، ثم الحفظ والرجوع');
+      }
       played++;
     } catch (e) {
       failures++; console.log(`❌ ${l.title} (${l.id}): ${e.message}`);

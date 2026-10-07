@@ -31,14 +31,15 @@ function render(W, d, cfg, msg) {
   if (it.type === 'match') body = `<div class="chMatch"><div>${it.left.map((o, k) => `<button class="chL" data-k="${k}">${o}</button>`).join('')}</div><div>${it.right.map((o, k) => `<button class="chR" data-k="${k}">${o}</button>`).join('')}</div></div><button class="act go" id="chGo">✓ تحقّق</button>`;
   if (it.type === 'num') body = `<div id="chPad"></div>`;
   sheetOpen(`<div class="chHead"><span class="chFace">${face}</span><div><b>${cfg.title}</b><small>الجولة ${ar(C.i + 1)} من ${ar(n)}</small></div>
-      ${(C.streak || 0) >= 2 ? `<span class="chStreak">🔥 ${ar(C.streak)}</span>` : ''}<span class="chGems">💎 ${ar(C.gems || 0)}</span></div>
-    <div class="chTrail">${trail}</div>
+      ${(C.streak || 0) >= 2 ? `<span class="chStreak">🔥 ${ar(C.streak)}</span>` : ''}<span class="chGems">💎 ${ar(C.gems || 0)}</span>${cfg.exit ? '<button class="chExit" id="chExit" aria-label="خروج">✕</button>' : ''}</div>
+    ${cfg.scene ? `<div class="acScene">${cfg.scene(C.i, n)}</div>` : `<div class="chTrail">${trail}</div>`}
     ${out}${it.art ? `<div class="chArt">${it.art}</div>` : ''}
     <div class="chQ">${it.q}${it.tail ? `<div class="chTail">${it.tail}</div>` : ''}</div>
     ${msgBox(msg ? msg.t : 'خذ وقتك، لا يوجد مؤقت 🙂', msg ? msg.k : '')}${body}`);
   const el = document.getElementById('panel'), sheet = el.querySelector('.sheet');
   sheet.classList.add('chSheet'); sheet.dataset.i = C.i;
   el.querySelectorAll('canvas[data-draw]').forEach(cv => { try { DRAW[cv.dataset.draw] && DRAW[cv.dataset.draw](cv); } catch (e) { console.warn('رسم التحدي', e); } });
+  if (cfg.exit) btn('chExit', () => { sheetClose(); cfg.exit(); });   // النشاط اختياري: يخرج منه متى شاء بلا خسارة
   let locked = false;
   const ok = () => { if (locked) return; locked = true;
     const first = C.tries === 0; C.firstTry += first ? 1 : 0; C.streak = first ? (C.streak || 0) + 1 : 0; C.gems = (C.gems || 0) + 1; C.tries = 0; C.i++; sfx('good'); changed();
@@ -73,9 +74,10 @@ function render(W, d, cfg, msg) {
 // عند الإنهاء تُحذف الأسئلة من الحفظ ويبقى ملخصها فقط (رمز التقدّم أقصر)
 async function done(W, d, cfg) {
   const C = d.ch, n = C.items.length, stars = C.firstTry >= n ? 3 : C.firstTry >= n - 2 ? 2 : 1;
+  if (cfg.onDone) return cfg.onDone(stars, C);   // نشاط اختياري: له شاشة نهاية خاصة
   d.stars = Math.max(d.stars || 0, stars); changed();
   sheetOpen(`<div class="chEnd"><div class="chTreasure">🎁</div><div class="chStars">${[1, 2, 3].map(k => `<span class="${k <= stars ? 'on' : ''}">★</span>`).join('')}</div>
-    <h3>أنجزتَ ${cfg.title}!</h3><p class="chGot">جمعتَ <b>${ar(C.gems || n)}</b> 💎</p><p class="muted">أجبت ${ar(C.firstTry)} من ${ar(n)} من المحاولة الأولى. ${stars < 3 ? 'تستطيع إعادة الدرس لاحقاً من «رحلة الدروس» لتجمع النجوم الثلاث.' : 'إتقان كامل! 🌟'}</p>
+    <h3>أنجزتَ ${cfg.title}!</h3><p class="chGot">جمعتَ <b>${ar(C.gems || n)}</b> 💎</p><p class="muted">أجبت ${ar(C.firstTry)} من ${ar(n)} من المحاولة الأولى. ${stars < 3 ? 'تستطيع لعب «نشاط الدرس» لاحقاً من الخريطة 🗺️ لتجمع النجوم الثلاث.' : 'إتقان كامل! 🌟'}</p>
     <button class="act big" id="chFin">متابعة</button></div>`);
   document.querySelector('#panel .sheet').classList.add('chSheet');
   sfx('win');
