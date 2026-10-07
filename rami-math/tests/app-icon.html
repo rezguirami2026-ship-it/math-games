@@ -1,0 +1,69 @@
+<meta charset="utf-8">
+<link rel="stylesheet" href="../style.css">
+<style>html,body{background:transparent!important;overflow:visible}body{margin:0}#w{width:512px;height:512px}</style>
+<div id="w"></div>
+<script>
+const P = new URLSearchParams(location.search), MASK = P.has('mask');
+// المحتوى داخل منطقة الأمان (٨٠٪ من الوسط) في الأيقونة القابلة للقص
+const S = MASK ? .8 : 1, O = 256 * (1 - S);
+const DUNES = `<path d="M0 330 Q130 290 256 318 T512 300 V512 H0Z" fill="url(#dune2)"/><path d="M0 360 Q150 330 300 352 T512 342 V512 H0Z" fill="url(#dune)"/>`;
+const fort = `
+  <!-- الشمس والتوهج -->
+  <circle cx="256" cy="215" r="150" fill="url(#glow)"/>
+  ${MASK ? '' : DUNES}
+  <!-- النخلة -->
+  <g transform="translate(118 350)">
+    <path d="M0 0 C4 -50 10 -95 22 -132" stroke="#7A4A22" stroke-width="13" fill="none" stroke-linecap="round"/>
+    <path d="M0 0 C4 -50 10 -95 22 -132" stroke="#A86D3A" stroke-width="5" fill="none" stroke-dasharray="6 9" stroke-linecap="round"/>
+    <g transform="translate(22 -134)" fill="#2FA35A" stroke="#1C6B3A" stroke-width="3" stroke-linejoin="round">
+      <path d="M0 0 C-30 -22 -62 -16 -82 8 C-56 -2 -30 0 0 0Z"/>
+      <path d="M0 0 C30 -26 66 -20 84 6 C56 -6 30 -2 0 0Z"/>
+      <path d="M0 0 C-14 -36 -44 -52 -70 -44 C-42 -36 -20 -20 0 0Z"/>
+      <path d="M0 0 C16 -38 46 -54 72 -42 C44 -36 22 -20 0 0Z"/>
+      <path d="M0 0 C-4 -30 4 -56 20 -66 C10 -44 6 -22 0 0Z"/>
+    </g>
+    <circle cx="16" cy="-124" r="7" fill="#E08A1E"/><circle cx="28" cy="-122" r="7" fill="#F0A030"/>
+  </g>
+  <!-- القلعة -->
+  <g stroke="#9A6A34" stroke-width="3" stroke-linejoin="round">
+    <path d="M196 352 V214 h16 v-14 h16 v14 h16 v-14 h16 v14 h16 v-14 h16 v14 h16 V352Z" fill="url(#wall)"/>
+    <path d="M300 352 V160 h12 v-14 h14 v14 h12 v-14 h14 v14 h12 V352Z" fill="url(#tower)"/>
+    <path d="M170 352 V250 h10 v-12 h12 v12 h10 v-12 h12 v12 h4 V352Z" fill="url(#tower)"/>
+  </g>
+  <path d="M240 352 V300 a22 22 0 0 1 44 0 V352Z" fill="#7A3E1C" stroke="#5A2A10" stroke-width="3"/>
+  <circle cx="276" cy="326" r="3" fill="#F2C14E"/>
+  <rect x="320" y="190" width="18" height="26" rx="9" fill="#2E6B78"/><rect x="320" y="250" width="18" height="26" rx="9" fill="#2E6B78"/>
+  <rect x="216" y="244" width="16" height="22" rx="8" fill="#2E6B78"/><rect x="186" y="276" width="14" height="20" rx="7" fill="#2E6B78"/>
+  <!-- العلم العُماني -->
+  <line x1="352" y1="146" x2="352" y2="70" stroke="#5A4630" stroke-width="5" stroke-linecap="round"/>
+  <g transform="translate(354 72)"><rect width="66" height="44" rx="3" fill="#fff"/><rect y="29" width="66" height="15" fill="#1F8A3B"/><rect width="66" height="15" fill="#fff"/><rect width="22" height="44" fill="#D2122E"/><rect x="22" y="14.5" width="44" height="15" fill="#D2122E"/></g>
+`;
+const svg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512">
+<defs>
+  <radialGradient id="bg" cx=".5" cy=".38" r=".75"><stop offset="0" stop-color="#3A6BD8"/><stop offset=".55" stop-color="#1B3C93"/><stop offset="1" stop-color="#0C1C55"/></radialGradient>
+  <radialGradient id="glow" cx=".5" cy=".5" r=".5"><stop offset="0" stop-color="#FFE9A0" stop-opacity=".95"/><stop offset=".45" stop-color="#FFC75A" stop-opacity=".55"/><stop offset="1" stop-color="#FFB040" stop-opacity="0"/></radialGradient>
+  <linearGradient id="dune" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#F3C877"/><stop offset="1" stop-color="#D99A45"/></linearGradient>
+  <linearGradient id="dune2" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#E7B266"/><stop offset="1" stop-color="#C88A3E"/></linearGradient>
+  <linearGradient id="wall" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#F6DDAE"/><stop offset="1" stop-color="#E4BF85"/></linearGradient>
+  <linearGradient id="tower" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#F9E4BC"/><stop offset=".6" stop-color="#EBC991"/><stop offset="1" stop-color="#D6AD6E"/></linearGradient>
+  <linearGradient id="gold" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#FFF0B8"/><stop offset=".3" stop-color="#F2C14E"/><stop offset=".6" stop-color="#B9802A"/><stop offset="1" stop-color="#F5D57A"/></linearGradient>
+  <linearGradient id="txt" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#FFF3B0"/><stop offset=".5" stop-color="#FFD54A"/><stop offset="1" stop-color="#F2A21E"/></linearGradient>
+  <clipPath id="clip"><rect x="${MASK ? 0 : 14}" y="${MASK ? 0 : 14}" width="${MASK ? 512 : 484}" height="${MASK ? 512 : 484}" rx="${MASK ? 0 : 100}"/></clipPath>
+</defs>
+${MASK ? '<rect width="512" height="512" fill="url(#bg)"/>' : `<rect x="4" y="4" width="504" height="504" rx="110" fill="url(#gold)"/><rect x="14" y="14" width="484" height="484" rx="100" fill="#7A5214"/>`}
+<g clip-path="url(#clip)">
+  ${MASK ? '' : '<rect x="14" y="14" width="484" height="484" fill="url(#bg)"/>'}
+  ${MASK ? `<g transform="translate(0 ${O + S * 330 - 330 * .95})">${DUNES}</g>` : ''}
+  <g transform="translate(${O} ${O}) scale(${S})">${fort}</g>
+  <!-- شريط الاسم -->
+  <g transform="translate(${O} ${O}) scale(${S})">
+    <path d="M30 392 H482 L462 432 L482 472 H30 L50 432Z" fill="#0E1F5C" opacity=".35" transform="translate(0 6)"/>
+    <path d="M30 392 H482 L462 432 L482 472 H30 L50 432Z" fill="url(#bg)" stroke="url(#gold)" stroke-width="5" stroke-linejoin="round"/>
+    <text x="256" y="452" text-anchor="middle" direction="rtl" font-family="Cairo" font-weight="900" font-size="66" fill="url(#txt)" stroke="#2A1B66" stroke-width="7" paint-order="stroke fill">قرية الخير</text>
+  </g>
+</g>
+${MASK ? '' : '<rect x="14" y="14" width="484" height="484" rx="100" fill="none" stroke="rgba(255,255,255,.25)" stroke-width="2"/>'}
+</svg>`;
+document.getElementById('w').innerHTML = svg;
+document.fonts.load('900 66px Cairo', 'قرية الخير').then(() => document.body.dataset.ready = 1);
+</script>
