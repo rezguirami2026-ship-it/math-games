@@ -449,3 +449,5 @@ body:has(.adv) #toast,body:has(.adv) .region,body:has(.adv) #hud{display:none!im
 @media (max-width:480px){#ttCard p{font-size:13px;margin-bottom:4px}#ttCard .tt th,#ttCard .tt td{padding:2px 3px}#ttCard small{font-size:11.5px}}
 #ttCard{top:auto;bottom:calc(var(--safeB) + 84px)}
 @media (max-width:480px){#ttCard{top:auto;bottom:calc(var(--safeB) + 80px)}}
+.advFlash{position:absolute;inset:0;background:#EAF2FF;opacity:0;pointer-events:none;z-index:2}.advFlash.on{animation:advBolt .7s ease-out}
+@keyframes advBolt{0%{opacity:0}8%{opacity:.75}16%{opacity:.1}24%{opacity:.55}100%{opacity:0}}

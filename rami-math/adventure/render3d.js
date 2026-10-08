@@ -180,7 +180,7 @@ export function createAdv3D(canvas) {
     const P = new Parts(), wd = material('wood', '#9C6438'), g = new THREE.Group();
     if (kind === 'raft') { for (let i = 0; i < 5; i++) P.add(wd, cyl(5, 5, 60, -20 + i * 10, 5, 0, 8).rotateX(0), { uv: false }); P.add(material('wood', '#6E4520'), box(56, 3, 6, 0, 10, -20)); P.add(material('wood', '#6E4520'), box(56, 3, 6, 0, 10, 20)); P.add(wd, cyl(2, 2, 70, 0, 45, 0, 6)); const sail = new THREE.Mesh(new THREE.PlaneGeometry(40, 46), std('#F2EAD8', { side: THREE.DoubleSide })); sail.position.set(0, 52, 2); g.add(sail); }
     else if (kind === 'bridge') { for (let i = 0; i < 6; i++) P.add(wd, box(T, 4, 8, 0, 6, -20 + i * 8)); }
-    else if (kind === 'bell') { P.add(wd, box(6, 90, 6, -24, 45, 0)); P.add(wd, box(6, 90, 6, 24, 45, 0)); P.add(wd, box(56, 6, 8, 0, 90, 0)); P.add(material('metal', '#C9971C'), new THREE.CylinderGeometry(8, 16, 24, 14).translate(0, 74, 0)); }
+    else if (kind === 'bell') { P.add(wd, box(6, 90, 6, -24, 45, 0)); P.add(wd, box(6, 90, 6, 24, 45, 0)); P.add(wd, box(56, 6, 8, 0, 90, 0)); g.add(new THREE.Mesh(new THREE.CylinderGeometry(8, 16, 24, 14).translate(0, 74, 0), new THREE.MeshStandardMaterial({ color: '#E3B04B', emissive: '#7A5410', emissiveIntensity: .5, metalness: .3, roughness: .35 }))); }
     else { const hull = new THREE.Mesh(new THREE.CylinderGeometry(22, 14, 120, 10, 1, false, 0, Math.PI).rotateZ(Math.PI / 2).rotateY(Math.PI / 2), material('wood', '#8A5A30')); hull.position.y = 18; hull.rotation.x = Math.PI; g.add(hull); P.add(wd, cyl(3, 3, 110, 0, 60, 0, 6)); const sail = new THREE.Mesh(new THREE.PlaneGeometry(60, 70), std('#EFE3CC', { side: THREE.DoubleSide })); sail.position.set(0, 72, 0); sail.rotation.y = .4; g.add(sail); }
     g.add(P.build()); return shadowed(g);
   }
@@ -196,7 +196,7 @@ export function createAdv3D(canvas) {
 
   /* ── الطقس: الظلام والسماء والضباب تتغير بنعومة (عاصفة تهدأ، ليل، غبار)، والمطر والرمل جزيئات حول الكاميرا ── */
   const wz = { dark: -1, sand: 0, rain: 0 };
-  let rain = null;
+  let rain = null, rainbowM = null;
   const C = (a, b, k) => new THREE.Color(a).lerp(new THREE.Color(b), k);
   function weatherFrame(V, dt) {
     const w = V.weather || {}, k = Math.min(1, dt * 1.5);
@@ -207,6 +207,9 @@ export function createAdv3D(canvas) {
     scene.background.copy(sky); scene.fog.color.copy(sky); scene.fog.far = 2600 - wz.sand * 1700 - storm * 900; scene.fog.near = 900 - wz.sand * 700 - storm * 300;
     hemi.color.copy(C('#CFE4FA', '#5A6AA8', Math.min(1, d * 1.6))); hemi.groundColor.copy(C('#8A6A48', '#2A2030', Math.min(1, d * 1.6))); hemi.intensity = 1.05 - d * .55;
     sun.color.copy(C('#FFE9C4', '#9FB4FF', Math.min(1, d * 1.6))); sun.intensity = Math.max(.35, 2.5 - d * 2.6 - storm * 1.2);
+    // قوس قزح بعد العاصفة: قريب من الكاميرا أمامها فيُرى من الزاوية العالية
+    if (w.rainbow && !rainbowM) { rainbowM = new THREE.Group(); ['#E2475C', '#F08A1E', '#FFD54A', '#4CC36B', '#3F8BE8', '#5A4FD0', '#9B4FD0'].forEach((col, i) => { const m = new THREE.Mesh(new THREE.TorusGeometry(240 - i * 9, 4.5, 8, 64, Math.PI), new THREE.MeshBasicMaterial({ color: col, transparent: true, opacity: .55, depthWrite: false, fog: false })); rainbowM.add(m); }); scene.add(rainbowM); }
+    if (rainbowM) { rainbowM.visible = !!w.rainbow; rainbowM.position.set(V.cam.x, -150, V.cam.y - 300); }
     // جزيئات المطر/الرمل
     const on = wz.rain > .05 || wz.sand > .05;
     if (on && !rain) { const n = MOB ? 700 : 1400, g = new THREE.BufferGeometry(), p = new Float32Array(n * 3); for (let i = 0; i < n; i++) { p[i * 3] = (Math.random() - .5) * 1600; p[i * 3 + 1] = Math.random() * 500; p[i * 3 + 2] = (Math.random() - .5) * 1400; } g.setAttribute('position', new THREE.BufferAttribute(p, 3));

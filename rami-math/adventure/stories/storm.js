@@ -56,7 +56,7 @@ export default {
   rewards: ['💎 ٣٠ جوهرة', '🔔 جرس الوادي يُعلّق في ساحة القرية', '🏅 وسام «بطل العاصفة»'],
   areas: {
     market: {
-      theme: 'storm', map: rows(M), dark: .42, rain: true,
+      theme: 'storm', map: rows(M), dark: .3, rain: true,
       wind: { period: 7, dur: 2.2, dx: -1, dy: 0, force: 2.4, zones: [[6, 6, 23, 17]], until: A => A.flag('calm') },
       ents: [
         { id: 'shelter', kind: 'house', x: 2, y: 4, w: 4, h: 3, roof: '#C9BCA0' }, { id: 'sgS', kind: 'sign', x: 7, y: 5, text: 'الملجأ: القلعة الصغيرة. جدرانها صمدت مئة عاصفة.' },
@@ -74,7 +74,7 @@ export default {
         { id: 's1', kind: 'star', x: 23, y: 2 }, { id: 's2', kind: 'star', x: 1, y: 15 }
       ],
       tick: A => {
-        if (A.flag('leading') && !A.flag('sheltered') && ['umkhalid', 'salim', 'hind'].every(id => A.near(id, 1, 5, 8, 9))) {
+        const h = A.hero(); if (A.flag('leading') && !A.flag('sheltered') && A.heroIn(1, 5, 8, 8) && ['umkhalid', 'salim', 'hind'].every(id => { const e = A.ent(id); return Math.abs(e.x - h.x) + Math.abs(e.y - h.y) <= 6; })) {
           A.flag('sheltered', true); [['umkhalid', 3, 6], ['salim', 2, 6], ['hind', 5, 6]].forEach(([id, x, y]) => A.unfollow(id, x, y)); A.sfx('win');
           A.say([{ who: 'umkhalid', text: 'الحمد لله، وصلنا سالمين! جدران القلعة قوية. اذهب يا بطل، الوادي يحتاجك.' }, { who: 'hind', text: 'شكراً لأنك لم تتركنا!' }]);
         }
@@ -103,7 +103,7 @@ export default {
       }
     },
     valley: {
-      theme: 'storm', map: rows(V), dark: .5, rain: true,
+      theme: 'storm', map: rows(V), dark: .36, rain: true,
       wind: { period: 6.5, dur: 2.4, dx: -1, dy: 0, force: 2.8, zones: [[8, 2, 21, 19]], until: A => A.flag('calm') },
       enter: A => { if (!A.flag('valley')) { A.flag('valley', true); A.say([{ who: 'narrator', text: 'الوادي: صخور تتدحرج من التل مع السيل، والريح أقوى هنا. وفي الأعلى برج الجرس القديم.' }]); } },
       ents: [

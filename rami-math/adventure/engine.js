@@ -6,7 +6,7 @@ import { drawHuman } from '../character/human.js';
 import { heroLookWorn } from '../ui/wardrobe.js';
 import { game } from '../core/state.js';
 import { bus } from '../core/events.js';
-import { sfx } from '../core/sound.js';
+import { sfx, thunder } from '../core/sound.js';
 import { ar } from '../core/util.js';
 import { createAdv3D } from './render3d.js';
 import { gfx, WEAK } from '../ui/hud.js';
@@ -25,7 +25,7 @@ export function runAdventure(def, onExit) {
 
   /* ── واجهة DOM ── */
   const root = document.createElement('div'); root.className = 'adv'; root.innerHTML = `
-    <canvas class="advCv"></canvas><canvas class="advCv3" hidden></canvas><div class="advFade"></div>
+    <canvas class="advCv"></canvas><canvas class="advCv3" hidden></canvas><div class="advFade"></div><div class="advFlash"></div>
     <div class="advTop"><button class="advBtn advX" title="حفظ والخروج">✖</button>
       <div class="advTitle"><b>${esc(def.icon)} ${esc(def.title)}</b><span class="advGoal"></span></div>
       <div class="advStars">⭐ <b>٠</b>/${ar(def.stars || 0)}</div><button class="advBtn advLogB" title="سجل المهام">📜</button><button class="advBtn advHintB" title="تلميح">💡</button></div><div class="advLog" hidden></div>
@@ -295,8 +295,16 @@ export function runAdventure(def, onExit) {
     const shelter = blocked(x - Math.sign(w.dx), y - Math.sign(w.dy)) || blocked(x - Math.sign(w.dx), y) || blocked(x, y - Math.sign(w.dy));
     if (!inZone || shelter) return;
     if (!warned) { warned = true; toast('💨 الريح تدفعك! قف خلف جدار أو صخرة حتى تهدأ الهبّة'); }
-    P.path = null; const sp = (w.force || 2.2) * gust * dt, r = .28, can = (x2, y2) => !solidAt(x2 - r, y2 - r * .6) && !solidAt(x2 + r, y2 - r * .6) && !solidAt(x2 - r, y2 + r * .6) && !solidAt(x2 + r, y2 + r * .6);
+    const sp = (w.force || 2.2) * gust * dt,   // الريح تدفع ولا تلغي المشي: يكمل البطل طريقه إلى هدفه
+    r = .28, can = (x2, y2) => !solidAt(x2 - r, y2 - r * .6) && !solidAt(x2 + r, y2 - r * .6) && !solidAt(x2 - r, y2 + r * .6) && !solidAt(x2 + r, y2 + r * .6);
     if (can(P.x + w.dx * sp, P.y)) P.x += w.dx * sp; if (can(P.x, P.y + w.dy * sp)) P.y += w.dy * sp; shakeK = Math.max(shakeK, .12);
+  }
+  /* ── البرق في العاصفة: وميض أبيض واهتزاز خفيف كل بضع ثوانٍ (يتوقف حين تهدأ) ── */
+  let boltT = 3;
+  function lightning(dt) {
+    const w = S.flags.weather || {}, on = area.rain && w.rain !== false; if (!on) return;
+    boltT -= dt; if (boltT > 0) return; boltT = 5 + Math.random() * 5;
+    const el = $('.advFlash'); el.classList.remove('on'); void el.offsetWidth; el.classList.add('on'); shakeK = Math.max(shakeK, .35); thunder();
   }
   /* ── من يتبع البطل (أهل يُقادون إلى الملجأ، أو ماعز تُعاد إلى الحظيرة): يمشون على أثره ── */
   function followStep(dt) {
@@ -318,7 +326,7 @@ export function runAdventure(def, onExit) {
     ents.forEach(e => { if (e.kind === 'guard') { updGuard(e, dt); if (!locked && !caught && sees(e)) getCaught(e); } if (e.kind === 'hazard') { updGuard(e, dt); if (!locked && !caught && touches(e)) getCaught(e); } if (e.kind === 'block' && e.px != null) { e.px += (e.x - e.px) * Math.min(1, dt * 14); e.py += (e.y - e.py) * Math.min(1, dt * 14); if (Math.abs(e.px - e.x) + Math.abs(e.py - e.y) < .01) { e.px = e.py = null; } } });
     if (area.tick) area.tick(A, dt);
     if (ents.some(e => e.kind === 'beam')) traceBeams();
-    windStep(dt);
+    windStep(dt); lightning(dt);
     ents.forEach(e => { if ((e.kind === 'gate' || e.kind === 'door' || e.kind === 'cage') && !e.open && e.when && e.when(A)) { A.set(e.id, { open: true }); sfx('gate'); A.shake(.4); toast(e.openMsg || '🔓 انفتح شيء ما!'); } });
     for (let i = fx.length - 1; i >= 0; i--) { const p = fx[i]; p.life -= dt; p.x += p.vx * dt; p.y += p.vy * dt; p.vy += 160 * dt; if (p.life <= 0) fx.splice(i, 1); }
     shakeK = Math.max(0, shakeK - dt * 2.5); if (cine < 1) cine += dt / 4.5;

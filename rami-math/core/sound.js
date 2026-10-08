@@ -71,6 +71,13 @@ function event(k) {
 }
 /* تغريد خافت (بقي للتوافق؛ الأصوات الآن عبر ambience) */
 export function ambient() { if (AC && sound.on) sfx('bird'); }
+/* رعد: ضجيج منخفض يتدحرج (للعاصفة في المغامرات) */
+export function thunder() {
+  if (!sound.on) return;
+  try { AC = AC || new (window.AudioContext || window.webkitAudioContext)(); const n = AC.sampleRate * 2.2, b = AC.createBuffer(1, n, AC.sampleRate), d = b.getChannelData(0); let l = 0;
+    for (let i = 0; i < n; i++) { l = (l + .03 * (Math.random() * 2 - 1)) / 1.03; d[i] = l * 6 * Math.min(1, i / 2000) * Math.pow(1 - i / n, 1.6); }
+    const s = AC.createBufferSource(), f = AC.createBiquadFilter(), g = AC.createGain(); s.buffer = b; f.type = 'lowpass'; f.frequency.value = 260; g.gain.value = .5; s.connect(f); f.connect(g); g.connect(AC.destination); s.start(AC.currentTime + .25); } catch (e) {}
+}
 export function sfx(k) {
   bus.emit('sfx', k);
   if (k === 'pick') tone(520, .07, 'triangle', .1);
