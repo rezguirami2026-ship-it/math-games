@@ -1,0 +1,117 @@
+<!doctype html>
+<html lang="ar" dir="rtl"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex">
+<title>لوحة تحكم قرية الخير</title>
+<style>
+:root{--ink:#13245C;--mut:#5B6785;--line:#E3E7F0;--bg:#F4F6FB;--card:#fff;--pri:#1E6FE0;--gold:#E9A825;--ok:#1FA05A;--bad:#D64545}
+*{box-sizing:border-box}body{margin:0;font:600 14px system-ui,'Segoe UI',Tahoma,sans-serif;background:var(--bg);color:var(--ink)}
+header{background:linear-gradient(160deg,#1F3F86,#0D2155);color:#fff;padding:14px 18px;display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+header b{font-size:18px;color:#FFD54A}header small{opacity:.8}
+nav{display:flex;gap:4px;flex-wrap:wrap;padding:10px 14px;background:#fff;border-bottom:1px solid var(--line);position:sticky;top:0;z-index:2}
+nav button{border:0;background:none;padding:8px 12px;border-radius:10px;font:inherit;color:var(--mut);cursor:pointer}nav button.on{background:#E8F0FF;color:var(--pri)}
+main{max-width:1100px;margin:0 auto;padding:16px}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:12px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:14px;margin-bottom:12px}
+.k{color:var(--mut);font-size:12px}.v{font-size:26px;font-weight:800;margin-top:4px}.v small{font-size:12px;color:var(--mut);font-weight:600}
+table{width:100%;border-collapse:collapse;font-size:13px}td,th{padding:8px;border-bottom:1px solid var(--line);text-align:right;vertical-align:top}th{color:var(--mut);font-weight:700}
+input,textarea,select{font:inherit;padding:8px 10px;border:1px solid var(--line);border-radius:10px;width:100%;background:#fff;color:var(--ink)}textarea{min-height:70px}
+label{display:block;margin:8px 0 4px;color:var(--mut);font-size:12px}
+.btn{border:0;border-radius:10px;padding:9px 16px;font:inherit;font-weight:800;cursor:pointer;background:var(--pri);color:#fff}.btn.gh{background:#EEF2F8;color:var(--ink)}.btn.red{background:var(--bad)}.btn.grn{background:var(--ok)}
+.row{display:flex;gap:10px;flex-wrap:wrap;align-items:end}.row>*{flex:1;min-width:150px}
+.pill{display:inline-block;border-radius:20px;padding:2px 10px;font-size:12px;background:#EEF2F8}.pill.new{background:#FFF1D6}.pill.progress{background:#E8F0FF}.pill.resolved{background:#E2F6EA}.pill.closed{background:#EEE}
+.muted{color:var(--mut);font-weight:500}.na{color:var(--bad);font-size:13px;font-weight:700}
+.chart{width:100%;height:220px}.legend span{margin-left:14px}.legend i{display:inline-block;width:12px;height:3px;margin-left:5px;vertical-align:middle}
+#login{max-width:380px;margin:60px auto}.hide{display:none}.ltr{direction:ltr;unicode-bidi:isolate}
+.scroll{overflow-x:auto}
+</style></head><body>
+<header><b>🏰 قرية الخير</b><span>لوحة تحكم المطوّر</span><small id="who"></small></header>
+<div id="login" class="card"><h3>🔐 الدخول</h3><label>كلمة سر اللوحة (ADMIN_TOKEN)</label><input id="tok" type="password" dir="ltr"><p class="na" id="lerr"></p><button class="btn" id="go">دخول</button></div>
+<div id="app" class="hide">
+<nav id="tabs"></nav>
+<main id="view"></main>
+</div>
+<script>
+const $ = s => document.querySelector(s), esc = s => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+const n = x => (x || 0).toLocaleString('en-US');
+let TOKEN = sessionStorage.getItem('rm_admin') || '';
+async function api(path, body) {
+  const r = await fetch('/v1/admin/' + path, { method: body ? 'POST' : 'GET', headers: { authorization: 'Bearer ' + TOKEN, 'content-type': 'application/json' }, body: body ? JSON.stringify(body) : undefined });
+  if (r.status === 401) { sessionStorage.removeItem('rm_admin'); location.reload(); throw new Error('auth'); }
+  return r.json();
+}
+const TABS = { overview: '📊 نظرة عامة', analytics: '📈 الإحصاءات', support: '🛟 الدعم', errors: '🐛 الأخطاء', versions: '🔄 الإصدارات', ann: '📢 الإعلانات', maint: '🔧 الصيانة' };
+const ST = { new: 'جديدة', progress: 'قيد المعالجة', resolved: 'محلولة', closed: 'مغلقة' }, TT = { bug: '🐛 مشكلة', idea: '💡 اقتراح', crash: '🎮 توقفت', help: '❓ مساعدة' };
+let tab = 'overview';
+function nav() { $('#tabs').innerHTML = Object.entries(TABS).map(([k, v]) => `<button class="${k === tab ? 'on' : ''}" data-t="${k}">${v}</button>`).join(''); document.querySelectorAll('[data-t]').forEach(b => b.onclick = () => { tab = b.dataset.t; nav(); show(); }); }
+const card = (k, v, sub) => `<div class="card"><div class="k">${k}</div><div class="v">${v}${sub ? ` <small>${sub}</small>` : ''}</div></div>`;
+
+async function show() {
+  const V = $('#view'); V.innerHTML = '<p class="muted">…</p>';
+  if (tab === 'overview') {
+    const o = await api('overview'), t = o.tickets || {};
+    V.innerHTML = `<div class="grid">${card('Total Users (تثبيتات مجهولة)', n(o.totalUsers))}${card('First Launches', n(o.firstLaunches))}
+      ${card('Downloads', '<span class="na">Downloads data unavailable</span>', '')}${card('Active Users اليوم', n(o.active.today), `٧ أيام: ${n(o.active.d7)} · ٣٠ يوماً: ${n(o.active.d30)}`)}
+      ${card('Current Version', `<span class="ltr">v${esc(o.currentVersion)}</span>`, `الحد الأدنى v${esc(o.minVersion)}`)}${card('Errors (٧ أيام)', n(o.errors7d))}
+      ${card('Support Tickets', n(t.new), `جديدة · قيد المعالجة ${n(t.progress)} · محلولة ${n(t.resolved)} · مغلقة ${n(t.closed)}`)}
+      ${card('الصيانة / الإعلان', (o.maint && o.maint.on ? '🔧 مفعّلة' : '✅ لا صيانة'), o.ann && o.ann.on ? '📢 إعلان ظاهر' : 'لا إعلان')}</div>
+      <p class="muted">ملاحظة: First Launches = عدد مرات التشغيل الأول المسجلة (ليس عدد التنزيلات). المنصة الحالية (GitHub Pages وملف APK يدوي) لا توفر عدد التنزيلات الحقيقي.</p>`;
+  }
+  if (tab === 'analytics') {
+    const s = await api('series?days=30'), days = []; for (let d = new Date(s.from + 'T00:00:00Z'); d <= new Date(); d.setUTCDate(d.getUTCDate() + 1)) days.push(d.toISOString().slice(0, 10));
+    const act = Object.fromEntries(s.active.map(r => [r.day, r.n])), cnt = {}; s.counts.forEach(r => { (cnt[r.ev] = cnt[r.ev] || {})[r.day] = r.n; });
+    const ser = [['المستخدمون النشطون', '#1E6FE0', days.map(d => act[d] || 0)], ['First Launches', '#E9A825', days.map(d => (cnt.first_launch || {})[d] || 0)], ['دروس مكتملة', '#1FA05A', days.map(d => (cnt.level_completed || {})[d] || 0)]];
+    const max = Math.max(1, ...ser.flatMap(x => x[2])), W = 1000, H = 220, X = i => 30 + i * (W - 40) / Math.max(1, days.length - 1), Y = v => H - 20 - v / max * (H - 40);
+    const svg = `<svg class="chart" viewBox="0 0 ${W} ${H}" preserveAspectRatio="none"><line x1="30" y1="${H - 20}" x2="${W - 10}" y2="${H - 20}" stroke="#ccd"/>${ser.map(([, c, a]) => `<polyline fill="none" stroke="${c}" stroke-width="3" points="${a.map((v, i) => X(i) + ',' + Y(v)).join(' ')}"/>`).join('')}<text x="30" y="14" font-size="12" fill="#5B6785">${n(max)}</text></svg>`;
+    const evs = ['first_launch', 'app_open', 'session_start', 'level_completed', 'adventure_started', 'adventure_completed', 'error_occurred', 'support_ticket'];
+    V.innerHTML = `<div class="card"><h3>آخر ٣٠ يوماً</h3>${svg}<div class="legend">${ser.map(([l, c]) => `<span><i style="background:${c}"></i>${l}</span>`).join('')}</div></div>
+      <div class="card scroll"><table><tr><th>اليوم</th><th>نشطون</th>${evs.map(e => `<th class="ltr">${e}</th>`).join('')}</tr>${days.slice().reverse().map(d => `<tr><td class="ltr">${d}</td><td>${n(act[d])}</td>${evs.map(e => `<td>${n((cnt[e] || {})[d])}</td>`).join('')}</tr>`).join('')}</table></div>`;
+  }
+  if (tab === 'versions') {
+    const r = await api('versions'), c = r.cfg, tot = r.versions.reduce((a, x) => a + x.n, 0) || 1, bar = (rows, key) => rows.map(x => `<tr><td class="ltr">${esc(x[key])}</td><td>${n(x.n)}</td><td>${Math.round(x.n / tot * 100)}%</td></tr>`).join('');
+    V.innerHTML = `<div class="grid"><div class="card"><h3>توزيع الإصدارات (٧ أيام)</h3><table><tr><th>الإصدار</th><th>مستخدمون</th><th>%</th></tr>${bar(r.versions, 'v')}</table></div>
+      <div class="card"><h3>الأنظمة</h3><table>${bar(r.os, 'os')}</table><h3>الأجهزة</h3><table>${bar(r.dev, 'dev')}</table></div></div>
+      <div class="card"><h3>إعلان إصدار جديد</h3><p class="muted">بعد نشر الملفات الجديدة على GitHub وتغيير APP_VERSION في core/version.js، اكتب الرقم نفسه هنا فيظهر للطلاب «تحديث جديد متوفر».</p>
+        <div class="row"><div><label>Current Version (الأحدث)</label><input id="lv" dir="ltr" value="${esc(c.latest.v)}"></div><div><label>Minimum supported version (التحديث الإجباري)</label><input id="mv" dir="ltr" value="${esc(c.min)}"></div></div>
+        <label>التحديثات (سطر لكل نقطة)</label><textarea id="ln">${esc((c.latest.notes || []).join('\n'))}</textarea>
+        <p class="muted">⚠️ رفع الحد الأدنى يجبر كل من لديه إصدار أقدم على التحديث. استعمله عند الضرورة فقط.</p><button class="btn" id="saveV">حفظ</button></div>
+      <div class="card"><h3>Previous Versions</h3><table>${(c.history || []).map(h => `<tr><td class="ltr">v${esc(h.v)}</td><td class="ltr">${esc(h.at)}</td></tr>`).join('') || '<tr><td class="muted">لا يوجد بعد</td></tr>'}</table></div>`;
+    $('#saveV').onclick = async () => { await api('config', { latest: { v: $('#lv').value.trim().replace(/^v/, ''), notes: $('#ln').value.split('\n').map(s => s.trim()).filter(Boolean) }, min: $('#mv').value.trim().replace(/^v/, '') }); show(); };
+  }
+  if (tab === 'support') {
+    const f = sessionStorage.getItem('rm_tf') || 'new', r = await api('tickets?status=' + f);
+    V.innerHTML = `<div class="card"><div class="row" style="align-items:center">${Object.entries(ST).map(([k, v]) => `<button class="btn ${k === f ? '' : 'gh'}" data-f="${k}">${v}</button>`).join('')}</div></div>
+      <div class="card scroll"><table><tr><th>التذكرة</th><th>النوع</th><th>الوصف</th><th>الإصدار / الجهاز</th><th>التاريخ</th><th>الحالة</th></tr>
+      ${r.tickets.map(t => `<tr><td class="ltr">${esc(t.id)}</td><td>${TT[t.type] || esc(t.type)}</td><td style="max-width:340px;white-space:pre-wrap">${esc(t.descr)}</td><td class="ltr">v${esc(t.v)} · ${esc(t.os)} · ${esc(t.dev)}</td><td class="ltr">${esc(String(t.created).slice(0, 16).replace('T', ' '))}</td>
+        <td><select data-id="${esc(t.id)}">${Object.entries(ST).map(([k, v]) => `<option value="${k}" ${k === t.status ? 'selected' : ''}>${v}</option>`).join('')}</select></td></tr>`).join('') || '<tr><td class="muted" colspan="6">لا تذاكر</td></tr>'}</table></div>`;
+    document.querySelectorAll('[data-f]').forEach(b => b.onclick = () => { sessionStorage.setItem('rm_tf', b.dataset.f); show(); });
+    document.querySelectorAll('select[data-id]').forEach(s => s.onchange = async () => { await api('ticket', { id: s.dataset.id, status: s.value }); show(); });
+  }
+  if (tab === 'errors') {
+    const r = await api('errors');
+    V.innerHTML = `<div class="card scroll"><h3>الأخطاء (٣٠ يوماً، الأكثر تكراراً أولاً)</h3><table><tr><th>Error ID</th><th>النوع</th><th>الرسالة</th><th>مرات</th><th>Version / OS / Device</th><th>التاريخ</th></tr>
+      ${r.errors.map(e => `<tr><td class="ltr">${esc(e.id)}</td><td class="ltr">${esc(e.type)}</td><td class="ltr" style="max-width:380px">${esc(e.msg)}</td><td>${n(e.c)}</td><td class="ltr">v${esc(e.v)} · ${esc(e.os)} · ${esc(e.dev)}</td><td class="ltr">${esc(e.day)}</td></tr>`).join('') || '<tr><td class="muted" colspan="6">لا أخطاء 🎉</td></tr>'}</table></div>`;
+  }
+  if (tab === 'ann') {
+    const c = (await api('versions')).cfg, a = c.ann || {};
+    V.innerHTML = `<div class="card"><h3>📢 الإعلان</h3><p class="muted">يظهر لكل طالب مرة واحدة عند وصول الإعدادات (مرة يومياً على الأكثر). حفظه بعنوان جديد يجعله يظهر من جديد.</p>
+      <div class="row"><div style="max-width:90px"><label>أيقونة</label><input id="ai" value="${esc(a.icon || '🎉')}"></div><div><label>العنوان</label><input id="at" value="${esc(a.title || '')}" placeholder="مغامرة جديدة!"></div></div>
+      <label>النص</label><textarea id="ab" placeholder="تمت إضافة مغامرة إنقاذ القرية.">${esc(a.body || '')}</textarea>
+      <p>الحالة: ${a.on ? '<b style="color:var(--ok)">ظاهر</b>' : '<b class="muted">متوقف</b>'}</p>
+      <div class="row"><button class="btn grn" id="aon">${a.on ? 'حفظ التعديل' : 'نشر الإعلان'}</button><button class="btn red" id="aoff">إيقاف الإعلان</button></div></div>`;
+    const save = on => api('config', { ann: { on, id: on ? (a.on && a.title === $('#at').value ? a.id : 'a' + Date.now().toString(36)) : a.id, icon: $('#ai').value, title: $('#at').value, body: $('#ab').value } }).then(show);
+    $('#aon').onclick = () => save(true); $('#aoff').onclick = () => save(false);
+  }
+  if (tab === 'maint') {
+    const c = (await api('versions')).cfg, m = c.maint || {};
+    V.innerHTML = `<div class="card"><h3>🔧 وضع الصيانة</h3><p class="muted">تظهر الرسالة للطلاب مرة في الجلسة. اللعبة تبقى قابلة للعب بلا إنترنت؛ وتتوقف فقط الإحصاءات وإرسال التذاكر حتى تنتهي الصيانة (ويتحقق الجهاز كل ٣ ساعات).</p>
+      <label>العنوان</label><input id="mt" value="${esc(m.title || '🔧 اللعبة تحت الصيانة')}"><label>الرسالة</label><textarea id="mm">${esc(m.msg || 'نعمل حالياً على تحسين اللعبة وإضافة تحديثات جديدة.')}</textarea>
+      <p>الحالة: ${m.on ? '<b style="color:var(--bad)">الصيانة مفعّلة</b>' : '<b style="color:var(--ok)">لا صيانة</b>'}</p>
+      <div class="row"><button class="btn red" id="mon">تفعيل الصيانة</button><button class="btn grn" id="moff">إيقاف الصيانة</button></div></div>`;
+    const save = on => api('config', { maint: { on, online: true, title: $('#mt').value, msg: $('#mm').value } }).then(show);
+    $('#mon').onclick = () => save(true); $('#moff').onclick = () => save(false);
+  }
+}
+async function start() { try { await api('overview'); } catch (e) { return; } $('#login').classList.add('hide'); $('#app').classList.remove('hide'); nav(); show(); }
+$('#go').onclick = async () => { TOKEN = $('#tok').value.trim(); const r = await fetch('/v1/admin/overview', { headers: { authorization: 'Bearer ' + TOKEN } }); if (r.ok) { sessionStorage.setItem('rm_admin', TOKEN); start(); } else $('#lerr').textContent = 'كلمة السر غير صحيحة'; };
+$('#tok').onkeydown = e => { if (e.key === 'Enter') $('#go').click(); };
+if (TOKEN) start();
+</script></body></html>

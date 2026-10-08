@@ -376,3 +376,16 @@ body:has(.dialog.on) .region{opacity:0!important;animation:none!important}
   #hud .pills .pill + .pill{padding-inline-start:5px}}
 @media (max-width:370px){.oct{width:38px;height:38px}.oct.sm{width:27px;height:27px}#hud .pills .pill{font-size:13px}}
 @media (max-width:480px){#hud .obj{font-size:13px;line-height:1.5;padding:5px 12px;max-width:calc(100vw - 24px)}}
+/* ── الخدمات الاختيارية: نوافذ التحديث/الإعلان/الصيانة، وحول اللعبة، والدعم الفني ── */
+.opsRow{display:flex;gap:8px}.opsRow .act{flex:1}
+.opsTypes{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:6px 0 10px}
+.opsDesc{min-height:110px;font:700 15px Cairo,sans-serif;direction:rtl;text-align:right;user-select:text;-webkit-user-select:text}
+.opsNote{background:#EEF5FF;border-radius:12px;padding:8px 10px;line-height:1.7}
+.opsModal{position:fixed;inset:0;z-index:60;display:none;align-items:center;justify-content:center;padding:16px;background:rgba(20,16,50,.55)}
+.opsModal.on{display:flex}.opsModal.must{background:rgba(20,16,50,.88)}
+.opsCard{width:min(420px,100%);text-align:center;border-radius:24px;padding:18px 18px 16px;border:3px solid transparent;animation:pop .25s ease-out;
+  background:linear-gradient(180deg,#FFFCF3,#F6EBD3) padding-box,linear-gradient(160deg,#FBE3A0,#D9A13A 35%,#A8711E 60%,#E9C068) border-box;box-shadow:0 18px 40px rgba(10,10,40,.45)}
+.opsCard h3{margin:4px 0 6px;font:900 21px Cairo,sans-serif;color:#13245C}.opsCard p{margin:6px 0;font-weight:700;color:#2A3A6E;line-height:1.7}
+.opsIcon{font-size:44px;line-height:1}
+.opsNotes{text-align:right;margin:8px auto;padding:0 22px 0 0;max-width:320px;font-weight:700;color:#2A3A6E;line-height:1.8}
+.opsCard .act{width:100%;margin-top:8px}

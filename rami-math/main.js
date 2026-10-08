@@ -59,6 +59,8 @@ import { SCENE } from './ui/home.js';
 import { unlock } from './achievements/achievements.js';
 import { hud, gfx } from './ui/hud.js';
 import { screens } from './ui/screens.js';
+import { startOps, track, reportError } from './core/ops.js';
+import { initOpsUI } from './ui/opsui.js';
 
 const eng = createEngine(document.getElementById('game'), WORLD);
 // فقد سياق الرسم (الهاتف يحرّر ذاكرة الرسوم حين تُصغَّر اللعبة أو تمتلئ ذاكرته) يترك الشاشة سوداء: نحفظ ونعيد التحميل عند العودة.
@@ -173,7 +175,7 @@ function wallRects() {   // كل العوائق الثابتة؛ البركة ع
 const reported = new Set();
 function report(where, id, err) {
   const k = where + ':' + id; if (reported.has(k)) return; reported.add(k);
-  console.error(`[قرية الخير] ${where} — ${id}`, err);
+  console.error(`[قرية الخير] ${where} — ${id}`, err); reportError(err, where + ':' + id);
 }
 
 function boot() {
@@ -202,7 +204,7 @@ async function start(state) {
   }
 }
 /* ── العرض ثلاثي الأبعاد (renderer3d): يُحمَّل فقط عند طلبه، ويرجع إلى الرسم الحالي إن لم يدعم الجهاز WebGL أو فشل التحميل ── */
-const V3D = 'نسخة 3D · ٥٣';   // تُعرض في شاشة التحميل وفي الزاوية: للتأكد أن المتصفح حمّل آخر نسخة
+const V3D = 'نسخة 3D · ٥٤';   // تُعرض في شاشة التحميل وفي الزاوية: للتأكد أن المتصفح حمّل آخر نسخة
 const want3d = () => gfx.d3();
 function loadingScreen() {
   const el = document.createElement('div'); el.className = 'load3d';
@@ -641,6 +643,7 @@ bus.on('challenge', id => {   // انتهت مهمة العالم: يُفتح ا
     const c = cur(); if (c && c.id === id && quests.data(id).chStage === 2) stage2(W, quests.data(id), MODS[id]); };
   setTimeout(go, 500);
 });
+bus.on('lessonDone', id => track('level_completed', id));
 bus.on('lessonDone', id => {
   const before = gateState().slice(); resetGates();   // قد تُفتح بوابة الآن: حركتها تبدأ حين تظهر على الشاشة
   gateState().forEach((o, i) => { if (o && !before[i]) gateAnim.pending[i] = true; });
@@ -655,3 +658,4 @@ bus.on('lessonDone', id => {
 });
 window.__game = { get state() { return game.state; }, get W() { return W; }, eng, game, quests, MODS, activity: id => openActivity(W, id, MODS[id]), finale: u => openFinale(W, u, MODS), expert: id => openExpert(W, id, MODS[id]), daily: () => openDaily(W, MODS), TREASURES, findPath: (a, b) => findPath(a.x, a.y, b.x, b.y, blocked) };
 boot();
+try { startOps(); initOpsUI(); } catch (e) { console.warn('[ops]', e); }   // الخدمات الاختيارية: بعد تشغيل اللعبة، ولا توقفها أبداً

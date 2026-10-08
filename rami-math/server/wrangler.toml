@@ -1,0 +1,19 @@
+# نشر الخادم: من مجلد server شغّل  npx wrangler deploy
+name = "qaryat-alkhair-ops"
+main = "worker.js"
+compatibility_date = "2026-09-01"
+
+# لوحة التحكم ملف HTML يُضمَّن نصاً داخل الخادم
+[[rules]]
+type = "Text"
+globs = ["**/*.html"]
+fallthrough = false
+
+[[d1_databases]]
+binding = "DB"
+database_name = "qaryat-ops"
+database_id = "988f7db3-aeb9-483b-984d-6ac4feaad056"
+
+# تنظيف يومي للبيانات القديمة (مجاني)
+[triggers]
+crons = ["17 3 * * *"]

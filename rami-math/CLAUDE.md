@@ -93,3 +93,9 @@
 (`__game.findPath(a, b).length === 0` عبر بوابة مغلقة).
 الاختبار في `tests/play.mjs` (يحتاج Node وChrome): `cd tests && npm install && npm test`، أو `npm run test:show` لرؤية المتصفح.
 لكل درس دالة في `S` باسم معرّفه؛ الاختبار يتوقف عند أول درس بلا دالة. والبوابات في `GATES`.
+
+## الخدمات الاختيارية بعد الإطلاق (Online، لا تُشترط للعب)
+- **اللعبة**: `core/version.js` (`APP_VERSION` بصيغة 1.0.0 — ارفعه عند كل تحديث يستحق الإشعار، و`OPS_URL`)، `core/ops.js` (معرف مجهول `USER-XXXXXXXX`، طابور أحداث محلي ≤ ٢٠٠، دفعة كل ١٠ دقائق على الأكثر أو عند ٢٠ حدثاً/الإغلاق/عودة الإنترنت، تراجع بعد الفشل، الإعدادات مرة يومياً داخل رد الدفعة، أخطاء مجمّعة ≤ ١٠ أنواع يومياً، تذاكر ≤ ٥ معلّقة)، `ui/opsui.js` (حول اللعبة، الدعم الفني، نوافذ التحديث/الإجباري/الإعلان/الصيانة). على localhost لا يُرسل شيء للخادم الحقيقي.
+- الأحداث المسموحة فقط: first_launch, app_open, session_start, level_completed, adventure_started, adventure_completed, error_occurred, support_ticket. لا يُرسل اسم البطل ولا أي بيانات شخصية.
+- **الخادم**: `server/worker.js` (Cloudflare Worker) + D1 `qaryat-ops` (`server/schema.sql`) — صف واحد لكل جهاز نشط يومياً يحمل العدادات. لوحة التحكم: `https://qaryat-alkhair-ops.rezgui-rami2026.workers.dev/admin` (كلمة السر سرّ `ADMIN_TOKEN` في Cloudflare). النشر: `cd server && npx wrangler@4 deploy`.
+- **الاختبار**: `node tests/ops-test.mjs` (٢٠ سيناريو مع خادم محلي بنفس الكود فوق node:sqlite)، و`node tests/ops-load.mjs [نسبة النشطين]` لتقدير الطلبات والكتابة عند ٥/١٠/٥٠ ألف مستخدم.

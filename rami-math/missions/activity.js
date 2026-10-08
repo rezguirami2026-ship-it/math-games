@@ -8,6 +8,7 @@ import { LESSONS } from '../content/lessons.js';
 import { runChallenge, pickN } from './challenge.js';
 import { sheetOpen, sheetClose, btn } from './bench.js';
 import * as quests from './quests.js';
+import { track } from '../core/ops.js';
 
 const ROUNDS = 6;
 const BLOCK = ['#E2475C', '#FFC23D', '#3FA3F5', '#2E9E5B', '#8E6CF6', '#F08A24'];
@@ -82,11 +83,11 @@ export function openFinale(W, u, MODS) {
   const start = () => {
     const items = []; for (let k = 0; items.length < 10 && k < 40; k++) { const l = ls[k % ls.length], pool = MODS[l.id].challenge.make(); const it = pool[Math.floor(Math.random() * pool.length)]; if (it) items.push(it); }
     const d = { ch: { items: pickN(items, 10), i: 0, firstTry: 0, tries: 0, gems: 0, streak: 0 } };
-    R.run = d;
+    R.run = d; track('adventure_started', 'unit' + (u + 1));
     runChallenge(W, d, { id: 'finale' + u, who: F.who, title: `👑 ${F.title}`, make: () => items, scene: sc.draw,
       exit: () => { delete R.run; bus.emit('save'); },
       onDone: (stars, C) => {
-        delete R.run; R.plays++; R.best = Math.max(R.best, stars);
+        delete R.run; R.plays++; R.best = Math.max(R.best, stars); track('adventure_completed', 'unit' + (u + 1));
         game.state.good += 50; game.state.gems = (game.state.gems || 0) + 10; bus.emit('good'); bus.emit('gems'); bus.emit('save'); sfx('win');
         sheetOpen(`<div class="chEnd"><div class="chTreasure">👑</div><div class="chStars">${[1, 2, 3].map(k => `<span class="${k <= stars ? 'on' : ''}">★</span>`).join('')}</div>
           <h3>أتممتَ ${F.title}!</h3><p class="chGot">+٥٠ 💚 و+١٠ 💎</p><p class="muted">أجبت ${ar(C.firstTry)} من ${ar(C.items.length)} من المحاولة الأولى.</p>

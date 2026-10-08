@@ -5,7 +5,7 @@ import { createHash } from 'crypto';
 import { join, relative, dirname } from 'path';
 import { fileURLToPath } from 'url';
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..');
-const SKIP = new Set(['tests', 'node_modules', '.git', 'sw.js', 'CLAUDE.md', 'README.md']);
+const SKIP = new Set(['tests', 'server', 'node_modules', '.git', 'sw.js', 'CLAUDE.md', 'README.md']);
 const files = [];
 (function walk(d) { for (const f of readdirSync(d)) { if (SKIP.has(f)) continue; const p = join(d, f); if (statSync(p).isDirectory()) walk(p); else files.push(relative(ROOT, p).replace(/\\/g, '/')); } })(ROOT);
 files.sort();
