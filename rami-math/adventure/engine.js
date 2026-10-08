@@ -95,8 +95,8 @@ export function runAdventure(def, onExit) {
     use: id => new Promise(r => { const e = A.ent(id); if (!e) return r(false); const ex = e.kind === 'house' ? e.x + Math.floor((e.w || 3) / 2) : e.x;
       const go = async () => { await interact(e); r(true); }; if (Math.abs(ex - Math.floor(P.x)) + Math.abs(e.y - Math.floor(P.y)) === 1) return go(); P.path = route(ex, e.y, true); if (!P.path) return r(false); P.onArrive = go; }),
     tp: (x, y) => { P.x = x + .5; P.y = y + .5; P.path = null; },
-    tapTile: (x, y) => tapTo(W / 2 + ((x + .5) * T - cam.x) * Z, H / 2 + ((y + .5) * T - cam.y) * Z),
-    busy: () => locked || !!caught || !!(P.path && P.path.length)
+    tapTile: (x, y) => tapTile(x, y),
+    busy: () => locked || !!caught || !!(P.path && P.path.length) || pushing
   };
 
   /* ── الحوار ── */
@@ -151,7 +151,7 @@ export function runAdventure(def, onExit) {
   async function interact(e) {
     if (!e || locked) return; const h0 = e.kind === 'house' ? e.x + Math.floor((e.w || 3) / 2) : e.x; const fx = h0 - Math.floor(P.x), fy = e.y - Math.floor(P.y);
     if (Math.abs(fx) >= Math.abs(fy)) P.dir = fx > 0 ? 'right' : 'left'; else P.dir = fy > 0 ? 'down' : 'up';
-    if (e.kind === 'block') return pushBlock(e, Math.sign(fx) * (Math.abs(fx) >= Math.abs(fy)), Math.sign(fy) * (Math.abs(fy) > Math.abs(fx)));
+    if (e.kind === 'block') return e.to ? smartPush(e) : pushBlock(e, Math.sign(fx) * (Math.abs(fx) >= Math.abs(fy)), Math.sign(fy) * (Math.abs(fy) > Math.abs(fx)));
     const h = e.on_ || (area.on && area.on[e.id]);
     if (h) { locked = false; await h(A, e); return; }
     if (e.kind === 'sign' && e.text) return say([{ who: 'narrator', text: e.text }]);
@@ -162,17 +162,35 @@ export function runAdventure(def, onExit) {
       return say([{ who: 'narrator', text: e.locked || 'مقفل… لا بد من طريقة لفتحه.' }]);
     }
   }
+  /* صندوق له لوحة هدف: يمشي البطل خلفه ويدفعه خطوة بعد خطوة حتى يستقر عليها (ضغطة واحدة تكفي) */
+  async function smartPush(b) {
+    const pl = A.ent(b.to); if (!pl || pushing) return; pushing = true;
+    try {
+      for (let i = 0; i < 12 && !(b.x === pl.x && b.y === pl.y); i++) {
+        const dx = Math.sign(pl.x - b.x), dy = dx ? 0 : Math.sign(pl.y - b.y), sx = b.x - dx, sy = b.y - dy;
+        if (Math.floor(P.x) !== sx || Math.floor(P.y) !== sy) { const ok = await A.goTile(sx, sy); if (!ok || Math.floor(P.x) !== sx || Math.floor(P.y) !== sy) { toast('🚧 لا أستطيع الوقوف خلف الصندوق من هنا'); return; } }
+        P.dir = dx > 0 ? 'right' : dx < 0 ? 'left' : dy > 0 ? 'down' : 'up'; await wait(160);
+        if (!pushBlock(b, dx, dy)) return; await wait(300);
+      }
+    } finally { pushing = false; }
+  }
+  let pushing = false;
   function pushBlock(b, dx, dy) {
     const nx = b.x + dx, ny = b.y + dy;
-    if (!dx && !dy) return;
-    if (blocked(nx, ny, b) || ents.find(o => o.kind === 'block' && o.x === nx && o.y === ny)) { toast('🧱 لا يتحرك من هذه الجهة'); return; }
+    if (!dx && !dy) return false;
+    if (blocked(nx, ny, b) || ents.find(o => o.kind === 'block' && o.x === nx && o.y === ny)) { toast('🧱 لا يتحرك من هذه الجهة'); return false; }
     b.px = b.x; b.py = b.y; b.x = nx; b.y = ny; persist(b, ['x', 'y']); sfx('drop'); A.shake(.3); save(); goal();
+    const pl = b.to && A.ent(b.to); if (pl && b.x === pl.x && b.y === pl.y) { burst(pl.x * T + T / 2, pl.y * T + T / 2, 18, '#FFD54A'); toast('✨ الصندوق على اللوحة!'); }
+    return true;
   }
   function tapTo(sx, sy) {
     if (locked || caught) return;
     let wx = (sx - W / 2) / Z + cam.x, wy = (sy - H / 2) / Z + cam.y;
     if (r3) { const p = r3.pick(sx, sy); if (!p) return; wx = p.x; wy = p.y; }
-    const tx = Math.floor(wx / T), ty = Math.floor(wy / T);
+    tapTile(Math.floor(wx / T), Math.floor(wy / T));
+  }
+  function tapTile(tx, ty) {   // نقرة على بلاطة (من الشاشة أو من الاختبار)
+    if (locked || caught) return;
     const e = actAt(tx, ty) || actAt(tx, ty + 1);
     if (e) {
       const ex = e.kind === 'house' ? e.x + Math.floor((e.w || 3) / 2) : e.x, ey = e.y;
@@ -314,6 +332,8 @@ export function runAdventure(def, onExit) {
     });
     list.push({ y: P.y * T + T * .35, draw: () => { const h = Object.assign({}, heroLookWorn(game.state), { x: P.x * T, y: P.y * T + T * .35, dir: P.dir, moving: P.moving, phase: P.phase, s: .95 }); ctx.fillStyle = 'rgba(40,25,10,.25)'; ctx.beginPath(); ctx.ellipse(h.x + 3, h.y, 13, 4, 0, 0, 7); ctx.fill(); drawHuman(ctx, h);
       if (tileAt(Math.floor(P.x), Math.floor(P.y)) === ';') grass(Math.floor(P.x), Math.floor(P.y), true); } });
+    ents.forEach(b => { const pl = b.kind === 'block' && b.to && A.ent(b.to); if (!pl || (b.x === pl.x && b.y === pl.y)) return; ctx.save(); ctx.setLineDash([8, 8]); ctx.lineDashOffset = -t * 30; ctx.strokeStyle = 'rgba(255,214,90,.85)'; ctx.lineWidth = 4;
+      ctx.beginPath(); ctx.moveTo(b.x * T + T / 2, b.y * T + T * .7); ctx.lineTo(pl.x * T + T / 2, pl.y * T + T * .7); ctx.stroke(); ctx.restore(); });   // دليل: من الصندوق إلى لوحته
     list.sort((a, b) => a.y - b.y).forEach(o => o.draw());
     fx.forEach(p => { ctx.globalAlpha = Math.min(1, p.life * 2); ctx.fillStyle = p.col; ctx.beginPath(); ctx.arc(p.x, p.y, 3.2, 0, 7); ctx.fill(); }); ctx.globalAlpha = 1;
     if (dk > .02) lighting(dk);

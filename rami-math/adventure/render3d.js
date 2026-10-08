@@ -71,10 +71,12 @@ export function createAdv3D(canvas) {
     const br = new Parts(), wood = material('wood', '#8A5A30'); for (let y = 0; y < mh; y++) for (let x = 0; x < mw; x++) if (V.tileAt(x, y) === '=') br.add(wood, box(T + 2, 6, T - 6, x * T + T / 2, 5, y * T + T / 2)); root.add(br.build());
     // الجدران: أسوار من حجر بارتفاع حقيقي وشُرفات
     const wp = new Parts(), wm = material('stone', th.wall[0]), wt = material('plaster', th.wall[1]);
-    for (let y = 0; y < mh; y++) for (let x = 0; x < mw; x++) if (V.tileAt(x, y) === '#') { wp.add(wm, box(T + .5, 66, T + .5, x * T + T / 2, 33, y * T + T / 2)); wp.add(wt, box(T + 3, 5, T + 3, x * T + T / 2, 66, y * T + T / 2)); if ((x + y) % 2 === 0) wp.add(wm, box(T * .45, 12, T * .45, x * T + T / 2, 74, y * T + T / 2)); }
+    for (let y = 0; y < mh; y++) for (let x = 0; x < mw; x++) if (V.tileAt(x, y) === '#' && y >= mh - 2) wp.add(wm, box(T + .5, 22, T + .5, x * T + T / 2, 11, y * T + T / 2));   // الحافة القريبة من الكاميرا منخفضة فلا تحجب المشهد
+    for (let y = 0; y < mh - 2; y++) for (let x = 0; x < mw; x++) if (V.tileAt(x, y) === '#') { wp.add(wm, box(T + .5, 66, T + .5, x * T + T / 2, 33, y * T + T / 2)); wp.add(wt, box(T + 3, 5, T + 3, x * T + T / 2, 66, y * T + T / 2)); if ((x + y) % 2 === 0) wp.add(wm, box(T * .45, 12, T * .45, x * T + T / 2, 74, y * T + T / 2)); }
     root.add(wp.build());
     // الأشجار: نخيل/سدر/صبار/صخور حسب العالم
-    const tl = []; for (let y = 0; y < mh; y++) for (let x = 0; x < mw; x++) if (V.tileAt(x, y) === 'T') tl.push({ x: x * T + T / 2, y: y * T + T / 2, s: .78 });
+    const tl = [], low = []; for (let y = 0; y < mh; y++) for (let x = 0; x < mw; x++) if (V.tileAt(x, y) === 'T') (y >= mh - 2 ? low : tl).push({ x: x * T + T / 2, y: y * T + T / 2, s: .78, r: 18 });
+    if (low.length) root.add(shrubs(low));   // أشجار الحافة القريبة من الكاميرا: شجيرات منخفضة بدل نخيل يغطي الرؤية
     if (th.tree === 'palm') root.add(palms(tl));
     else if (th.tree === 'round') tl.forEach(p => root.add(sidrTree(p.x, p.y, .9)));
     else if (th.tree === 'cactus') tl.forEach(p => root.add(cactus(p.x, p.y)));
@@ -106,8 +108,9 @@ export function createAdv3D(canvas) {
       case 'well': return shadowed(well3d(x, z, 22, true));
       case 'chest': { P.add(wood, box(36, 22, 26, 0, 11, 0, 3)); P.add(material('metal', '#C9971C'), box(38, 3, 28, 0, 15, 0)); G.add(P.build()); const lid = new THREE.Group(); lid.position.set(0, 22, -13); const lm = new THREE.Mesh(box(36, 8, 26, 0, 4, 13, 3), wood); lid.add(lm); G.add(lid); G.userData.lid = lid; break; }
       case 'lever': { P.add(std('#6A6A72'), box(26, 8, 14, 0, 4, 0, 2), { uv: false }); G.add(P.build()); const arm = new THREE.Group(); arm.position.y = 8; const st = new THREE.Mesh(cyl(1.8, 1.8, 26, 0, 13, 0, 8), dark); const kn = new THREE.Mesh(sphere(5, 0, 27, 0), std(e.color || '#E2475C', { emissive: e.color || '#E2475C', emissiveIntensity: .35 })); arm.add(st, kn); G.add(arm); G.userData.arm = arm; break; }
-      case 'plate': { const m = new THREE.Mesh(box(38, 4, 38, 0, 2, 0, 2), std('#8C8478')); m.receiveShadow = true; G.add(m); G.userData.plate = m; break; }
-      case 'block': { P.add(material('wood', '#A8723E'), box(42, 40, 42, 0, 20, 0, 2)); P.add(material('wood', '#6E4520'), box(44, 5, 44, 0, 3, 0)); P.add(material('wood', '#6E4520'), box(44, 5, 44, 0, 37, 0)); G.add(P.build()); break; }
+      case 'plate': { const m = new THREE.Mesh(box(40, 5, 40, 0, 2.5, 0, 2), new THREE.MeshStandardMaterial({ color: '#B89A3A', emissive: '#6A5010', emissiveIntensity: .6, metalness: .5, roughness: .4 })); m.receiveShadow = true; G.add(m); G.userData.plate = m; break; }
+      case 'block': { const hl = new THREE.Mesh(new THREE.RingGeometry(26, 31, 28), new THREE.MeshBasicMaterial({ color: '#FFD54A', transparent: true, opacity: .75, side: THREE.DoubleSide })); hl.rotation.x = -Math.PI / 2; hl.position.y = 1.2; G.add(hl); G.userData.hl = hl;
+        P.add(material('wood', '#C88A4A'), box(42, 40, 42, 0, 20, 0, 2)); P.add(material('wood', '#6E4520'), box(44, 5, 44, 0, 3, 0)); P.add(material('wood', '#6E4520'), box(44, 5, 44, 0, 37, 0)); G.add(P.build()); break; }
       case 'gate': case 'cage': { const n = e.kind === 'cage' ? 7 : 5, wdt = e.kind === 'cage' ? 46 : 44; for (let i = 0; i < n; i++) P.add(dark, cyl(1.8, 1.8, 70, -wdt / 2 + i * wdt / (n - 1), 35, e.kind === 'cage' ? 20 : 0, 8), { uv: false });
         if (e.kind === 'cage') for (let i = 0; i < n; i++) P.add(dark, cyl(1.8, 1.8, 70, -wdt / 2 + i * wdt / (n - 1), 35, -20, 8), { uv: false });
         P.add(dark, box(wdt + 6, 5, e.kind === 'cage' ? 46 : 6, 0, 72, 0), { uv: false }); if (e.kind === 'cage') { P.add(dark, box(5, 70, 44, -wdt / 2, 35, 0), { uv: false }); P.add(dark, box(5, 70, 44, wdt / 2, 35, 0), { uv: false }); } G.add(P.build()); G.userData.bars = 1; if (e.kind === 'gate') G.position.z = z + T / 2 - 4; break; }
@@ -134,6 +137,14 @@ export function createAdv3D(canvas) {
     }
     shadowed(G); return G;
   }
+  /* أسهم مضيئة على الأرض من الصندوق إلى لوحته */
+  const guides = new Map();
+  function guide(b, pl, t) {
+    let g = guides.get(b); if (!g || g.parent !== root) { g = new THREE.Group(); for (let i = 0; i < 6; i++) { const c = new THREE.Mesh(new THREE.ConeGeometry(8, 18, 3), glow('#FFE27A')); c.rotation.x = Math.PI / 2; g.add(c); } root.add(g); guides.set(b, g); }
+    const bx = (b.px != null ? b.px : b.x) * T + T / 2, bz = (b.py != null ? b.py : b.y) * T + T / 2, px = pl.x * T + T / 2, pz = pl.y * T + T / 2, d = Math.hypot(px - bx, pz - bz);
+    g.visible = d > 4 && !b.hidden; if (!g.visible) return; const ang = Math.atan2(px - bx, pz - bz);
+    g.children.forEach((c, i) => { const f = ((i / 6 + t * .35) % 1); c.position.set(bx + (px - bx) * f, 3, bz + (pz - bz) * f); c.rotation.set(Math.PI / 2, 0, -ang + Math.PI); c.visible = f * d > 26 && f * d < d - 10; });
+  }
   function flame(s) { const g = new THREE.Group(); const o = new THREE.Mesh(new THREE.ConeGeometry(9 * s, 26 * s, 8), new THREE.MeshBasicMaterial({ color: '#FF8A1E', transparent: true, opacity: .92 })); o.position.y = 13 * s; const i = new THREE.Mesh(new THREE.ConeGeometry(5 * s, 16 * s, 8), new THREE.MeshBasicMaterial({ color: '#FFE070' })); i.position.y = 9 * s; g.add(o, i); g.userData.flame = 1; return g; }
 
   /* ── كل إطار ── */
@@ -151,7 +162,10 @@ export function createAdv3D(canvas) {
       if (e.kind === 'block') { const bx = (e.px != null ? e.px : e.x) * T + T / 2, bz = (e.py != null ? e.py : e.y) * T + T / 2; o.position.set(bx, 0, bz); }
       if (o.userData.lid) o.userData.lid.rotation.x += ((e.open ? -1.9 : 0) - o.userData.lid.rotation.x) * Math.min(1, dt * 6);
       if (o.userData.arm) o.userData.arm.rotation.z += ((e.on ? -.6 : .6) - o.userData.arm.rotation.z) * Math.min(1, dt * 10);
-      if (o.userData.plate) { const on = V.pressed(e); o.userData.plate.material.color.set(on ? '#E9B23A' : '#8C8478'); o.userData.plate.material.emissive && o.userData.plate.material.emissive.set(on ? '#7A5A10' : '#000'); }
+      if (o.userData.plate) { const pulse = V.pressed(e) ? 1 : 1 + Math.sin(t * 5) * .08; o.userData.plate.scale.set(pulse, 1, pulse); nearL.push([o.position.x, 30, o.position.z, .45]); }
+      if (o.userData.hl) { const pl = e.to && V.A.ent(e.to), on = pl && pl.x === e.x && pl.y === e.y; o.userData.hl.visible = !on; o.userData.hl.material.opacity = .5 + Math.sin(t * 4) * .3; }
+      if (e.kind === 'block' && e.to) guide(e, V.A.ent(e.to), t);
+      if (o.userData.plate) { const on = V.pressed(e); o.userData.plate.material.color.set(on ? '#FFD54A' : '#B89A3A'); o.userData.plate.material.emissiveIntensity = on ? 1.2 : .5 + Math.sin(t * 5) * .3; }
       if (o.userData.bars) { const tgt = e.open ? -74 : 0; o.position.y += (tgt - o.position.y) * Math.min(1, dt * 4); if (e.open && o.position.y < -70) o.visible = false; }
       if (e.kind === 'door' && e.open) o.visible = false;
       if (o.userData.spin) { o.userData.spin.rotation.y = t * 1.6; o.userData.spin.position.y = 30 + Math.sin(t * 3 + e.x) * 4; }
@@ -186,7 +200,7 @@ export function createAdv3D(canvas) {
       fxPts.geometry.setAttribute('position', new THREE.BufferAttribute(pos, 3)); fxPts.geometry.setAttribute('color', new THREE.BufferAttribute(col, 3)); fxPts.visible = true; } else fxPts.visible = false;
     // الكاميرا: من الجنوب بزاوية عالية تتبع البطل
     const ci = V.cine == null ? 1 : Math.min(1, V.cine), e = 1 - Math.pow(1 - ci, 3);   // لقطة افتتاحية: من فوق القرية إلى البطل
-    const dist = (W < H ? 620 : 760) / V.zoom * (V.userZoom || 1) * (1 + (1 - e) * 1.8), pitch = (34 + (1 - e) * 30) * Math.PI / 180, cx = V.cam.x, cz = V.cam.y - 10;
+    const dist = (W < H ? 900 : 760) / V.zoom * (V.userZoom || 1) * (1 + (1 - e) * 1.8), pitch = (34 + (1 - e) * 30) * Math.PI / 180, cx = V.cam.x, cz = V.cam.y - 10;
     camera.position.set(cx + V.shake * (Math.random() - .5) * 10, Math.sin(pitch) * dist, cz + Math.cos(pitch) * dist); camera.lookAt(cx, 0, cz);
     sun.position.set(cx - 380, 900, cz - 520); sun.target.position.set(cx, 0, cz); sun.target.updateMatrixWorld();
     renderer.render(scene, camera);

@@ -50,8 +50,9 @@ await shot('5-camp');
 const caught = await page.evaluate(async () => { const A = window.__adv, g = A.ent('gA'); A.tp(Math.round(g.px) + 2, Math.round(g.py)); g.ang = 0; g.pause = 3; await new Promise(r => setTimeout(r, 2600)); return A.hero(); });
 ok('الحارس يراك فتعود بهدوء إلى النار الآمنة (لا عقاب)', caught.x <= 3, JSON.stringify(caught));
 await page.evaluate(() => { window.__adv.S.flags.invisible = 1; });   // باقي الاختبار بلا حراس
-await act("A.goTile(16, 16)"); await act("A.use('b1')"); await act("A.use('b1')");
-await act("A.goTile(23, 13)"); await act("A.use('b2')"); await act("A.use('b2')"); await sleep(400);
+await act("A.goTile(10, 10)"); await act("A.tapTile(17, 16)"); await sleep(600);   // ضغطة واحدة على الصندوق من بعيد: يمشي البطل خلفه ويدفعه حتى لوحته
+ok('ضغطة واحدة تدفع الصندوق الأول حتى لوحته', await page.evaluate(() => { const b = window.__adv.ent('b1'); return b.x === 19 && b.y === 16; }));
+await act("A.tapTile(23, 14)"); await sleep(600);
 ok('لغز الصناديق: اللوحتان مضغوطتان فينفتح القفص', await page.evaluate(() => window.__adv.ent('cage').open === true));
 await shot('6-cage');
 await act("A.use('yousef')"); ok('مهمة ٤: تحرير يوسف', (await st()).flags.yousef);

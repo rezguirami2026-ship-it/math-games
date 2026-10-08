@@ -45,7 +45,7 @@ export default {
     { text: 'خذ المنجل من صندوق الأدوات بجانب السقيفة', done: A => A.has('sickle') || A.flag('salem'), at: () => ({ area: 'village', id: 'c_shed' }), hint: 'السقيفة الصغيرة جنوب غرب القرية، والصندوق أمامها.' },
     { text: 'اقطع الشوك حول المزرعة (اضغط على الشوك) وأنقذ العم سالم', done: A => A.flag('salem'), at: A => A.S.cut['village:4,17'] ? { area: 'village', id: 'salem' } : { area: 'village', x: 4, y: 17 }, hint: 'معك المنجل: اضغط على الشجيرات الشوكية المضيئة، أو امشِ نحوها، أو اضغط 🌾.' },
     { text: 'اذهب شرقاً إلى معسكر العصابة', done: A => A.flag('campIntro') || A.flag('yousef'), at: () => ({ area: 'camp', x: 1, y: 10 }), hint: 'المخرج في الطرف الشرقي من الطريق الكبير، عند السهم المضيء.' },
-    { text: 'ادفع الصندوقين على اللوحتين لتفتح القفص', done: A => A.flag('cageOpen') || A.flag('yousef'), at: A => ({ area: 'camp', id: A.flag('b1ok') ? 'b2' : 'b1' }), hint: 'امشِ نحو الصندوق ليتحرك أمامك، أو اضغط عليه وأنت بجانبه. كل صندوق إلى لوحة.' },
+    { text: 'اضغط على كل صندوق خشبي ليدفعه البطل إلى لوحته الذهبية (اتبع الأسهم)', done: A => A.flag('cageOpen') || A.flag('yousef'), at: A => ({ area: 'camp', id: A.flag('b1ok') ? 'b2' : 'b1' }), hint: 'اضغط على الصندوق مرة واحدة: يمشي البطل خلفه ويدفعه حتى يستقر على اللوحة. ثم افعل الشيء نفسه مع الصندوق الثاني.' },
     { text: 'حرّر يوسف من القفص', done: A => A.flag('yousef'), at: () => ({ area: 'camp', id: 'yousef' }), hint: 'القفص انفتح! اضغط على يوسف.' },
     { text: 'تسلّل وخذ حلقة المفاتيح من صندوق خيمة الزعيم', done: A => A.has('keys') || A.flag('naser'), at: () => ({ area: 'camp', id: 'c_keys' }), hint: 'اختبئ في العشب الطويل، وانتظر حتى يدير الحارس ظهره. المخروط الأصفر هو ما يراه.' },
     { text: 'عُد إلى القرية وافتح المخزن لتنقذ العم ناصر', done: A => A.flag('naser'), at: () => ({ area: 'village', id: 'wdoor' }), hint: 'المخزن الكبير شمال شرق القرية، والمفاتيح معك.' },
@@ -143,7 +143,7 @@ export default {
     },
     camp: {
       theme: 'camp', map: rows(C), dark: .5,
-      enter: A => { if (!A.flag('campIntro')) { A.flag('campIntro', true); A.say([{ who: 'narrator', text: 'معسكر عصابة الظلال: خيام وصناديق وحراس يدورون بفوانيسهم.' }, { who: 'hero', text: 'سأتحرك بهدوء. العشب الطويل يخفيني، ومخروط الضوء أمام الحارس هو ما يراه.' }]); } },
+      enter: A => { if (!A.flag('campIntro')) { A.flag('campIntro', true); A.say([{ who: 'narrator', text: 'معسكر عصابة الظلال: خيام وصناديق وحراس يدورون بفوانيسهم.' }, { who: 'hero', text: 'سأتحرك بهدوء. العشب الطويل يخفيني، ومخروط الضوء أمام الحارس هو ما يراه.' }, { who: 'yousef', text: 'أنا هنا في القفص! ادفع الصندوقين الخشبيين على اللوحتين الذهبيتين فينفتح. اضغط على الصندوق وسيدفعه البطل وحده!' }]); } },
       ents: [
         { id: 'back', kind: 'exit', x: 0, y: 10, to: 'village', tx: 30, ty: 11, arrow: '➜' },
         { id: 'f1', kind: 'safe', x: 2, y: 10 }, { id: 'f2', kind: 'safe', x: 15, y: 9 },
@@ -153,8 +153,8 @@ export default {
         { id: 'cage', kind: 'cage', x: 21, y: 13, when: A => { const a = A.pressed(A.ent('p1')), b = A.pressed(A.ent('p2')); if (a && !A.flag('b1ok')) A.flag('b1ok', true); if (a && b) A.flag('cageOpen', true); return a && b; }, openMsg: '🔓 انفتح القفص!' },
         { id: 'yousef', kind: 'npc', who: 'yousef', x: 21, y: 13, face: 'down', mark: A => A.ent('cage').open && !A.flag('yousef') ? '!' : null },
         { id: 'p1', kind: 'plate', x: 19, y: 16 }, { id: 'p2', kind: 'plate', x: 23, y: 16 },
-        { id: 'b1', kind: 'block', x: 17, y: 16 }, { id: 'b2', kind: 'block', x: 23, y: 14 },
-        { id: 'sgn', kind: 'sign', x: 17, y: 12, text: 'قفص العصابة: يُفتح حين يُضغط على اللوحتين معاً. (امشِ نحو الصندوق لتدفعه، أو اضغط عليه وأنت بجانبه)' },
+        { id: 'b1', kind: 'block', x: 17, y: 16, to: 'p1' }, { id: 'b2', kind: 'block', x: 23, y: 14, to: 'p2' },
+        { id: 'sgn', kind: 'sign', x: 17, y: 12, text: 'قفص العصابة يُفتح حين يقف صندوق ثقيل على كل لوحة ذهبية. اضغط على الصندوق الخشبي، فيقف البطل خلفه ويدفعه على طول الأسهم المضيئة حتى لوحته.' },
         { id: 'gA', kind: 'guard', look: BANDIT, path: [[6, 9], [13, 9]], speed: 1.3, range: 3.6 },
         { id: 'gB', kind: 'guard', look: BANDIT, path: [[18, 2], [18, 12]], speed: 1.2, range: 3.6 },
         { id: 'gC', kind: 'guard', look: BANDIT, path: [[21, 2], [26, 2], [26, 8], [21, 8]], speed: 1.1, range: 3.2, wait: 1.4 },
