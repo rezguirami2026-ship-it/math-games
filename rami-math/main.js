@@ -13,7 +13,7 @@ import { makeTrucks, truckColliders, drawTruck, drawPile, drawSignal, drawSpot, 
 import { makeNpcs, npcVisible, updateNpc, drawNpc } from './npc/npc.js';
 import { updateKids, kidsItems, kidsPeople3d } from './world/school.js';
 import { decorItems, initGems, DECOR } from './world/decor.js';
-import { updatePet, petItems } from './world/pet.js';
+import { updatePet, petItems, pet3d } from './world/pet.js';
 import { treasureItems, nearTreasure, openTreasure, TREASURES } from './world/treasure.js';
 import { CHAPTER, introLines, npcLines } from './story/dialogues.js';
 import * as convoy from './missions/convoy.js';
@@ -205,7 +205,7 @@ async function start(state) {
   }
 }
 /* ── العرض ثلاثي الأبعاد (renderer3d): يُحمَّل فقط عند طلبه، ويرجع إلى الرسم الحالي إن لم يدعم الجهاز WebGL أو فشل التحميل ── */
-const V3D = 'نسخة 3D · ٦٠';   // تُعرض في شاشة التحميل وفي الزاوية: للتأكد أن المتصفح حمّل آخر نسخة
+const V3D = 'نسخة 3D · ٦١';   // تُعرض في شاشة التحميل وفي الزاوية: للتأكد أن المتصفح حمّل آخر نسخة
 const want3d = () => gfx.d3();
 function loadingScreen() {
   const el = document.createElement('div'); el.className = 'load3d';
@@ -237,7 +237,7 @@ async function init3D() {
     try { await Promise.race([document.fonts.load('900 88px Cairo', 'مستودع الطرود ٠١٢٣'), new Promise(r => setTimeout(r, 2500))]); } catch (e) {}   // لافتات المباني تُقاس بخط Cairo نفسه (وإلا قُصّ النص)
     let q = 'auto'; try { q = localStorage.getItem('ramimath_q') || 'auto'; } catch (e) {}   // تلقائية: تبدأ عالية وتنخفض وحدها إن كان الجهاز بطيئاً
     eng.l3 = await R.create3D({ quality: q === 'low' ? 'low' : 'high', world: WORLD, paintGround: paintStaticGround, onProgress: k => load.set(k) });
-    eng.l3.ground = paintDynamicGround; eng.l3.people = people3d; eng.l3.gates = () => W.gateK; eng.l3.allDone = allDone; eng.l3.ramadan = () => SEASON.ramadan; eng.l3.signal = () => W.signalGreen;
+    eng.l3.ground = paintDynamicGround; eng.l3.people = people3d; eng.l3.pet = pet3d; eng.l3.gates = () => W.gateK; eng.l3.allDone = allDone; eng.l3.ramadan = () => SEASON.ramadan; eng.l3.signal = () => W.signalGreen;
     eng.l3.vehicles = () => { const s = game.state, m = s.missions.convoy, out = W.trucks.map(tr => ({ id: 't' + tr.i, x: tr.x, y: tr.y, load: m.loads[tr.i], covered: tr.covered, shake: tr.shake, sag: tr.sag }));
       if (quests.isStarted('division1') || quests.isDone('division1')) out.push({ id: 'van', x: convoy.VAN.x, y: convoy.VAN.y, load: m.van || 0, covered: !!s.world.delivered, s: .72 }); return out; };
     // فقد سياق الرسم (الهاتف يحرّر ذاكرة الرسوم حين تُصغَّر اللعبة أو تُقفل الشاشة) يترك المشهد أسود: نحفظ ونعيد التحميل عند العودة،
@@ -447,7 +447,7 @@ const routeLeft = pl => { if (!pl.target) return 0; let d = Math.hypot(pl.target
 /* ── التحديث ── */
 function update(dt) {
   updateKids(dt);   // طلاب المدرسة يلعبون
-  updatePet(dt, W.player);   // الرفيق سهيل يتبع البطل
+  updatePet(dt, W.player, (x, y) => blocked(x, y));   // الرفيق سهيل يتبع البطل على أثره
   const s = game.state, pl = W.player;
   pl.speed = routeLeft(pl) > 280 ? 215 : 150;   // يجري في الطرق الطويلة ويمشي قرب الهدف
   if (pl.anim && (pl.anim.t += dt / pl.anim.dur) >= 1) pl.anim = null;
@@ -543,7 +543,7 @@ function worldItems(view, t, three) {
   if (!three) list.push({ y: HERO_DOOR.y - 13, draw: cc => signboard(cc, HERO_DOOR.x + 52, HERO_DOOR.y - 66, '🚪 خزانة البطل') });   // لافتة على جدار بيت البطل (في 3D على الواجهة نفسها)
   const giverMark = n => c && c.ready && MODS[c.id] && c.giver === n.id && !quests.isStarted(c.id) ? '!' : null;
   // الشخصيات خارج الشاشة لا تُرسم (كانت كلها تُرسم في كل إطار)
-  list.push(...kidsItems(drawNpc, view, three), ...decorItems(view), ...treasureItems(view, gateState(), t), ...petItems(view, t));
+  list.push(...kidsItems(drawNpc, view, three), ...decorItems(view), ...treasureItems(view, gateState(), t), ...petItems(view, t, three));
   if (!three) W.npcs.filter(n => npcVisible(n, s) && n.x > view.x - 60 && n.x < view.x + view.w + 60 && n.y > view.y - 20 && n.y < view.y + view.h + 110).forEach(n => list.push({ y: n.y, x: n.x, lean: .5, draw: cc => drawNpc(cc, n, giverMark(n)) }));   // في 3D: الشخصيات مجسّمة (people3d)
   const pl = W.player, mod = curMod(), hand = mod && mod.hand && c && quests.isStarted(c.id) ? mod.hand(quests.data(c.id)) : null;
   const pa = pl.anim ? pl.anim.name : pl.moving ? (pl.speed > 160 ? 'run' : 'walk') : 'idle';
@@ -660,6 +660,6 @@ bus.on('lessonDone', id => {
   if (allDone()) { unlock('all69'); setTimeout(() => hud.toast('🎓 أكملتَ الدروس الـ٦٩ كلها! اذهب إلى منصة التخرّج'), 4500); }
   if (id === 'mixedNumbers') setTimeout(() => hud.toast('💧 أم خالد تنتظرك في القرية: خزانات البيوت عطشى!'), 3500);   // الدرس التالي في القرية لا في السوق
 });
-window.__game = { get state() { return game.state; }, get W() { return W; }, eng, game, quests, MODS, activity: id => openActivity(W, id, MODS[id]), finale: u => openFinale(W, u, MODS), expert: id => openExpert(W, id, MODS[id]), daily: () => openDaily(W, MODS), TREASURES, findPath: (a, b) => findPath(a.x, a.y, b.x, b.y, blocked) };
+window.__game = { get state() { return game.state; }, get W() { return W; }, eng, game, quests, MODS, blocked, activity: id => openActivity(W, id, MODS[id]), finale: u => openFinale(W, u, MODS), expert: id => openExpert(W, id, MODS[id]), daily: () => openDaily(W, MODS), TREASURES, findPath: (a, b) => findPath(a.x, a.y, b.x, b.y, blocked) };
 boot();
 try { startOps(); initOpsUI(); } catch (e) { console.warn('[ops]', e); }   // الخدمات الاختيارية: بعد تشغيل اللعبة، ولا توقفها أبداً

@@ -10,6 +10,7 @@ import { ramadan } from './ramadan.js';
 import { residential, funpark, port } from './city.js';
 import { buildRegions } from './regions.js';
 import { lessonProps } from './props2.js';
+import { buildCamel, animateCamel } from './animals.js';
 import { vehicles, shop3d, busStation, dhows, plane3d, pumps3d, stage3d, farmShed3d, bellTowers } from './things.js';
 import { buildVillage } from './world.js';
 import { buildPerson, animatePerson } from './people.js';
@@ -126,7 +127,7 @@ export async function create3D(opts) {
   }
 
   /* ── الشخصيات: تُبنى عند ظهورها أول مرة (ثلاث على الأكثر في الإطار)، وتختفي خارج الرؤية ── */
-  const people = new Map(); let lastT = 0;
+  const people = new Map(); let lastT = 0, camel = null;   // الجمل سهيل مجسّم حقيقي تحجبه البيوت حين يمر خلفها
   function syncPeople(list, t) {
     const dt = Math.min(.05, Math.max(0, t - lastT)); lastT = t; let built = 0;
     const seen = new Set();
@@ -200,6 +201,7 @@ export async function create3D(opts) {
       village.update(state, t, E.follow); regions.update(t, E.follow, L.gates && L.gates());
       if (L.vehicles) veh.update(L.vehicles()); boats.userData.tick(t); lp.userData.tick(t, L.signal && L.signal()); bells.userData.tick(t); stg.userData.update(t, L.allDone && L.allDone()); if (E.follow) { resi.userData.fade(E.follow); prt.userData.fade(E.follow); }
       if (L.people) try { syncPeople(L.people(), t); } catch (e) { if (!L._pErr) { L._pErr = 1; console.error('people', e); } }
+      if (L.pet) try { const ps = L.pet(); if (ps) { if (!camel) { camel = buildCamel(); scene.add(camel.root); } camel.root.visible = true; animateCamel(camel, ps, Math.min(.05, Math.max(0, t - (camel.lt || t))), t); camel.lt = t; } else if (camel) camel.root.visible = false; } catch (e) { if (!L._petErr) { L._petErr = 1; console.error('pet', e); } }
       if (L.ground) try { paintDecal(t, L.ground); } catch (e) { if (!L._gErr) { L._gErr = 1; console.error('ground layer', e); } }
       cl.userData.tick(t, camera); park.userData.tick(t);
       if (post && L.usePost !== false) post.render(); else renderer.render(scene, camera);

@@ -4,18 +4,47 @@ import { game } from '../core/state.js';
 import { levelOf } from '../core/levels.js';
 import { shade } from '../core/util.js';
 
-const P = { x: 0, y: 0, phase: 0, moving: false, dir: 1, init: false };
+const P = { x: 0, y: 0, phase: 0, moving: false, dir: 1, init: false, v: 0 };
+const TR = [];   // أثر البطل: النقاط التي مشى عليها فعلاً (كلها طرق مفتوحة)
+const GAP = 44;  // المسافة التي يقف عندها الجمل خلف البطل
 export const petOn = () => { const s = game.state; return !!s && levelOf(s).n >= 2 && !(s.pet && s.pet.hidden); };
-export function updatePet(dt, pl) {
-  if (!petOn()) { P.init = false; return; }
-  if (!P.init) { P.x = pl.x - 30; P.y = pl.y + 6; P.init = true; }
-  const tx = pl.x - 34 * (pl.dir === 'left' ? -1 : 1), ty = pl.y + 8, dx = tx - P.x, dy = ty - P.y, d = Math.hypot(dx, dy);
-  if (d > 260) { P.x = tx; P.y = ty; }   // انتقل البطل بعيداً (بوابة أو انتقال): يلحق به فوراً
-  P.moving = d > 6; if (P.moving) { const sp = Math.min(d, (d > 60 ? 230 : 140) * dt); P.x += dx / d * sp; P.y += dy / d * sp; P.phase += sp * .12; }
-  // ينظر حيث ينظر البطل (يمين/يسار)؛ وحين يمشي البطل للأعلى أو الأسفل يتبع اتجاه حركته الأفقية
-  if (pl.dir === 'left') P.dir = -1; else if (pl.dir === 'right') P.dir = 1; else if (P.moving && Math.abs(dx) > 4) P.dir = dx > 0 ? 1 : -1;
+/* مكان مفتوح خلف البطل (عند أول ظهور أو بعد انتقال مفاجئ عبر بوابة) */
+function placeBehind(pl, blocked) {
+  const back = pl.dir === 'left' ? 1 : pl.dir === 'right' ? -1 : 0, up = pl.dir === 'up' ? 1 : pl.dir === 'down' ? -1 : 0;
+  const tries = [[back * 40, up * 34], [-34, 8], [34, 8], [0, 34], [0, -30], [-50, 0], [50, 0]];
+  for (const [dx, dy] of tries) { const x = pl.x + dx, y = pl.y + dy; if (!blocked || !blocked(x, y)) return { x, y }; }
+  return { x: pl.x, y: pl.y + 2 };
 }
-export function petItems(view, t) {
+/* الجمل يمشي على أثر البطل بالضبط فلا يعبر جداراً ولا يعلق خلف عائق، بسرعة تتغير بنعومة،
+   ويقف خلف البطل على مسافة، وينتظر إن عاد البطل نحوه بدل أن يمر من خلاله */
+export function updatePet(dt, pl, blocked) {
+  if (!petOn()) { P.init = false; return; }
+  if (!P.init || Math.hypot(pl.x - (P.hx ?? pl.x), pl.y - (P.hy ?? pl.y)) > 140) {   // أول ظهور أو انتقال مفاجئ
+    const q = placeBehind(pl, blocked); P.x = q.x; P.y = q.y; P.v = 0; TR.length = 0; TR.push({ x: P.x, y: P.y }, { x: pl.x, y: pl.y }); P.init = true;
+  }
+  P.hx = pl.x; P.hy = pl.y;
+  const L = TR[TR.length - 1]; if (Math.hypot(pl.x - L.x, pl.y - L.y) > 5) { TR.push({ x: pl.x, y: pl.y }); if (TR.length > 400) TR.shift(); }
+  // البطل عاد نحو الجمل: يقف وينتظر، ويبدأ أثراً جديداً من مكانه
+  const direct = Math.hypot(pl.x - P.x, pl.y - P.y);
+  if (direct < GAP * .8) { TR.length = 0; TR.push({ x: P.x, y: P.y }, { x: pl.x, y: pl.y }); }
+  // طول الأثر الباقي من الجمل إلى البطل
+  let left = Math.hypot(TR[0].x - P.x, TR[0].y - P.y); for (let i = 1; i < TR.length; i++) left += Math.hypot(TR[i].x - TR[i - 1].x, TR[i].y - TR[i - 1].y);
+  const want = left > GAP + 6 ? Math.min(250, 70 + (left - GAP) * 2.2) : 0;   // يسرع إذا ابتعد، ويبطئ ثم يقف قرب البطل
+  P.v += (want - P.v) * Math.min(1, dt * (want > P.v ? 5 : 7));
+  let step = P.v * dt, mvx = 0;
+  while (step > 0 && TR.length > 1) {
+    const t0 = TR[0], d = Math.hypot(t0.x - P.x, t0.y - P.y);
+    if (d <= step) { mvx += t0.x - P.x; P.x = t0.x; P.y = t0.y; step -= d; TR.shift(); }
+    else { const k = step / d; mvx += (t0.x - P.x) * k; P.x += (t0.x - P.x) * k; P.y += (t0.y - P.y) * k; step = 0; }
+  }
+  P.moving = P.v > 12;
+  if (P.moving) { P.phase += P.v * dt * .12; if (Math.abs(mvx) > P.v * dt * .35) P.dir = mvx > 0 ? 1 : -1; }   // يلتفت فقط حين يتغير اتجاه مشيه فعلاً
+  else if (pl.dir === 'left' || pl.dir === 'right') P.dir = pl.dir === 'left' ? -1 : 1;   // واقفاً: ينظر حيث ينظر البطل
+}
+export const petState = () => ({ x: P.x, y: P.y, dir: P.dir, moving: P.moving, v: P.v });   // للاختبار
+export const pet3d = () => petOn() && P.init ? { x: P.x, y: P.y, dir: P.dir, moving: P.moving, phase: P.phase, k: .95 + Math.min(9, levelOf(game.state).n) * .05 } : null;
+export function petItems(view, t, three) {
+  if (three) return [];   // في العرض ثلاثي الأبعاد يُرسم الجمل مجسّماً (renderer3d/animals.js)
   if (!petOn() || !P.init || (view && (P.x < view.x - 60 || P.x > view.x + view.w + 60 || P.y < view.y - 60 || P.y > view.y + view.h + 120))) return [];
   const k = .9 + Math.min(9, levelOf(game.state).n) * .05;
   return [{ y: P.y, x: P.x, draw: c => calf(c, P.x, P.y, k, t) }];
