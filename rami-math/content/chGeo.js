@@ -7,7 +7,7 @@ import { drawSolid } from '../missions/unit3.js';
 const INK = '#2A1B66', ACC = '#E2475C', FILL = '#9CC9F5';
 const T = (x, y, s, o = {}) => `<text x="${x}" y="${y}" text-anchor="${o.a || 'middle'}" font-size="${o.fs || 12}" font-weight="900" fill="${o.c || INK}" font-family="Cairo,sans-serif" direction="ltr">${s}</text>`;
 const poly = (P, o = {}) => `<polygon points="${P.map(p => p.map(v => +v.toFixed(1)).join(',')).join(' ')}" fill="${o.fill || FILL}" stroke="${o.stroke || INK}" stroke-width="${o.sw || 2.2}" ${o.dash ? 'stroke-dasharray="4 3"' : ''} stroke-linejoin="round"/>`;
-export const sg = n => n < 0 ? '⁦−' + ar(-n) + '⁩' : ar(n);
+export const sg = n => ar(n);
 export const pt = (x, y) => `(${sg(x)}، ${sg(y)})`;   // كما في مهمة الإحداثيات
 
 /* أيقونة شكل ثنائي الأبعاد (للخيارات والبطاقات) */

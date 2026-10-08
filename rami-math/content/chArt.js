@@ -69,7 +69,7 @@ export function gridShape(cols, rows, full, half) {
 }
 /* خط أعداد من lo إلى hi بعلامات كل step، وسهم عند v (labels: أي العلامات تُكتب) */
 export function nline(lo, hi, v, step, every = 1) {
-  const x = t => 20 + (t - lo) / (hi - lo) * 280, sgn = n => n < 0 ? '−' + ar(-n) : ar(n); let s = `<svg viewBox="0 0 320 72" class="chLine"><line x1="14" y1="40" x2="306" y2="40" stroke="${INK}" stroke-width="3"/>`;
+  const x = t => 20 + (t - lo) / (hi - lo) * 280, sgn = n => ar(n); let s = `<svg viewBox="0 0 320 72" class="chLine"><line x1="14" y1="40" x2="306" y2="40" stroke="${INK}" stroke-width="3"/>`;
   for (let t = lo, i = 0; t <= hi + 1e-9; t += step, i++) { s += `<line x1="${x(t)}" y1="32" x2="${x(t)}" y2="48" stroke="${INK}" stroke-width="2"/>`; if (i % every === 0) s += `<text x="${x(t)}" y="66" text-anchor="middle" font-size="12" font-weight="900" fill="${INK}" font-family="Cairo,sans-serif" direction="ltr">${sgn(+t.toFixed(3)).replace('.', '٫')}</text>`; }
   return s + (v != null ? `<path d="M${x(v)} 30 l-7 -14 h14z" fill="${ACC}"/>` : '') + '</svg>';
 }

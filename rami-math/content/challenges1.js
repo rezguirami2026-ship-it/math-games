@@ -5,7 +5,7 @@ import { ar } from '../core/util.js';
 import { choice, multi, order, num, tf, build, sort, match, pickN, fresh, line, memory, error } from '../missions/challenge.js';
 
 const R = (a, b) => a + Math.floor(Math.random() * (b - a + 1));
-const N = n => n < 0 ? '⁦−' + ar(-n) + '⁩' : ar(n);                        // عدد كامل بلا فاصلة آلاف
+const N = n => ar(n);                        // عدد كامل بلا فاصلة آلاف
 const dec = v => ar(String(+(+v).toFixed(3))).replace('.', '٫');                       // ٤٫٧٥
 const ltr = s => `<span class="ltr" dir="ltr">${s}</span>`;
 const PLACE = ['الآحاد', 'العشرات', 'المئات', 'الآلاف', 'عشرات الآلاف', 'مئات الآلاف'];

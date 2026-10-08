@@ -5,7 +5,7 @@ import { nline, dec } from './chArt.js';
 
 const R = (a, b) => a + Math.floor(Math.random() * (b - a + 1));
 const shuffle = a => pickN(a, a.length);
-const N = n => n < 0 ? '⁦−' + ar(-n) + '⁩' : ar(n);
+const N = n => ar(n);
 const gcd = (a, b) => b ? gcd(b, a % b) : a;
 const fr = (n, d) => `<span class="frac"><b>${ar(n)}</b><i>${ar(d)}</i></span>`;
 const mx = (w, n, d) => { if (!n) return ar(w); const g = gcd(n, d); n /= g; d /= g; return w ? `${ar(w)} و${fr(n, d)}` : fr(n, d); };   // عدد كسري في أبسط صورة

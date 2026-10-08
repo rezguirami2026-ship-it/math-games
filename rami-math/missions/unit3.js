@@ -13,7 +13,7 @@ const R = (a, b) => a + Math.floor(Math.random() * (b - a + 1));
 const shuffle = a => a.map(v => [Math.random(), v]).sort((x, y) => x[0] - y[0]).map(x => x[1]);
 const near = (W, p, r) => Math.hypot(W.player.x - p.x, W.player.y - p.y) < (r || 50);
 const changed = () => { bus.emit('mission'); bus.emit('save'); };
-const sg = n => n < 0 ? '\u2066−' + ar(-n) + '\u2069' : ar(n);          // السالب يُعرض صحيحاً داخل النص العربي
+const sg = n => ar(n);          // السالب يُعرض صحيحاً داخل النص العربي
 const pt = (x, y) => `(${sg(x)}، ${sg(y)})`;
 async function finish(W, id, lines, reward) { sfx('win'); await wait(600); earn(reward || 40, W.player.x, W.player.y - 80); complete(id); if (lines) await W.talk(lines[0].who, lines); }
 const panel = () => document.getElementById('panel');

@@ -1,5 +1,7 @@
-// الأرقام الهندية. العدد السالب يُعزل باتجاه من اليسار مع علامة ناقص حقيقية، حتى يظهر «−٣» لا «٣-» داخل النص العربي
-export const ar = n => { const s = String(n).replace(/\d/g, d => '٠١٢٣٤٥٦٧٨٩'[d]); return /^-[٠-٩]/.test(s) ? '⁦−' + s.slice(1) + '⁩' : s; };
+// الأرقام الهندية (والسالب عبر neg)
+export const ar = n => { const s = String(n).replace(/\d/g, d => '٠١٢٣٤٥٦٧٨٩'[d]); return /^-[٠-٩]/.test(s) ? neg(s.slice(1)) : s; };
+// العدد السالب بالعربية: الإشارة على يمين العدد فيقرؤها الطالب أولاً (٣−)، داخل عزل اتجاه ثابت فلا يقلبها النص المحيط
+export const neg = digits => '\u2066' + digits + '−\u2069';
 export const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
 export const dist = (a, b) => Math.hypot(a.x - b.x, a.y - b.y);
 export const lerp = (a, b, t) => a + (b - a) * t;

@@ -1,14 +1,14 @@
 // تحديات الوحدة ٤ (الأعداد والحساب — القلعة): ٨ جولات لكل درس تغطي مخرجاته (content/outcomes.js).
 // القواعد نفسها: لا فاصلة آلاف، والسؤال عن قيمة رقم في عدد أرقامه مختلفة، وأعداد جديدة لكل جولة، ولا مؤقت ولا عقاب.
-import { ar } from '../core/util.js';
+import { ar, neg } from '../core/util.js';
 import { choice, multi, order, num, tf, build, sort, match, pickN, fresh, line, memory, error } from '../missions/challenge.js';
 import { nline, dec } from './chArt.js';
 import { glyphs, GLY } from '../missions/unit4.js';
 
 const R = (a, b) => a + Math.floor(Math.random() * (b - a + 1));
 const shuffle = a => pickN(a, a.length);
-const N = n => n < 0 ? '⁦−' + ar(-n) + '⁩' : ar(n);
-const D = v => v < 0 ? '⁦−' + dec(-v) + '⁩' : dec(v);
+const N = n => ar(n);
+const D = v => v < 0 ? neg(dec(-v)) : dec(v);
 const isPrime = n => { if (n < 2) return false; for (let i = 2; i * i <= n; i++) if (n % i === 0) return false; return true; };
 const lcm = (a, b) => { for (let k = 1; ; k++) if ((a * k) % b === 0) return a * k; };
 const hiero = n => `<span class="hiero chHiero">${glyphs(n)}</span>`;

@@ -1,7 +1,7 @@
 // أدوات مشتركة لطاولات العمل (المنظر القريب): نافذة، رسائل، لوحة أرقام، عدّادات
 import { game } from '../core/state.js';
 import { bus } from '../core/events.js';
-import { ar, wait } from '../core/util.js';
+import { ar, wait, neg } from '../core/util.js';
 import { earn } from '../rewards/goodDeeds.js';
 import { sfx } from '../core/sound.js';
 import { complete } from './quests.js';
@@ -10,7 +10,7 @@ export const shuffle = a => a.map(v => [Math.random(), v]).sort((x, y) => x[0] -
 export const near = (W, p, r) => Math.hypot(W.player.x - p.x, W.player.y - p.y) < (r || 50);
 export const changed = () => { bus.emit('mission'); bus.emit('save'); };
 export const dec = v => ar(String(+(+v).toFixed(3))).replace('.', '٫');
-export const sg = n => n < 0 ? '\u2066−' + ar(-n) + '\u2069' : ar(n);
+export const sg = n => ar(n);
 export async function finish(W, id, lines, reward) { sfx('win'); await wait(600); earn(reward || 40, W.player.x, W.player.y - 80); complete(id); if (lines) await W.talk(lines[0].who, lines); }
 export const panel = () => document.getElementById('panel');
 export function sheetOpen(html) { const el = panel(); el.innerHTML = `<div class="sheet bench">${html}</div>`; el.classList.add('on'); game.busy = true; return el; }
@@ -24,7 +24,7 @@ export function numPad(holder, label, onGo, opts) {
   const o = opts || {}, keys = ['7', '8', '9', '⌫', '4', '5', '6', o.dot === false ? '' : '.', '1', '2', '3', o.neg ? '−' : '', '0'];
   holder.innerHTML = `<div class="lockscr2" id="npd"></div><div class="keys2">${keys.map(k => k ? `<button class="act ghost" data-k="${k}">${k === '.' ? '٫' : k === '⌫' ? '⌫' : k === '−' ? '−' : ar(k)}</button>` : '<span></span>').join('')}<button class="act go" data-k="go">${label}</button></div>`;
   let v = '';
-  const show = () => { holder.querySelector('#npd').textContent = v ? ar(v).replace('.', '٫').replace('-', '−') : '؟'; };
+  const show = () => { holder.querySelector('#npd').textContent = v ? (v === '-' ? '−' : v.startsWith('-') ? neg(ar(v.slice(1)).replace('.', '٫')) : ar(v).replace('.', '٫')) : '؟'; };
   holder.querySelectorAll('[data-k]').forEach(b => b.onclick = e => {
     e.stopPropagation(); const k = b.dataset.k; sfx('click');
     if (k === 'go') { if (v && v !== '-' && v !== '.') onGo(parseFloat(v)); return; }
