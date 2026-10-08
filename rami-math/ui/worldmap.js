@@ -46,7 +46,7 @@ export function drawWorldMap(cv, d) {
   c.fillStyle = '#4FB3E8'; rr(c, X(V.pond.x), Y(V.pond.y), V.pond.w * k, V.pond.h * k, 6); c.fill(); c.strokeStyle = '#2F7FB0'; c.lineWidth = 1; c.stroke();
   const house = (b, roof) => { const x = X(b.x), y = Y(b.y), w = b.w * k, h = b.h * k; c.fillStyle = 'rgba(70,45,20,.25)'; c.fillRect(x + 1.5, y + 1.5, w, h); c.fillStyle = '#F3E4C4'; c.fillRect(x, y, w, h); c.fillStyle = roof; c.fillRect(x, y, w, h * .45); c.strokeStyle = '#7A5A30'; c.lineWidth = .8; c.strokeRect(x, y, w, h); };
   V.houses.forEach(b => house(b, '#C8875A')); house(V.warehouse, '#8FA0B5'); house(V.school, '#3F7FB0');
-  { const s = V.school; c.strokeStyle = '#555'; c.lineWidth = .8; c.beginPath(); c.moveTo(X(s.x + s.w - 6), Y(s.y)); c.lineTo(X(s.x + s.w - 6), Y(s.y) - 9); c.stroke(); c.fillStyle = '#C8102E'; c.fillRect(X(s.x + s.w - 6), Y(s.y) - 9, 6, 2); c.fillStyle = '#fff'; c.fillRect(X(s.x + s.w - 6), Y(s.y) - 7, 6, 1.5); c.fillStyle = '#009639'; c.fillRect(X(s.x + s.w - 6), Y(s.y) - 5.5, 6, 2); }
+  { const s = V.school; c.strokeStyle = '#555'; c.lineWidth = .8; c.beginPath(); c.moveTo(X(s.x + s.w - 6), Y(s.y)); c.lineTo(X(s.x + s.w - 6), Y(s.y) - 9); c.stroke(); c.fillStyle = '#fff'; c.fillRect(X(s.x + s.w - 6), Y(s.y) - 9, 6, 2); c.fillStyle = '#C8102E'; c.fillRect(X(s.x + s.w - 6), Y(s.y) - 7, 6, 1.5); c.fillStyle = '#009639'; c.fillRect(X(s.x + s.w - 6), Y(s.y) - 5.5, 6, 2); }
   c.fillStyle = '#9C8B72'; c.beginPath(); c.arc(X(V.well.x), Y(V.well.y), 3, 0, 7); c.fill(); c.fillStyle = '#4FB3E8'; c.beginPath(); c.arc(X(V.well.x), Y(V.well.y), 1.6, 0, 7); c.fill();
   // معالم المناطق الأخرى
   c.fillStyle = '#4FB3E8'; c.fillRect(X(d.moat.x), Y(d.moat.y), d.moat.w * k, d.moat.h * k);

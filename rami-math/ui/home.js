@@ -52,8 +52,8 @@ export const SCENE = `<svg class="hscene" viewBox="0 0 1600 900" preserveAspectR
     <g fill="#B48550">${Array.from({ length: 26 }, (_, i) => `<rect x="${-40 + i * 18}" y="${i < 7 ? 76 : i < 17 ? 136 : 46}" width="11" height="16" rx="2"/>`).join('')}</g>
     <g fill="#8A6238" opacity=".75"><rect x="0" y="260" width="20" height="34" rx="10"/><rect x="342" y="220" width="20" height="34" rx="10"/><rect x="190" y="90" width="22" height="36" rx="11"/></g>
     <path d="M150 480 V390 a45 45 0 0 1 90 0 V480Z" fill="#6E4524"/><path d="M160 480 V395 a35 35 0 0 1 70 0 V480Z" fill="#8A5A30"/>
-    <line x1="350" y1="60" x2="350" y2="-70" stroke="#5A5A5A" stroke-width="5"/>
-    <g transform="translate(350 -70)"><rect width="90" height="20" fill="#C8102E"/><rect y="20" width="90" height="16" fill="#fff"/><rect y="36" width="90" height="18" fill="#009639"/><rect width="28" height="54" fill="#C8102E"/></g>
+    <g class="hsFlag"><line x1="350" y1="60" x2="350" y2="-70" stroke="#5A5A5A" stroke-width="5"/>
+    <g transform="translate(350 -70)"><rect width="90" height="18" fill="#fff"/><rect y="18" width="90" height="18" fill="#C8102E"/><rect y="36" width="90" height="18" fill="#009639"/><rect width="28" height="54" fill="#C8102E"/></g></g>
   </g>
   <!-- بيوت ودكان على اليسار -->
   <g transform="translate(-40 360)">
@@ -84,7 +84,7 @@ const CARD_ICON = {
     <rect x="40" y="48" width="80" height="52" fill="url(#ciW)" stroke="#8A5A24" stroke-width="2"/><rect x="28" y="36" width="24" height="64" fill="url(#ciW)" stroke="#8A5A24" stroke-width="2"/><rect x="108" y="36" width="24" height="64" fill="url(#ciW)" stroke="#8A5A24" stroke-width="2"/>
     <g fill="url(#ciW)" stroke="#8A5A24" stroke-width="1.5">${[28, 40, 108, 120].map(x => `<rect x="${x}" y="28" width="8" height="10"/>`).join('')}${[46, 58, 70, 82, 94, 106].map(x => `<rect x="${x}" y="40" width="8" height="10"/>`).join('')}</g>
     <path d="M70 100 V82 a10 10 0 0 1 20 0 V100Z" fill="#7A4A2A"/><line x1="120" y1="30" x2="120" y2="6" stroke="#555" stroke-width="2"/>
-    <g transform="translate(120 6)"><rect width="22" height="5" fill="#C8102E"/><rect y="5" width="22" height="4" fill="#fff"/><rect y="9" width="22" height="5" fill="#009639"/><rect width="7" height="14" fill="#C8102E"/></g>
+    <g transform="translate(120 6)"><rect width="22" height="5" fill="#fff"/><rect y="5" width="22" height="4" fill="#C8102E"/><rect y="9" width="22" height="5" fill="#009639"/><rect width="7" height="14" fill="#C8102E"/></g>
     <g stroke="#2F8A3A" stroke-width="4" stroke-linecap="round" fill="none"><path d="M18 98 Q16 76 20 64"/><path d="M20 64 q-12 -2 -16 6M20 64 q12 -4 16 4M20 64 q-4 -10 -12 -12M20 64 q6 -10 14 -10"/></g></svg>`,
   map: `<svg viewBox="0 0 160 120"><defs><linearGradient id="ciP" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#FFF4D6"/><stop offset="1" stop-color="#E7C48A"/></linearGradient></defs>
     <path d="M20 24 L60 14 L100 24 L138 14 V96 L100 106 L60 96 L20 106Z" fill="url(#ciP)" stroke="#8A5A24" stroke-width="2.4" stroke-linejoin="round"/>
@@ -119,7 +119,7 @@ export function homeHTML(saved) {
     </header>
     <section class="h2hero">
       <canvas id="tHero" width="270" height="355"></canvas>
-      <div class="hbrand"><div class="hlogo"><span class="cap">🎓</span>قرية الخير</div><div class="hribbon">مغامرة رامي ماث</div><p class="htag">رحلة ممتعة في عالم الرياضيات</p></div>
+      <div class="hbrand"><div class="hflag" aria-hidden="true"><i></i><b><s></s></b></div><div class="hlogo"><span class="cap">🎓</span>قرية الخير</div><div class="hribbon">مغامرة رامي ماث</div><p class="htag">رحلة ممتعة في عالم الرياضيات</p></div>
     </section>
     <nav class="h2cards">
       ${saved ? card('c1', 'bCont', '', 'castle', 'تابع المغامرة', `الوحدة ${ar(P.unitIdx + 1)}: ${P.u.title}`, '#2F6FB2') : card('c1', 'bNew', '', 'castle', 'ابدأ المغامرة', 'ابدأ رحلتك مع رامي', '#2F6FB2')}

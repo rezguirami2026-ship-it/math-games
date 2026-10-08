@@ -194,3 +194,18 @@
   .p2on .sw button{width:30px;height:30px}.sw2{padding:3px 12px}.p2on #hname{padding:5px 4px;font-size:18px}.pgo{min-height:52px}}
 @media (max-height:820px){.pcard{width:clamp(110px,min(19vw,calc((100dvh - 430px) * .78)),220px)}}
 @media (max-width:600px){.pcard{width:clamp(110px,min(40vw,calc((100dvh - 430px) * .78)),190px)}}
+
+/* علم عُمان: في الهاتف العمودي يقع علم القلعة خلف العنوان، فيُخفى ويظهر علم يرفرف فوق البطل بجانب العنوان */
+.hflag{display:none}
+@media (max-aspect-ratio:10/11){
+  .hscene .hsFlag{display:none}
+  .h2hero{position:relative}
+  .hflag{display:block;position:absolute;left:clamp(14px,6vw,40px);top:-6px;width:70px;height:96px;pointer-events:none;z-index:0}
+  .hflag i{position:absolute;left:0;top:0;width:5px;height:96px;border-radius:3px;background:linear-gradient(90deg,#8A8A8A,#5A5A5A)}
+  .hflag i::before{content:'';position:absolute;top:-6px;left:-3px;width:11px;height:11px;border-radius:50%;background:#E3B04B}
+  .hflag b{position:absolute;left:5px;top:4px;width:60px;height:38px;transform-origin:left center;animation:hflagWave 2.6s ease-in-out infinite;box-shadow:0 3px 8px rgba(0,0,0,.2);
+    background:linear-gradient(90deg,#C8102E 0 30%,transparent 30%),linear-gradient(180deg,#fff 0 33.4%,#C8102E 33.4% 66.7%,#009639 66.7%)}
+  .hflag s{position:absolute;inset:0;background:linear-gradient(90deg,rgba(0,0,0,.12),rgba(255,255,255,.18) 40%,rgba(0,0,0,.1) 70%,rgba(255,255,255,.12))}
+  .h2hero canvas{position:relative;z-index:1}
+}
+@keyframes hflagWave{0%,100%{transform:skewY(0) scaleX(1)}50%{transform:skewY(-4deg) scaleX(.94)}}
