@@ -87,6 +87,7 @@ export function drawHuman(ctx, h) {
   const farLeg = side ? 0 : back ? 1 : 0, nearLeg = 1 - farLeg;
   const farArm = side ? 0 : -1;
   if (back && h.carry) boxes(ctx, h.carry, AR[1].wr[0] - 6, AR[1].wr[1] - 2);
+  if (G.cape && !back) cape(ctx, shV, hipV, G.cape, side, ph);   // الوشاح خلف الجسم (ومن الخلف يُرسم فوقه)
   if (G.shovel && !back) shovelGear(ctx, shV);
   if (side) drawArm(ctx, AR[0], robe, skin, acc, female, true, L);
   drawLeg(ctx, LG[farLeg], h, female, adult, acc, true, side);
@@ -95,6 +96,7 @@ export function drawHuman(ctx, h) {
   skirt(ctx, LG, hipV, robe, acc, female, side, back, L, ph, walking);
   torso(ctx, rot, P, hipV, shV, robe, acc, female, adult, side, back, L, G);
   if (G.flask) flask(ctx, P, rot, shV);
+  if (G.cape && back) cape(ctx, shV, hipV, G.cape, side, ph);
   outfit(ctx, h, rot, P, hipV, shV, side, back);   // سترة، مريلة، حقيبة بريد
   if (side) { if (h.carry) boxes(ctx, h.carry, AR[1].wr[0] - 3, AR[1].wr[1] + 1); drawArm(ctx, AR[1], robe, skin, acc, female, false, L); }
   else { drawArm(ctx, AR[0], robe, skin, acc, female, false, L); drawArm(ctx, AR[1], robe, skin, acc, female, false, -L); if (!back && h.carry) boxes(ctx, h.carry, -6.5, AR[0].wr[1] + 1); }
@@ -314,6 +316,12 @@ function flask(ctx, P, rot, shV) {
   const [ax, ay] = rot(-3, shV), [bx, by] = rot(3.5, shV + 15);
   ctx.strokeStyle = '#6B4A2A'; ctx.lineWidth = 1; ctx.beginPath(); ctx.moveTo(ax, ay); ctx.lineTo(bx, by); ctx.stroke();
   ctx.fillStyle = '#2D7DB8'; rr(ctx, bx - 2.5, by - 1, 6, 9, 2.5); ctx.fill(); ctx.strokeStyle = INK; ctx.lineWidth = .7; ctx.stroke();
+}
+function cape(ctx, shV, hipV, col, side, ph) {   // وشاح حامي القرية (جائزة مغامرة)
+  const w = side ? 4.5 : 7.5, f = side ? 9 : 12.5, sw = Math.sin(ph * 2) * 1.6, by = hipV + 15;
+  ctx.fillStyle = col; ctx.beginPath(); ctx.moveTo(-w, shV + 2); ctx.lineTo(w, shV + 2); ctx.quadraticCurveTo(f + 1, (shV + hipV) / 2, f + sw, by);
+  ctx.quadraticCurveTo(sw, by + 3, -f + sw, by); ctx.quadraticCurveTo(-f - 1, (shV + hipV) / 2, -w, shV + 2); ctx.fill(); ctx.strokeStyle = INK; ctx.lineWidth = .8; ctx.stroke();
+  ctx.strokeStyle = '#E3B04B'; ctx.lineWidth = 1.3; ctx.beginPath(); ctx.moveTo(f + sw - 1, by - 1); ctx.quadraticCurveTo(sw, by + 2, -f + sw + 1, by - 1); ctx.stroke();
 }
 function shovelGear(ctx, shV) {
   ctx.lineCap = 'round'; ctx.strokeStyle = INK; ctx.lineWidth = 3.2; ctx.beginPath(); ctx.moveTo(-10, shV + 34); ctx.lineTo(9, shV - 6); ctx.stroke();

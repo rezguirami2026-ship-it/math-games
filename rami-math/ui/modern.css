@@ -389,3 +389,41 @@ body:has(.dialog.on) .region{opacity:0!important;animation:none!important}
 .opsIcon{font-size:44px;line-height:1}
 .opsNotes{text-align:right;margin:8px auto;padding:0 22px 0 0;max-width:320px;font-weight:700;color:#2A3A6E;line-height:1.8}
 .opsCard .act{width:100%;margin-top:8px}
+/* ── المغامرات ── */
+.adv{position:fixed;inset:0;z-index:45;background:#1A1420;touch-action:none;user-select:none;-webkit-user-select:none}
+.advCv{display:block;width:100%;height:100%}
+.advFade{position:absolute;inset:0;background:#0E0A1E;opacity:0;pointer-events:none;transition:opacity .35s}
+.advTop{position:absolute;top:calc(var(--safeT) + 8px);left:8px;right:8px;display:flex;align-items:center;gap:8px;pointer-events:none}
+.advTop>*{pointer-events:auto}
+.advBtn{width:44px;height:44px;border-radius:14px;border:2px solid #E2B95A;background:linear-gradient(180deg,#24489E,#132E72);color:#fff;font-size:18px;box-shadow:0 4px 10px rgba(0,0,0,.35);flex:none}
+.advTitle{flex:1;min-width:0;display:flex;flex-direction:column;gap:2px;padding:6px 14px;border-radius:16px;background:rgba(14,22,60,.82);border:1.5px solid rgba(226,185,90,.7);color:#fff;box-shadow:0 4px 12px rgba(0,0,0,.3)}
+.advTitle b{font:900 15px Cairo,sans-serif;color:#FFD54A}.advGoal{font:700 13.5px/1.5 Cairo,sans-serif;color:#F3F6FF}
+.advStars{flex:none;padding:8px 12px;border-radius:14px;background:rgba(14,22,60,.82);border:1.5px solid rgba(226,185,90,.7);color:#FFE7A0;font:900 15px Cairo,sans-serif}
+.advInv{position:absolute;bottom:calc(var(--safeB) + 12px);right:10px;display:flex;gap:6px;flex-wrap:wrap;max-width:60vw}
+.advInv span{position:relative;width:46px;height:46px;display:grid;place-items:center;font-size:24px;border-radius:14px;background:linear-gradient(180deg,#FFFCF3,#F3E6CA);border:2px solid #D9A13A;box-shadow:0 4px 10px rgba(0,0,0,.35)}
+.advInv i{position:absolute;bottom:-4px;left:-4px;min-width:20px;height:20px;border-radius:10px;background:#E2475C;color:#fff;font:900 11px/20px Cairo;font-style:normal;text-align:center}
+.advAct{position:absolute;bottom:calc(var(--safeB) + 16px);left:16px;width:74px;height:74px;border-radius:50%;font-size:32px;border:3px solid #fff;background:linear-gradient(180deg,#FFD866,#F5A51E);box-shadow:0 6px 0 #C77A0A,0 10px 20px rgba(0,0,0,.4);animation:dnPulse 1.4s ease-in-out infinite}
+.advToast{position:absolute;top:calc(var(--safeT) + 70px);left:50%;transform:translate(-50%,-8px);opacity:0;transition:.25s;padding:8px 16px;border-radius:14px;background:rgba(14,22,60,.9);color:#fff;font:800 15px Cairo,sans-serif;white-space:nowrap;max-width:92vw;overflow:hidden;text-overflow:ellipsis;pointer-events:none;border:1.5px solid rgba(226,185,90,.7)}
+.advToast.on{opacity:1;transform:translate(-50%,0)}
+.adv .advDlg{position:absolute;display:none;left:50%;bottom:calc(var(--safeB) + 96px);transform:translateX(-50%);z-index:3}
+.adv .advDlg.on{display:flex}
+.adv .advDlg .advFace{display:block;width:62px;height:62px;flex:none;border-radius:50%;border:2.5px solid transparent;background:radial-gradient(circle at 50% 35%,#BFE3FF,#5A9BE0 75%) padding-box,linear-gradient(160deg,#FBE3A0,#D9A13A 35%,#A8711E 60%,#E9C068) border-box}
+.adv .advDlg .advFace[hidden]{display:none}
+.adv .advDlg .advWho{position:absolute;top:-17px;right:20px;display:inline-block;padding:1px 16px 4px;border-radius:999px;font:900 14px Cairo,sans-serif;color:#fff;border:2px solid #E2B95A;background:linear-gradient(180deg,#5AA0FF,#1846B0)}
+.adv .advDlg .advWho[hidden]{display:none}
+.adv .advDlg .dbody{position:relative}
+.advOpts{display:flex;flex-wrap:wrap;gap:6px;margin-top:6px}.advOpts .act{flex:1;min-width:120px}
+.advEnd{position:absolute;inset:0;display:grid;place-items:center;background:rgba(14,10,30,.6);padding:16px;z-index:5;animation:pop .3s}
+.advEndCard{width:min(440px,100%);text-align:center;border-radius:26px;padding:20px;border:3px solid transparent;background:linear-gradient(180deg,#FFFCF3,#F6EBD3) padding-box,linear-gradient(160deg,#FBE3A0,#D9A13A 35%,#A8711E 60%,#E9C068) border-box}
+.advEndIcon{font-size:56px}.advEndCard h2{margin:4px 0;font:900 28px Cairo,sans-serif;color:#13245C}.advEndSub{margin:0;font:800 17px Cairo;color:#2A3A6E}
+.advEndStars{font-size:30px;margin:8px 0;letter-spacing:2px}.advEndStars small{display:block;font:700 13px Cairo;color:#5B6785;letter-spacing:0}
+.advRw{display:flex;flex-direction:column;gap:6px;margin:10px 0;text-align:right}.advRw b{color:#13245C}.advRw span{background:#fff;border-radius:12px;padding:6px 10px;font-weight:800;color:#2A3A6E;border:1px solid #EADCB8}
+.advEndCard .act{width:100%;margin-top:8px}
+.advList .advCard{display:flex;gap:12px;align-items:flex-start;padding:12px;margin:8px 0;border-radius:18px;background:#fff;border:2px solid #EADCB8}
+.advList .advCard.open{border-color:#D9A13A;background:linear-gradient(180deg,#FFFCF3,#FFF3D6);box-shadow:0 4px 12px rgba(200,140,30,.2)}
+.advList .advCard.locked{opacity:.72}
+.advCardIcon{font-size:42px;line-height:1;flex:none}.advCardBody{flex:1}.advCardBody b{font:900 17px Cairo;color:#13245C}.advCardBody p{margin:4px 0 8px;font-weight:600;color:#4A5578;line-height:1.6}
+.advCardBody em{display:block;font-style:normal;font-weight:800;font-size:13px;color:#7A6A4A;margin-bottom:6px}.advCardBody .act{width:100%}
+.advUnlockIcon{font-size:64px;animation:pop .5s}.advUnlockTag{margin:0;font:900 15px Cairo;color:#C77A0A}
+body:has(.adv) #toast,body:has(.adv) .region,body:has(.adv) #hud{display:none!important}   /* المغامرة عالم مستقل: لا إشعارات من القرية فوقها */
+.advEndCard{max-height:calc(100dvh - 32px);overflow-y:auto}

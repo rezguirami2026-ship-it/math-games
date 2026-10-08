@@ -13,7 +13,8 @@ export const DECOR = [
   { id: 'palm', icon: '🌴', name: 'نخلة صغيرة', price: 15, x: 1222, y: 450 },
   { id: 'swing', icon: '🎠', name: 'أرجوحة الأطفال', price: 20, x: 990, y: 452 },
   { id: 'fountain', icon: '⛲', name: 'نافورة صغيرة', price: 30, x: 1180, y: 540 },
-  { id: 'camel', icon: '🐪', name: 'تمثال جمل', price: 40, x: 1110, y: 556 }
+  { id: 'camel', icon: '🐪', name: 'تمثال جمل', price: 40, x: 1110, y: 556 },
+  { id: 'statue', icon: '🗿', name: 'تمثال حامي القرية', price: 0, reward: true, x: 1058, y: 424 }   // جائزة مغامرة «إنقاذ القرية» (لا تُباع)
 ];
 export const gems = () => (game.state && game.state.gems) || 0;
 export function addGems(n) { const s = game.state; s.gems = (s.gems || 0) + n; bus.emit('gems'); }
@@ -47,6 +48,11 @@ const DRAW = {
   fountain(c, x, y, t) { sh(c, x, y, 26); c.fillStyle = shade('#C9C0AE', -20); c.beginPath(); c.ellipse(x, y - 6, 26, 9, 0, 0, 7); c.fill(); c.fillStyle = '#C9C0AE'; c.beginPath(); c.ellipse(x, y - 10, 26, 9, 0, 0, 7); c.fill();
     c.fillStyle = '#5FB8E8'; c.beginPath(); c.ellipse(x, y - 11, 21, 6.5, 0, 0, 7); c.fill(); c.fillStyle = '#B8AE98'; c.fillRect(x - 3, y - 34, 6, 24); c.fillStyle = '#C9C0AE'; c.beginPath(); c.ellipse(x, y - 34, 10, 3.5, 0, 0, 7); c.fill();
     c.strokeStyle = 'rgba(150,215,255,.9)'; c.lineWidth = 1.6; for (let i = 0; i < 4; i++) { const ph = (t * 1.4 + i / 4) % 1, dx = (i % 2 ? 1 : -1) * (6 + ph * 10); c.beginPath(); c.moveTo(x, y - 36); c.quadraticCurveTo(x + dx * .6, y - 50, x + dx, y - 14); c.stroke(); } },
+  statue(c, x, y) { sh(c, x, y, 22); c.fillStyle = '#A89E8C'; c.fillRect(x - 18, y - 16, 36, 16); c.fillStyle = '#C2B8A4'; c.fillRect(x - 20, y - 20, 40, 6);
+    c.fillStyle = '#B5AB97'; c.beginPath(); c.moveTo(x - 10, y - 20); c.lineTo(x - 13, y - 52); c.lineTo(x + 13, y - 52); c.lineTo(x + 10, y - 20); c.fill();   // الثوب
+    c.fillStyle = '#9C2A3C'; c.beginPath(); c.moveTo(x - 12, y - 50); c.quadraticCurveTo(x - 20, y - 36, x - 15, y - 22); c.lineTo(x - 9, y - 26); c.closePath(); c.fill();   // الوشاح
+    c.fillStyle = '#C9BFA9'; c.beginPath(); c.arc(x, y - 60, 8, 0, 7); c.fill(); c.strokeStyle = '#B5AB97'; c.lineWidth = 4; c.lineCap = 'round'; c.beginPath(); c.moveTo(x + 11, y - 48); c.lineTo(x + 20, y - 66); c.stroke();
+    c.fillStyle = '#FFD54A'; c.beginPath(); c.arc(x + 21, y - 70, 4, 0, 7); c.fill(); c.fillStyle = '#5A4632'; c.font = '900 8px Cairo'; c.textAlign = 'center'; c.fillText('حامي القرية', x, y - 6); },
   camel(c, x, y) { sh(c, x, y, 26); c.fillStyle = '#B48550'; c.fillRect(x - 24, y - 8, 48, 8); c.fillStyle = '#C9955A';
     [-14, -6, 8, 16].forEach(dx => c.fillRect(x + dx, y - 26, 4, 18)); c.beginPath(); c.ellipse(x, y - 30, 20, 9, 0, 0, 7); c.fill(); c.beginPath(); c.ellipse(x - 2, y - 38, 9, 7, 0, 0, 7); c.fill();
     c.beginPath(); c.moveTo(x + 16, y - 32); c.quadraticCurveTo(x + 26, y - 40, x + 24, y - 52); c.lineTo(x + 30, y - 52); c.quadraticCurveTo(x + 32, y - 40, x + 20, y - 28); c.fill(); c.beginPath(); c.ellipse(x + 30, y - 52, 6, 3.5, 0, 0, 7); c.fill(); c.fillStyle = '#2A1B66'; c.beginPath(); c.arc(x + 31, y - 53, 1, 0, 7); c.fill(); }
@@ -62,7 +68,7 @@ export function openDecorShop(onClose) {
   const draw = (msg) => {
     el.innerHTML = `<div class="sheet decorShop"><h3>🛍️ متجر زينة القرية</h3>
       <p class="dsGems">💎 جواهرك: <b>${ar(gems())}</b></p><p class="muted">اجمع الجواهر بالإجابة في التحديات والأنشطة، ثم زيّن ساحة البئر في قريتك.</p>${msg ? `<p class="dsMsg">${msg}</p>` : ''}
-      <div class="dsGrid">${DECOR.map(d => { const own = owned(d.id), can = gems() >= d.price;
+      <div class="dsGrid">${DECOR.filter(d => !d.reward).map(d => { const own = owned(d.id), can = gems() >= d.price;
         return `<div class="dsItem ${own ? 'own' : ''}"><span>${d.icon}</span><b>${d.name}</b>${own ? '<em>✓ في قريتك</em>' : `<button class="act ${can ? 'go' : 'ghost'}" data-buy="${d.id}" ${can ? '' : 'disabled'}>💎 ${ar(d.price)}</button>`}</div>`; }).join('')}</div>
       <button class="act" data-close>رجوع إلى العالم</button></div>`;
     el.classList.add('on');

@@ -35,6 +35,7 @@ export const BADGES = [
   { id: 'b_daily3', icon: '📅', name: 'المواظب', desc: 'أنجز مهمة اليوم ٣ أيام متتالية', prog: s => [Math.min(3, (s.daily || {}).best || 0), 3] },
   { id: 'b_daily7', icon: '🗓️', name: 'أسبوع المثابرة', desc: 'أنجز مهمة اليوم ٧ أيام متتالية', prog: s => [Math.min(7, (s.daily || {}).best || 0), 7] },
   { id: 'b_lvl5', icon: '🛤️', name: 'نصف الطريق', desc: 'صل إلى المستوى ٥', prog: s => [Math.min(5, levelOf(s).n), 5] },
+  { id: 'b_adv_rescue', icon: '🦸', name: 'حامي القرية', desc: 'أكمل مغامرة «إنقاذ القرية»', prog: s => [((s.adventures || {}).rescue || {}).done ? 1 : 0, 1] },
   { id: 'b_lvl10', icon: '👑', name: 'حكيم القرية', desc: 'صل إلى المستوى ١٠', prog: s => [levelOf(s).n, 10] },
   ...DOMAIN.map(([k, icon, name, ids]) => ({ id: 'b_' + k, icon, name, desc: `ثلاث نجوم في ${ids.length === 6 ? 'ستة' : ids.length === 5 ? 'خمسة' : ids.length === 8 ? 'ثمانية' : 'تسعة'} دروس من هذا المجال`, prog: s => [full(s, ids), ids.length] })),
   ...UNITS.map((u, i) => { const ids = LESSONS.filter(l => l.u === i).map(l => l.id); return { id: 'b_u' + i, icon: UNIT_ICON[i] || '⭐', name: `نجوم ${u.title}`, desc: `ثلاث نجوم في كل دروس وحدة ${u.title} (${u.term === 1 ? 'الفصل الأول' : 'الفصل الثاني'})`, prog: s => [full(s, ids), ids.length] }; })

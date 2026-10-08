@@ -61,6 +61,7 @@ import { hud, gfx } from './ui/hud.js';
 import { screens } from './ui/screens.js';
 import { startOps, track, reportError } from './core/ops.js';
 import { initOpsUI } from './ui/opsui.js';
+import { openAdventures, checkAdventureUnlocks } from './adventure/index.js';
 
 const eng = createEngine(document.getElementById('game'), WORLD);
 // فقد سياق الرسم (الهاتف يحرّر ذاكرة الرسوم حين تُصغَّر اللعبة أو تمتلئ ذاكرته) يترك الشاشة سوداء: نحفظ ونعيد التحميل عند العودة.
@@ -204,7 +205,7 @@ async function start(state) {
   }
 }
 /* ── العرض ثلاثي الأبعاد (renderer3d): يُحمَّل فقط عند طلبه، ويرجع إلى الرسم الحالي إن لم يدعم الجهاز WebGL أو فشل التحميل ── */
-const V3D = 'نسخة 3D · ٥٤';   // تُعرض في شاشة التحميل وفي الزاوية: للتأكد أن المتصفح حمّل آخر نسخة
+const V3D = 'نسخة 3D · ٥٥';   // تُعرض في شاشة التحميل وفي الزاوية: للتأكد أن المتصفح حمّل آخر نسخة
 const want3d = () => gfx.d3();
 function loadingScreen() {
   const el = document.createElement('div'); el.className = 'load3d';
@@ -644,6 +645,9 @@ bus.on('challenge', id => {   // انتهت مهمة العالم: يُفتح ا
   setTimeout(go, 500);
 });
 bus.on('lessonDone', id => track('level_completed', id));
+bus.on('lessonDone', () => checkAdventureUnlocks());   // إكمال وحدة يفتح مغامرتها
+bus.on('pauseWorld', on => { eng.paused = on; });
+bus.on('openAdventures', () => openAdventures());
 bus.on('lessonDone', id => {
   const before = gateState().slice(); resetGates();   // قد تُفتح بوابة الآن: حركتها تبدأ حين تظهر على الشاشة
   gateState().forEach((o, i) => { if (o && !before[i]) gateAnim.pending[i] = true; });

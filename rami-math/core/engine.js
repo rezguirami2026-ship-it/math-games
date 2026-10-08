@@ -65,6 +65,7 @@ export function createEngine(canvas, world) {
     if (E.running) return; E.running = true;
     let last = performance.now();
     const frame = now => {
+      if (E.paused) { last = now; requestAnimationFrame(frame); return; }   // مغامرة مفتوحة فوق العالم: لا رسم ولا تحديث
       const dt = Math.min(.05, (now - last) / 1000); last = now; E.t += dt;
       try { E.update(dt); } catch (err) { if (!E._errU) { E._errU = 1; console.error('update', err); } }   // خطأ واحد لا يوقف اللعبة
       const tgt = E.focus || E.follow;

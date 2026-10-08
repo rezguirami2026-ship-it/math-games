@@ -27,6 +27,7 @@ import { exportCode } from '../save/save.js';
 import { progress } from '../missions/quests.js';
 import { ramadanPref, setRamadanPref, PREF_LABEL } from '../core/season.js';
 import { openAbout, openSupport } from './opsui.js';
+import { bus } from '../core/events.js';
 // جهاز ضعيف (ذاكرة ٣ غيغا أو أقل، أو هاتف بأربع أنوية أو أقل): العرض العادي افتراضياً، ويبقى ثلاثي الأبعاد متاحاً من زر «العرض» في الحقيبة
 export const WEAK = (() => { try { const n = navigator, mob = matchMedia('(pointer: coarse)').matches; return (n.deviceMemory && n.deviceMemory <= 3) || (mob && n.hardwareConcurrency && n.hardwareConcurrency <= 4); } catch (e) { return false; } })();
 const $ = id => document.getElementById(id);
@@ -129,6 +130,7 @@ export const hud = {
         <button class="act ghost" id="codeBtn">🔑 رمز حفظ التقدّم</button>
         <button class="act ghost" id="ramBtn">🌙 أجواء رمضان: ${PREF_LABEL[ramadanPref()]}</button>
         ${installable() ? '<button class="act go" id="instBtn">📲 ثبّت اللعبة كتطبيق</button>' : ''}
+        <button class="act go" id="advBtn">🗺️ المغامرات</button>
         <div class="opsRow"><button class="act ghost" id="aboutBtn">ℹ️ حول اللعبة</button><button class="act ghost" id="supBtn">🛟 الدعم الفني</button></div>
         <button class="act ghost" id="d3Btn">🎮 العرض: ${gfx.d3() ? 'ثلاثي الأبعاد' : 'عادي'}</button>
         ${gfx.d3() ? `<button class="act ghost" id="qBtn">✨ الجودة: ${{ auto: 'تلقائية', high: 'عالية', low: 'منخفضة' }[gfx.q()]}</button>` : ''}`;
@@ -152,6 +154,7 @@ export const hud = {
       if ($('petBtn')) $('petBtn').onclick = e => { e.stopPropagation(); s.pet = s.pet || {}; s.pet.hidden = !s.pet.hidden; this.panel('bag'); };
       $('decoBtn').onclick = e => { e.stopPropagation(); openDecorShop(); };
       if ($('instBtn')) $('instBtn').onclick = e => { e.stopPropagation(); install(); };
+      $('advBtn').onclick = e => { e.stopPropagation(); bus.emit('openAdventures'); };
       $('aboutBtn').onclick = e => { e.stopPropagation(); openAbout(); };
       $('supBtn').onclick = e => { e.stopPropagation(); openSupport(); };
       $('d3Btn').onclick = e => { e.stopPropagation(); gfx.set3d(!gfx.d3()); };   // يُعاد تحميل الصفحة: التقدّم محفوظ
