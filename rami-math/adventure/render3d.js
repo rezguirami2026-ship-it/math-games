@@ -70,7 +70,7 @@ export function createAdv3D(canvas) {
     // الجدران: أسوار من حجر بارتفاع حقيقي وشُرفات
     const wp = new Parts(), wm = material('stone', th.wall[0]), wt = material('plaster', th.wall[1]);
     for (let y = 0; y < mh; y++) for (let x = 0; x < mw; x++) if (V.tileAt(x, y) === '#' && y >= mh - 2) wp.add(wm, box(T + .5, 22, T + .5, x * T + T / 2, 11, y * T + T / 2));   // الحافة القريبة من الكاميرا منخفضة فلا تحجب المشهد
-    for (let y = 0; y < mh - 2; y++) for (let x = 0; x < mw; x++) if (V.tileAt(x, y) === '#') { wp.add(wm, box(T + .5, 66, T + .5, x * T + T / 2, 33, y * T + T / 2)); wp.add(wt, box(T + 3, 5, T + 3, x * T + T / 2, 66, y * T + T / 2)); if ((x + y) % 2 === 0) wp.add(wm, box(T * .45, 12, T * .45, x * T + T / 2, 74, y * T + T / 2)); }
+    for (let y = 0; y < mh - 2; y++) for (let x = 0; x < mw; x++) if (V.tileAt(x, y) === '#') { wp.add(wm, box(T + .5, 46, T + .5, x * T + T / 2, 23, y * T + T / 2)); wp.add(wt, box(T + 3, 5, T + 3, x * T + T / 2, 46, y * T + T / 2)); if ((x + y) % 2 === 0) wp.add(wm, box(T * .45, 10, T * .45, x * T + T / 2, 53, y * T + T / 2)); }
     root.add(wp.build());
     // الأشجار: نخيل/سدر/صبار/صخور حسب العالم
     const tl = [], low = []; for (let y = 0; y < mh; y++) for (let x = 0; x < mw; x++) if (V.tileAt(x, y) === 'T') (y >= mh - 2 ? low : tl).push({ x: x * T + T / 2, y: y * T + T / 2, s: .78, r: 18 });
@@ -138,7 +138,7 @@ export function createAdv3D(canvas) {
       case 'pillar': { P.add(material('stone', e.color || '#C9BFA9'), cyl(13, 15, e.h || 90, 0, (e.h || 90) / 2, 0, 12)); P.add(material('stone', '#B5AB97'), box(34, 8, 34, 0, (e.h || 90) + 4, 0)); G.add(P.build()); break; }
       case 'torchw': { P.add(dark, cyl(2, 2, 40, 0, 20, 0, 6), { uv: false }); G.add(P.build()); const f = flame(.8); f.position.y = 40; G.add(f); G.userData.light = 1; break; }
       case 'site': { const g = new THREE.Group(); const ring = new THREE.Mesh(new THREE.RingGeometry(20, 26, 4), new THREE.MeshBasicMaterial({ color: '#FFD54A', transparent: true, opacity: .7, side: THREE.DoubleSide })); ring.rotation.x = -Math.PI / 2; ring.rotation.z = Math.PI / 4; ring.position.y = 1.5; g.add(ring); G.add(g); G.userData.site = ring;
-        const b = buildModel(e.model || 'raft'); b.visible = !!e.built; G.add(b); G.userData.built = b; break; }
+        const b = buildModel(e.model || 'raft'); b.visible = !!e.built; G.add(b); G.userData.built = b; if (e.model === 'altar') { const base = new THREE.Mesh(box(50, 30, 40, 0, 15, 0, 3), material('stone', '#C9BFA9')); G.add(base); G.userData.altarBase = base; } break; }
       case 'boat': { G.add(buildModel('dhow')); break; }
       case 'npc': case 'guard': { const Pp = buildPerson(V.look(e)); Pp.root.position.set(x, 0, z); people.set(e, Pp); shadowed(Pp.root); scene.add(Pp.root);
         if (e.kind === 'guard') { const cone = new THREE.Mesh(new THREE.CircleGeometry((e.range || 4) * T, 24, -(e.fov || .5), (e.fov || .5) * 2), new THREE.MeshBasicMaterial({ color: '#FFD54A', transparent: true, opacity: .28, depthWrite: false, side: THREE.DoubleSide }));
@@ -173,13 +173,14 @@ export function createAdv3D(canvas) {
   function rotMesh(style) {
     const g = new THREE.Group(), P = new Parts(), st = material('stone', '#C9BFA9');
     if (style === 'vane') { P.add(material('metal', '#5A5664'), cyl(2.5, 2.5, 70, 0, 35, 0, 8), { uv: false }); P.add(material('metal', '#C9971C'), box(6, 4, 40, 0, 70, 6), { uv: false }); P.add(material('metal', '#C9971C'), new THREE.ConeGeometry(7, 14, 4).rotateX(Math.PI / 2).translate(0, 70, 30), { uv: false }); P.add(material('metal', '#C9971C'), box(2, 16, 14, 0, 70, -16), { uv: false }); }
-    else if (style === 'mirror') { P.add(st, cyl(12, 14, 14, 0, 7, 0, 10)); const f = new THREE.Mesh(box(40, 44, 4, 0, 36, 0, 2), material('wood', '#7A4A22')); f.rotation.y = Math.PI / 4; const glass = new THREE.Mesh(new THREE.PlaneGeometry(34, 38), new THREE.MeshStandardMaterial({ color: '#DDEBFF', metalness: .95, roughness: .05, emissive: '#3A5A7A', emissiveIntensity: .3 })); glass.position.set(0, 36, 0); glass.rotation.y = Math.PI / 4; glass.translateZ(2.5); g.add(f, glass); }
+    else if (style === 'mirror') { P.add(st, cyl(12, 14, 14, 0, 7, 0, 10)); const f = new THREE.Mesh(box(40, 44, 4, 0, 36, 0, 2), material('wood', '#7A4A22')); f.rotation.y = Math.PI / 4; const glass = new THREE.Mesh(new THREE.PlaneGeometry(34, 38), new THREE.MeshStandardMaterial({ color: '#E8F4FF', metalness: .6, roughness: .08, emissive: '#7FB2E0', emissiveIntensity: .9, side: THREE.DoubleSide })); glass.position.set(0, 36, 0); glass.rotation.y = Math.PI / 4; glass.translateZ(2.5); g.add(f, glass); }
     else { P.add(st, box(30, 14, 30, 0, 7, 0, 2)); P.add(material('stone', '#BDB39E'), cyl(9, 12, 46, 0, 37, 0, 10)); P.add(material('stone', '#BDB39E'), sphere(9, 0, 66, 0)); P.add(material('stone', '#BDB39E'), box(5, 5, 26, 6, 52, 14), { uv: false }); P.add(material('metal', '#C9971C'), new THREE.ConeGeometry(4, 10, 6).rotateX(Math.PI / 2).translate(6, 52, 30), { uv: false }); }
     g.add(P.build()); return g;
   }
   function buildModel(kind) {
     const P = new Parts(), wd = material('wood', '#9C6438'), g = new THREE.Group();
     if (kind === 'raft') { for (let i = 0; i < 5; i++) P.add(wd, cyl(5, 5, 60, -20 + i * 10, 5, 0, 8).rotateX(0), { uv: false }); P.add(material('wood', '#6E4520'), box(56, 3, 6, 0, 10, -20)); P.add(material('wood', '#6E4520'), box(56, 3, 6, 0, 10, 20)); P.add(wd, cyl(2, 2, 70, 0, 45, 0, 6)); const sail = new THREE.Mesh(new THREE.PlaneGeometry(40, 46), std('#F2EAD8', { side: THREE.DoubleSide })); sail.position.set(0, 52, 2); g.add(sail); }
+    else if (kind === 'altar') { P.add(material('stone', '#C9BFA9'), box(50, 30, 40, 0, 15, 0, 3)); P.add(material('stone', '#B5AB97'), box(58, 6, 48, 0, 33, 0)); const disc = new THREE.Mesh(new THREE.CylinderGeometry(15, 15, 4, 28), new THREE.MeshStandardMaterial({ color: '#FFD54A', emissive: '#FFB020', emissiveIntensity: 1.2, metalness: .6, roughness: .3 })); disc.position.y = 46; disc.rotation.x = Math.PI / 2; g.add(disc); }
     else if (kind === 'bridge') { for (let i = 0; i < 6; i++) P.add(wd, box(T, 4, 8, 0, 6, -20 + i * 8)); }
     else if (kind === 'bell') { P.add(wd, box(6, 90, 6, -24, 45, 0)); P.add(wd, box(6, 90, 6, 24, 45, 0)); P.add(wd, box(56, 6, 8, 0, 90, 0)); g.add(new THREE.Mesh(new THREE.CylinderGeometry(8, 16, 24, 14).translate(0, 74, 0), new THREE.MeshStandardMaterial({ color: '#E3B04B', emissive: '#7A5410', emissiveIntensity: .5, metalness: .3, roughness: .35 }))); }
     else {   // مركب خشبي محطّم: بدن بمقدمة مدببة مائل على الرمل، وصارٍ مكسور وشراع ممزق
