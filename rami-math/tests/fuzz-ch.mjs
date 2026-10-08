@@ -22,6 +22,8 @@ const r = await p.evaluate(async ([unit, times]) => {
       if (!OUT[it.out]) bad('مخرج مجهول ' + it.out);
       if (/NaN|undefined|Infinity|٬|[0-9]/.test(all + (it.art || '').replace(/<[^>]+>/g, ''))) bad('نص: NaN أو فاصلة آلاف أو أرقام لاتينية');
       if (/NaN|undefined/.test((it.art || '') + (it.opts || []).join(''))) bad('رسم فيه NaN');
+      { const raw = [it.q, ...(it.opts || []), ...(it.left || []), ...(it.right || []), ...(it.bins || [])].join(' ').replace(/<svg[\s\S]*?<\/svg>/g, '').replace(/<span class="ltr"[^>]*>[\s\S]*?<\/span>/g, '').replace(/<[^>]+>/g, '');   // الرسوم SVG وعناصر .ltr اتجاهها من اليسار أصلاً
+        if (/(?<!⁦)[-−][٠-٩]/.test(raw)) bad('سالب بلا عزل اتجاه (يظهر ٣- بدل −٣)'); }
       const o = it.opts || it.left; if (o && new Set(o).size !== o.length) bad('خيارات مكررة');
       if (it.right && new Set(it.right).size !== it.right.length) bad('وصل مكرر');
       if (it.left && it.left.length < 3) bad('وصل قليل');

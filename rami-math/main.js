@@ -12,7 +12,7 @@ import { WORLD, PILE, SIGNAL, TREE_SPOTS, FARM, HOUSES, WAREHOUSE, ROADS, SOUTH,
 import { makeTrucks, truckColliders, drawTruck, drawPile, drawSignal, drawSpot, updateFx, drawFx, moveAlong, say, bubble, sparkle, dust } from './world/entities.js';
 import { makeNpcs, npcVisible, updateNpc, drawNpc } from './npc/npc.js';
 import { updateKids, kidsItems, kidsPeople3d } from './world/school.js';
-import { decorItems, initGems } from './world/decor.js';
+import { decorItems, initGems, DECOR } from './world/decor.js';
 import { updatePet, petItems } from './world/pet.js';
 import { treasureItems, nearTreasure, openTreasure, TREASURES } from './world/treasure.js';
 import { CHAPTER, introLines, npcLines } from './story/dialogues.js';
@@ -202,7 +202,7 @@ async function start(state) {
   }
 }
 /* ── العرض ثلاثي الأبعاد (renderer3d): يُحمَّل فقط عند طلبه، ويرجع إلى الرسم الحالي إن لم يدعم الجهاز WebGL أو فشل التحميل ── */
-const V3D = 'نسخة 3D · ٥٢';   // تُعرض في شاشة التحميل وفي الزاوية: للتأكد أن المتصفح حمّل آخر نسخة
+const V3D = 'نسخة 3D · ٥٣';   // تُعرض في شاشة التحميل وفي الزاوية: للتأكد أن المتصفح حمّل آخر نسخة
 const want3d = () => gfx.d3();
 function loadingScreen() {
   const el = document.createElement('div'); el.className = 'load3d';
@@ -534,7 +534,7 @@ function worldItems(view, t, three) {
   if (!three) list.push({ y: SHOP.y - 42, x: SHOP.x, draw: cc => drawShopBack(cc) }, { y: SHOP.y, x: SHOP.x, draw: cc => drawShop(cc) });
   if (three) {   // لافتات أماكن ثابتة كانت مرسومة على الأرض: قائمة وواضحة في 3D
     const O = ORCH, W2 = O.cell * O.n, G = GARDEN;
-    list.push({ y: O.y - 14, x: O.x + W2 / 2, draw: cc => bigSign(cc, O.x + W2 / 2, O.y - 14, 'بستان العم حمد', { fs: 18, h: 30, bg: '#2E7D5B', line: '#FFE7A0' }) },
+    list.push({ y: O.y - 14, x: O.x + 30, draw: cc => bigSign(cc, O.x + 30, O.y - 14, 'بستان العم حمد', { fs: 18, h: 30, bg: '#2E7D5B', line: '#FFE7A0' }) },
       { y: G.y + G.h + 20, x: G.x + G.w / 2, draw: cc => bigSign(cc, G.x + G.w / 2, G.y + G.h + 20, quests.isDone('decimalAdd') ? 'حديقة المدرسة 🌼' : 'حديقة المدرسة', { fs: 18, h: 26, bg: '#B0476A', line: '#FFE7A0' }) });
   }
   if (!three) list.push({ y: HERO_DOOR.y - 13, draw: cc => signboard(cc, HERO_DOOR.x + 52, HERO_DOOR.y - 66, '🚪 خزانة البطل') });   // لافتة على جدار بيت البطل (في 3D على الواجهة نفسها)
@@ -616,6 +616,14 @@ function questLog() {
 bus.on('save', () => { if (game.state) saveSoon(game.state); });
 bus.on('good', () => hud.good());
 bus.on('gems', () => hud.gems());
+/* بعد شراء زينة: ننقل البطل أمامها مباشرة ونحتفل بها حتى يرى الطالب ما اشتراه في مكانه */
+bus.on('decorShow', id => {
+  const d = DECOR.find(x => x.id === id), p = W.player; if (!d || !p) return;
+  const spot = [[-48, 12], [48, 12], [-40, 46], [40, 46], [0, 46]].map(([dx, dy]) => ({ x: d.x + dx, y: d.y + dy })).find(q => !blocked(q.x, q.y)) || { x: WELL.x, y: WELL.y + 60 };
+  p.route = null; p.target = null; p.x = spot.x; p.y = spot.y; p.dir = 'up'; eng.snap && eng.snap(p);
+  sfx('win'); let k = 0; const fx = () => { sparkle(d.x, d.y - 30, 14, k % 2 ? '#FFC23D' : '#FF7AB6'); if (++k < 5) setTimeout(fx, 380); }; fx();
+  say(d.x, d.y - 90, `${d.icon} ${d.name}`, '#2A1B66', 2600);
+});
 bus.on('save', () => { if (game.state) checkBadges(unlock); });
 bus.on('save', () => {   // الارتقاء: يُحتفل به مرة واحدة حين تصبح اللعبة حرة
   if (!game.state || !W) return; const L = hud.level(); if (L.n <= (game.state.levelSeen || 1)) return;

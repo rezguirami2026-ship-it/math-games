@@ -66,7 +66,8 @@ export function openDecorShop(onClose) {
         return `<div class="dsItem ${own ? 'own' : ''}"><span>${d.icon}</span><b>${d.name}</b>${own ? '<em>✓ في قريتك</em>' : `<button class="act ${can ? 'go' : 'ghost'}" data-buy="${d.id}" ${can ? '' : 'disabled'}>💎 ${ar(d.price)}</button>`}</div>`; }).join('')}</div>
       <button class="act" data-close>رجوع إلى العالم</button></div>`;
     el.classList.add('on');
-    el.querySelectorAll('[data-buy]').forEach(b => b.onclick = e => { e.stopPropagation(); const d = DECOR.find(x => x.id === b.dataset.buy); if (buy(d.id)) draw(`🎉 أُضيف «${d.name}» إلى ساحة البئر!`); });
+    el.querySelectorAll('[data-buy]').forEach(b => b.onclick = e => { e.stopPropagation(); const d = DECOR.find(x => x.id === b.dataset.buy); if (buy(d.id)) draw(`🎉 أُضيف «${d.name}» إلى ساحة البئر!<br><button class="act go dsSee" data-see="${d.id}">👀 شاهدها في قريتك</button>`); });
+    el.querySelectorAll('[data-see]').forEach(b => b.onclick = e => { e.stopPropagation(); el.classList.remove('on'); el.innerHTML = ''; if (onClose) onClose(); bus.emit('decorShow', b.dataset.see); });
   };
   draw();
 }

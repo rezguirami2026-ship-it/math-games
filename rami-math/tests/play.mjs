@@ -171,7 +171,7 @@ S.compareRound = async () => {
 };
 // ٣. العوامل والمضاعفات
 S.factorsMultiples = async () => {
-  await goTo(210, 1462);
+  await goTo(210, 1086);   // شمال البستان (ORCH.y − ٢٤)
   await press('🌱 ازرع', { prefix: true });   // خطأ: ١ × ١
   expect((await data('factorsMultiples')).r === 0, 'زراعة خاطئة قُبلت');
   for (let r = 0; r < 3; r++) {

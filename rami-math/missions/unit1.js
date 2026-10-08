@@ -163,7 +163,7 @@ function depotShed(c, x, y, left) {
 
 
 /* ═══ ٣. العوامل والمضاعفات — «صفوف البستان» ═══ */
-export const ORCH = { x: 90, y: 1200, cell: 40, n: 6 };
+export const ORCH = { x: 90, y: 1110, cell: 40, n: 6 };   // شمال المدرسة بمسافة كافية حتى لا يحجب مبناها الأشجار (والوقوف للزراعة من الشمال)
 export const factorsMultiples = {
   id: 'factorsMultiples', giver: 'hamad',
   intro: n => [
@@ -173,7 +173,7 @@ export const factorsMultiples = {
   begin(d) { const P = [[12, 'rows', 3], [18, 'cols', 6], [20, 'rows', 4], [24, 'rows', 4], [15, 'cols', 5], [16, 'rows', 4], [30, 'rows', 5], [12, 'cols', 6]].filter(([n, , k]) => n % k === 0 && k <= 6 && n / k <= 6); d.rounds = shuffle(P).slice(0, 3); d.r = 0; d.rows = 1; d.cols = 1; d.grown = 0; },   // كل جولة تتسع للبستان (٦ × ٦)
   goal: d => { const [n, kind, k] = d.rounds[Math.min(d.r, d.rounds.length - 1)]; return `🌱 ازرع ${ar(n)} فسيلة ${kind === 'rows' ? `في ${ar(k)} صفوف متساوية` : `بحيث يكون في كل صف ${ar(k)}`}`; },
   target: () => ({ x: ORCH.x + 120, y: ORCH.y + 130 }),
-  taps: () => [{ x: ORCH.x + 120, y: ORCH.y + 120, hit: 120, approach: { x: ORCH.x + 120, y: ORCH.y + 262 } }],
+  taps: () => [{ x: ORCH.x + 120, y: ORCH.y + 120, hit: 120, approach: { x: ORCH.x + 120, y: ORCH.y - 24 } }],
   actions(W, d) {
     if (!(W.player.x > ORCH.x - 40 && W.player.x < ORCH.x + 280 && W.player.y > ORCH.y - 40 && W.player.y < ORCH.y + 300)) return [];
     const st = (key, delta) => () => { d[key] = clamp(d[key] + delta, 1, ORCH.n); sfx('click'); changed(); };
