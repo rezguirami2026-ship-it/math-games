@@ -63,12 +63,30 @@ export function solidNet(kind) {
 }
 
 /* مثلث بزواياه: ang = [أ، ب، ج] بالدرجات، lab = نصوص تُكتب عند الزوايا */
+/* موضع رقم زاوية لا يلمس ضلعيها: على منصّف الزاوية، بعده عن الرأس يكفي لاتساع الرقم. lw = عرض النص التقريبي */
+let MC = null;   // قياس عرض الرقم الفعلي بخط Cairo (وتقدير إن تعذّر)
+const lblR = (txt, fs) => { let w; try { MC = MC || document.createElement('canvas').getContext('2d'); MC.font = `900 ${fs}px Cairo, sans-serif`; w = MC.measureText(String(txt)).width + 4; } catch (e) { w = String(txt).length * fs * .6 + 4; }
+  const h = fs * .8; return Math.hypot(w / 2, h / 2) + 4; };
+const arcAt = (x, y, a1, a2, r) => { const p1 = [x + Math.cos(a1) * r, y + Math.sin(a1) * r], p2 = [x + Math.cos(a2) * r, y + Math.sin(a2) * r], big = ((a2 - a1 + 4 * Math.PI) % (2 * Math.PI)) > Math.PI ? 1 : 0;
+  return `<path d="M${p1[0]} ${p1[1]} A${r} ${r} 0 ${big} 1 ${p2[0]} ${p2[1]}" fill="none" stroke="${ACC}" stroke-width="1.6"/>`; };
 export function triangle(ang, lab) {
-  const [A, B] = ang, base = 220, rad = d => d * Math.PI / 180, x0 = 50, y0 = 130;
+  const [A, B] = ang, base = 250, rad = d => d * Math.PI / 180, x0 = 35, y0 = 150;
   const tA = Math.tan(rad(A)), tB = Math.tan(rad(B)), px = x0 + base * tB / (tA + tB), py = y0 - (px - x0) * tA;
-  const P = [[x0, y0], [x0 + base, y0], [px, py]], sc = Math.min(1, 110 / (y0 - py)), Q = P.map(([x, y]) => [x, y0 - (y0 - y) * sc]);
-  return `<svg viewBox="0 ${Math.min(...Q.map(q => q[1])) - 26} 320 ${y0 - Math.min(...Q.map(q => q[1])) + 40}" class="chLine">${poly(Q, { fill: '#FFF1D6' })}
-    ${T(Q[0][0] + 26, Q[0][1] - 8, lab[0], { fs: 14, c: ACC })}${T(Q[1][0] - 26, Q[1][1] - 8, lab[1], { fs: 14, c: ACC })}${T(Q[2][0], Q[2][1] + 30, lab[2], { fs: 14, c: ACC })}</svg>`;
+  const P = [[x0, y0], [x0 + base, y0], [px, py]], sc = Math.min(1, 140 / (y0 - py)), Q = P.map(([x, y]) => [x, y0 - (y0 - y) * sc]);
+  const dist = (p, a, b) => { const vx = b[0] - a[0], vy = b[1] - a[1], t = Math.max(0, Math.min(1, ((p[0] - a[0]) * vx + (p[1] - a[1]) * vy) / (vx * vx + vy * vy))); return Math.hypot(p[0] - a[0] - vx * t, p[1] - a[1] - vy * t); };
+  const inside = p => { const c = (a, b) => (b[0] - a[0]) * (p[1] - a[1]) - (b[1] - a[1]) * (p[0] - a[0]), s1 = c(Q[0], Q[1]), s2 = c(Q[1], Q[2]), s3 = c(Q[2], Q[0]); return (s1 >= 0 && s2 >= 0 && s3 >= 0) || (s1 <= 0 && s2 <= 0 && s3 <= 0); };
+  let txt = '', arcs = '', ys = Q.map(q => q[1]);
+  Q.forEach((V, i) => {
+    const U = Q[(i + 1) % 3], W = Q[(i + 2) % 3], au = Math.atan2(U[1] - V[1], U[0] - V[0]), aw = Math.atan2(W[1] - V[1], W[0] - V[0]);
+    let half = Math.abs(Math.atan2(Math.sin(aw - au), Math.cos(aw - au))) / 2; const bis = Math.atan2(Math.sin(au) + Math.sin(aw), Math.cos(au) + Math.cos(aw)), r = lblR(lab[i], 14);
+    let d = Math.max(r / Math.sin(half), 15 + r + 2), c = [V[0] + Math.cos(bis) * d, V[1] + Math.sin(bis) * d];   // بعد قوس الزاوية
+    const fits = inside(c) && [0, 1, 2].every(k => dist(c, Q[k], Q[(k + 1) % 3]) >= r);
+    if (!fits) c = [V[0] - Math.cos(bis) * (r + 8), V[1] - Math.sin(bis) * (r + 8)];   // زاوية حادة جداً: الرقم خارج المثلث بجانب رأسها
+    const s1 = Math.min(au, aw), s2 = Math.max(au, aw), [b1, b2] = s2 - s1 > Math.PI ? [s2, s1 + 2 * Math.PI] : [s1, s2];
+    arcs += arcAt(V[0], V[1], b1, b2, 15); txt += T(c[0], c[1] + 5, lab[i], { fs: 14, c: ACC }); ys.push(c[1] - 10, c[1] + 10);
+  });
+  const top = Math.min(...ys) - 8, bot = Math.max(...ys) + 8;
+  return `<svg viewBox="-20 ${top} 360 ${bot - top}" class="chLine">${poly(Q, { fill: '#FFF1D6' })}${arcs}${txt}</svg>`;
 }
 /* زاوية بين ذراعين على منقلة: theta بالدرجات، تُقاس من اليمين */
 export function protractor(theta) {
@@ -82,12 +100,21 @@ export function protractor(theta) {
 }
 /* زوايا حول نقطة أو على خط مستقيم: ang = قياسات متتالية، lab = نصوصها */
 export function fan(ang, lab, line = false) {
-  const c = [160, line ? 110 : 85], r = 70; let a0 = line ? 180 : 90, s = `<svg viewBox="0 0 320 ${line ? 130 : 170}" class="chLine">`, rays = [];
+  const c = [160, line ? 120 : 110], r = 70, L = r * 1.4; let a0 = line ? 180 : 90, s = '', rays = [], ys = [c[1] - L, c[1] + (line ? 4 : L)];
   if (line) s += `<line x1="40" y1="${c[1]}" x2="280" y2="${c[1]}" stroke="${INK}" stroke-width="2.5"/>`;
   rays.push(a0); ang.forEach(d => { a0 -= d; rays.push(a0); });
-  rays.forEach(d => { const a = d * Math.PI / 180; if (!line || (d !== 180 && d !== 0)) s += `<line x1="${c[0]}" y1="${c[1]}" x2="${c[0] + Math.cos(a) * r * 1.4}" y2="${c[1] - Math.sin(a) * r * 1.4}" stroke="${INK}" stroke-width="2.5"/>`; });
-  ang.forEach((d, i) => { const m = (rays[i] + rays[i + 1]) / 2 * Math.PI / 180; s += T(c[0] + Math.cos(m) * r * .62, c[1] - Math.sin(m) * r * .62 + 5, lab[i], { fs: 13, c: ACC }); });
-  return s + `<circle cx="${c[0]}" cy="${c[1]}" r="3.5" fill="${INK}"/></svg>`;
+  rays.forEach(d => { const a = d * Math.PI / 180; if (!line || (d !== 180 && d !== 0)) s += `<line x1="${c[0]}" y1="${c[1]}" x2="${c[0] + Math.cos(a) * L}" y2="${c[1] - Math.sin(a) * L}" stroke="${INK}" stroke-width="2.5"/>`; });
+  ang.forEach((d, i) => {
+    const m = (rays[i] + rays[i + 1]) / 2 * Math.PI / 180, half = d / 2 * Math.PI / 180, rr = lblR(lab[i], 13);
+    let k = Math.max(r * .55, rr / Math.sin(Math.min(half, Math.PI / 2)), (i % 2 ? 26 : 18) + rr + 2);   // بعيد عن الذراعين بقدر اتساع الرقم
+    if (k > L - rr) k = L + rr + 4;   // زاوية صغيرة: الرقم بعد طرفي الذراعين
+    const x = c[0] + Math.cos(m) * k, y = c[1] - Math.sin(m) * k; ys.push(y - 10, y + 10);
+    const ar_ = i % 2 ? 26 : 18;   // أقواس الزوايا المتجاورة بنصفي قطر مختلفين حتى تتميز كل زاوية
+    s += `<path d="M${c[0] + Math.cos(rays[i] * Math.PI / 180) * ar_} ${c[1] - Math.sin(rays[i] * Math.PI / 180) * ar_} A${ar_} ${ar_} 0 ${d > 180 ? 1 : 0} 1 ${c[0] + Math.cos(rays[i + 1] * Math.PI / 180) * ar_} ${c[1] - Math.sin(rays[i + 1] * Math.PI / 180) * ar_}" fill="none" stroke="${ACC}" stroke-width="1.8"/>`;
+    s += T(x, y + 5, lab[i], { fs: 13, c: ACC });
+  });
+  const top = Math.min(...ys) - 6, bot = Math.max(...ys) + 6;
+  return `<svg viewBox="0 ${top} 320 ${bot - top}" class="chLine">${s}<circle cx="${c[0]}" cy="${c[1]}" r="3.5" fill="${INK}"/></svg>`;
 }
 
 /* شبكة إحداثيات من −n إلى n: pts = [{x,y,l}]، shapes = [{p:[[x,y]..], c, l, dash}]، mirror = {x:k} أو {y:k} */

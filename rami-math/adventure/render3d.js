@@ -62,8 +62,9 @@ export function createAdv3D(canvas) {
     ground.rotation.x = -Math.PI / 2; ground.position.set(mw * T / 2, 0, mh * T / 2); ground.receiveShadow = true; root.add(ground);
     const outer = new THREE.Mesh(new THREE.PlaneGeometry(mw * T + 4000, mh * T + 4000), std(th.g[0], { roughness: 1 })); outer.rotation.x = -Math.PI / 2; outer.position.set(mw * T / 2, -.5, mh * T / 2); outer.receiveShadow = true; root.add(outer);
     // الماء: سطح لامع فوق بلاطات الماء
-    const wl = []; for (let y = 0; y < mh; y++) for (let x = 0; x < mw; x++) if (V.tileAt(x, y) === '~') wl.push(box(T + 2, 3, T + 2, x * T + T / 2, 1.5, y * T + T / 2));
-    if (wl.length) { const wp = new Parts(); const wm = new THREE.MeshStandardMaterial({ color: th.water[0], roughness: .12, metalness: .25, transparent: true, opacity: .88 }); wl.forEach(q => wp.add(wm, q, { uv: false })); const wg = wp.build({ cast: false, ao: false }); wg.userData.water = wm; root.add(wg); }
+    // الماء سطح معتم من مربعات متلاصقة (الشفافية كانت تُظهر حواف البلاطات المتداخلة)
+    const wl = []; for (let y = 0; y < mh; y++) for (let x = 0; x < mw; x++) if (V.tileAt(x, y) === '~') wl.push(box(T, 3, T, x * T + T / 2, 1.5, y * T + T / 2));
+    if (wl.length) { const wp = new Parts(); const wm = new THREE.MeshStandardMaterial({ color: th.water[0], roughness: .15, metalness: .2 }); wl.forEach(q => wp.add(wm, q, { uv: false })); const wg = wp.build({ cast: false, ao: false }); wg.userData.water = wm; root.add(wg); }
     // الجسور
     const br = new Parts(), wood = material('wood', '#8A5A30'); for (let y = 0; y < mh; y++) for (let x = 0; x < mw; x++) if (V.tileAt(x, y) === '=') br.add(wood, box(T + 2, 6, T - 6, x * T + T / 2, 5, y * T + T / 2)); root.add(br.build());
     // الجدران: أسوار من حجر بارتفاع حقيقي وشُرفات
@@ -181,7 +182,15 @@ export function createAdv3D(canvas) {
     if (kind === 'raft') { for (let i = 0; i < 5; i++) P.add(wd, cyl(5, 5, 60, -20 + i * 10, 5, 0, 8).rotateX(0), { uv: false }); P.add(material('wood', '#6E4520'), box(56, 3, 6, 0, 10, -20)); P.add(material('wood', '#6E4520'), box(56, 3, 6, 0, 10, 20)); P.add(wd, cyl(2, 2, 70, 0, 45, 0, 6)); const sail = new THREE.Mesh(new THREE.PlaneGeometry(40, 46), std('#F2EAD8', { side: THREE.DoubleSide })); sail.position.set(0, 52, 2); g.add(sail); }
     else if (kind === 'bridge') { for (let i = 0; i < 6; i++) P.add(wd, box(T, 4, 8, 0, 6, -20 + i * 8)); }
     else if (kind === 'bell') { P.add(wd, box(6, 90, 6, -24, 45, 0)); P.add(wd, box(6, 90, 6, 24, 45, 0)); P.add(wd, box(56, 6, 8, 0, 90, 0)); g.add(new THREE.Mesh(new THREE.CylinderGeometry(8, 16, 24, 14).translate(0, 74, 0), new THREE.MeshStandardMaterial({ color: '#E3B04B', emissive: '#7A5410', emissiveIntensity: .5, metalness: .3, roughness: .35 }))); }
-    else { const hull = new THREE.Mesh(new THREE.CylinderGeometry(22, 14, 120, 10, 1, false, 0, Math.PI).rotateZ(Math.PI / 2).rotateY(Math.PI / 2), material('wood', '#8A5A30')); hull.position.y = 18; hull.rotation.x = Math.PI; g.add(hull); P.add(wd, cyl(3, 3, 110, 0, 60, 0, 6)); const sail = new THREE.Mesh(new THREE.PlaneGeometry(60, 70), std('#EFE3CC', { side: THREE.DoubleSide })); sail.position.set(0, 72, 0); sail.rotation.y = .4; g.add(sail); }
+    else {   // مركب خشبي محطّم: بدن بمقدمة مدببة مائل على الرمل، وصارٍ مكسور وشراع ممزق
+      const hw = material('wood', '#8A5A30'), dk = material('wood', '#5E3A1C'), sh = new THREE.Shape(); sh.moveTo(-60, 0); sh.lineTo(40, 0); sh.quadraticCurveTo(66, 0, 74, 14); sh.lineTo(-62, 14); sh.closePath();
+      const hull = new THREE.Mesh(new THREE.ExtrudeGeometry(sh, { depth: 40, bevelEnabled: false }), hw); hull.rotation.x = -Math.PI / 2; hull.position.set(0, 0, 20); hull.scale.set(1, 1, 1.4); g.add(hull);
+      const rim = new THREE.Mesh(new THREE.BoxGeometry(136, 5, 44), dk); rim.position.y = 21; g.add(rim);
+      for (let i = 0; i < 5; i++) { const pl = new THREE.Mesh(new THREE.BoxGeometry(3, 4, 40), dk); pl.position.set(-48 + i * 22, 20.5, 0); g.add(pl); }
+      const mast = new THREE.Mesh(new THREE.CylinderGeometry(3, 3, 64, 6), dk); mast.position.set(-6, 52, 0); mast.rotation.z = .55; g.add(mast);
+      const sail = new THREE.Mesh(new THREE.PlaneGeometry(44, 40), std('#EFE3CC', { side: THREE.DoubleSide })); sail.position.set(-22, 50, 6); sail.rotation.set(.3, .5, .55); g.add(sail);
+      g.rotation.z = .12; g.rotation.y = .5;
+    }
     g.add(P.build()); return shadowed(g);
   }
   /* الأشعة: أسطوانات مضيئة بين النقاط */

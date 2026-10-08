@@ -509,7 +509,7 @@ S.multiplyStrategies2 = padLesson('multiplyStrategies2', '🌾 لوح المخز
 S.divisibility = async () => {
   await station(W.fort.ST4.conveyor, '🌴 سير الأكياس');
   const grab = async ok => {
-    for (let i = 0; i < 200; i++) {
+    for (let i = 0; i < 600; i++) {   // الأكياس عشوائية: قد يتأخر الكيس المناسب
       const x = await G(ok => { const s = (document.getElementById('belt')?.__sacks || []).find(s => s.ok === ok && s.x > 40 && s.x < 280); return s ? s.x : null; }, ok);
       if (x !== null) { const b = await page.locator('#belt').boundingBox(); await page.mouse.click(b.x + x - 4, b.y + 55); return; }
       await sleep(100);

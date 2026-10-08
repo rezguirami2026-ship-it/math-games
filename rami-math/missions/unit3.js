@@ -313,7 +313,7 @@ function imageMod(cfg) {
     actions(W, d) { return near(W, cfg.stand, 46) ? [{ key: cfg.id, label: `${cfg.icon} لوح ${cfg.place}`, kind: 'go', run: () => this.open(W, d) }] : []; },
     open(W, d, msg, kind) {
       const r = d.rounds[d.r], Z = 30, O = 15, N = 8;
-      sheetOpen(`<h3>${cfg.icon} ${cfg.title}</h3>${msgBox(msg || r.text, kind)}<canvas id="img" width="${N * Z + 2 * O}" height="${N * Z + 2 * O}" style="touch-action:none"></canvas>
+      sheetOpen(`<h3>${cfg.icon} ${cfg.title}</h3>${msgBox((msg || r.text) + ` (للشكل ${ar(r.shape.length)} رؤوس: ضع ${ar(r.shape.length)} نقاط)`, kind)}<canvas id="img" width="${N * Z + 2 * O}" height="${N * Z + 2 * O}" style="touch-action:none"></canvas>
         <div class="row2"><button class="act ghost" id="imgClear">↺ امسح</button><button class="act ghost" id="benchOut">رجوع</button><button class="act go" id="benchGo">✓ تحقّق</button></div>`);
       const cv = document.getElementById('img'), c = hiDPI(cv), X = g => O + g * Z;
       const draw = () => {
@@ -321,6 +321,7 @@ function imageMod(cfg) {
         c.strokeStyle = '#E3D6B5'; c.lineWidth = 1; for (let i = 0; i <= N; i++) { c.beginPath(); c.moveTo(X(i), X(0)); c.lineTo(X(i), X(N)); c.stroke(); c.beginPath(); c.moveTo(X(0), X(i)); c.lineTo(X(N), X(i)); c.stroke(); }
         cfg.guide(c, r, X);
         c.fillStyle = 'rgba(47,111,178,.35)'; c.strokeStyle = '#2F6FB2'; c.lineWidth = 2.5; c.beginPath(); r.shape.forEach(([x, y], i) => i ? c.lineTo(X(x), X(y)) : c.moveTo(X(x), X(y))); c.closePath(); c.fill(); c.stroke();
+        r.shape.forEach(([x, y]) => { c.fillStyle = '#1F4E9A'; c.beginPath(); c.arc(X(x), X(y), 4.5, 0, 7); c.fill(); });   // رؤوس الشكل ظاهرة: يعدّها الطالب
         d.pts.forEach(([x, y]) => { c.fillStyle = '#E2475C'; c.beginPath(); c.arc(X(x), X(y), 6, 0, 7); c.fill(); });
       };
       draw();
@@ -339,7 +340,15 @@ function imageMod(cfg) {
     draw: cfg.world
   };
 }
-function polyOK(s) { const k = new Set(s.map(p => p.join(','))); return k.size === s.length && s.every(([x, y]) => x >= 0 && y >= 0 && x <= 8 && y <= 8); }
+// شكل صالح: رؤوس مختلفة داخل الشبكة، ولا رأس على ضلع (ثلاثة رؤوس متتالية على خط واحد تُخفي رأساً فيبدو المربع مثلثاً)، ولا أضلاع متقاطعة
+function polyOK(s) {
+  const k = new Set(s.map(p => p.join(','))), n = s.length; if (k.size !== n || !s.every(([x, y]) => x >= 0 && y >= 0 && x <= 8 && y <= 8)) return false;
+  const cr = (a, b, c) => (b[0] - a[0]) * (c[1] - a[1]) - (b[1] - a[1]) * (c[0] - a[0]);
+  for (let i = 0; i < n; i++) if (cr(s[i], s[(i + 1) % n], s[(i + 2) % n]) === 0) return false;
+  for (let i = 0; i < n; i++) for (let j = i + 2; j < n; j++) { if (i === 0 && j === n - 1) continue; const a = s[i], b = s[(i + 1) % n], c = s[j], d = s[(j + 1) % n];
+    if (Math.sign(cr(a, b, c)) * Math.sign(cr(a, b, d)) <= 0 && Math.sign(cr(c, d, a)) * Math.sign(cr(c, d, b)) <= 0) return false; }
+  return true;
+}
 function randShape(fx, fy, n) { for (;;) { const s = Array.from({ length: n }, () => [fx(), fy()]); const area = s.reduce((a, [x, y], i) => { const [x2, y2] = s[(i + 1) % n]; return a + x * y2 - x2 * y; }, 0); if (polyOK(s) && Math.abs(area) >= 4) return s; } }
 export const reflection = imageMod({
   id: 'reflection', giver: 'hind', icon: '🪞', place: 'المرآة', title: 'بركة المرايا', stand: POOL_STAND,
