@@ -12,7 +12,7 @@ import { PREVIEW } from '../save/save.js';
 
 export const ADVENTURES = [
   { id: 'rescue', unit: 0, icon: '🏘️', title: 'إنقاذ القرية', blurb: 'هاجمت «عصابة الظلال» القرية ليلاً وخطفت أربعة من أهلها. استكشف وتسلّل وأنقذهم!', load: () => import('./stories/rescue.js') },
-  { id: 'storm', unit: 1, icon: '🌪️', title: 'العاصفة الكبرى', blurb: 'عاصفة تضرب المنطقة: ساعد الناس على الوصول إلى أماكن آمنة واجمع ما يحتاجونه.', soon: true },
+  { id: 'storm', unit: 1, icon: '🌪️', title: 'العاصفة الكبرى', blurb: 'عاصفة رعدية تضرب سوق الوادي: احتمِ من الريح، قُد الناس إلى الملجأ، أصلح الجسر، أعد الماعز، واقرع جرس البرج!', load: () => import('./stories/storm.js'), soon: true },
   { id: 'island', unit: 2, icon: '🏝️', title: 'الجزيرة المفقودة', blurb: 'تحطّم القارب، وأنت على جزيرة مجهولة فيها كهوف وغابة وشاطئ. ابحث عن طريق العودة.', soon: true },
   { id: 'oldcity', unit: 3, icon: '🏛️', title: 'سر المدينة القديمة', blurb: 'مدينة مهجورة فيها أبواب مخفية وأدلة. اكشف قصتها.', soon: true },
   { id: 'desert', unit: 6, icon: '🏜️', title: 'مهمة في الصحراء', blurb: 'رحلة عبر الكثبان والمخيمات والآثار القديمة والمناطق السرية.', soon: true },

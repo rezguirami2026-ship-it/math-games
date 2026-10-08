@@ -40,7 +40,7 @@ export function createAdv3D(canvas) {
   scene.add(hemi, sun, sun.target);
   const lights = []; for (let i = 0; i < (MOB ? 4 : 6); i++) { const l = new THREE.PointLight('#FFB060', 0, 260, 1.6); scene.add(l); lights.push(l); }
   const heroLight = new THREE.PointLight('#FFD08A', 0, 300, 1.4); scene.add(heroLight);
-  let root = null, built = null, people = new Map(), objs = new Map(), cutSeen = new Set(), tileObj = new Map(), marker, goalArrow, fxPts, W = 1, H = 1, last = 0;
+  let builtTV = 0, sky0 = new THREE.Color(), root = null, built = null, people = new Map(), objs = new Map(), cutSeen = new Set(), tileObj = new Map(), marker, goalArrow, fxPts, W = 1, H = 1, last = 0;
 
   function resize(w, h) { W = w; H = h; renderer.setSize(w, h, false); camera.aspect = w / h; camera.updateProjectionMatrix(); }
 
@@ -51,10 +51,7 @@ export function createAdv3D(canvas) {
     const { map, theme } = V, th = THEMES[theme], mw = map[0].length, mh = map.length, night = V.dark;
     built = V.areaId;
     // السماء والضباب والإضاءة حسب العالم والليل
-    const skyC = night > .4 ? '#0E1530' : night > .1 ? '#6E8AB8' : '#8CC4EE';
-    scene.background = new THREE.Color(skyC); scene.fog = new THREE.Fog(skyC, 900, 2600);
-    hemi.color.set(night > .4 ? '#5A6AA8' : '#CFE4FA'); hemi.groundColor.set(night > .4 ? '#2A2030' : '#8A6A48'); hemi.intensity = night > .4 ? .55 : 1.05;
-    sun.color.set(night > .4 ? '#9FB4FF' : '#FFE9C4'); sun.intensity = night > .4 ? .55 : 2.5;
+    scene.background = new THREE.Color('#8CC4EE'); scene.fog = new THREE.Fog('#8CC4EE', 900, 2600); void night;
     // الأرض: لوحة واحدة مرسومة من البلاطات
     const S = Math.min(2, 2048 / Math.max(mw, mh) / T), gc = document.createElement('canvas'); gc.width = Math.ceil(mw * T * S); gc.height = Math.ceil(mh * T * S);
     const g = gc.getContext('2d'); g.scale(S, S); const soft = [];
@@ -118,7 +115,7 @@ export function createAdv3D(canvas) {
       case 'sign': { P.add(wood, box(5, 34, 5, 0, 17, 0)); P.add(material('wood', '#C9955A'), box(42, 24, 4, 0, 38, 0, 2)); G.add(P.build()); break; }
       case 'fire': case 'safe': { for (let i = 0; i < 3; i++) { const l = new THREE.Mesh(cyl(2.6, 2.6, 28, 0, 3, 0, 6), material('wood', '#5A3A1A')); l.rotation.z = Math.PI / 2; l.rotation.y = i * 1.05; G.add(l); }
         const ring = new THREE.Group(); for (let i = 0; i < 8; i++) { const s = new THREE.Mesh(new THREE.DodecahedronGeometry(4, 0), std('#8C8478', { flatShading: true })); s.position.set(Math.cos(i * .785) * 15, 2, Math.sin(i * .785) * 15); ring.add(s); } G.add(ring); G.add(flame(1)); G.userData.light = 1; break; }
-      case 'beacon': { P.add(material('stone', '#B8AE98'), cyl(14, 18, 54, 0, 27, 0, 10)); P.add(material('metal', '#5A4632'), cyl(20, 12, 10, 0, 59, 0, 12)); G.add(shadowed(P.build())); const f = flame(1.8); f.position.y = 62; G.add(f); G.userData.beacon = f; break; }
+      case 'beacon': { P.add(material('stone', '#C9BFA9'), cyl(15, 20, 96, 0, 48, 0, 10)); P.add(material('stone', '#B8AE98'), box(46, 10, 46, 0, 5, 0, 2)); P.add(material('metal', '#5A4632'), cyl(22, 13, 12, 0, 102, 0, 12)); G.add(shadowed(P.build())); const f = flame(2); f.position.y = 106; G.add(f); G.userData.beacon = f; const r = new THREE.Mesh(new THREE.RingGeometry(26, 32, 32), new THREE.MeshBasicMaterial({ color: '#FFB060', transparent: true, opacity: .5, side: THREE.DoubleSide })); r.rotation.x = -Math.PI / 2; r.position.y = 1.5; G.add(r); G.userData.bring = r; break; }
       case 'tent': { const c = new THREE.ConeGeometry(42, 66, 4); c.rotateY(Math.PI / 4); c.translate(0, 33, 0); G.add(shadowed(new THREE.Mesh(c, std(e.color || '#8E3B3B', { roughness: .9 })))); const dr = new THREE.Mesh(new THREE.PlaneGeometry(18, 30), std('#2A1A10')); dr.position.set(0, 15, 30.5); dr.rotation.x = -.42; G.add(dr); break; }
       case 'crates': { [[-13, 0, 13], [13, 0, 13], [0, 26, 13]].forEach(([dx, dy]) => P.add(material('wood', '#9C6438'), box(26, 26, 26, dx, dy + 13, 0, 1.5))); G.add(P.build()); break; }
       case 'barrel': { P.add(material('wood', '#8A5A30'), cyl(13, 13, 34, 0, 17, 0, 14)); P.add(dark, cyl(13.6, 13.6, 3, 0, 7, 0, 14), { uv: false }); P.add(dark, cyl(13.6, 13.6, 3, 0, 27, 0, 14), { uv: false }); G.add(P.build()); break; }
@@ -129,6 +126,19 @@ export function createAdv3D(canvas) {
         m.position.y = 30; G.add(m); G.userData.spin = m; break; }
       case 'item': { const sp = sprite(iconTexture(V.itemIcon(e.item)), 34); sp.position.y = 34; G.add(sp); G.userData.bob = sp; const rg = new THREE.Mesh(new THREE.RingGeometry(14, 18, 24), new THREE.MeshBasicMaterial({ color: '#FFD54A', transparent: true, opacity: .55, side: THREE.DoubleSide })); rg.rotation.x = -Math.PI / 2; rg.position.y = 1; G.add(rg); break; }
       case 'exit': { const a = new THREE.Mesh(new THREE.ConeGeometry(10, 22, 3), glow('#7CD6FF')); a.rotation.z = e.x === 0 ? Math.PI / 2 : -Math.PI / 2; a.position.y = 18; G.add(a); G.userData.bob = a; const rg = new THREE.Mesh(new THREE.RingGeometry(16, 22, 28), new THREE.MeshBasicMaterial({ color: '#7CD6FF', transparent: true, opacity: .6, side: THREE.DoubleSide })); rg.rotation.x = -Math.PI / 2; rg.position.y = 1; G.add(rg); break; }
+      case 'hazard': case 'animal': { const c = creature(e.creature || 'crab'); G.add(c); G.userData.creature = c;
+        if (e.kind === 'animal') { const mk = sprite(markTexture('!', '#E2475C'), 18); mk.position.y = 70; mk.visible = false; G.add(mk); G.userData.mark = mk; }
+        return shadowed(G); }
+      case 'rot': { G.add(rotMesh(e.style || 'statue')); G.userData.rot = G.children[0]; G.userData.rot.rotation.y = -(e.r || 0) * Math.PI / 2; break; }
+      case 'tablet': { P.add(material('stone', '#B8AE98'), box(36, 46, 14, 0, 23, 0, 2)); G.add(P.build()); const sp = sprite(iconTexture((V.symbols || [])[e.sym || 0] || '?', '#8C7A5A'), 30); sp.material.depthTest = true; sp.position.set(0, 30, 9); G.add(sp); G.userData.tab = sp; break; }
+      case 'crystal': { const c = new THREE.Mesh(new THREE.OctahedronGeometry(14), new THREE.MeshStandardMaterial({ color: '#7CD6FF', emissive: '#2A7AB8', emissiveIntensity: .4, metalness: .2, roughness: .15, transparent: true, opacity: .9 })); c.scale.y = 1.6; c.position.y = 34; P.add(material('stone', '#8C8478'), cyl(12, 15, 12, 0, 6, 0, 8)); G.add(P.build(), c); G.userData.crystal = c; break; }
+      case 'beam': { P.add(material('stone', '#B8AE98'), cyl(12, 15, 30, 0, 15, 0, 10)); G.add(P.build()); const s = new THREE.Mesh(sphere(10, 0, 40, 0), glow('#FFD54A')); G.add(s); break; }
+      case 'fence': { P.add(wood, box(e.vertical ? 6 : T, 6, e.vertical ? T : 6, 0, 22, 0)); P.add(wood, box(e.vertical ? 6 : T, 6, e.vertical ? T : 6, 0, 10, 0)); [-1, 1].forEach(s => P.add(wood, box(7, 32, 7, e.vertical ? 0 : s * T / 2.3, 16, e.vertical ? s * T / 2.3 : 0))); G.add(P.build()); break; }
+      case 'pillar': { P.add(material('stone', e.color || '#C9BFA9'), cyl(13, 15, e.h || 90, 0, (e.h || 90) / 2, 0, 12)); P.add(material('stone', '#B5AB97'), box(34, 8, 34, 0, (e.h || 90) + 4, 0)); G.add(P.build()); break; }
+      case 'torchw': { P.add(dark, cyl(2, 2, 40, 0, 20, 0, 6), { uv: false }); G.add(P.build()); const f = flame(.8); f.position.y = 40; G.add(f); G.userData.light = 1; break; }
+      case 'site': { const g = new THREE.Group(); const ring = new THREE.Mesh(new THREE.RingGeometry(20, 26, 4), new THREE.MeshBasicMaterial({ color: '#FFD54A', transparent: true, opacity: .7, side: THREE.DoubleSide })); ring.rotation.x = -Math.PI / 2; ring.rotation.z = Math.PI / 4; ring.position.y = 1.5; g.add(ring); G.add(g); G.userData.site = ring;
+        const b = buildModel(e.model || 'raft'); b.visible = !!e.built; G.add(b); G.userData.built = b; break; }
+      case 'boat': { G.add(buildModel('dhow')); break; }
       case 'npc': case 'guard': { const Pp = buildPerson(V.look(e)); Pp.root.position.set(x, 0, z); people.set(e, Pp); shadowed(Pp.root); scene.add(Pp.root);
         if (e.kind === 'guard') { const cone = new THREE.Mesh(new THREE.CircleGeometry((e.range || 4) * T, 24, -(e.fov || .5), (e.fov || .5) * 2), new THREE.MeshBasicMaterial({ color: '#FFD54A', transparent: true, opacity: .28, depthWrite: false, side: THREE.DoubleSide }));
           cone.rotation.x = -Math.PI / 2; cone.position.y = 1.5; G.add(cone); G.userData.cone = cone; const lan = new THREE.Mesh(sphere(4, 14, 40, 6), glow('#FFC86A')); G.add(lan); }
@@ -145,13 +155,75 @@ export function createAdv3D(canvas) {
     g.visible = d > 4 && !b.hidden; if (!g.visible) return; const ang = Math.atan2(px - bx, pz - bz);
     g.children.forEach((c, i) => { const f = ((i / 6 + t * .35) % 1); c.position.set(bx + (px - bx) * f, 3, bz + (pz - bz) * f); c.rotation.set(Math.PI / 2, 0, -ang + Math.PI); c.visible = f * d > 26 && f * d < d - 10; });
   }
+  /* مخلوقات بسيطة جميلة: سرطان، عقرب، ماعز، جمل، صخرة متدحرجة */
+  function creature(kind) {
+    const g = new THREE.Group(), P = new Parts();
+    if (kind === 'crab') { const m = std('#D9482E', { roughness: .5 }); P.add(m, sphere(13, 0, 9, 0, 12, 8), { uv: false }); [-1, 1].forEach(s => { for (let i = 0; i < 3; i++) P.add(m, box(14, 2.5, 2.5, s * 16, 4, -6 + i * 6), { uv: false }); P.add(m, sphere(6, s * 16, 12, 13), { uv: false }); }); P.add(std('#111'), sphere(2.2, -4, 18, 9), { uv: false }); P.add(std('#111'), sphere(2.2, 4, 18, 9), { uv: false }); g.add(P.build()); g.scale.set(1, .9, 1); }
+    else if (kind === 'scorpion') { const m = std('#3A2A1E', { roughness: .6 }); P.add(m, box(16, 7, 26, 0, 6, 0, 3), { uv: false }); for (let i = 0; i < 5; i++) P.add(m, sphere(4.5 - i * .5, 0, 9 + i * 6, -14 - i * 3), { uv: false }); P.add(std('#C9971C'), new THREE.ConeGeometry(2.4, 8, 6).translate(0, 38, -26), { uv: false });
+      [-1, 1].forEach(s => { for (let i = 0; i < 4; i++) P.add(m, box(12, 2, 2, s * 12, 3, -8 + i * 5), { uv: false }); P.add(m, sphere(5, s * 9, 6, 16), { uv: false }); }); g.add(P.build()); }
+    else if (kind === 'goat' || kind === 'camel') { const camel = kind === 'camel', m = std(camel ? '#C9955A' : '#F2EDE2'), dk = std(camel ? '#9C6A3A' : '#5A4A3A'), s = camel ? 1.6 : 1;
+      P.add(m, box(16 * s, 14 * s, 30 * s, 0, 22 * s, 0, 5), { uv: false }); if (camel) P.add(m, sphere(9 * s, 0, 32 * s, -2), { uv: false });
+      P.add(m, box(8 * s, 16 * s, 8 * s, 0, 32 * s, 16 * s, 3), { uv: false }); P.add(m, box(9 * s, 9 * s, 13 * s, 0, 38 * s, 22 * s, 3), { uv: false });
+      [[-5, -10], [5, -10], [-5, 10], [5, 10]].forEach(([a, b]) => P.add(dk, box(3.4 * s, 15 * s, 3.4 * s, a * s, 7.5 * s, b * s), { uv: false })); if (!camel) { P.add(dk, new THREE.ConeGeometry(1.6, 9, 5).translate(-3, 46, 20), { uv: false }); P.add(dk, new THREE.ConeGeometry(1.6, 9, 5).translate(3, 46, 20), { uv: false }); }
+      P.add(std('#111'), sphere(1.4 * s, -3.4 * s, 40 * s, 27 * s), { uv: false }); P.add(std('#111'), sphere(1.4 * s, 3.4 * s, 40 * s, 27 * s), { uv: false }); g.add(P.build()); }
+    else { const r = new THREE.Mesh(new THREE.DodecahedronGeometry(20, 1), std('#8C8072', { flatShading: true })); r.position.y = 20; g.add(r); g.userData.roll = r; }
+    return g;
+  }
+  function rotMesh(style) {
+    const g = new THREE.Group(), P = new Parts(), st = material('stone', '#C9BFA9');
+    if (style === 'vane') { P.add(material('metal', '#5A5664'), cyl(2.5, 2.5, 70, 0, 35, 0, 8), { uv: false }); P.add(material('metal', '#C9971C'), box(6, 4, 40, 0, 70, 6), { uv: false }); P.add(material('metal', '#C9971C'), new THREE.ConeGeometry(7, 14, 4).rotateX(Math.PI / 2).translate(0, 70, 30), { uv: false }); P.add(material('metal', '#C9971C'), box(2, 16, 14, 0, 70, -16), { uv: false }); }
+    else if (style === 'mirror') { P.add(st, cyl(12, 14, 14, 0, 7, 0, 10)); const f = new THREE.Mesh(box(40, 44, 4, 0, 36, 0, 2), material('wood', '#7A4A22')); f.rotation.y = Math.PI / 4; const glass = new THREE.Mesh(new THREE.PlaneGeometry(34, 38), new THREE.MeshStandardMaterial({ color: '#DDEBFF', metalness: .95, roughness: .05, emissive: '#3A5A7A', emissiveIntensity: .3 })); glass.position.set(0, 36, 0); glass.rotation.y = Math.PI / 4; glass.translateZ(2.5); g.add(f, glass); }
+    else { P.add(st, box(30, 14, 30, 0, 7, 0, 2)); P.add(material('stone', '#BDB39E'), cyl(9, 12, 46, 0, 37, 0, 10)); P.add(material('stone', '#BDB39E'), sphere(9, 0, 66, 0)); P.add(material('stone', '#BDB39E'), box(5, 5, 26, 6, 52, 14), { uv: false }); P.add(material('metal', '#C9971C'), new THREE.ConeGeometry(4, 10, 6).rotateX(Math.PI / 2).translate(6, 52, 30), { uv: false }); }
+    g.add(P.build()); return g;
+  }
+  function buildModel(kind) {
+    const P = new Parts(), wd = material('wood', '#9C6438'), g = new THREE.Group();
+    if (kind === 'raft') { for (let i = 0; i < 5; i++) P.add(wd, cyl(5, 5, 60, -20 + i * 10, 5, 0, 8).rotateX(0), { uv: false }); P.add(material('wood', '#6E4520'), box(56, 3, 6, 0, 10, -20)); P.add(material('wood', '#6E4520'), box(56, 3, 6, 0, 10, 20)); P.add(wd, cyl(2, 2, 70, 0, 45, 0, 6)); const sail = new THREE.Mesh(new THREE.PlaneGeometry(40, 46), std('#F2EAD8', { side: THREE.DoubleSide })); sail.position.set(0, 52, 2); g.add(sail); }
+    else if (kind === 'bridge') { for (let i = 0; i < 6; i++) P.add(wd, box(T, 4, 8, 0, 6, -20 + i * 8)); }
+    else if (kind === 'bell') { P.add(wd, box(6, 90, 6, -24, 45, 0)); P.add(wd, box(6, 90, 6, 24, 45, 0)); P.add(wd, box(56, 6, 8, 0, 90, 0)); P.add(material('metal', '#C9971C'), new THREE.CylinderGeometry(8, 16, 24, 14).translate(0, 74, 0)); }
+    else { const hull = new THREE.Mesh(new THREE.CylinderGeometry(22, 14, 120, 10, 1, false, 0, Math.PI).rotateZ(Math.PI / 2).rotateY(Math.PI / 2), material('wood', '#8A5A30')); hull.position.y = 18; hull.rotation.x = Math.PI; g.add(hull); P.add(wd, cyl(3, 3, 110, 0, 60, 0, 6)); const sail = new THREE.Mesh(new THREE.PlaneGeometry(60, 70), std('#EFE3CC', { side: THREE.DoubleSide })); sail.position.set(0, 72, 0); sail.rotation.y = .4; g.add(sail); }
+    g.add(P.build()); return shadowed(g);
+  }
+  /* الأشعة: أسطوانات مضيئة بين النقاط */
+  const beamPool = [];
+  function drawBeams(list) {
+    let n = 0; list.forEach(pts => { for (let i = 0; i + 1 < pts.length; i++) { let m = beamPool[n]; if (!m) { m = new THREE.Mesh(new THREE.CylinderGeometry(3, 3, 1, 8, 1, true), new THREE.MeshBasicMaterial({ color: '#FFE27A', transparent: true, opacity: .85, depthWrite: false })); scene.add(m); beamPool.push(m); }
+      const [a, b] = [pts[i], pts[i + 1]], ax = a[0] * T + T / 2, az = a[1] * T + T / 2, bx = b[0] * T + T / 2, bz = b[1] * T + T / 2, len = Math.hypot(bx - ax, bz - az);
+      m.visible = len > 1; m.scale.set(1, len, 1); m.position.set((ax + bx) / 2, 38, (az + bz) / 2); m.rotation.set(Math.PI / 2, 0, -Math.atan2(bx - ax, bz - az) + Math.PI); m.rotation.order = 'YXZ'; m.rotation.set(Math.PI / 2, Math.atan2(bx - ax, bz - az), 0); n++; } });
+    for (let i = n; i < beamPool.length; i++) beamPool[i].visible = false;
+  }
   function flame(s) { const g = new THREE.Group(); const o = new THREE.Mesh(new THREE.ConeGeometry(9 * s, 26 * s, 8), new THREE.MeshBasicMaterial({ color: '#FF8A1E', transparent: true, opacity: .92 })); o.position.y = 13 * s; const i = new THREE.Mesh(new THREE.ConeGeometry(5 * s, 16 * s, 8), new THREE.MeshBasicMaterial({ color: '#FFE070' })); i.position.y = 9 * s; g.add(o, i); g.userData.flame = 1; return g; }
+
+  /* ── الطقس: الظلام والسماء والضباب تتغير بنعومة (عاصفة تهدأ، ليل، غبار)، والمطر والرمل جزيئات حول الكاميرا ── */
+  const wz = { dark: -1, sand: 0, rain: 0 };
+  let rain = null;
+  const C = (a, b, k) => new THREE.Color(a).lerp(new THREE.Color(b), k);
+  function weatherFrame(V, dt) {
+    const w = V.weather || {}, k = Math.min(1, dt * 1.5);
+    wz.dark = wz.dark < 0 ? V.dark : wz.dark + (V.dark - wz.dark) * k; wz.sand += ((w.sand ? 1 : 0) - wz.sand) * k; wz.rain += ((w.rain ? 1 : 0) - wz.rain) * k;
+    const d = wz.dark, storm = Math.max(wz.rain * .6, 0);
+    const sky = d > .4 ? C('#6E8AB8', '#0E1530', Math.min(1, (d - .1) / .7)) : C('#8CC4EE', '#6E8AB8', Math.min(1, d / .4));
+    if (storm) sky.lerp(new THREE.Color('#4A5568'), storm); if (wz.sand > .01) sky.lerp(new THREE.Color('#D9A86A'), wz.sand * .8);
+    scene.background.copy(sky); scene.fog.color.copy(sky); scene.fog.far = 2600 - wz.sand * 1700 - storm * 900; scene.fog.near = 900 - wz.sand * 700 - storm * 300;
+    hemi.color.copy(C('#CFE4FA', '#5A6AA8', Math.min(1, d * 1.6))); hemi.groundColor.copy(C('#8A6A48', '#2A2030', Math.min(1, d * 1.6))); hemi.intensity = 1.05 - d * .55;
+    sun.color.copy(C('#FFE9C4', '#9FB4FF', Math.min(1, d * 1.6))); sun.intensity = Math.max(.35, 2.5 - d * 2.6 - storm * 1.2);
+    // جزيئات المطر/الرمل
+    const on = wz.rain > .05 || wz.sand > .05;
+    if (on && !rain) { const n = MOB ? 700 : 1400, g = new THREE.BufferGeometry(), p = new Float32Array(n * 3); for (let i = 0; i < n; i++) { p[i * 3] = (Math.random() - .5) * 1600; p[i * 3 + 1] = Math.random() * 500; p[i * 3 + 2] = (Math.random() - .5) * 1400; } g.setAttribute('position', new THREE.BufferAttribute(p, 3));
+      rain = new THREE.Points(g, new THREE.PointsMaterial({ size: 3, color: '#CFE0F0', transparent: true, opacity: .7, depthWrite: false })); rain.frustumCulled = false; scene.add(rain); }
+    if (rain) { rain.visible = on; if (on) { const p = rain.geometry.attributes.position, wd = V.wind && V.wind.on ? V.wind : { dx: -.6, dy: 0, gust: 0 }, sandy = wz.sand > wz.rain;
+      rain.material.color.set(sandy ? '#E3B878' : '#CFE0F0'); rain.material.size = sandy ? 4 : 3; rain.material.opacity = Math.max(wz.rain, wz.sand) * .75;
+      const vy = sandy ? -40 : -900, vx = (wd.dx || 0) * (sandy ? 700 : 260) * (1 + (wd.gust || 0) * 2);
+      for (let i = 0; i < p.count; i++) { let x = p.getX(i) + vx * dt, y = p.getY(i) + vy * dt; if (y < 0) y += 500; if (x < -800) x += 1600; if (x > 800) x -= 1600; p.setX(i, x); p.setY(i, y); } p.needsUpdate = true;
+      rain.position.set(V.cam.x, 0, V.cam.y); } }
+  }
 
   /* ── كل إطار ── */
   const ray = new THREE.Raycaster(), plane = new THREE.Plane(new THREE.Vector3(0, 1, 0), 0), v3 = new THREE.Vector3();
   function frame(V) {
-    if (built !== V.areaId) build(V);
+    if (built !== V.areaId || builtTV !== V.tilesV) { build(V); builtTV = V.tilesV; }
     const t = V.t, dt = Math.min(.05, Math.max(0, t - last)); last = t; wind.value = t;
+    weatherFrame(V, dt);
     // البطل
     let hp = people.get('hero'); if (!hp || hp.lookKey !== V.heroKey) { if (hp) scene.remove(hp.root); hp = buildPerson(V.heroLook); hp.lookKey = V.heroKey; shadowed(hp.root); scene.add(hp.root); people.set('hero', hp); }
     animatePerson(hp, { x: V.P.x * T, y: V.P.y * T, moving: V.P.moving, phase: V.P.phase, dir: V.P.dir, faceCam: false }, dt, t);
@@ -170,14 +242,23 @@ export function createAdv3D(canvas) {
       if (e.kind === 'door' && e.open) o.visible = false;
       if (o.userData.spin) { o.userData.spin.rotation.y = t * 1.6; o.userData.spin.position.y = 30 + Math.sin(t * 3 + e.x) * 4; }
       if (o.userData.bob) o.userData.bob.position.y = (e.kind === 'exit' ? 18 : 34) + Math.sin(t * 3 + e.y) * 4;
-      if (o.userData.beacon) { o.userData.beacon.visible = !!e.lit; if (e.lit) nearL.push([o.position.x, 90, o.position.z, 2.2]); }
+      if (o.userData.beacon) { o.userData.beacon.visible = !!e.lit; o.userData.bring.visible = !e.lit; o.userData.bring.material.opacity = .3 + Math.sin(t * 4) * .2; if (e.lit) nearL.push([o.position.x, 130, o.position.z, 2.6]); }
       if (o.userData.light && e.lit !== false) nearL.push([o.position.x, 30, o.position.z, 1]);
       o.traverse(m => { if (m.userData.flame) { const k = 1 + Math.sin(t * 13 + e.x * 3) * .12; m.scale.set(1, k, 1); } });
+      if (o.userData.creature) { const px = ((e.kind === 'hazard') ? e.px + .5 : e.follow ? e.fx : e.x + .5) * T, pz = ((e.kind === 'hazard') ? e.py + .5 : e.follow ? e.fy : e.y + .5) * T;
+        const dx = px - o.position.x, dz = pz - o.position.z; if (dx * dx + dz * dz > .5) o.rotation.y = Math.atan2(dx, dz); o.position.set(px, 0, pz);
+        const cr = o.userData.creature; cr.position.y = (e.kind === 'hazard' || e.moving) ? Math.abs(Math.sin(t * 10)) * 2 : 0; if (cr.userData.roll) cr.userData.roll.rotation.x += dt * 4;
+        if (o.userData.mark) { const mt = e.mark ? e.mark(V.A) : null; o.userData.mark.visible = !!mt; }
+        if (e.kind === 'hazard') nearL.push([px, 30, pz, .35]); }
+      if (o.userData.rot) { const tgt = -(e.r || 0) * Math.PI / 2; let d = tgt - o.userData.rot.rotation.y; d = Math.atan2(Math.sin(d), Math.cos(d)); o.userData.rot.rotation.y += d * Math.min(1, dt * 8); }
+      if (o.userData.tab && o.userData.symNow !== e.sym) { o.userData.symNow = e.sym; o.userData.tab.material.map = iconTexture((V.symbols || [])[e.sym || 0] || '?', '#8C7A5A'); o.userData.tab.material.needsUpdate = true; }
+      if (o.userData.crystal) { o.userData.crystal.material.emissiveIntensity = e.lit ? 2.2 + Math.sin(t * 8) * .4 : .4; o.userData.crystal.rotation.y = t * (e.lit ? 2 : .4); if (e.lit) nearL.push([o.position.x, 40, o.position.z, 1.2]); }
+      if (o.userData.site) { o.userData.site.visible = !e.built; o.userData.site.material.opacity = .4 + Math.sin(t * 4) * .3; o.userData.built.visible = !!e.built; }
       if (e.kind === 'npc' || e.kind === 'guard') {
         const Pp = people.get(e); if (!Pp) return; Pp.root.visible = !e.hidden;
-        const px = (e.kind === 'guard' ? e.px : e.x) * T + T / 2, pz = (e.kind === 'guard' ? e.py : e.y) * T + T / 2;
+        const px = e.follow ? e.fx * T : (e.kind === 'guard' ? e.px : e.x) * T + T / 2, pz = e.follow ? e.fy * T : (e.kind === 'guard' ? e.py : e.y) * T + T / 2;
         const face = e.kind === 'guard' ? { x: px + Math.cos(e.ang) * 50, y: pz + Math.sin(e.ang) * 50 } : (Math.hypot(V.P.x * T - px, V.P.y * T - pz) < 160 ? { x: V.P.x * T, y: V.P.y * T } : null);
-        animatePerson(Pp, { x: px, y: pz, moving: e.kind === 'guard' && !e.pause, phase: e.ph || 0, dir: e.face || 'down', face }, dt, t);
+        animatePerson(Pp, { x: px, y: pz, moving: (e.kind === 'guard' && !e.pause && !e.spin) || !!(e.follow && e.moving), phase: e.ph || 0, dir: e.face || 'down', face: e.follow ? null : face }, dt, t);
         o.position.set(px, 0, pz);
         if (o.userData.cone) { o.userData.cone.rotation.z = -e.ang; o.userData.cone.material.color.set(V.caught === e ? '#FF4646' : '#FFD54A'); }
         const mt = e.kind === 'guard' ? (V.caught === e ? '!' : null) : e.mark ? e.mark(V.A) : null; o.userData.mark.visible = !!mt && !e.hidden; o.userData.mark.position.y = 96 + Math.sin(t * 4) * 4;
@@ -191,8 +272,9 @@ export function createAdv3D(canvas) {
     const hx = V.P.x * T, hz = V.P.y * T; nearL.sort((a, b) => Math.hypot(a[0] - hx, a[2] - hz) - Math.hypot(b[0] - hx, b[2] - hz));
     lights.forEach((l, i) => { const q = nearL[i]; if (!q || V.dark < .1) { l.intensity = 0; return; } l.position.set(q[0], q[1], q[2]); l.distance = 260 * q[3]; l.intensity = (6000 + Math.sin(t * 9 + i) * 600) * q[3]; });
     heroLight.intensity = V.dark > .3 ? (V.lantern ? 9000 : 2600) : 0; heroLight.distance = V.lantern ? 330 : 170; heroLight.position.set(hx, 70, hz + 10);
+    drawBeams(V.beams || []);
     // هدف المهمة الحالية: ماسة ذهبية فوق الهدف
-    const g = V.goalAt; marker.visible = !!g; if (g) { marker.position.set(g.x * T + T / 2, 128 + Math.sin(t * 3) * 6, g.y * T + T / 2); marker.rotation.y = t * 1.5; }
+    const g = V.goalAt; marker.visible = !!g; if (g) { const tall = V.ents.find(e => e.kind === 'beacon' && e.x === g.x && e.y === g.y); marker.position.set(g.x * T + T / 2, (tall ? 170 : 128) + Math.sin(t * 3) * 6, g.y * T + T / 2); marker.rotation.y = t * 1.5; }
     // الماء والجزيئات
     root.traverse(o => { if (o.userData.water) o.userData.water.color.offsetHSL(0, 0, Math.sin(t * 2) * .0006); });
     const fx = V.fx; if (fx.length) { const pos = new Float32Array(fx.length * 3), col = new Float32Array(fx.length * 3), c = new THREE.Color();

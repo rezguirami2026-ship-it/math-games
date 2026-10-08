@@ -52,7 +52,7 @@ export default {
     { text: 'حرّك الرافعات بترتيب ألوان الراية (من اليمين) لتفتح البرج', done: A => A.flag('tower_open'), at: A => ({ area: 'village', id: ['lv_blue', 'lv_red', 'lv_green'][(A.flag('seq') || []).length] || 'lv_blue' }), hint: 'الراية على البرج: الأزرق ثم الأحمر ثم الأخضر.' },
     { text: 'أنقذ الجدة مريم من البرج', done: A => A.flag('maryam'), at: () => ({ area: 'village', id: 'maryam' }), hint: 'البوابة مفتوحة. اضغط على الجدة مريم.' },
     { text: 'أشعل الشعلة من نار الساحة', done: A => A.has('fire') || (A.flag('lit') || 0) >= 3, at: () => ({ area: 'village', id: 'square' }), hint: 'النار في ساحة البئر. اضغط عليها والشعلة معك.' },
-    { text: 'أوقد المنارات الثلاث لتطرد العصابة', done: A => (A.flag('lit') || 0) >= 3, at: A => ({ area: 'village', id: ['bc1', 'bc2', 'bc3'].find(id => !(A.ent(id) || {}).lit) || 'bc3' }), hint: 'المنارات: شمال غرب القرية، وشمال شرقها، وجنوبها قرب الطريق.' }
+    { text: 'أوقد المنارات الثلاث (المشتعلة تظهر بلهب كبير) لتطرد العصابة', done: A => (A.flag('lit') || 0) >= 3, at: A => ({ area: 'village', id: ['bc1', 'bc2', 'bc3'].find(id => !(A.ent(id) || {}).lit) || 'bc3' }), hint: 'المنارات الثلاث أبراج حجرية: واحدة شرق بيتك، وواحدة غرب المخزن الكبير، وواحدة جنوب الساحة قرب الطريق. الماسة الذهبية فوق التالية دائماً.' }
   ],
   intro: A => A.say([
     { who: 'narrator', text: 'منتصف الليل في قرية الخير… صوت عربات وصراخ، ثم سكون غريب.' },
@@ -77,7 +77,7 @@ export default {
         villager('naser', 25, 6, { hidden: true, face: 'down' }), villager('maryam', 28, 20, { hidden: true, face: 'down' }),
         villager('v_salem', 13, 12, { who: 'salem', hidden: true, face: 'right' }), villager('v_naser', 15, 13, { who: 'naser', hidden: true, face: 'up' }),
         villager('v_yousef', 18, 13, { who: 'yousef', hidden: true, face: 'up' }), villager('v_maryam', 19, 12, { who: 'maryam', hidden: true, face: 'left' }),
-        { id: 'bc1', kind: 'beacon', x: 3, y: 2 }, { id: 'bc2', kind: 'beacon', x: 27, y: 2 }, { id: 'bc3', kind: 'beacon', x: 13, y: 21 },
+        { id: 'bc1', kind: 'beacon', x: 8, y: 6 }, { id: 'bc2', kind: 'beacon', x: 21, y: 6 }, { id: 'bc3', kind: 'beacon', x: 13, y: 20 },
         { id: 'sign1', kind: 'sign', x: 30, y: 10, text: '← معسكر عصابة الظلال. الطريق مظلم جداً بلا فانوس.' },
         { id: 'sign2', kind: 'sign', x: 23, y: 18, text: 'البرج القديم: «لا يدخل إلا من قرأ الراية من اليمين إلى اليسار».' },
         { id: 'toCamp', kind: 'exit', x: 31, y: 11, to: 'camp', tx: 1, ty: 10, arrow: '➜', when: A => A.has('lantern') && A.flag('salem'), locked: 'الطريق إلى المعسكر مظلم ومخيف… أنقذ العم سالم أولاً، وخذ الفانوس معك.' },
@@ -179,7 +179,7 @@ async function beacon(A, e) {
   if (e.lit) return A.say([{ who: 'narrator', text: 'المنارة مشتعلة. ' + ((A.flag('lit') || 0) < 3 ? 'بقيت منارات أخرى.' : '') }]);
   if (!A.has('fire')) return A.say([{ who: 'narrator', text: A.flag('maryam') ? 'تحتاج شعلة مشتعلة. أشعلها من نار الساحة.' : 'منارة مطفأة. ستحتاج شعلة لتوقدها.' }]);
   A.set(e.id, { lit: true }); A.sfx('gate'); A.sparkle(e.x, e.y - 1, '#FF8A1E'); const n = (A.flag('lit') || 0) + 1; A.flag('lit', n);
-  if (n < 3) return A.toast(`🔥 أوقدتَ منارة (${n === 1 ? 'واحدة' : 'اثنتين'} من ثلاث)`);
+  if (n < 3) { A.toast(`🔥 أوقدتَ منارة (${n === 1 ? 'واحدة' : 'اثنتين'} من ثلاث)`); return A.say([{ who: 'narrator', text: n === 1 ? 'اشتعلت المنارة الأولى! بقيت اثنتان. اتبع الماسة الذهبية إلى التالية.' : 'منارتان! بقيت الأخيرة. الماسة الذهبية تدلك عليها.' }]); }
   await A.say([
     { who: 'narrator', text: 'اشتعلت المنارات الثلاث! أضاءت القرية كلها، ورأى رجال القرية النار من بعيد.' },
     { who: 'narrator', text: 'سُمع صوت عصابة الظلال تفرّ مسرعة نحو الصحراء… ولن تعود.' },

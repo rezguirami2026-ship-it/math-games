@@ -12,16 +12,16 @@ import { createAdv3D } from './render3d.js';
 import { gfx, WEAK } from '../ui/hud.js';
 import { webglOK } from '../renderer3d/index.js';
 
-const SOLID_KINDS = new Set(['npc', 'chest', 'block', 'gate', 'door', 'sign', 'fire', 'beacon', 'cage', 'tent', 'crates', 'barrel', 'boat', 'well', 'lever', 'banner', 'house']);
-const ACT_KINDS = new Set(['npc', 'chest', 'lever', 'sign', 'door', 'gate', 'cage', 'beacon', 'boat', 'fire', 'safe', 'block', 'well', 'tent', 'banner', 'house']);
+const SOLID_KINDS = new Set(['npc', 'chest', 'block', 'gate', 'door', 'sign', 'fire', 'beacon', 'cage', 'tent', 'crates', 'barrel', 'boat', 'well', 'lever', 'banner', 'house', 'rot', 'tablet', 'crystal', 'beam', 'fence', 'pillar']);
+const ACT_KINDS = new Set(['npc', 'chest', 'lever', 'sign', 'door', 'gate', 'cage', 'beacon', 'boat', 'fire', 'safe', 'block', 'well', 'tent', 'banner', 'house', 'rot', 'tablet', 'crystal', 'animal', 'pillar', 'site']);
 const esc = s => String(s).replace(/[&<>]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;' }[c]));
 const wait = ms => new Promise(r => setTimeout(r, ms));
 
 export const advRec = id => { const s = game.state; s.adventures = s.adventures || {}; return (s.adventures[id] = s.adventures[id] || { done: false, plays: 0, best: 0, st: null }); };
 
 export function runAdventure(def, onExit) {
-  const R = advRec(def.id), S = R.st || (R.st = fresh());
-  function fresh() { return { area: def.start.area, x: def.start.x, y: def.start.y, flags: {}, inv: {}, ent: {}, cut: {}, cp: { ...def.start }, stars: 0 }; }
+  const R = advRec(def.id), S = R.st || (R.st = fresh()); S.tiles = S.tiles || {};
+  function fresh() { return { area: def.start.area, x: def.start.x, y: def.start.y, flags: {}, inv: {}, ent: {}, cut: {}, tiles: {}, cp: { ...def.start }, stars: 0 }; }
 
   /* ── واجهة DOM ── */
   const root = document.createElement('div'); root.className = 'adv'; root.innerHTML = `
@@ -29,7 +29,7 @@ export function runAdventure(def, onExit) {
     <div class="advTop"><button class="advBtn advX" title="حفظ والخروج">✖</button>
       <div class="advTitle"><b>${esc(def.icon)} ${esc(def.title)}</b><span class="advGoal"></span></div>
       <div class="advStars">⭐ <b>٠</b>/${ar(def.stars || 0)}</div><button class="advBtn advLogB" title="سجل المهام">📜</button><button class="advBtn advHintB" title="تلميح">💡</button></div><div class="advLog" hidden></div>
-    <div class="advInv"></div><button class="advAct" hidden>✋</button><div class="advToast"></div>
+    <div class="advInv"></div><button class="advAct" hidden>✋</button><div class="advToast"></div><div class="advWind" hidden></div>
     <div class="advDlg dialog caption"><canvas class="advFace" width="120" height="120"></canvas><div class="dbody"><b class="advWho"></b><p class="advTxt"></p><div class="advOpts"></div></div><span class="dnext">◀</span></div>`;
   document.body.appendChild(root);
   const cv = root.querySelector('.advCv'), ctx = cv.getContext('2d'), $ = s => root.querySelector(s);
@@ -47,14 +47,15 @@ export function runAdventure(def, onExit) {
   const key = (a, x, y) => a + ':' + x + ',' + y;
   function load(aId, x, y) {
     area = def.areas[aId]; S.area = aId; map = area.map.map(r => r.padEnd(area.map[0].length, '#'));
-    ents = area.ents.map(e => { const o = Object.assign({}, e, S.ent[aId + ':' + e.id] || {}); if (o.kind === 'guard') { o.px = o.path[0][0]; o.py = o.path[0][1]; o.wp = 1; o.ang = 0; o.pause = 0; } return o; });
+    ents = area.ents.map(e => { const o = Object.assign({}, e, S.ent[aId + ':' + e.id] || {}); if (o.kind === 'guard' || o.kind === 'hazard') { o.px = o.path[0][0]; o.py = o.path[0][1]; o.wp = 1 % o.path.length; o.ang = o.ang0 || 0; o.pause = 0; } if (o.follow) { o.fx = o.x + .5; o.fy = o.y + .5; } return o; });
+    trail.length = 0;
     if (x != null) { P.x = x + .5; P.y = y + .5; } P.path = null; cam.x = P.x * T; cam.y = P.y * T;
     if (P.onArrive) { const f = P.onArrive; P.onArrive = null; f(); }   // انتقال لمنطقة أخرى أثناء المشي: الوصول تمّ
     if (area.enter) setTimeout(() => area.enter(A), 50);
   }
   const save = () => { S.x = Math.floor(P.x); S.y = Math.floor(P.y); bus.emit('save'); };
   const persist = (e, k) => { const s = (S.ent[S.area + ':' + e.id] = S.ent[S.area + ':' + e.id] || {}); k.forEach(f => { s[f] = e[f]; }); };
-  const tileAt = (x, y) => { if (y < 0 || y >= map.length || x < 0 || x >= map[0].length) return '#'; const ch = map[y][x]; return S.cut[key(S.area, x, y)] ? '.' : ch; };
+  const tileAt = (x, y) => { if (y < 0 || y >= map.length || x < 0 || x >= map[0].length) return '#'; const k = key(S.area, x, y), o = S.tiles[k]; if (o) return o; return S.cut[k] ? '.' : map[y][x]; };
   const entAt = (x, y, skip) => ents.find(e => e !== skip && !e.hidden && !e.got && footprint(e, x, y) && solidEnt(e)) || ents.find(e => e !== skip && !e.hidden && !e.got && footprint(e, x, y));
   const RANK = { npc: 0, house: 3, cage: 2 };   // عند التداخل: الشخص أولاً، ثم الباب/الرافعة، ثم المبنى
   const actAt = (x, y) => ents.filter(e => !e.hidden && !e.got && ACT_KINDS.has(e.kind) && footprint(e, x, y)).sort((a, b) => (RANK[a.kind] ?? 1) - (RANK[b.kind] ?? 1))[0];
@@ -63,7 +64,7 @@ export function runAdventure(def, onExit) {
     if (e.kind === 'block') return x === e.x && y === e.y;
     return x === e.x && y === e.y;
   }
-  const solidEnt = e => e && SOLID_KINDS.has(e.kind) && !((e.kind === 'gate' || e.kind === 'door' || e.kind === 'cage') && e.open);
+  const solidEnt = e => e && SOLID_KINDS.has(e.kind) && !e.follow && !((e.kind === 'gate' || e.kind === 'door' || e.kind === 'cage') && e.open);
   const blocked = (x, y, skip) => SOLID_TILES.has(tileAt(x, y)) || solidEnt(entAt(x, y, skip));
   const solidAt = (fx, fy) => blocked(Math.floor(fx), Math.floor(fy));
 
@@ -75,7 +76,7 @@ export function runAdventure(def, onExit) {
     has: (k, n = 1) => (S.inv[k] || 0) >= n, count: k => S.inv[k] || 0,
     give: (k, n = 1, quiet) => { S.inv[k] = (S.inv[k] || 0) + n; inv(); if (!quiet) toast(`${items[k] ? items[k].icon : '🎁'} حصلتَ على ${items[k] ? items[k].name : k}`); sfx('pick'); goal(); save(); },
     take: (k, n = 1) => { S.inv[k] = Math.max(0, (S.inv[k] || 0) - n); if (!S.inv[k]) delete S.inv[k]; inv(); save(); },
-    itemIcon: k => items[k] ? items[k].icon : '🎁',
+    itemIcon: k => items[k] ? items[k].icon : '🎁', symbols: def.symbols,
     ent: id => ents.find(e => e.id === id),
     set: (id, props) => { const e = A.ent(id); if (e) { Object.assign(e, props); persist(e, Object.keys(props)); } goal(); save(); },
     hide: id => A.set(id, { hidden: true }), show: id => A.set(id, { hidden: false }),
@@ -97,8 +98,35 @@ export function runAdventure(def, onExit) {
     tp: (x, y) => { P.x = x + .5; P.y = y + .5; P.path = null; },
     tapTile: (x, y) => tapTile(x, y),
     tapEnt: id => { const e = A.ent(id); if (e) tapTile(e.kind === 'house' ? e.x + Math.floor((e.w || 3) / 2) : e.x, e.y); },   // كما ينقر اللاعب على الشيء
-    busy: () => locked || !!caught || !!(P.path && P.path.length) || pushing
+    busy: () => locked || !!caught || !!(P.path && P.path.length) || pushing,
+    tileAt: (x, y) => tileAt(x, y),
+    setTile: (x, y, ch) => { S.tiles[key(S.area, x, y)] = ch; tilesV++; save(); },
+    follow: id => { const e = A.ent(id); if (!e) return; e.follow = true; e.fx = e.x + .5; e.fy = e.y + .5; persist(e, ['follow']); },
+    unfollow: (id, x, y) => { const e = A.ent(id); if (!e) return; e.follow = false; if (x != null) { e.x = x; e.y = y; } e.fx = e.fy = null; persist(e, ['follow', 'x', 'y']); },
+    near: (id, x0, y0, x1, y1) => { const e = A.ent(id); if (!e) return false; const ex = e.follow ? Math.floor(e.fx) : e.x, ey = e.follow ? Math.floor(e.fy) : e.y; return ex >= x0 && ex <= x1 && ey >= y0 && ey <= y1; },
+    heroIn: (x0, y0, x1, y1) => { const x = Math.floor(P.x), y = Math.floor(P.y); return x >= x0 && x <= x1 && y >= y0 && y <= y1; },
+    weather: w => { S.flags.weather = Object.assign({}, S.flags.weather || {}, w); save(); },
+    beams: () => beams
   };
+  let tilesV = 0;
+  const trail = [];
+  /* ── شعاع الضوء: ينطلق من مصدر، وتعكسه المرايا (rot بنمط mirror)، ويُضيء البلّورة التي يصلها ── */
+  let beams = [];
+  function traceBeams() {
+    beams = []; ents.forEach(c => { if (c.kind === 'crystal') c.lit = false; });
+    ents.filter(e => e.kind === 'beam' && !e.hidden && (!e.when || e.when(A))).forEach(src => {
+      let x = src.x, y = src.y, d = src.dir || 0; const pts = [[x, y]];
+      for (let i = 0; i < 60; i++) {
+        x += [1, 0, -1, 0][d]; y += [0, 1, 0, -1][d];
+        const m = ents.find(e => e.x === x && e.y === y && !e.hidden && (e.kind === 'rot' && e.style === 'mirror' || e.kind === 'crystal'));
+        if (m && m.kind === 'crystal') { pts.push([x, y]); m.lit = true; break; }
+        if (m) { pts.push([x, y]); d = (m.r % 2 === 0) ? [3, 2, 1, 0][d] : [1, 0, 3, 2][d]; continue; }
+        if (SOLID_TILES.has(tileAt(x, y)) || solidEnt(entAt(x, y))) { pts.push([x - [1, 0, -1, 0][d] * .5, y - [0, 1, 0, -1][d] * .5]); break; }
+      }
+      if (pts.length === 1) pts.push([x, y]);
+      beams.push(pts);
+    });
+  }
 
   /* ── الحوار ── */
   const dlg = $('.advDlg'), face = $('.advFace'), fctx = face.getContext('2d');
@@ -157,6 +185,8 @@ export function runAdventure(def, onExit) {
     if (h) { locked = false; await h(A, e); return; }
     if (e.kind === 'sign' && e.text) return say([{ who: 'narrator', text: e.text }]);
     if (e.kind === 'lever') { A.set(e.id, { on: !e.on }); sfx('click'); if (area.onLever) area.onLever(A, e); return; }
+    if (e.kind === 'rot') { A.set(e.id, { r: ((e.r || 0) + 1) % 4 }); sfx('click'); A.shake(.15); if (area.onRotate) area.onRotate(A, e); return; }
+    if (e.kind === 'tablet') { const n = (def.symbols || ['🌙', '☀️', '⭐', '🌴']).length; A.set(e.id, { sym: ((e.sym || 0) + 1) % n }); sfx('click'); if (area.onTablet) area.onTablet(A, e); return; }
     if (e.kind === 'chest' && !e.open) { A.set(e.id, { open: true }); sfx('win'); if (e.item) A.give(e.item, e.n || 1); return; }
     if ((e.kind === 'door' || e.kind === 'gate') && !e.open) {
       if (e.needs && A.has(e.needs)) { if (e.consume) A.take(e.needs); A.set(e.id, { open: true }); sfx('gate'); toast(`🔓 فُتح ${e.name || 'الباب'}`); return; }
@@ -235,8 +265,11 @@ export function runAdventure(def, onExit) {
     for (let k = .4; k < d; k += .25) { const x = Math.floor(g.px + .5 + dx / d * k), y = Math.floor(g.py + .5 + dy / d * k); if (SOLID_TILES.has(tileAt(x, y)) || solidEnt(entAt(x, y))) return false; }
     return true;
   }
+  function touches(h) { return !S.flags.invisible && !h.hidden && Math.hypot(P.x - (h.px + .5), P.y - (h.py + .5)) < (h.r || .62); }
   function updGuard(g, dt) {
     if (g.hidden) return;
+    if (g.spin) { g.ang += g.spin * dt; return; }   // زعيم/حارس ثابت يدير نظره
+    if (g.path.length < 2) return;
     if (g.pause > 0) { g.pause -= dt; g.ang += Math.sin(t * 2) * dt * .9; return; }
     const [tx, ty] = g.path[g.wp], dx = tx - g.px, dy = ty - g.py, d = Math.hypot(dx, dy), sp = (g.speed || 1.4) * dt;
     if (d < sp) { g.px = tx; g.py = ty; g.wp = (g.wp + 1) % g.path.length; g.pause = g.wait || .9; }
@@ -246,8 +279,31 @@ export function runAdventure(def, onExit) {
     caught = g; locked = true; P.path = null; sfx('cough'); A.shake(.6);
     await wait(700); toast(g.caughtMsg || '👀 رآك الحارس! تعود إلى آخر مخبأ آمن… حاول من جديد بهدوء.');
     await fadeTo(1); const cp = S.cp; if (cp.area !== S.area) load(cp.area, cp.x, cp.y); else { P.x = cp.x + .5; P.y = cp.y + .5; }
-    ents.filter(e => e.kind === 'guard').forEach(e => { e.px = e.path[0][0]; e.py = e.path[0][1]; e.wp = 1; e.pause = 1.2; });
+    ents.filter(e => e.kind === 'guard' || e.kind === 'hazard').forEach(e => { e.px = e.path[0][0]; e.py = e.path[0][1]; e.wp = 1 % e.path.length; e.pause = 1.2; });
+    ents.filter(e => e.follow).forEach(e => { e.fx = P.x; e.fy = P.y; }); trail.length = 0;
     await fadeTo(0); caught = null; locked = false;
+  }
+
+  /* ── الريح: هبّات دورية تدفع البطل في المناطق المكشوفة، ويحميه جدار أو جسم صلب في جهة الريح. تحذير قبلها، ولا ضرر ── */
+  let gust = 0, warned = false;
+  function windStep(dt) {
+    const w = area.wind, wx = $('.advWind'); if (!w || S.flags.nowind || (w.until && w.until(A))) { gust = 0; if (wx) wx.hidden = true; return; }
+    const ph = t % w.period, active = ph < w.dur, warn = ph > w.period - 1.4; gust = active ? Math.sin(ph / w.dur * Math.PI) : 0;
+    if (wx) { wx.hidden = !(active || warn); wx.textContent = active ? '💨 هبّة ريح! احتمِ خلف جدار' : '⚠️ هبّة ريح قادمة…'; }
+    if (!active || locked || caught) return;
+    const x = Math.floor(P.x), y = Math.floor(P.y), inZone = w.zones.some(([a, b, c, d]) => x >= a && x <= c && y >= b && y <= d);
+    const shelter = blocked(x - Math.sign(w.dx), y - Math.sign(w.dy)) || blocked(x - Math.sign(w.dx), y) || blocked(x, y - Math.sign(w.dy));
+    if (!inZone || shelter) return;
+    if (!warned) { warned = true; toast('💨 الريح تدفعك! قف خلف جدار أو صخرة حتى تهدأ الهبّة'); }
+    P.path = null; const sp = (w.force || 2.2) * gust * dt, r = .28, can = (x2, y2) => !solidAt(x2 - r, y2 - r * .6) && !solidAt(x2 + r, y2 - r * .6) && !solidAt(x2 - r, y2 + r * .6) && !solidAt(x2 + r, y2 + r * .6);
+    if (can(P.x + w.dx * sp, P.y)) P.x += w.dx * sp; if (can(P.x, P.y + w.dy * sp)) P.y += w.dy * sp; shakeK = Math.max(shakeK, .12);
+  }
+  /* ── من يتبع البطل (أهل يُقادون إلى الملجأ، أو ماعز تُعاد إلى الحظيرة): يمشون على أثره ── */
+  function followStep(dt) {
+    const L = trail[trail.length - 1]; if (!L || Math.hypot(L[0] - P.x, L[1] - P.y) > .25) { trail.push([P.x, P.y]); if (trail.length > 80) trail.shift(); }
+    let i = 0; ents.forEach(e => { if (!e.follow || e.hidden) return; i++; const k = Math.max(0, trail.length - 1 - i * 4), tgt = trail[k] || [P.x, P.y];
+      const dx = tgt[0] - e.fx, dy = tgt[1] - e.fy, d = Math.hypot(dx, dy); e.moving = d > .15; if (d > .05) { const sp = Math.min(d, 3.9 * dt); e.fx += dx / d * sp; e.fy += dy / d * sp; e.ph = (e.ph || 0) + sp * 4; e.face = Math.abs(dx) > Math.abs(dy) ? (dx > 0 ? 'right' : 'left') : (dy > 0 ? 'down' : 'up'); }
+      if (d > 8) { e.fx = P.x; e.fy = P.y; } e.x = Math.floor(e.fx); e.y = Math.floor(e.fy); });
   }
 
   /* ── تأثيرات ── */
@@ -258,22 +314,25 @@ export function runAdventure(def, onExit) {
   let raf = 0, last = performance.now();
   function step(now) {
     const dt = Math.min(.05, (now - last) / 1000); last = now; t += dt;
-    if (!locked && !caught) update(dt);
-    ents.forEach(e => { if (e.kind === 'guard') { updGuard(e, dt); if (!locked && !caught && sees(e)) getCaught(e); } if (e.kind === 'block' && e.px != null) { e.px += (e.x - e.px) * Math.min(1, dt * 14); e.py += (e.y - e.py) * Math.min(1, dt * 14); if (Math.abs(e.px - e.x) + Math.abs(e.py - e.y) < .01) { e.px = e.py = null; } } });
+    if (!locked && !caught) { update(dt); followStep(dt); }
+    ents.forEach(e => { if (e.kind === 'guard') { updGuard(e, dt); if (!locked && !caught && sees(e)) getCaught(e); } if (e.kind === 'hazard') { updGuard(e, dt); if (!locked && !caught && touches(e)) getCaught(e); } if (e.kind === 'block' && e.px != null) { e.px += (e.x - e.px) * Math.min(1, dt * 14); e.py += (e.y - e.py) * Math.min(1, dt * 14); if (Math.abs(e.px - e.x) + Math.abs(e.py - e.y) < .01) { e.px = e.py = null; } } });
     if (area.tick) area.tick(A, dt);
+    if (ents.some(e => e.kind === 'beam')) traceBeams();
+    windStep(dt);
     ents.forEach(e => { if ((e.kind === 'gate' || e.kind === 'door' || e.kind === 'cage') && !e.open && e.when && e.when(A)) { A.set(e.id, { open: true }); sfx('gate'); A.shake(.4); toast(e.openMsg || '🔓 انفتح شيء ما!'); } });
     for (let i = fx.length - 1; i >= 0; i--) { const p = fx[i]; p.life -= dt; p.x += p.vx * dt; p.y += p.vy * dt; p.vy += 160 * dt; if (p.life <= 0) fx.splice(i, 1); }
     shakeK = Math.max(0, shakeK - dt * 2.5); if (cine < 1) cine += dt / 4.5;
     if (r3) {
       cam.x += (P.x * T - cam.x) * Math.min(1, dt * 6); cam.y += (P.y * T - cam.y) * Math.min(1, dt * 6);
-      r3.frame({ areaId: S.area, map, theme: area.theme, dark: area.dark != null ? area.dark : THEMES[area.theme].night, tileAt, ents, P, t, A, caught,
-        look: e => e.kind === 'guard' ? e.look : def.cast[e.who].look, itemIcon: A.itemIcon, pressed: A.pressed,
+      r3.frame({ areaId: S.area, map, theme: area.theme, dark: (S.flags.weather && S.flags.weather.dark != null) ? S.flags.weather.dark : area.dark != null ? area.dark : THEMES[area.theme].night, tileAt, ents, P, t, A, caught,
+        look: e => e.look || def.cast[e.who].look, itemIcon: A.itemIcon, pressed: A.pressed,
         heroLook: heroLookWorn(game.state), heroKey: JSON.stringify(heroLookWorn(game.state)), lantern: A.has('lantern'), goalAt: goalAt(),
         fx: fx.map(p => ({ x: p.x, y: p.y, h: Math.max(0, -p.vy * .1), col: p.col })), cam, zoom: Z / (W < H ? .9 : 1.1), userZoom, cine, shake: shakeK,
+        tilesV, beams, symbols: def.symbols || ['🌙', '☀️', '⭐', '🌴'], wind: area.wind ? { gust, dx: area.wind.dx, dy: area.wind.dy, on: !(area.wind.until && area.wind.until(A)) } : null, weather: Object.assign({ rain: area.rain, sand: area.sand }, S.flags.weather || {}), defItems: items,
         cutList: () => Object.keys(S.cut).filter(k => k.startsWith(S.area + ':')).map(k => k.slice(S.area.length + 1)),
         canCut: k => { const [x, y] = k.split(',').map(Number), ch = map[y][x]; return (ch === '"' && A.has(def.cutTool || 'sickle')) || (ch === 'R' && A.has(def.breakTool || 'hammer')); } });
     } else draw();
-    const f = front(), ft = !f && frontTile(); $('.advAct').hidden = !(f || ft) || locked; if (f) $('.advAct').textContent = f.kind === 'npc' ? '💬' : f.kind === 'block' ? '👐' : '✋'; else if (ft) $('.advAct').textContent = ft.ch === '"' ? '🌾' : '🔨';
+    const f = front(), ft = !f && frontTile(); $('.advAct').hidden = !(f || ft) || locked; if (f) $('.advAct').textContent = f.kind === 'npc' || f.kind === 'animal' ? '💬' : f.kind === 'block' ? '👐' : f.kind === 'rot' ? '🔄' : '✋'; else if (ft) $('.advAct').textContent = ft.ch === '"' ? '🌾' : '🔨';
     raf = requestAnimationFrame(step);
   }
   function update(dt) {
@@ -329,7 +388,9 @@ export function runAdventure(def, onExit) {
       if (e.hidden || (e.x < x0 - 3 || e.x > x1 + 3 || e.y < y0 - 1 || e.y > y1 + 3) && e.kind !== 'guard') return;
       if (e.kind === 'plate') { drawThing(ctx, e, t, A); return; }
       if (e.kind === 'guard') { ctx.save(); drawCone(ctx, e, caught === e); ctx.restore(); list.push({ y: (e.py + 1) * T - 4, draw: () => person(e.px, e.py, e.look, e.ang, !!e.pause, e.ph, caught === e ? '!' : null) }); return; }
-      if (e.kind === 'npc') { list.push({ y: (e.y + 1) * T - 4, draw: () => person(e.x, e.y, def.cast[e.who].look, e.face, false, 0, e.mark ? e.mark(A) : null) }); return; }
+      if (e.kind === 'npc') { const nx = e.follow ? e.fx - .5 : e.x, ny = e.follow ? e.fy - .5 : e.y; list.push({ y: (ny + 1) * T - 4, draw: () => person(nx, ny, e.look || def.cast[e.who].look, e.face, !e.moving, e.ph || 0, e.mark ? e.mark(A) : null) }); return; }
+      if (e.kind === 'hazard' || e.kind === 'animal') { const hx = e.kind === 'hazard' ? e.px : e.follow ? e.fx - .5 : e.x, hy = e.kind === 'hazard' ? e.py : e.follow ? e.fy - .5 : e.y;
+        list.push({ y: (hy + 1) * T - 4, draw: () => { ctx.font = '34px "Segoe UI Emoji","Apple Color Emoji","Noto Color Emoji",sans-serif'; ctx.textAlign = 'center'; ctx.fillText({ crab: '🦀', scorpion: '🦂', goat: '🐐', camel: '🐪', boulder: '🪨' }[e.creature] || '❗', hx * T + T / 2, hy * T + T * .8); } }); return; }
       if (e.kind === 'exit' || e.kind === 'trigger' || e.kind === 'safe') { if (e.kind === 'safe') list.push({ y: (e.y + 1) * T - 8, draw: () => drawThing(ctx, Object.assign({}, e, { kind: 'fire' }), t, A) }); if (e.kind === 'exit' && e.arrow) arrow(e); return; }
       list.push({ y: (e.kind === 'block' && e.py != null ? e.py : e.y) * T + T - 2 + (e.kind === 'door' || e.kind === 'gate' || e.kind === 'cage' ? 1 : 0), draw: () => drawThing(ctx, e, t, A) });
     });
@@ -337,6 +398,7 @@ export function runAdventure(def, onExit) {
       if (tileAt(Math.floor(P.x), Math.floor(P.y)) === ';') grass(Math.floor(P.x), Math.floor(P.y), true); } });
     ents.forEach(b => { const pl = b.kind === 'block' && b.to && A.ent(b.to); if (!pl || (b.x === pl.x && b.y === pl.y)) return; ctx.save(); ctx.setLineDash([8, 8]); ctx.lineDashOffset = -t * 30; ctx.strokeStyle = 'rgba(255,214,90,.85)'; ctx.lineWidth = 4;
       ctx.beginPath(); ctx.moveTo(b.x * T + T / 2, b.y * T + T * .7); ctx.lineTo(pl.x * T + T / 2, pl.y * T + T * .7); ctx.stroke(); ctx.restore(); });   // دليل: من الصندوق إلى لوحته
+    beams.forEach(pts => { ctx.strokeStyle = 'rgba(255,226,122,.9)'; ctx.lineWidth = 6; ctx.beginPath(); pts.forEach(([x, y], i) => i ? ctx.lineTo(x * T + T / 2, y * T + T / 2) : ctx.moveTo(x * T + T / 2, y * T + T / 2)); ctx.stroke(); });
     list.sort((a, b) => a.y - b.y).forEach(o => o.draw());
     fx.forEach(p => { ctx.globalAlpha = Math.min(1, p.life * 2); ctx.fillStyle = p.col; ctx.beginPath(); ctx.arc(p.x, p.y, 3.2, 0, 7); ctx.fill(); }); ctx.globalAlpha = 1;
     if (dk > .02) lighting(dk);

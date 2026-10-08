@@ -14,7 +14,8 @@ export const DECOR = [
   { id: 'swing', icon: '🎠', name: 'أرجوحة الأطفال', price: 20, x: 990, y: 452 },
   { id: 'fountain', icon: '⛲', name: 'نافورة صغيرة', price: 30, x: 1180, y: 540 },
   { id: 'camel', icon: '🐪', name: 'تمثال جمل', price: 40, x: 1110, y: 556 },
-  { id: 'statue', icon: '🗿', name: 'تمثال حامي القرية', price: 0, reward: true, x: 1058, y: 424 }   // جائزة مغامرة «إنقاذ القرية» (لا تُباع)
+  { id: 'statue', icon: '🗿', name: 'تمثال حامي القرية', price: 0, reward: true, x: 1058, y: 424 },
+  { id: 'bell', icon: '🔔', name: 'جرس الوادي', price: 0, reward: true, x: 1166, y: 418 }   // جائزة مغامرة «إنقاذ القرية» (لا تُباع)
 ];
 export const gems = () => (game.state && game.state.gems) || 0;
 export function addGems(n) { const s = game.state; s.gems = (s.gems || 0) + n; bus.emit('gems'); }
@@ -53,6 +54,8 @@ const DRAW = {
     c.fillStyle = '#9C2A3C'; c.beginPath(); c.moveTo(x - 12, y - 50); c.quadraticCurveTo(x - 20, y - 36, x - 15, y - 22); c.lineTo(x - 9, y - 26); c.closePath(); c.fill();   // الوشاح
     c.fillStyle = '#C9BFA9'; c.beginPath(); c.arc(x, y - 60, 8, 0, 7); c.fill(); c.strokeStyle = '#B5AB97'; c.lineWidth = 4; c.lineCap = 'round'; c.beginPath(); c.moveTo(x + 11, y - 48); c.lineTo(x + 20, y - 66); c.stroke();
     c.fillStyle = '#FFD54A'; c.beginPath(); c.arc(x + 21, y - 70, 4, 0, 7); c.fill(); c.fillStyle = '#5A4632'; c.font = '900 8px Cairo'; c.textAlign = 'center'; c.fillText('حامي القرية', x, y - 6); },
+  bell(c, x, y) { sh(c, x, y, 20); c.fillStyle = '#6B4520'; c.fillRect(x - 20, y - 64, 5, 64); c.fillRect(x + 15, y - 64, 5, 64); c.fillRect(x - 22, y - 68, 44, 6);
+    c.fillStyle = '#C9971C'; c.beginPath(); c.moveTo(x - 6, y - 60); c.lineTo(x + 6, y - 60); c.quadraticCurveTo(x + 8, y - 40, x + 13, y - 34); c.lineTo(x - 13, y - 34); c.quadraticCurveTo(x - 8, y - 40, x - 6, y - 60); c.fill(); c.fillStyle = '#8A6A10'; c.beginPath(); c.arc(x, y - 33, 3, 0, 7); c.fill(); },
   camel(c, x, y) { sh(c, x, y, 26); c.fillStyle = '#B48550'; c.fillRect(x - 24, y - 8, 48, 8); c.fillStyle = '#C9955A';
     [-14, -6, 8, 16].forEach(dx => c.fillRect(x + dx, y - 26, 4, 18)); c.beginPath(); c.ellipse(x, y - 30, 20, 9, 0, 0, 7); c.fill(); c.beginPath(); c.ellipse(x - 2, y - 38, 9, 7, 0, 0, 7); c.fill();
     c.beginPath(); c.moveTo(x + 16, y - 32); c.quadraticCurveTo(x + 26, y - 40, x + 24, y - 52); c.lineTo(x + 30, y - 52); c.quadraticCurveTo(x + 32, y - 40, x + 20, y - 28); c.fill(); c.beginPath(); c.ellipse(x + 30, y - 52, 6, 3.5, 0, 0, 7); c.fill(); c.fillStyle = '#2A1B66'; c.beginPath(); c.arc(x + 31, y - 53, 1, 0, 7); c.fill(); }
