@@ -17,21 +17,18 @@ const h = createHash('sha1'); files.forEach(f => { h.update(f); h.update(readFil
 const VERSION = h.digest('hex').slice(0, 10);
 const list = ['./', ...files.filter(f => f !== 'index.html').map(f => './' + f), './index.html'];
 const sw = `// خدمة العمل بلا إنترنت لتطبيق «قرية الخير» (مولّد بـ tests/gen-sw.mjs — لا تعدّله يدوياً)
-// الاستراتيجية: الشبكة أولاً لكل الملفات (بلا ذاكرة المتصفح المؤقتة) فيصل كل تحديث فوراً؛ والمحفوظ فقط بلا إنترنت أو إن تأخرت الشبكة ٤ ثوانٍ.
+// الاستراتيجية: كل نسخة تُحفظ كاملة دفعة واحدة، وتُقدَّم من الحفظ (سريعة ومتسقة: لا خلط بين ملفات نسختين).
+// النسخة الجديدة تُنزَّل في الخلفية وتنتظر؛ والصفحة تفحص التحديث عند الفتح وعند العودة للتطبيق وكل ٢٠ دقيقة،
+// ثم تطلب التفعيل في لحظة فراغ (لا تحدٍّ ولا حوار مفتوح) فيُعاد التحميل بالنسخة الجديدة كاملة.
 const CACHE = 'qaryat-alkhair-${VERSION}';
 const FILES = ${JSON.stringify(list, null, 0)};
-self.addEventListener('install', e => { e.waitUntil(caches.open(CACHE).then(c => c.addAll(FILES.map(f => new Request(f, { cache: 'reload' })))).then(() => self.skipWaiting())); });
+self.addEventListener('install', e => { e.waitUntil(caches.open(CACHE).then(c => c.addAll(FILES.map(f => new Request(f, { cache: 'reload' }))))); });
+self.addEventListener('message', e => { if (e.data === 'skip') self.skipWaiting(); });
 self.addEventListener('activate', e => { e.waitUntil(caches.keys().then(ks => Promise.all(ks.filter(k => k.startsWith('qaryat-alkhair-') && k !== CACHE).map(k => caches.delete(k)))).then(() => self.clients.claim())); });
 self.addEventListener('fetch', e => {
   const r = e.request, u = new URL(r.url); if (r.method !== 'GET' || u.origin !== location.origin) return;
   const key = r.mode === 'navigate' ? './index.html' : r;
-  e.respondWith(new Promise(done => {
-    let settled = false; const finish = v => { if (!settled && v) { settled = true; done(v); } };
-    const cached = () => caches.match(key, { ignoreSearch: true });
-    fetch(new Request(r, { cache: 'no-cache' })).then(res => { if (res.ok) { const cp = res.clone(); caches.open(CACHE).then(c => c.put(key, cp)); } finish(res); })
-      .catch(() => cached().then(hit => finish(hit || Response.error())));
-    setTimeout(() => cached().then(hit => finish(hit)), 4000);   // شبكة بطيئة جداً: المحفوظ
-  }));
+  e.respondWith(caches.open(CACHE).then(c => c.match(key, { ignoreSearch: true }).then(hit => hit || fetch(r).then(res => { if (res.ok && r.mode !== 'navigate') c.put(key, res.clone()); return res; }).catch(() => c.match('./index.html')))));
 });
 `;
 writeFileSync(join(ROOT, 'sw.js'), sw);

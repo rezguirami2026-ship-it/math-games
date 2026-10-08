@@ -13,7 +13,7 @@ function sheet(html) { const el = panel(); el.innerHTML = `<div class="sheet ops
 export function openAbout() {
   const c = config();
   sheet(`<h3>ℹ️ حول اللعبة</h3>
-    <div class="bagrow"><span>🎮 الإصدار</span><b dir="ltr">v${APP_VERSION}</b></div>
+    <div class="bagrow"><span>🎮 الإصدار</span><b>v${APP_VERSION} · نسخة ${window.__BUILD || ''}</b></div>
     <div class="bagrow"><span>📱 الجهاز</span><b>${DEV_AR[env.dev]} · ${OS_AR[env.os]}</b></div>
     <div class="bagrow"><span>🔄 أحدث إصدار</span><b dir="ltr">${c && c.latest ? 'v' + esc(c.latest.v) : '—'}</b></div>
     <div class="bagrow"><span>🆔 رقم التثبيت</span><b dir="ltr">${uid()}</b></div>
