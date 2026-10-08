@@ -438,3 +438,14 @@ body:has(.adv) #toast,body:has(.adv) .region,body:has(.adv) #hud{display:none!im
 .advLog div.ok{color:#2E8B57}.advLog div.now{color:#13245C;font-weight:900;background:#FFF1C9;border-radius:10px}.advLog i{font-style:normal}
 
 .adv .advDlg .dbody,.adv .advDlg.caption .dbody{position:static}   /* شارة الاسم تُقاس من إطار الحوار نفسه، فلا تغطي السطر الأول */
+
+/* بطاقة المسافر في محطة الحافلات */
+#ttCard{position:fixed;left:50%;transform:translateX(-50%);top:calc(var(--safeT) + 112px);z-index:8;width:min(460px,94vw);padding:10px 12px;border-radius:18px;border:2.5px solid transparent;pointer-events:none;
+  background:linear-gradient(180deg,#FFFCF3,#F6EBD3) padding-box,linear-gradient(160deg,#FBE3A0,#D9A13A 35%,#A8711E 60%,#E9C068) border-box;box-shadow:0 10px 24px rgba(20,20,50,.3);direction:rtl}
+#ttCard b{font:900 15px Cairo;color:#13245C}#ttCard p{margin:2px 0 6px;font:800 14px/1.6 Cairo;color:#2A3A6E}#ttCard small{display:block;margin-top:6px;font:700 12.5px Cairo;color:#7A5A1A}
+#ttCard .tt{width:100%;border-collapse:collapse;font:800 13px Cairo;text-align:center}#ttCard .tt th,#ttCard .tt td{padding:3px 4px;border-bottom:1px solid #EADCB8;color:#2A3A6E}
+#ttCard .tt th{color:#7A6A4A;font-size:12px}#ttCard .tt .hl{background:#FFE9A8;color:#13245C}
+@media (max-width:480px){#ttCard{top:calc(var(--safeT) + 104px);padding:8px}#ttCard .tt{font-size:11.5px}}
+@media (max-width:480px){#ttCard p{font-size:13px;margin-bottom:4px}#ttCard .tt th,#ttCard .tt td{padding:2px 3px}#ttCard small{font-size:11.5px}}
+#ttCard{top:auto;bottom:calc(var(--safeB) + 84px)}
+@media (max-width:480px){#ttCard{top:auto;bottom:calc(var(--safeB) + 80px)}}

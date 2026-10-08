@@ -12,7 +12,7 @@ export const BOATHOUSE = { x: 2380, y: 740, w: 200, h: 120 }, ROOF_TABLE = { x: 
 export const FISH = { x: 2960, y: 1000, cell: 40, n: 5 }, FISH_STAND = { x: 2900, y: 1120 };
 export const POOL = { x: 2380, y: 1050, w: 170, h: 120 }, POOL_STAND = { x: 2465, y: 1206 };
 export const MILL = { x: 2690, y: 1160 }, MILL_STAND = { x: 2690, y: 1222 };
-export const BEACH = { ox: 2600, oy: 1560, u: 40, xr: 5, yr: 3 };
+export const BEACH = { ox: 2600, oy: 1480, u: 40, xr: 5, yr: 3 };   // الصف السفلي (−٣) عند ١٦٠٠: بعيد عن سور القلعة (١٧١٢) فلا يحجبه في 3D
 
 export function harborColliders(open) {
   const c = [

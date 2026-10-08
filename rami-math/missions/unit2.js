@@ -147,7 +147,8 @@ export const timeTables = {
   id: 'timeTables', giver: 'abdullah',
   intro: n => [
     { who: 'abdullah', text: `مرحباً يا ${n}! أنا عبدالله ناظر المحطة. ثلاثة مسافرين وصلوا ولا يعرفون أي حافلة يركبون.` },
-    { who: 'abdullah', text: 'الجدول على اللوحة بنظام ٢٤ ساعة. اسمع طلب كل مسافر، ثم رافقه إلى رصيف الحافلة التي تناسبه.' }
+    { who: 'abdullah', text: 'فوق كل حافلة لوحة فيها الرصيف والوجهة وموعد الانطلاق والوصول ومدة الرحلة، بنظام ٢٤ ساعة.' },
+    { who: 'abdullah', text: 'اسمع طلب كل مسافر، فتظهر لك بطاقته مع الجدول. قارن، ثم رافقه إلى رصيف الحافلة التي تناسبه.' }
   ],
   begin(d) {
     let deps, durs;
@@ -183,6 +184,8 @@ export const timeTables = {
     }
     return out;
   },
+  /* لوحة فوق كل حافلة: الرصيف والوجهة والانطلاق والوصول والمدة (تُرسم قائمة فتظهر واضحة في العرضين) */
+  signs(d) { return d.buses ? d.buses.map(b => ({ b, x: BAYS[b.bay].x, y: 880 })) : []; },
   board(d) {
     sheetOpen(`<h3>📋 جدول الحافلات — بنظام ٢٤ ساعة</h3><table class="tt"><tr><th>الرصيف</th><th>الوجهة</th><th>الانطلاق</th><th>الوصول</th></tr>
       ${d.buses.map(b => `<tr><td>${BAYS[b.bay].id}</td><td>${b.dest}</td><td>${hhmm(b.dep)}</td><td>${hhmm(b.arr)}</td></tr>`).join('')}</table>
@@ -207,6 +210,7 @@ export const timeTables = {
   },
   update(dt, W, d) {
     if (!d.pax) return;
+    ttCard(d);
     d.pax.forEach((p, i) => {
       if (p.st !== 'follow') { p.moving = false; return; }
       const tx = W.player.x + 26, ty = W.player.y + 6, dx = tx - p.x, dy = ty - p.y, dd = Math.hypot(dx, dy);
@@ -228,9 +232,35 @@ export const timeTables = {
       } });
     });
     d.pax.forEach(p => { if (p.st !== 'board') out.push({ y: p.y, draw: c => drawHuman(c, Object.assign({}, p, { s: .92 })) }); });
+    if (!d.leave && !done) d.buses.forEach(b => { const x = BAYS[b.bay].x, y = 884, kind = d.follow >= 0 ? d.pax[d.follow].kind : null;
+      out.push({ y, x, draw: c => busSign(c, x, y - 52, b, BAYS[b.bay].id, kind) }); });
     return out;
   }
 };
+
+function busSign(c, x, y, b, bay, kind) {   // لوحة الحافلة (عرضها أقل من المسافة بين الأرصفة): الوجهة، ثم الانطلاق والوصول والمدة، وما يطلبه المسافر الحالي بالذهبي
+  const W = 100, H = 74, x0 = x - W / 2, y0 = y - H; c.save(); c.direction = 'rtl'; c.textAlign = 'center';
+  c.fillStyle = 'rgba(20,20,40,.25)'; rr(c, x0 + 3, y0 + 4, W, H, 9); c.fill();
+  c.fillStyle = '#13245C'; rr(c, x0, y0, W, H, 9); c.fill(); c.strokeStyle = '#E2B95A'; c.lineWidth = 2; rr(c, x0 + 1, y0 + 1, W - 2, H - 2, 8); c.stroke();
+  c.fillStyle = '#FFD54A'; c.beginPath(); c.arc(x0 + W - 13, y0 + 14, 9, 0, 7); c.fill(); c.fillStyle = '#13245C'; c.font = '900 11px Cairo, sans-serif'; c.fillText(bay, x0 + W - 13, y0 + 18);
+  c.fillStyle = '#fff'; c.font = '900 13px Cairo, sans-serif'; c.fillText(b.dest, x - 8, y0 + 18);
+  const hi = k => kind === k ? '#FFD54A' : '#D6E4F7'; c.font = '800 10.5px Cairo, sans-serif';
+  c.fillStyle = hi('dep'); c.fillText('تنطلق ' + hhmm(b.dep), x, y0 + 35); c.fillStyle = hi('arr'); c.fillText('تصل ' + hhmm(b.arr), x, y0 + 50);
+  c.fillStyle = hi('dur'); c.fillText('⏱ ' + durShort(b.dur), x, y0 + 66);
+  c.restore();
+}
+const durShort = m => `${Math.floor(m / 60) ? ar(Math.floor(m / 60)) + ' س' : ''}${Math.floor(m / 60) && m % 60 ? ' ' : ''}${m % 60 ? ar(m % 60) + ' د' : ''}`;
+/* بطاقة المسافر أثناء مرافقته: طلبه، والجدول مع إبراز العمود الذي يقارن به (بلا كشف الجواب) */
+function ttCard(d) {
+  let el = document.getElementById('ttCard'); const on = d.follow >= 0 && !d.leave && !game.busy;
+  if (!on) { if (el) el.remove(); return; }
+  const p = d.pax[d.follow], key = p.name + d.follow; if (el && el.dataset.k === key) return;
+  if (!el) { el = document.createElement('div'); el.id = 'ttCard'; document.body.appendChild(el); }
+  el.dataset.k = key; const col = { dep: 'الانطلاق', dur: 'المدة', arr: 'الوصول' }[p.kind];
+  el.innerHTML = `<b>🧳 طلب ${p.name}</b><p>${p.text}</p><table class="tt"><tr><th>الرصيف</th><th>الوجهة</th><th class="${p.kind === 'dep' ? 'hl' : ''}">الانطلاق</th><th class="${p.kind === 'dur' ? 'hl' : ''}">المدة</th><th class="${p.kind === 'arr' ? 'hl' : ''}">الوصول</th></tr>
+    ${d.buses.map(b => `<tr><td>${BAYS[b.bay].id}</td><td>${b.dest}</td><td class="${p.kind === 'dep' ? 'hl' : ''}">${hhmm(b.dep)}</td><td class="${p.kind === 'dur' ? 'hl' : ''}">${durShort(b.dur)}</td><td class="${p.kind === 'arr' ? 'hl' : ''}">${hhmm(b.arr)}</td></tr>`).join('')}</table>
+    <small>💡 قارن عمود «${col}» بطلب ${p.name}، ثم امشِ إلى رصيف الحافلة المناسبة.</small>`;
+}
 
 /* ═══ ١٤. التقويمات — «تقويم المهرجان» ═══ */
 const WD = ['الأحد', 'الاثنين', 'الثلاثاء', 'الأربعاء', 'الخميس', 'الجمعة', 'السبت'];

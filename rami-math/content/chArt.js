@@ -2,7 +2,8 @@
 // كل الأعداد بالأرقام الهندية عبر ar()، والوقت الرقمي يبقى من اليسار إلى اليمين.
 import { ar } from '../core/util.js';
 
-const INK = '#2A1B66', ACC = '#E2475C', T = (x, y, s, o = {}) => `<text x="${x}" y="${y}" text-anchor="${o.a || 'middle'}" font-size="${o.fs || 12}" font-weight="${o.fw || 900}" fill="${o.c || INK}" font-family="Cairo,sans-serif">${s}</text>`;
+// النص عربي (من اليمين): a:'start' = يبدأ النص من x متجهاً يميناً بعيداً عن الشكل، و a:'end' = ينتهي عند x
+const INK = '#2A1B66', ACC = '#E2475C', T = (x, y, s, o = {}) => `<text x="${x}" y="${y}" direction="rtl" text-anchor="${({ start: 'end', end: 'start' })[o.a] || 'middle'}" font-size="${o.fs || 12}" font-weight="${o.fw || 900}" fill="${o.c || INK}" font-family="Cairo,sans-serif">${s}</text>`;
 export const pad2 = n => (n < 10 ? '0' : '') + n;
 export const clock24 = (h, m) => `<span class="ltr" dir="ltr">${ar(pad2(h))}:${ar(pad2(m))}</span>`;   // ١٤:٠٥
 export const dec = v => ar(String(+(+v).toFixed(3))).replace('.', '٫');
@@ -53,10 +54,10 @@ export function rect(W, H, unit = 'م') {
     ${T(160, y + h + 20, `${ar(W)} ${unit}`, { fs: 14 })}${T(x + w + 8, y + h / 2 + 5, `${ar(H)} ${unit}`, { fs: 14, a: 'start' })}</svg>`;
 }
 export function lshape(W, H, w, h, unit = 'م') {
-  const k = Math.min(200 / W, 120 / H), X = 160 - W * k / 2, Y = 12, p = (a, b) => `${X + a * k},${Y + b * k}`;
-  return `<svg viewBox="0 0 320 ${H * k + 44}" class="chLine"><polygon points="${p(w, 0)} ${p(W, 0)} ${p(W, H)} ${p(0, H)} ${p(0, h)} ${p(w, h)}" fill="#CDEBC4" stroke="${INK}" stroke-width="2.5"/>
+  const k = Math.min(200 / W, 120 / H), X = 160 - W * k / 2, Y = 26, p = (a, b) => `${X + a * k},${Y + b * k}`;
+  return `<svg viewBox="0 0 320 ${H * k + 58}" class="chLine"><polygon points="${p(w, 0)} ${p(W, 0)} ${p(W, H)} ${p(0, H)} ${p(0, h)} ${p(w, h)}" fill="#CDEBC4" stroke="${INK}" stroke-width="2.5"/>
     ${T(X + W / 2 * k, Y + H * k + 20, `${ar(W)} ${unit}`, { fs: 13 })}${T(X + W * k + 6, Y + H / 2 * k + 5, `${ar(H)} ${unit}`, { fs: 13, a: 'start' })}
-    ${T(X + (w + W) / 2 * k, Y + 16, `${ar(W - w)} ${unit}`, { fs: 13 })}${T(X - 6, Y + (h + H) / 2 * k + 5, `${ar(H - h)} ${unit}`, { fs: 13, a: 'end' })}</svg>`;
+    ${T(X + (w + W) / 2 * k, Y - 7, `${ar(W - w)} ${unit}`, { fs: 13 })}${T(X - 6, Y + (h + H) / 2 * k + 5, `${ar(H - h)} ${unit}`, { fs: 13, a: 'end' })}</svg>`;
 }
 /* شكل غير منتظم على شبكة: full = خلايا كاملة [[c,r]]، half = خلايا نصفية [[c,r,اتجاه]] */
 export function gridShape(cols, rows, full, half) {
