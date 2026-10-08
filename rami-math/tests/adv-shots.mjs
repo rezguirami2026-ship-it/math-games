@@ -1,3 +1,4 @@
+// لقطات المغامرة ثلاثية الأبعاد: node adv-shots.mjs <مجلد> (خادم اللعبة على 8000)
 import { chromium } from 'playwright-core';
 const sleep = ms => new Promise(r => setTimeout(r, ms)), out = process.argv[2];
 const b = await chromium.launch({ channel: 'chrome' });
