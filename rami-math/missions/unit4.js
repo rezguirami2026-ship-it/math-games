@@ -157,7 +157,7 @@ export const integers = Object.assign({
   id: 'integers', giver: 'harith',
   intro: n => [{ who: 'harith', text: `مرحباً يا ${n}! أنا الحارث حارس البئر. سطح الأرض عندنا صفر، وتحته طوابق سالبة.` },
     { who: 'harith', text: 'حرّك الدلو كما في التعليمات، وثبّته في الطابق الذي ينتهي إليه.' }],
-  begin(d) { const s1 = R(-2, 3), a1 = R(5, 8), b1 = R(2, 4), s2 = R(1, 5), a2 = R(7, 10), s3 = R(-5, -2), a3 = R(2, 4), b3 = R(5, 8);
+  begin(d) { const s1 = R(-2, 3), a1 = R(5, 8), b1 = R(2, 4), s2 = R(1, 5), a2 = R(7, 10), s3 = R(-5, -2), a3 = R(2, 4), b3 = R(5, Math.min(8, s3 + a3 + 10));
     d.rounds = [{ s: s1, text: `الدلو عند ${sg(s1)}. ينزل ${ar(a1)} طوابق ثم يصعد ${ar(b1)}.`, ans: s1 - a1 + b1 }, { s: s2, text: `مقياس الحرارة يشير إلى ${sg(s2)}°، ثم تنخفض الحرارة ${ar(a2)} درجات.`, ans: s2 - a2 }, { s: s3, text: `الدلو عند ${sg(s3)}. يصعد ${ar(a3)} ثم ينزل ${ar(b3)}.`, ans: s3 + a3 - b3 }]; d.r = 0; d.lvl = d.rounds[0].s; },
   goal: d => `🪣 حرّك دلو البئر بحسب التعليمات ${roundsDone(d, 3)}`,
   open(W, d, msg, kind) {
@@ -168,7 +168,7 @@ export const integers = Object.assign({
     const c = hiDPI(panel().querySelector('#gauge')), Y = v => 125 - v * 11;
     const draw = () => { c.clearRect(0, 0, 300, 250); c.fillStyle = '#8B6A43'; c.fillRect(110, Y(10), 80, Y(-10) - Y(10)); c.fillStyle = '#3B2B1A'; c.fillRect(120, Y(0), 60, Y(-10) - Y(0));
       c.fillStyle = '#7CC36B'; c.fillRect(90, Y(0) - 3, 120, 6);
-      for (let v = -10; v <= 10; v++) { c.fillStyle = v === 0 ? '#2A1B66' : '#7A6A4A'; c.fillRect(200, Y(v) - .5, v % 2 ? 6 : 12, 1.5); if (v % 2 === 0) { c.font = '800 11px Cairo, sans-serif'; c.textAlign = 'left'; c.fillText(v < 0 ? '−' + ar(-v) : ar(v), 216, Y(v) + 4); } }
+      for (let v = -10; v <= 10; v++) { c.fillStyle = v === 0 ? '#2A1B66' : '#7A6A4A'; c.fillRect(200, Y(v) - .5, v % 2 ? 6 : 12, 1.5); if (v % 2 === 0) { c.font = '800 11px Cairo, sans-serif'; c.textAlign = 'left'; c.direction = 'ltr'; c.fillText(ar(v), 216, Y(v) + 4); c.direction = 'inherit'; } }
       c.fillStyle = '#C98A3A'; rr(c, 135, Y(d.lvl) - 10, 30, 18, 4); c.fill(); c.strokeStyle = '#5B3A1E'; c.beginPath(); c.moveTo(150, Y(10)); c.lineTo(150, Y(d.lvl) - 10); c.stroke(); };
     draw();
     btn('up', () => { d.lvl = clamp(d.lvl + 1, -10, 10); sfx('click'); draw(); });

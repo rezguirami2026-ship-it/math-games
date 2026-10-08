@@ -8,6 +8,9 @@ import { game } from '../core/state.js';
 import { bus } from '../core/events.js';
 import { sfx } from '../core/sound.js';
 import { ar } from '../core/util.js';
+import { createAdv3D } from './render3d.js';
+import { gfx, WEAK } from '../ui/hud.js';
+import { webglOK } from '../renderer3d/index.js';
 
 const SOLID_KINDS = new Set(['npc', 'chest', 'block', 'gate', 'door', 'sign', 'fire', 'beacon', 'cage', 'tent', 'crates', 'barrel', 'boat', 'well', 'lever', 'banner', 'house']);
 const ACT_KINDS = new Set(['npc', 'chest', 'lever', 'sign', 'door', 'gate', 'cage', 'beacon', 'boat', 'fire', 'block', 'well', 'tent', 'banner', 'house']);
@@ -22,17 +25,19 @@ export function runAdventure(def, onExit) {
 
   /* ── واجهة DOM ── */
   const root = document.createElement('div'); root.className = 'adv'; root.innerHTML = `
-    <canvas class="advCv"></canvas><div class="advFade"></div>
+    <canvas class="advCv"></canvas><canvas class="advCv3" hidden></canvas><div class="advFade"></div>
     <div class="advTop"><button class="advBtn advX" title="حفظ والخروج">✖</button>
       <div class="advTitle"><b>${esc(def.icon)} ${esc(def.title)}</b><span class="advGoal"></span></div>
-      <div class="advStars">⭐ <b>٠</b>/${ar(def.stars || 0)}</div><button class="advBtn advHintB" title="تلميح">💡</button></div>
+      <div class="advStars">⭐ <b>٠</b>/${ar(def.stars || 0)}</div><button class="advBtn advLogB" title="سجل المهام">📜</button><button class="advBtn advHintB" title="تلميح">💡</button></div><div class="advLog" hidden></div>
     <div class="advInv"></div><button class="advAct" hidden>✋</button><div class="advToast"></div>
     <div class="advDlg dialog caption"><canvas class="advFace" width="120" height="120"></canvas><div class="dbody"><b class="advWho"></b><p class="advTxt"></p><div class="advOpts"></div></div><span class="dnext">◀</span></div>`;
   document.body.appendChild(root);
   const cv = root.querySelector('.advCv'), ctx = cv.getContext('2d'), $ = s => root.querySelector(s);
+  let r3 = null;   // العرض ثلاثي الأبعاد هو الافتراضي، والرسم ثنائي الأبعاد احتياط للأجهزة الضعيفة أو بلا WebGL
+  try { if (webglOK() && !WEAK && gfx.d3()) { r3 = createAdv3D($('.advCv3')); $('.advCv3').hidden = false; cv.hidden = true; } } catch (e) { console.warn('[adv3d]', e); r3 = null; }
   let W = 0, H = 0, dpr = 1, Z = 1;
   function resize() { dpr = Math.min(devicePixelRatio || 1, 2); W = innerWidth; H = innerHeight; cv.width = W * dpr; cv.height = H * dpr; cv.style.width = W + 'px'; cv.style.height = H + 'px';
-    Z = Math.max(.62, Math.min(1.5, Math.min(W / ((W < H ? 9 : 15) * T), H / ((W < H ? 13 : 10) * T)))); }
+    Z = Math.max(.62, Math.min(1.5, Math.min(W / ((W < H ? 9 : 15) * T), H / ((W < H ? 13 : 10) * T)))); if (r3) r3.resize(W, H); }
   resize(); addEventListener('resize', resize);
   game.busy = true; bus.emit('pauseWorld', true);
 
@@ -124,6 +129,13 @@ export function runAdventure(def, onExit) {
   function inv() { $('.advInv').innerHTML = Object.keys(S.inv).map(k => `<span title="${esc(items[k] ? items[k].name : k)}">${items[k] ? items[k].icon : '🎁'}${S.inv[k] > 1 ? `<i>${ar(S.inv[k])}</i>` : ''}</span>`).join(''); }
   function stars() { $('.advStars b').textContent = ar(S.stars); }
   function goal() { const g = (def.goals || []).find(g => !g.done(A)); $('.advGoal').textContent = g ? '🎯 ' + g.text : '🎉 أكملتَ المغامرة!'; return g; }
+  /* موضع هدف المهمة الحالية: في هذه المنطقة، أو المخرج المؤدي إلى منطقته */
+  function goalAt() {
+    const g = goal(); if (!g || !g.at) return null; const a = g.at(A); if (!a) return null;
+    const ar2 = a.area || S.area; if (ar2 !== S.area) { const ex = ents.find(e => e.kind === 'exit' && e.to === ar2); return ex ? { x: ex.x, y: ex.y } : null; }
+    if (a.id) { const e = A.ent(a.id); return e && !e.hidden ? { x: e.kind === 'house' ? e.x + Math.floor((e.w || 3) / 2) : e.x, y: e.y } : null; }
+    return { x: a.x, y: a.y };
+  }
   const fadeTo = v => new Promise(r => { const el = $('.advFade'); el.style.opacity = v; setTimeout(r, 380); });
 
   /* ── المسار (بحث عرضي على البلاطات) ── */
@@ -158,7 +170,9 @@ export function runAdventure(def, onExit) {
   }
   function tapTo(sx, sy) {
     if (locked || caught) return;
-    const wx = (sx - W / 2) / Z + cam.x, wy = (sy - H / 2) / Z + cam.y, tx = Math.floor(wx / T), ty = Math.floor(wy / T);
+    let wx = (sx - W / 2) / Z + cam.x, wy = (sy - H / 2) / Z + cam.y;
+    if (r3) { const p = r3.pick(sx, sy); if (!p) return; wx = p.x; wy = p.y; }
+    const tx = Math.floor(wx / T), ty = Math.floor(wy / T);
     const e = actAt(tx, ty) || actAt(tx, ty + 1);
     if (e) {
       const ex = e.kind === 'house' ? e.x + Math.floor((e.w || 3) / 2) : e.x, ey = e.y;
@@ -166,19 +180,31 @@ export function runAdventure(def, onExit) {
       P.path = route(ex, ey, true); P.onArrive = () => interact(e); if (!P.path) toast('🚧 لا طريق إلى هناك الآن');
       mark = { x: ex, y: ey, t: 0 }; return;
     }
+    if (blocked(tx, ty) && area.onSolid && (tileAt(tx, ty) === '"' || tileAt(tx, ty) === 'R')) {
+      const act = () => area.onSolid(A, tx, ty, tileAt(tx, ty)); mark = { x: tx, y: ty, t: 0 };   // شوك أو صخرة: نمشي بجانبها ثم نستعمل الأداة
+      if (Math.abs(tx - Math.floor(P.x)) + Math.abs(ty - Math.floor(P.y)) === 1) return act();
+      P.path = route(tx, ty, true); P.onArrive = act; if (!P.path) toast('🚧 لا طريق إلى هناك الآن'); return;
+    }
     if (blocked(tx, ty)) { const h = area.onSolid && area.onSolid(A, tx, ty, tileAt(tx, ty)); if (!h) toast(tileAt(tx, ty) === '"' ? '🌿 شجيرة شوك كثيفة… تحتاج أداة لقصّها' : tileAt(tx, ty) === 'R' ? '🪨 صخرة متشققة… تحتاج أداة لكسرها' : '🚧 لا يمكن المرور'); return; }
     P.path = route(tx, ty); P.onArrive = null; mark = { x: tx, y: ty, t: 0 }; if (!P.path) toast('🚧 لا طريق إلى هناك الآن');
   }
-  let mark = null;
-  cv.addEventListener('pointerdown', e => { e.preventDefault(); tapTo(e.clientX, e.clientY); });
+  let mark = null, userZoom = 1, pinch = 0, cine = S.flags._intro ? 1 : 0;   // تقريب/إبعاد الكاميرا: العجلة أو إصبعان
+  cv.parentNode.addEventListener('wheel', e => { userZoom = Math.min(1.6, Math.max(.65, userZoom * (e.deltaY > 0 ? 1.08 : 1 / 1.08))); }, { passive: true });
+  cv.parentNode.addEventListener('touchmove', e => { if (e.touches.length !== 2) { pinch = 0; return; } const d = Math.hypot(e.touches[0].clientX - e.touches[1].clientX, e.touches[0].clientY - e.touches[1].clientY); if (pinch) userZoom = Math.min(1.6, Math.max(.65, userZoom * pinch / d)); pinch = d; }, { passive: true });
+  [cv, $('.advCv3')].forEach(c => c.addEventListener('pointerdown', e => { e.preventDefault(); if (e.isPrimary !== false) tapTo(e.clientX, e.clientY); }));
   const keys = {};
-  const kd = e => { if (!root.isConnected) return; keys[e.key] = true; if (e.key === ' ' || e.key === 'Enter' || e.key === 'e') { e.preventDefault(); if (dlg.classList.contains('on')) { if (dlg.onclick) dlg.onclick(e); } else interact(front()); } if (e.key.startsWith('Arrow')) e.preventDefault(); };
+  const kd = e => { if (!root.isConnected) return; keys[e.key] = true; if (e.key === ' ' || e.key === 'Enter' || e.key === 'e') { e.preventDefault(); if (dlg.classList.contains('on')) { if (dlg.onclick) dlg.onclick(e); } else doFront(); } if (e.key.startsWith('Arrow')) e.preventDefault(); };
   const ku = e => { keys[e.key] = false; };
   addEventListener('keydown', kd); addEventListener('keyup', ku);
   function front() { const x = Math.floor(P.x), y = Math.floor(P.y), d = { up: [0, -1], down: [0, 1], left: [-1, 0], right: [1, 0] }[P.dir];
     return actAt(x + d[0], y + d[1]) || [[1, 0], [-1, 0], [0, 1], [0, -1]].map(([a, b]) => actAt(x + a, y + b)).find(Boolean); }
-  $('.advAct').onclick = e => { e.stopPropagation(); interact(front()); };
+  const frontTile = () => { const d = { up: [0, -1], down: [0, 1], left: [-1, 0], right: [1, 0] }[P.dir], x = Math.floor(P.x) + d[0], y = Math.floor(P.y) + d[1], ch = tileAt(x, y); return (ch === '"' || ch === 'R') ? { x, y, ch } : null; };
+  const doFront = () => { const f = front(); if (f) return interact(f); const ft = frontTile(); if (ft && area.onSolid) area.onSolid(A, ft.x, ft.y, ft.ch); };
+  $('.advAct').onclick = e => { e.stopPropagation(); doFront(); };
   $('.advX').onclick = e => { e.stopPropagation(); exit(); };
+  $('.advLogB').onclick = e => { e.stopPropagation(); const L = $('.advLog'); if (!L.hidden) { L.hidden = true; return; } const cur = goal();
+    L.innerHTML = `<b>📜 مهام المغامرة</b>${(def.goals || []).map(g => { const d = g.done(A); return `<div class="${d ? 'ok' : g === cur ? 'now' : 'next'}"><i>${d ? '✅' : g === cur ? '🎯' : '⬜'}</i><span>${esc(g.text)}</span></div>`; }).join('')}<small>اضغط 📜 للإغلاق</small>`;
+    L.hidden = false; L.onclick = ev => { ev.stopPropagation(); L.hidden = true; }; };
   $('.advHintB').onclick = e => { e.stopPropagation(); const g = goal(); say([{ who: 'narrator', text: '💡 ' + (g && g.hint ? g.hint : 'استكشف المكان وتحدّث مع الجميع.') }]); };
 
   /* ── الحراس: دورية ومخروط رؤية؛ إن رأوك تعود لآخر نقطة آمنة ── */
@@ -218,9 +244,17 @@ export function runAdventure(def, onExit) {
     if (area.tick) area.tick(A, dt);
     ents.forEach(e => { if ((e.kind === 'gate' || e.kind === 'door' || e.kind === 'cage') && !e.open && e.when && e.when(A)) { A.set(e.id, { open: true }); sfx('gate'); A.shake(.4); toast(e.openMsg || '🔓 انفتح شيء ما!'); } });
     for (let i = fx.length - 1; i >= 0; i--) { const p = fx[i]; p.life -= dt; p.x += p.vx * dt; p.y += p.vy * dt; p.vy += 160 * dt; if (p.life <= 0) fx.splice(i, 1); }
-    shakeK = Math.max(0, shakeK - dt * 2.5);
-    draw();
-    const f = front(); $('.advAct').hidden = !f || locked; if (f) $('.advAct').textContent = f.kind === 'npc' ? '💬' : f.kind === 'block' ? '👐' : '✋';
+    shakeK = Math.max(0, shakeK - dt * 2.5); if (cine < 1) cine += dt / 4.5;
+    if (r3) {
+      cam.x += (P.x * T - cam.x) * Math.min(1, dt * 6); cam.y += (P.y * T - cam.y) * Math.min(1, dt * 6);
+      r3.frame({ areaId: S.area, map, theme: area.theme, dark: area.dark != null ? area.dark : THEMES[area.theme].night, tileAt, ents, P, t, A, caught,
+        look: e => e.kind === 'guard' ? e.look : def.cast[e.who].look, itemIcon: A.itemIcon, pressed: A.pressed,
+        heroLook: heroLookWorn(game.state), heroKey: JSON.stringify(heroLookWorn(game.state)), lantern: A.has('lantern'), goalAt: goalAt(),
+        fx: fx.map(p => ({ x: p.x, y: p.y, h: Math.max(0, -p.vy * .1), col: p.col })), cam, zoom: Z / (W < H ? .9 : 1.1), userZoom, cine, shake: shakeK,
+        cutList: () => Object.keys(S.cut).filter(k => k.startsWith(S.area + ':')).map(k => k.slice(S.area.length + 1)),
+        canCut: k => { const [x, y] = k.split(',').map(Number), ch = map[y][x]; return (ch === '"' && A.has(def.cutTool || 'sickle')) || (ch === 'R' && A.has(def.breakTool || 'hammer')); } });
+    } else draw();
+    const f = front(), ft = !f && frontTile(); $('.advAct').hidden = !(f || ft) || locked; if (f) $('.advAct').textContent = f.kind === 'npc' ? '💬' : f.kind === 'block' ? '👐' : '✋'; else if (ft) $('.advAct').textContent = ft.ch === '"' ? '🌾' : '🔨';
     raf = requestAnimationFrame(step);
   }
   function update(dt) {
@@ -236,6 +270,8 @@ export function runAdventure(def, onExit) {
       if (can(nx, P.y)) P.x = nx; if (can(P.x, ny)) P.y = ny;
       // دفع صندوق بالمشي نحوه (لوحة المفاتيح)
       const cx = Math.floor(P.x), cy = Math.floor(P.y), d = { up: [0, -1], down: [0, 1], left: [-1, 0], right: [1, 0] }[P.dir], b = ents.find(e => e.kind === 'block' && e.x === cx + d[0] && e.y === cy + d[1]);
+      const ft = frontTile(), held = keys.ArrowLeft || keys.ArrowRight || keys.ArrowUp || keys.ArrowDown || keys.a || keys.d || keys.w || keys.s;
+      if (ft && !P.path && held) { P.cutT = (P.cutT || 0) + dt; if (P.cutT > .3) { P.cutT = 0; if (area.onSolid) area.onSolid(A, ft.x, ft.y, ft.ch); } } else P.cutT = 0;
       if (b && !P.path && (keys.ArrowLeft || keys.ArrowRight || keys.ArrowUp || keys.ArrowDown || keys.a || keys.d || keys.w || keys.s)) { P.push += dt; if (P.push > .22) { P.push = 0; pushBlock(b, d[0], d[1]); } } else P.push = 0;
     }
     // التقاط الأشياء والنجوم والمخارج
@@ -304,7 +340,7 @@ export function runAdventure(def, onExit) {
   }
 
   /* ── النهاية والخروج ── */
-  function cleanup() { cancelAnimationFrame(raf); removeEventListener('resize', resize); removeEventListener('keydown', kd); removeEventListener('keyup', ku); root.remove(); game.busy = false; bus.emit('pauseWorld', false); }
+  function cleanup() { if (r3) { try { r3.dispose(); } catch (e) {} } cancelAnimationFrame(raf); removeEventListener('resize', resize); removeEventListener('keydown', kd); removeEventListener('keyup', ku); root.remove(); game.busy = false; bus.emit('pauseWorld', false); }
   function exit() { save(); cleanup(); onExit && onExit({ done: false }); }
   async function finish() {
     if (done) return; done = true; locked = true;

@@ -5,6 +5,10 @@ import { createHash } from 'crypto';
 import { join, relative, dirname } from 'path';
 import { fileURLToPath } from 'url';
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..');
+// حارس النشر: خطأ صياغة في أي ملف يوقف التوليد (فلا يُنشر)
+import { execFileSync } from 'child_process';
+try { execFileSync(process.execPath, ['--experimental-vm-modules', join(ROOT, 'tests', 'syntax.mjs')], { stdio: ['ignore', 'pipe', 'ignore'] }); }
+catch (e) { console.log(String(e.stdout || '')); console.log('⛔ أُلغي توليد sw.js: أصلح خطأ الصياغة أولاً'); process.exit(1); }
 const SKIP = new Set(['tests', 'server', 'node_modules', '.git', 'sw.js', 'CLAUDE.md', 'README.md']);
 const files = [];
 (function walk(d) { for (const f of readdirSync(d)) { if (SKIP.has(f)) continue; const p = join(d, f); if (statSync(p).isDirectory()) walk(p); else files.push(relative(ROOT, p).replace(/\\/g, '/')); } })(ROOT);

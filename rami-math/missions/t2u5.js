@@ -75,7 +75,7 @@ export const transformPolygons = Object.assign({
       c.clearRect(0, 0, 300, 236); c.fillStyle = '#FFFDF6'; c.fillRect(0, 0, 300, 236);
       c.strokeStyle = 'rgba(42,27,102,.12)'; c.lineWidth = 1; for (let x = -5; x <= 5; x++) { c.beginPath(); c.moveTo(X(x), Y(4)); c.lineTo(X(x), Y(-4)); c.stroke(); } for (let y = -4; y <= 4; y++) { c.beginPath(); c.moveTo(X(-5), Y(y)); c.lineTo(X(5), Y(y)); c.stroke(); }
       c.strokeStyle = '#2A1B66'; c.lineWidth = 2; c.beginPath(); c.moveTo(X(-5.4), Y(0)); c.lineTo(X(5.4), Y(0)); c.moveTo(X(0), Y(-4.4)); c.lineTo(X(0), Y(4.4)); c.stroke();
-      c.fillStyle = '#2A1B66'; c.font = '800 9px Cairo, sans-serif'; c.textAlign = 'center'; for (let x = -5; x <= 5; x++) if (x) c.fillText(x < 0 ? '−' + ar(-x) : ar(x), X(x), Y(0) + 11); for (let y = -4; y <= 4; y++) if (y) c.fillText(y < 0 ? '−' + ar(-y) : ar(y), X(0) - 9, Y(y) + 3);
+      c.fillStyle = '#2A1B66'; c.font = '800 9px Cairo, sans-serif'; c.textAlign = 'center'; for (let x = -5; x <= 5; x++) if (x) c.fillText(ar(x), X(x), Y(0) + 11); for (let y = -4; y <= 4; y++) if (y) c.fillText(ar(y), X(0) - 9, Y(y) + 3);
       c.font = '900 11px Cairo, sans-serif'; c.fillText('س', X(5.4), Y(0) - 6); c.fillText('ص', X(0) + 9, Y(4.4) + 4);
       c.fillStyle = 'rgba(192,57,43,.3)'; c.strokeStyle = '#C0392B'; c.lineWidth = 2.5; c.beginPath(); r.shape.forEach(([x, y], i) => i ? c.lineTo(X(x), Y(y)) : c.moveTo(X(x), Y(y))); if (r.t !== 'rect') c.closePath(); c.fill(); c.stroke();
       r.shape.forEach(([x, y]) => { c.fillStyle = '#C0392B'; c.beginPath(); c.arc(X(x), Y(y), 4, 0, 7); c.fill(); });

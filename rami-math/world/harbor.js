@@ -70,8 +70,8 @@ export function drawHarborGround(ctx, t) {
     [[X0 - 16, B.oy], [X0 + GW + 16, B.oy], [B.ox, Y0 - 16], [B.ox, Y0 + GH + 16]].forEach(([x, y]) => { c.fillStyle = PAL.wood; c.fillRect(x - 2.5, y - 10, 5, 12); c.fillStyle = PAL.woodLight; c.fillRect(x - 2.5, y - 10, 5, 2); });
     if (FLAGS.three) return;   // في 3D: أرقام المحورين قائمة وواضحة (harborDrawables)
     c.fillStyle = '#6E4A2E'; c.font = '900 12px Cairo, sans-serif'; c.textAlign = 'center';
-    for (let i = -B.xr; i <= B.xr; i++) if (i) c.fillText(i < 0 ? '−' + ar(-i) : ar(i), B.ox + i * B.u, B.oy + 17);
-    for (let j = -B.yr; j <= B.yr; j++) if (j) c.fillText(j < 0 ? '−' + ar(-j) : ar(j), B.ox - 15, B.oy - j * B.u + 4);
+    for (let i = -B.xr; i <= B.xr; i++) if (i) c.fillText(ar(i), B.ox + i * B.u, B.oy + 17);
+    for (let j = -B.yr; j <= B.yr; j++) if (j) c.fillText(ar(j), B.ox - 15, B.oy - j * B.u + 4);
     c.font = '900 15px Cairo, sans-serif'; c.fillText('س', X0 + GW + 30, B.oy + 5); c.fillText('ص', B.ox, Y0 - 28);
   });
   // ساحة الشحن أمام الصناديق
@@ -92,7 +92,7 @@ function pier(c, x, y, w, h) {   // رصيف خشبي: أعمدة في الما�
 }
 export function harborDrawables(open, t) {
   const axis = [];
-  if (FLAGS.three) { const B = BEACH, X0 = B.ox - B.xr * B.u, Y0 = B.oy - B.yr * B.u, GW = 2 * B.xr * B.u, GH = 2 * B.yr * B.u, n = v => v < 0 ? '−' + ar(-v) : ar(v), o = { fs: 15, bg: '#FFF6DE', line: '#6E4A2E', fg: '#4A2E14' };
+  if (FLAGS.three) { const B = BEACH, X0 = B.ox - B.xr * B.u, Y0 = B.oy - B.yr * B.u, GW = 2 * B.xr * B.u, GH = 2 * B.yr * B.u, n = v => ar(v), o = { fs: 15, bg: '#FFF6DE', line: '#6E4A2E', fg: '#4A2E14' };
     for (let i = -B.xr; i <= B.xr; i++) if (i) axis.push({ y: B.oy + 20, x: B.ox + i * B.u, draw: c => tag(c, B.ox + i * B.u, B.oy + 24, n(i), o) });
     for (let j = -B.yr; j <= B.yr; j++) if (j) axis.push({ y: B.oy - j * B.u + 6, x: B.ox - 18, draw: c => tag(c, B.ox - 18, B.oy - j * B.u + 10, n(j), o) });
     axis.push({ y: B.oy + 8, x: X0 + GW + 34, draw: c => tag(c, X0 + GW + 34, B.oy + 12, 'س', { fs: 18, bg: '#E2475C', line: '#fff', fg: '#fff' }) }, { y: Y0 - 16, x: B.ox, draw: c => tag(c, B.ox, Y0 - 12, 'ص', { fs: 18, bg: '#E2475C', line: '#fff', fg: '#fff' }) }); }

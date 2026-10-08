@@ -40,14 +40,19 @@ export default {
     bandit: { name: 'حارس العصابة', look: BANDIT }
   },
   goals: [
-    { text: 'تحدّث مع الشيخ الحارث عند البئر', done: A => A.flag('met'), hint: 'البئر في وسط القرية. اتبع الطريق الترابي.' },
-    { text: 'خذ الفانوس من الصندوق بجانب بيتك', done: A => A.has('lantern'), hint: 'الصندوق عند الزاوية الغربية لبيتك، في أعلى يسار القرية.' },
-    { text: 'أنقذ العم سالم من المزرعة المسيّجة بالشوك', done: A => A.flag('salem'), hint: 'الشوك لا يُقص باليد. في صندوق الأدوات بجانب السقيفة منجل.' },
-    { text: 'تسلّل إلى معسكر العصابة شرق القرية وحرّر يوسف', done: A => A.flag('yousef'), hint: 'القفص يُفتح حين يضغط شيء ثقيل على اللوحتين. ادفع الصناديق!' },
-    { text: 'احصل على حلقة المفاتيح من صندوق خيمة الزعيم', done: A => A.has('keys') || A.flag('naser'), hint: 'اختبئ في العشب الطويل حين يقترب الحارس، وراقب مخروط نظره.' },
-    { text: 'افتح المخزن وأنقذ العم ناصر', done: A => A.flag('naser'), hint: 'المخزن الكبير شمال شرق القرية. المفاتيح معك الآن.' },
-    { text: 'افتح بوابة البرج القديم وأنقذ الجدة مريم', done: A => A.flag('maryam'), hint: 'الراية على البرج تخبرك بترتيب الرافعات. اقرأ ألوانها من اليمين إلى اليسار.' },
-    { text: 'أشعل الشعلة من نار الساحة، ثم أوقد المنارات الثلاث', done: A => (A.flag('lit') || 0) >= 3, hint: 'المنارات في زوايا القرية: شمال غرب، وشمال شرق، وجنوبها قرب الطريق.' }
+    { text: 'اذهب إلى البئر وتحدّث مع الشيخ الحارث', done: A => A.flag('met'), at: () => ({ id: 'harith' }), hint: 'اتبع الماسة الذهبية فوق رأسه. البئر في وسط القرية.' },
+    { text: 'خذ الفانوس من الصندوق بجانب بيتك', done: A => A.has('lantern'), at: () => ({ area: 'village', id: 'c_home' }), hint: 'الصندوق عند الزاوية الغربية لبيتك (أعلى يسار القرية). اضغط عليه لتفتحه.' },
+    { text: 'خذ المنجل من صندوق الأدوات بجانب السقيفة', done: A => A.has('sickle') || A.flag('salem'), at: () => ({ area: 'village', id: 'c_shed' }), hint: 'السقيفة الصغيرة جنوب غرب القرية، والصندوق أمامها.' },
+    { text: 'اقطع الشوك حول المزرعة (اضغط على الشوك) وأنقذ العم سالم', done: A => A.flag('salem'), at: A => A.S.cut['village:4,17'] ? { area: 'village', id: 'salem' } : { area: 'village', x: 4, y: 17 }, hint: 'معك المنجل: اضغط على الشجيرات الشوكية المضيئة، أو امشِ نحوها، أو اضغط 🌾.' },
+    { text: 'اذهب شرقاً إلى معسكر العصابة', done: A => A.flag('campIntro') || A.flag('yousef'), at: () => ({ area: 'camp', x: 1, y: 10 }), hint: 'المخرج في الطرف الشرقي من الطريق الكبير، عند السهم المضيء.' },
+    { text: 'ادفع الصندوقين على اللوحتين لتفتح القفص', done: A => A.flag('cageOpen') || A.flag('yousef'), at: A => ({ area: 'camp', id: A.flag('b1ok') ? 'b2' : 'b1' }), hint: 'امشِ نحو الصندوق ليتحرك أمامك، أو اضغط عليه وأنت بجانبه. كل صندوق إلى لوحة.' },
+    { text: 'حرّر يوسف من القفص', done: A => A.flag('yousef'), at: () => ({ area: 'camp', id: 'yousef' }), hint: 'القفص انفتح! اضغط على يوسف.' },
+    { text: 'تسلّل وخذ حلقة المفاتيح من صندوق خيمة الزعيم', done: A => A.has('keys') || A.flag('naser'), at: () => ({ area: 'camp', id: 'c_keys' }), hint: 'اختبئ في العشب الطويل، وانتظر حتى يدير الحارس ظهره. المخروط الأصفر هو ما يراه.' },
+    { text: 'عُد إلى القرية وافتح المخزن لتنقذ العم ناصر', done: A => A.flag('naser'), at: () => ({ area: 'village', id: 'wdoor' }), hint: 'المخزن الكبير شمال شرق القرية، والمفاتيح معك.' },
+    { text: 'حرّك الرافعات بترتيب ألوان الراية (من اليمين) لتفتح البرج', done: A => A.flag('tower_open'), at: A => ({ area: 'village', id: ['lv_blue', 'lv_red', 'lv_green'][(A.flag('seq') || []).length] || 'lv_blue' }), hint: 'الراية على البرج: الأزرق ثم الأحمر ثم الأخضر.' },
+    { text: 'أنقذ الجدة مريم من البرج', done: A => A.flag('maryam'), at: () => ({ area: 'village', id: 'maryam' }), hint: 'البوابة مفتوحة. اضغط على الجدة مريم.' },
+    { text: 'أشعل الشعلة من نار الساحة', done: A => A.has('fire') || (A.flag('lit') || 0) >= 3, at: () => ({ area: 'village', id: 'square' }), hint: 'النار في ساحة البئر. اضغط عليها والشعلة معك.' },
+    { text: 'أوقد المنارات الثلاث لتطرد العصابة', done: A => (A.flag('lit') || 0) >= 3, at: A => ({ area: 'village', id: ['bc1', 'bc2', 'bc3'].find(id => !(A.ent(id) || {}).lit) || 'bc3' }), hint: 'المنارات: شمال غرب القرية، وشمال شرقها، وجنوبها قرب الطريق.' }
   ],
   intro: A => A.say([
     { who: 'narrator', text: 'منتصف الليل في قرية الخير… صوت عربات وصراخ، ثم سكون غريب.' },
@@ -79,7 +84,7 @@ export default {
         { id: 's1', kind: 'star', x: 30, y: 7 }, { id: 's2', kind: 'star', x: 23, y: 16 }, { id: 's5', kind: 'star', x: 1, y: 13 }
       ],
       onSolid: (A, x, y, ch) => {
-        if (ch === '"') { if (A.has('sickle')) { A.cut(x, y); A.sfx('plant'); A.toast('🌾 قصصتَ الشوك!'); } else A.toast('🌿 شوك كثيف! تحتاج أداة لقصّه.'); return true; }
+        if (ch === '"') { if (A.has('sickle')) { A.cut(x, y); A.sfx('plant'); A.toast('🌾 قصصتَ الشوك! الطريق مفتوح'); A.goal(); } else A.toast('🌿 شوك كثيف! خذ المنجل من صندوق الأدوات بجانب السقيفة.'); return true; }
         if (ch === 'R') { if (A.has('hammer')) { A.cut(x, y); A.sfx('drop'); A.shake(.5); A.toast('🔨 انكسرت الصخرة!'); } else A.toast('🪨 صخرة متشققة… لعل مطرقة تكسرها.'); return true; }
       },
       onLever: (A, e) => {
@@ -145,7 +150,7 @@ export default {
         { id: 't1', kind: 'tent', x: 8, y: 3, color: '#8E3B3B' }, { id: 't2', kind: 'tent', x: 13, y: 16, color: '#6B4A2E' }, { id: 't3', kind: 'tent', x: 23, y: 4, color: '#3E2A4E' },
         { id: 'cr1', kind: 'crates', x: 16, y: 7 }, { id: 'br1', kind: 'barrel', x: 17, y: 7 }, { id: 'br2', kind: 'barrel', x: 11, y: 6 }, { id: 'br3', kind: 'barrel', x: 8, y: 12 },
         { id: 'c_keys', kind: 'chest', x: 24, y: 5, item: 'keys' },
-        { id: 'cage', kind: 'cage', x: 21, y: 13, when: A => A.pressed(A.ent('p1')) && A.pressed(A.ent('p2')), openMsg: '🔓 انفتح القفص!' },
+        { id: 'cage', kind: 'cage', x: 21, y: 13, when: A => { const a = A.pressed(A.ent('p1')), b = A.pressed(A.ent('p2')); if (a && !A.flag('b1ok')) A.flag('b1ok', true); if (a && b) A.flag('cageOpen', true); return a && b; }, openMsg: '🔓 انفتح القفص!' },
         { id: 'yousef', kind: 'npc', who: 'yousef', x: 21, y: 13, face: 'down', mark: A => A.ent('cage').open && !A.flag('yousef') ? '!' : null },
         { id: 'p1', kind: 'plate', x: 19, y: 16 }, { id: 'p2', kind: 'plate', x: 23, y: 16 },
         { id: 'b1', kind: 'block', x: 17, y: 16 }, { id: 'b2', kind: 'block', x: 23, y: 14 },
