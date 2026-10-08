@@ -35,13 +35,13 @@ await shot('3-intro');
 await page.evaluate(() => window.__do(() => Promise.resolve()));   // مقدمة القصة
 ok('المغامرة تبدأ: مقدمة، هدف أول، العالم مستقل (اللعبة متوقفة خلفه)', /الحارث/.test((await st()).goal) && await page.evaluate(() => window.__game.eng.paused === true));
 // ٣. القرية
-await act("A.use('harith')"); ok('مهمة ١: الحديث مع الشيخ الحارث', (await st()).flags.met);
-await act("A.use('c_home')"); ok('مهمة ٢: الفانوس من صندوق البيت', !!(await st()).inv.lantern);
+await act("A.tapEnt('harith')"); ok('مهمة ١: الحديث مع الشيخ الحارث', (await st()).flags.met);
+await act("A.tapEnt('c_home')"); ok('مهمة ٢: الفانوس من صندوق البيت', !!(await st()).inv.lantern);
 await act("A.goTile(4, 16)"); await act("A.tapTile(4, 17)"); ok('الشوك لا يُقص بلا منجل', !(await page.evaluate(() => window.__adv.S.cut['village:4,17'])));
-await act("A.use('c_shed')"); ok('المنجل من صندوق السقيفة', !!(await st()).inv.sickle);
+await act("A.tapEnt('c_shed')"); ok('المنجل من صندوق السقيفة', !!(await st()).inv.sickle);
 await act("A.goTile(4, 16)"); await act("A.tapTile(4, 17)"); ok('قص الشوك بالمنجل يفتح الطريق', !!(await page.evaluate(() => window.__adv.S.cut['village:4,17'])));
 await shot('4-farm');
-await act("A.use('salem')"); ok('مهمة ٣: إنقاذ العم سالم', (await st()).flags.salem);
+await act("A.tapEnt('salem')"); ok('مهمة ٣: إنقاذ العم سالم', (await st()).flags.salem);
 // ٤. المعسكر
 await act("A.goTile(31, 11)"); await sleep(900); ok('الانتقال إلى معسكر العصابة', (await st()).area === 'camp');
 await page.evaluate(() => window.__do(() => Promise.resolve())); await sleep(400);
@@ -55,8 +55,8 @@ ok('ضغطة واحدة تدفع الصندوق الأول حتى لوحته', a
 await act("A.tapTile(23, 14)"); await sleep(600);
 ok('لغز الصناديق: اللوحتان مضغوطتان فينفتح القفص', await page.evaluate(() => window.__adv.ent('cage').open === true));
 await shot('6-cage');
-await act("A.use('yousef')"); ok('مهمة ٤: تحرير يوسف', (await st()).flags.yousef);
-await act("A.use('c_keys')"); ok('مهمة ٥: حلقة المفاتيح', !!(await st()).inv.keys);
+await act("A.tapEnt('yousef')"); ok('مهمة ٤: تحرير يوسف', (await st()).flags.yousef);
+await act("A.tapEnt('c_keys')"); ok('مهمة ٥: حلقة المفاتيح', !!(await st()).inv.keys);
 await act("A.goTile(25, 17)"); ok('المطرقة (اختيارية)', !!(await st()).inv.hammer);
 await act("A.goTile(5, 6)"); await act("A.goTile(25, 1)"); ok('نجمتان مخفيتان في المعسكر', (await st()).stars === 2, 'stars=' + (await st()).stars);
 // ٥. الحفظ والمتابعة: الخروج ثم العودة من القائمة
@@ -68,16 +68,16 @@ await page.click('[data-adv="rescue"]'); await page.waitForSelector('.adv'); awa
 ok('المتابعة من نفس المكان بنفس الأدوات', (await st()).area === 'camp' && !!(await st()).inv.keys);
 await page.evaluate(() => { window.__adv.S.flags.invisible = 1; });
 await act("A.goTile(0, 10)"); await sleep(900); ok('العودة إلى القرية', (await st()).area === 'village');
-await act("A.use('wdoor')"); ok('مهمة ٦: فتح المخزن وإنقاذ ناصر', (await st()).flags.naser);
-await act("A.use('lv_red')"); await sleep(900); ok('رافعة بترتيب خاطئ تُعاد بهدوء', !(await st()).flags.tower_open && !(await page.evaluate(() => window.__adv.ent('lv_red').on)));
-await act("A.use('lv_blue')"); await act("A.use('lv_red')"); await act("A.use('lv_green')"); await sleep(500);
+await act("A.tapEnt('wdoor')"); ok('مهمة ٦: فتح المخزن وإنقاذ ناصر', (await st()).flags.naser);
+await act("A.tapEnt('lv_red')"); await sleep(900); ok('رافعة بترتيب خاطئ تُعاد بهدوء', !(await st()).flags.tower_open && !(await page.evaluate(() => window.__adv.ent('lv_red').on)));
+await act("A.tapEnt('lv_blue')"); await act("A.tapEnt('lv_red')"); await act("A.tapEnt('lv_green')"); await sleep(500);
 ok('لغز الراية: الترتيب الصحيح يفتح البرج', (await st()).flags.tower_open && await page.evaluate(() => window.__adv.ent('gtower').open));
-await act("A.use('maryam')"); ok('مهمة ٧: إنقاذ الجدة مريم والحصول على الشعلة', (await st()).flags.maryam && !!(await st()).inv.torch);
+await act("A.tapEnt('maryam')"); ok('مهمة ٧: إنقاذ الجدة مريم والحصول على الشعلة', (await st()).flags.maryam && !!(await st()).inv.torch);
 await act("A.goTile(28, 7)"); await act("A.tapTile(29, 7)"); await act("A.goTile(30, 7)"); await act("A.goTile(23, 16)"); await act("A.goTile(1, 13)");
 ok('النجوم الخمس (منها خلف صخرة تُكسر بالمطرقة)', (await st()).stars === 5, 'stars=' + (await st()).stars);
-await act("A.use('square')"); ok('إشعال الشعلة من نار الساحة', !!(await st()).inv.fire);
+await act("A.tapEnt('square')"); ok('إشعال الشعلة من نار الساحة', !!(await st()).inv.fire);
 await shot('7-village');
-await act("A.use('bc1')"); await act("A.use('bc2')"); await shot('8-beacons'); await act("A.use('bc3')"); await sleep(800);
+await act("A.tapEnt('bc1')"); await act("A.tapEnt('bc2')"); await shot('8-beacons'); await act("A.tapEnt('bc3')"); await sleep(800);
 ok('مهمة ٨: المنارات الثلاث تنهي المغامرة', !!(await page.$('.advEnd')));
 await shot('9-end');
 const end = await page.textContent('.advEnd');

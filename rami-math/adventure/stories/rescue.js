@@ -70,7 +70,7 @@ export default {
         { id: 'tower', kind: 'house', x: 27, y: 19, w: 3, h: 3, roof: '#B8AE98', face: '#9C9280', noDoor: true }, { id: 'gtower', kind: 'gate', x: 28, y: 19, when: A => A.flag('tower_open'), openMsg: '🔓 انفتحت بوابة البرج!' },
         { id: 'banner', kind: 'banner', x: 26, y: 17, colors: [COL.green, COL.red, COL.blue] },
         { id: 'lv_blue', kind: 'lever', x: 24, y: 21, color: COL.blue, c: 'blue' }, { id: 'lv_red', kind: 'lever', x: 25, y: 21, color: COL.red, c: 'red' }, { id: 'lv_green', kind: 'lever', x: 26, y: 21, color: COL.green, c: 'green' },
-        { id: 'well', kind: 'well', x: 16, y: 10 }, { id: 'square', kind: 'safe', x: 17, y: 12 },
+        { id: 'well', kind: 'well', x: 16, y: 10 }, { id: 'square', kind: 'safe', x: 17, y: 12, step: A => A.has('torch') },
         { id: 'c_home', kind: 'chest', x: 2, y: 5, item: 'lantern' }, { id: 'c_shed', kind: 'chest', x: 9, y: 17, item: 'sickle' },
         { id: 'harith', kind: 'npc', who: 'harith', x: 14, y: 11, face: 'right', mark: A => A.flag('met') ? null : '!' },
         villager('salem', 4, 20, { face: 'up', mark: A => A.flag('salem') ? null : '!' }),

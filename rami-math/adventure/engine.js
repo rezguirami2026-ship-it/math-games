@@ -13,7 +13,7 @@ import { gfx, WEAK } from '../ui/hud.js';
 import { webglOK } from '../renderer3d/index.js';
 
 const SOLID_KINDS = new Set(['npc', 'chest', 'block', 'gate', 'door', 'sign', 'fire', 'beacon', 'cage', 'tent', 'crates', 'barrel', 'boat', 'well', 'lever', 'banner', 'house']);
-const ACT_KINDS = new Set(['npc', 'chest', 'lever', 'sign', 'door', 'gate', 'cage', 'beacon', 'boat', 'fire', 'block', 'well', 'tent', 'banner', 'house']);
+const ACT_KINDS = new Set(['npc', 'chest', 'lever', 'sign', 'door', 'gate', 'cage', 'beacon', 'boat', 'fire', 'safe', 'block', 'well', 'tent', 'banner', 'house']);
 const esc = s => String(s).replace(/[&<>]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;' }[c]));
 const wait = ms => new Promise(r => setTimeout(r, ms));
 
@@ -96,6 +96,7 @@ export function runAdventure(def, onExit) {
       const go = async () => { await interact(e); r(true); }; if (Math.abs(ex - Math.floor(P.x)) + Math.abs(e.y - Math.floor(P.y)) === 1) return go(); P.path = route(ex, e.y, true); if (!P.path) return r(false); P.onArrive = go; }),
     tp: (x, y) => { P.x = x + .5; P.y = y + .5; P.path = null; },
     tapTile: (x, y) => tapTile(x, y),
+    tapEnt: id => { const e = A.ent(id); if (e) tapTile(e.kind === 'house' ? e.x + Math.floor((e.w || 3) / 2) : e.x, e.y); },   // كما ينقر اللاعب على الشيء
     busy: () => locked || !!caught || !!(P.path && P.path.length) || pushing
   };
 
@@ -294,12 +295,14 @@ export function runAdventure(def, onExit) {
     }
     // التقاط الأشياء والنجوم والمخارج
     const tx = Math.floor(P.x), ty = Math.floor(P.y);
+    ents.forEach(e => { if (!e.hidden && e.step && Math.abs(e.x - tx) + Math.abs(e.y - ty) === 1 && e.step(A) && area.on && area.on[e.id]) area.on[e.id](A, e); });
     ents.forEach(e => {
       if (e.hidden || e.got || e.x !== tx || e.y !== ty) return;
       if (e.kind === 'star') { e.got = true; persist(e, ['got']); S.stars++; stars(); sfx('win'); burst(e.x * T + T / 2, e.y * T + T / 2, 22); toast(`⭐ نجمة مخفية! (${ar(S.stars)} من ${ar(def.stars)})`); save(); }
       if (e.kind === 'item') { e.got = true; persist(e, ['got']); A.give(e.item, e.n || 1); burst(e.x * T + T / 2, e.y * T + T / 2, 12); if (e.after) e.after(A); }
       if (e.kind === 'exit' && !locked) { if (e.when && !e.when(A)) { if (!e._warned) { e._warned = 1; say([{ who: 'narrator', text: e.locked || 'ليس بعد…' }]).then(() => setTimeout(() => { e._warned = 0; }, 1500)); } return; } A.goto(e.to, e.tx, e.ty); }
       if (e.kind === 'safe') { if (!S.cp || S.cp.x !== e.x || S.cp.y !== e.y) { A.checkpoint(e.x, e.y); toast('🔥 نقطة آمنة: إن رآك حارس تعود إلى هنا'); } }
+      if (e.step && e.step(A) && area.on && area.on[e.id]) area.on[e.id](A, e);   // الوصول إلى الشيء يكفي (مثل إشعال الشعلة من النار)
       if (e.kind === 'trigger' && !S.flags['trig_' + e.id] && (!e.when || e.when(A))) { S.flags['trig_' + e.id] = 1; e.run(A); }
     });
   }
