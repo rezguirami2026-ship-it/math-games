@@ -8,6 +8,7 @@ import { UNITS } from '../content/lessons.js';
 import { finaleOpen } from '../missions/activity.js';
 import { runAdventure, advRec } from './engine.js';
 import { track } from '../core/ops.js';
+import { PREVIEW } from '../save/save.js';
 
 export const ADVENTURES = [
   { id: 'rescue', unit: 0, icon: '🏘️', title: 'إنقاذ القرية', blurb: 'هاجمت «عصابة الظلال» القرية ليلاً وخطفت أربعة من أهلها. استكشف وتسلّل وأنقذهم!', load: () => import('./stories/rescue.js') },
@@ -17,7 +18,7 @@ export const ADVENTURES = [
   { id: 'desert', unit: 6, icon: '🏜️', title: 'مهمة في الصحراء', blurb: 'رحلة عبر الكثبان والمخيمات والآثار القديمة والمناطق السرية.', soon: true },
   { id: 'castle', unit: 8, icon: '🏰', title: 'القلعة المظلمة', blurb: 'المغامرة الكبرى: الوصول إلى القلعة، تجاوز الحراس، وكشف سرها الأخير.', soon: true }
 ];
-export const advUnlocked = a => finaleOpen(a.unit);
+export const advUnlocked = a => PREVIEW || finaleOpen(a.unit);   // ?preview=1: معاينة للمعلم بحفظ منفصل، كل المغامرات مفتوحة
 
 /* تشغيل مغامرة (أو متابعتها من حيث توقف الطالب) */
 export async function playAdventure(id, onDone) {

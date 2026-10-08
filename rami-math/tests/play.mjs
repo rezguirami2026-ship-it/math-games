@@ -28,6 +28,7 @@ const URL_ = `http://localhost:${server.address().port}/` + (D3 ? '?3d=1' : '?2d
 
 const browser = await chromium.launch({ channel: 'chrome', headless: !SHOW, args: D3 ? ['--use-angle=d3d11', '--ignore-gpu-blocklist'] : [] });
 const page = await browser.newPage({ viewport: { width: 1000, height: 700 } });
+await page.addInitScript(() => { setInterval(() => { const b = document.querySelector(".advUnlock [data-later]"); if (b) { window.__advUnlockSeen = (window.__advUnlockSeen || 0) + 1; b.click(); } }, 400); });   // نافذة «فُتحت مغامرة» بعد الوحدة: الاختبار يختار «لاحقاً» ويواصل
 // تشخيص: كل مهمة طويلة (>200ms) في الصفحة تُسجَّل، وتُطبع عند التعليق
 await page.addInitScript(() => { window.__long = []; try { new PerformanceObserver(l => l.getEntries().forEach(e => { if (e.duration > 200) window.__long.push([Math.round(e.startTime), Math.round(e.duration)]); })).observe({ type: 'longtask', buffered: true }); } catch (e) {} });
 const errors = [];

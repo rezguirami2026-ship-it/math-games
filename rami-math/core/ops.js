@@ -17,8 +17,8 @@ function load() {
   return { uid: 'USER-' + hex(8), fresh: true, q: [], pend: null, last: 0, tries: 0, next: 0, cfg: null, cfgAt: 0, errs: {}, errDay: '', tk: [], my: [], seen: {} };
 }
 function persist() { try { localStorage.setItem(KEY, JSON.stringify(S)); } catch (e) {} }
-// أثناء التطوير والاختبار (localhost) لا نرسل للخادم الحقيقي حتى لا تختلط الإحصاءات، إلا بعنوان اختبار صريح
-const url = () => { let u = /^(localhost|127\.)/.test(location.hostname) ? '' : OPS_URL; try { u = localStorage.getItem('ramimath_ops_url') || u; } catch (e) {} return (u || '').replace(/\/+$/, ''); };
+// أثناء التطوير والاختبار (localhost) ووضع المعاينة (?preview=1) لا نرسل للخادم الحقيقي حتى لا تختلط الإحصاءات، إلا بعنوان اختبار صريح
+const url = () => { let u = /^(localhost|127\.)/.test(location.hostname) || /[?&]preview=1/.test(location.search) ? '' : OPS_URL; try { u = localStorage.getItem('ramimath_ops_url') || u; } catch (e) {} return (u || '').replace(/\/+$/, ''); };
 
 /* بيانات الجهاز: تقريبية وعامة فقط (لا نص المتصفح الكامل، لا موقع، لا اسم) */
 export const env = (() => {
