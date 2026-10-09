@@ -210,7 +210,7 @@ async function start(state) {
   }
 }
 /* ── العرض ثلاثي الأبعاد (renderer3d): يُحمَّل فقط عند طلبه، ويرجع إلى الرسم الحالي إن لم يدعم الجهاز WebGL أو فشل التحميل ── */
-const V3D = 'نسخة 3D · ٨٣'; window.__BUILD = V3D.replace('نسخة 3D · ', '');   // تُعرض في شاشة التحميل وفي الزاوية: للتأكد أن المتصفح حمّل آخر نسخة
+const V3D = 'نسخة 3D · ٨٤'; window.__BUILD = V3D.replace('نسخة 3D · ', '');   // تُعرض في شاشة التحميل وفي الزاوية: للتأكد أن المتصفح حمّل آخر نسخة
 const want3d = () => gfx.d3();
 function loadingScreen() {
   const el = document.createElement('div'); el.className = 'load3d';
@@ -653,6 +653,7 @@ bus.on('challenge', id => {   // انتهت مهمة العالم: يُفتح ا
 });
 bus.on('lessonDone', id => track('level_completed', id));
 bus.on('lessonDone', () => checkAdventureUnlocks());
+bus.on('lessonDone', id => villageCheer(id));   // أهل القرية القريبون يحتفلون، وقصاصات ملوّنة، وشكر مختلف كل مرة
 bus.on('openWardrobe', () => openWardrobe());
 bus.on('lessonDone', () => setTimeout(() => { const n = syncUnitGear(); if (n.length) { bus.emit('save'); hud.toast(`👕 لباس جديد في خزانة البطل: ${n.map(g => g.name).join('، ')} (من الحقيبة 🎒)`); } }, 2500));   // قطعة لكل وحدة مكتملة   // من الحقيبة (والباب عند بيت البطل)   // إكمال وحدة يفتح مغامرتها
 bus.on('pauseWorld', on => { eng.paused = on; });
@@ -672,3 +673,16 @@ bus.on('lessonDone', id => {
 window.__game = { get state() { return game.state; }, get W() { return W; }, eng, game, quests, MODS, blocked, activity: id => openActivity(W, id, MODS[id]), finale: u => openFinale(W, u, MODS), expert: id => openExpert(W, id, MODS[id]), daily: () => openDaily(W, MODS), TREASURES, findPath: (a, b) => findPath(a.x, a.y, b.x, b.y, blocked) };
 boot();
 try { startOps(); initOpsUI(); } catch (e) { console.warn('[ops]', e); }   // الخدمات الاختيارية: بعد تشغيل اللعبة، ولا توقفها أبداً
+
+/* ── احتفال القرية بإنهاء درس ── */
+const THANKS = ['بارك الله فيك يا {n}! القرية كلها فخورة بك.', 'شكراً يا {n}! ما كنا لنفعلها بدونك.', 'أنت نجم قرية الخير يا {n}!', 'عمل متقن يا {n}! هكذا يكون الأبطال.', 'الله يحفظك يا {n}، ساعدتنا كثيراً!', 'رائع يا {n}! تعلّمتَ وعلّمتنا.', 'ما شاء الله يا {n}! سنحكي عن إنجازك في السوق.'];
+function villageCheer(id) {
+  if (!W || !game.state) return;
+  const p = W.player, near = W.npcs.filter(n => Math.hypot(n.x - p.x, n.y - p.y) < 520 && !n.talking).slice(0, 6);
+  near.forEach((n, i) => setTimeout(() => { n.anim = { name: 'celebrate', t: 0, dur: 1.6 }; }, 300 + i * 160));
+  const fx = document.createElement('div'); fx.className = 'confetti';
+  fx.innerHTML = Array.from({ length: 46 }, (_, i) => `<i style="left:${(i * 37) % 100}%;animation-delay:${(i % 9) * .09}s;background:${['#FFC23D', '#E2475C', '#3FA3F5', '#2E9E5B', '#9C6BFF'][i % 5]};transform:rotate(${i * 47}deg)"></i>`).join('');
+  document.body.appendChild(fx); setTimeout(() => fx.remove(), 3200);
+  const s = game.state, k = (s.thankI = ((s.thankI || 0) + 1) % THANKS.length), l = LESSONS.find(x => x.id === id), g = l && W.npcs.find(n => n.id === l.giver);
+  setTimeout(() => hud.toast('💬 ' + (g ? g.name + ': ' : '') + THANKS[k].replace('{n}', s.hero.name)), 1800);
+}

@@ -4,7 +4,7 @@
 // لا مؤقت ولا عقاب: الخطأ يعطي تلميحاً وتعاد المحاولة، وكل جولة تضيف جوهرة. النجوم تكافئ الإجابة من المحاولة الأولى فقط.
 // item = { type, out, q, opts?, ans, hint, why?, tail?, art?, bins?, left?, right? }
 import { ar } from '../core/util.js';
-import { sfx } from '../core/sound.js';
+import { sfx, cheer } from '../core/sound.js';
 import { OUT } from '../content/outcomes.js';
 import { game } from '../core/state.js';
 import { addGems } from '../world/decor.js';
@@ -44,10 +44,13 @@ function render(W, d, cfg, msg) {
     ${msgBox(msg ? msg.t : '', msg ? msg.k : '')}${body}`);
   const el = document.getElementById('panel'), sheet = el.querySelector('.sheet');
   sheet.classList.add('chSheet'); sheet.dataset.i = C.i;
+  const gold = n >= 6 && C.i === n - 1;   // سؤال الكنز: الجولة الأخيرة ذهبية وبجوهرتين
+  if (gold) { sheet.classList.add('chGold'); const q = sheet.querySelector('.chQ'); if (q) q.insertAdjacentHTML('beforebegin', '<div class="chGoldTag">🎁 سؤال الكنز · جوهرتان 💎💎</div>'); }
   el.querySelectorAll('canvas[data-draw]').forEach(cv => { try { DRAW[cv.dataset.draw] && DRAW[cv.dataset.draw](cv); } catch (e) { console.warn('رسم التحدي', e); } });
   if (cfg.exit) btn('chExit', () => { sheetClose(); cfg.exit(); });   // النشاط اختياري: يخرج منه متى شاء بلا خسارة
   let locked = false;
   const ok = () => { if (locked) return; locked = true;
+    const gold = n >= 6 && C.i === n - 1; if (gold) { C.gems = (C.gems || 0) + 1; addGems(1); }
     const first = C.tries === 0; C.firstTry += first ? 1 : 0; C.streak = first ? (C.streak || 0) + 1 : 0; C.gems = (C.gems || 0) + 1; C.tries = 0; C.i++; addGems(1);   // جوهرة لكل إجابة صحيحة (تُصرف في متجر الزينة)
    
     const S = game.state.stats = game.state.stats || {}; if (!first) S.persist = (S.persist || 0) + 1; S.streak = Math.max(S.streak || 0, C.streak);   // للأوسمة: المثابرة وأطول سلسلة
@@ -55,8 +58,11 @@ function render(W, d, cfg, msg) {
     const praise = PRAISE[Math.floor(Math.random() * PRAISE.length)];
     // الإطراء والشرح يظهران بعد الإجابة مباشرة في الاحتفال، والسؤال التالي يبدأ برسالة محايدة
     const fc = sheet.querySelector('.chFace'); if (fc) { fc.classList.remove('cheer'); void fc.offsetWidth; fc.classList.add('cheer'); }   // الشخصية تقفز فرحاً
-    sheet.insertAdjacentHTML('beforeend', `<div class="chBurst${it.why ? ' why' : ''}"><div class="chCheer"><i>${face}</i><em>👏</em></div><b>💎</b><span>${praise}</span>${it.why ? `<p>${it.why}</p>` : ''}${'<i></i>'.repeat(10)}</div>`);
-    setTimeout(() => { if (C.i >= n) done(W, d, cfg); else render(W, d, cfg, null); }, it.why ? 2200 : 850); };
+    const MS = { 3: ['🔥', 'ثلاثة متتالية!'], 5: ['⚡', 'خمسة متتالية! مذهل!'], 8: ['🌟', 'ثمانية متتالية! أسطورة!'] }, ms = MS[C.streak];   // سلسلة الإجابات
+    if (ms) { cheer('medal', C.streak); setTimeout(() => cheer('medal', C.streak + 4), 140); setTimeout(() => cheer('sparkle'), 260); }
+    if (gold) setTimeout(() => cheer('sparkle'), 120);
+    sheet.insertAdjacentHTML('beforeend', `<div class="chBurst${it.why ? ' why' : ''}${ms ? ' streak' : ''}${gold ? ' gold' : ''}"><div class="chCheer"><i>${face}</i><em>👏</em></div><b>${gold ? '💎💎' : ms ? ms[0] : '💎'}</b><span>${ms ? ms[1] : gold ? 'كنز!' : praise}</span>${it.why ? `<p>${it.why}</p>` : ''}${'<i></i>'.repeat(10)}</div>`);
+    setTimeout(() => { if (C.i >= n) done(W, d, cfg); else render(W, d, cfg, null); }, it.why ? 2200 : ms || gold ? 1300 : 850); };
   const bad = extra => { const fc = sheet.querySelector('.chFace'); if (fc) { fc.classList.remove('think'); void fc.offsetWidth; fc.classList.add('think'); }   // تفكّر معك، لا تغضب
     C.tries++; C.streak = 0; sfx('cough'); changed(); setMsg('💡 ' + (extra || it.hint), 'bad'); sheet.classList.add('shake'); setTimeout(() => sheet.classList.remove('shake'), 450); };
   const wrongCount = w => w === 1 ? 'بطاقة واحدة ليست في مكانها. ' : `${ar(w)} بطاقات ليست في مكانها. `;

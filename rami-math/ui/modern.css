@@ -558,3 +558,13 @@ body:has(.hall) .toast,body:has(.grand) .toast,body:has(.tour) .toast,body:has(.
 @media (max-width:520px){.advTop{flex-wrap:wrap}.advTitle{order:9;flex-basis:100%;padding:5px 12px}.advTitle b{font-size:14px}.advGoal{font-size:13px}.advToast{top:calc(var(--safeT) + 128px)}.advLog{top:calc(var(--safeT) + 124px);max-height:56vh}}
 /* عنوان المنطقة لا يظهر فوق لوحة مفتوحة */
 body:has(#panel.on) .region{display:none}
+
+/* احتفال القرية: قصاصات تتساقط */
+.confetti{position:fixed;inset:0;pointer-events:none;z-index:55;overflow:hidden}
+.confetti i{position:absolute;top:-20px;width:10px;height:14px;border-radius:3px;animation:confFall 2.8s cubic-bezier(.3,.6,.6,1) forwards}
+@keyframes confFall{to{top:105%;transform:rotate(720deg) translateX(40px)}}
+/* سلسلة الإجابات وسؤال الكنز */
+.chBurst.streak{background:linear-gradient(160deg,#FFF6D6,#FFE0B0)}.chBurst.streak span{color:#C2410C;font-size:24px}.chBurst.streak b{font-size:62px}
+.chBurst.gold{background:linear-gradient(160deg,#FFF4C4,#FFD54A)}.chBurst.gold span{color:#8A5A00}
+.chSheet.chGold{box-shadow:0 0 0 4px #E3B04B,0 0 40px rgba(255,200,60,.55)!important}
+.chGoldTag{align-self:center;font:900 16px Cairo,sans-serif;color:#3A2400;background:linear-gradient(180deg,#FFF1B8,#FFD54A 55%,#E3A21A);border-radius:18px;padding:3px 16px;box-shadow:0 3px 0 #8A5A00;animation:chPop .5s}
