@@ -3,8 +3,12 @@
 import { game } from '../core/state.js';
 import { levelOf } from '../core/levels.js';
 import { shade } from '../core/util.js';
+import { petLook } from '../ui/minigames.js';
 
-const P = { x: 0, y: 0, phase: 0, moving: false, dir: 1, init: false, v: 0 };
+const P = { x: 0, y: 0, phase: 0, moving: false, dir: 1, init: false, v: 0, hop: 0, hopT: 0, sniff: null };
+/* يقفز فرحاً مع كل إجابة صحيحة، ويشمّ الكنز القريب (علامة فوق رأسه) */
+export const petHop = () => { P.hopT = .55; };
+export const setSniff = t => { P.sniff = t || null; };
 const TR = [];   // أثر البطل: النقاط التي مشى عليها فعلاً (كلها طرق مفتوحة)
 const GAP = 44;  // المسافة التي يقف عندها الجمل خلف البطل
 export const petOn = () => { const s = game.state; return !!s && levelOf(s).n >= 2 && !(s.pet && s.pet.hidden); };
@@ -19,6 +23,7 @@ function placeBehind(pl, blocked) {
    ويقف خلف البطل على مسافة، وينتظر إن عاد البطل نحوه بدل أن يمر من خلاله */
 export function updatePet(dt, pl, blocked) {
   if (!petOn()) { P.init = false; return; }
+  P.hopT = Math.max(0, P.hopT - dt); P.hop = P.hopT > 0 ? Math.abs(Math.sin((.55 - P.hopT) / .55 * Math.PI * 2)) * 14 : 0;
   if (!P.init || Math.hypot(pl.x - (P.hx ?? pl.x), pl.y - (P.hy ?? pl.y)) > 140) {   // أول ظهور أو انتقال مفاجئ
     const q = placeBehind(pl, blocked); P.x = q.x; P.y = q.y; P.v = 0; TR.length = 0; TR.push({ x: P.x, y: P.y }, { x: pl.x, y: pl.y }); P.init = true;
   }
@@ -42,12 +47,13 @@ export function updatePet(dt, pl, blocked) {
   else if (pl.dir === 'left' || pl.dir === 'right') P.dir = pl.dir === 'left' ? -1 : 1;   // واقفاً: ينظر حيث ينظر البطل
 }
 export const petState = () => ({ x: P.x, y: P.y, dir: P.dir, moving: P.moving, v: P.v });   // للاختبار
-export const pet3d = () => petOn() && P.init ? { x: P.x, y: P.y, dir: P.dir, moving: P.moving, phase: P.phase, k: .95 + Math.min(9, levelOf(game.state).n) * .05 } : null;
+export const pet3d = () => petOn() && P.init ? Object.assign({ x: P.x, y: P.y, dir: P.dir, moving: P.moving, phase: P.phase, hop: P.hop, k: .95 + Math.min(9, levelOf(game.state).n) * .05 }, petLook()) : null;
 export function petItems(view, t, three) {
-  if (three) return [];   // في العرض ثلاثي الأبعاد يُرسم الجمل مجسّماً (renderer3d/animals.js)
+  const sn = petOn() && P.init && P.sniff ? [{ y: P.y + 2, x: P.x, draw: c => sniffBubble(c, P.x, P.y - (three ? 74 : 62) - P.hop, t) }] : [];
+  if (three) return sn;   // في العرض ثلاثي الأبعاد يُرسم الجمل مجسّماً (renderer3d/animals.js)، وفقاعة الشمّ فوقه
   if (!petOn() || !P.init || (view && (P.x < view.x - 60 || P.x > view.x + view.w + 60 || P.y < view.y - 60 || P.y > view.y + view.h + 120))) return [];
   const k = .9 + Math.min(9, levelOf(game.state).n) * .05;
-  return [{ y: P.y, x: P.x, draw: c => calf(c, P.x, P.y, k, t) }];
+  return [{ y: P.y, x: P.x, draw: c => calf(c, P.x, P.y - P.hop, k, t) }, ...sn];
 }
 function calf(c, x, y, k, t) {
   const mv = P.moving, ph = P.phase, bob = mv ? Math.abs(Math.sin(ph)) * 1.8 : Math.sin(t * 2) * .5, sw = mv ? Math.sin(ph) * 4 : 0;
@@ -74,9 +80,15 @@ function calf(c, x, y, k, t) {
   if (blink) { c.strokeStyle = '#2A1B66'; c.lineWidth = .9; c.beginPath(); c.moveTo(21.2, hy - .8); c.lineTo(23.6, hy - .8); c.stroke(); }
   else { c.fillStyle = '#fff'; c.beginPath(); c.arc(22.6, hy - .9, 1.5, 0, 7); c.fill(); c.fillStyle = '#2A1B66'; c.beginPath(); c.arc(23, hy - .8, .9, 0, 7); c.fill(); }
   // بطانية مزخرفة على الظهر بشراريب
-  c.fillStyle = '#C8102E'; c.beginPath(); c.moveTo(-9, -26 + B); c.quadraticCurveTo(-1, -29 + B, 8, -26 + B); c.lineTo(9, -18 + B); c.quadraticCurveTo(-1, -16 + B, -10, -18 + B); c.closePath(); c.fill();
-  c.fillStyle = '#FFC23D'; c.fillRect(-9.5, -22.5 + B, 18.5, 1.8); c.fillStyle = '#1F8A3B'; c.fillRect(-9.5, -20.4 + B, 18.5, 1.2);
+  const LK = petLook(); c.fillStyle = LK.saddle; c.beginPath(); c.moveTo(-9, -26 + B); c.quadraticCurveTo(-1, -29 + B, 8, -26 + B); c.lineTo(9, -18 + B); c.quadraticCurveTo(-1, -16 + B, -10, -18 + B); c.closePath(); c.fill();
+  c.fillStyle = '#FFC23D'; c.fillRect(-9.5, -22.5 + B, 18.5, 1.8); if (LK.bells) { c.fillStyle = '#FFC23D'; [0, 1, 2].forEach(i => { c.beginPath(); c.arc(14 + i * 2.4, -27 + B + i * 2.2, 1.6, 0, 7); c.fill(); }); } c.fillStyle = '#1F8A3B'; c.fillRect(-9.5, -20.4 + B, 18.5, 1.2);
   ['#FFC23D', '#fff', '#FFC23D', '#fff', '#FFC23D'].forEach((col, i) => { c.fillStyle = col; c.beginPath(); c.arc(-8 + i * 4, -16.6 + B + Math.sin(t * 4 + i) * .3, 1.1, 0, 7); c.fill(); });
   leg(-11, sw, '#C9955A'); leg(12, -sw, '#C9955A');   // الساقان القريبتان
   c.restore();
+}
+
+function sniffBubble(c, x, y, t) {   // «سهيل يشمّ كنزاً»: فقاعة تنبض فوق رأسه
+  const k = 1 + Math.sin(t * 6) * .08; c.save(); c.translate(x, y); c.scale(k, k);
+  c.fillStyle = '#FFF8E1'; c.strokeStyle = '#E3A21A'; c.lineWidth = 2; c.beginPath(); c.ellipse(0, 0, 17, 13, 0, 0, 7); c.fill(); c.stroke();
+  c.beginPath(); c.moveTo(-4, 12); c.lineTo(0, 19); c.lineTo(4, 12); c.fill(); c.font = '15px sans-serif'; c.textAlign = 'center'; c.textBaseline = 'middle'; c.fillText('🎁', 0, 1); c.restore();
 }

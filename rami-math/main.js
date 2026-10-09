@@ -15,7 +15,8 @@ import { updateKids, kidsItems, kidsPeople3d } from './world/school.js';
 import { updateCrowd, crowdItems, crowdPeople3d } from './world/crowd.js';
 import { openHome, homeExterior } from './ui/herohome.js';
 import { decorItems, initGems, DECOR } from './world/decor.js';
-import { updatePet, petItems, pet3d } from './world/pet.js';
+import { updatePet, petItems, pet3d, petHop, setSniff, petOn } from './world/pet.js';
+import { openMiniGames, openPetDecor } from './ui/minigames.js';
 import { treasureItems, nearTreasure, openTreasure, TREASURES } from './world/treasure.js';
 import { CHAPTER, introLines, npcLines } from './story/dialogues.js';
 import { startTour } from './ui/tour.js';
@@ -212,7 +213,7 @@ async function start(state) {
   }
 }
 /* ── العرض ثلاثي الأبعاد (renderer3d): يُحمَّل فقط عند طلبه، ويرجع إلى الرسم الحالي إن لم يدعم الجهاز WebGL أو فشل التحميل ── */
-const V3D = 'نسخة 3D · ٨٥'; window.__BUILD = V3D.replace('نسخة 3D · ', '');   // تُعرض في شاشة التحميل وفي الزاوية: للتأكد أن المتصفح حمّل آخر نسخة
+const V3D = 'نسخة 3D · ٨٦'; window.__BUILD = V3D.replace('نسخة 3D · ', '');   // تُعرض في شاشة التحميل وفي الزاوية: للتأكد أن المتصفح حمّل آخر نسخة
 const want3d = () => gfx.d3();
 function loadingScreen() {
   const el = document.createElement('div'); el.className = 'load3d';
@@ -413,6 +414,7 @@ function currentActions() {
       out.push({ key: k, label: '🔒 أغلق الصمام', kind: 'go', run: () => tanks.seal(W, tk.i), disabled: lv <= 0 });
     }
   }
+  if (nearest([{ x: WELL.x, y: WELL.y + 40 }], 95)) out.push({ key: 'mini', label: '🎮 ألعاب الساحة', run: () => openMiniGames() });
   if (nearest([HERO_DOOR], 70)) out.push({ key: 'door', label: '🏠 بيت البطل', run: () => openHome(openWardrobe) });
   if (s.world.delivered) {
     const sp = nearest(TREE_SPOTS.map((p, i) => ({ x: p.x, y: p.y + 10, i })).filter(o => !s.world.trees[o.i]), 66);
@@ -447,6 +449,7 @@ bus.on('sfx', k => {
   if (k === 'pick' || k === 'drop') dust(p.x, p.y);
   if (k === 'win') { eng.kick(1); sparkle(p.x, p.y - 40, 18); }
   if (k === 'good') sparkle(p.x, p.y - 50, 6);
+  if (k === 'good' || k === 'win') petHop();   // سهيل يقفز فرحاً
   if (k === 'plant') sparkle(p.x, p.y - 10, 10, '#7CC36B');
   if (k === 'cough') eng.shake(.5);
 });
@@ -456,6 +459,10 @@ const routeLeft = pl => { if (!pl.target) return 0; let d = Math.hypot(pl.target
 function update(dt) {
   updateKids(dt);   // طلاب المدرسة يلعبون
   updateCrowd(dt);   // أهل القرية المتجولون (يزدادون مع التقدّم)
+  if (petOn() && (W.sniffT = (W.sniffT || 0) + dt) > .5) {   // سهيل يشمّ الكنز القريب
+    W.sniffT = 0; const open = gateState(), tr = TREASURES.find(t => !(game.state.treasure || {})[t.id] && (t.g < 0 || open[t.g]) && Math.hypot(W.player.x - t.x, W.player.y - t.y) < 260); setSniff(tr);
+    if (tr && !(W.sniffed = W.sniffed || {})[tr.id]) { W.sniffed[tr.id] = 1; hud.toast('🐪 سهيل يشمّ شيئاً… كنز مخفي قريب منك! 🎁'); }
+  }
   updatePet(dt, W.player, (x, y) => blocked(x, y));   // الرفيق سهيل يتبع البطل على أثره
   const s = game.state, pl = W.player;
   pl.speed = routeLeft(pl) > 280 ? 215 : 150;   // يجري في الطرق الطويلة ويمشي قرب الهدف
@@ -661,6 +668,8 @@ bus.on('lessonDone', () => checkAdventureUnlocks());
 bus.on('lessonDone', id => villageCheer(id));   // أهل القرية القريبون يحتفلون، وقصاصات ملوّنة، وشكر مختلف كل مرة
 bus.on('openWardrobe', () => openWardrobe());
 bus.on('openHome', () => openHome(openWardrobe));
+bus.on('openMini', () => openMiniGames());
+bus.on('openPetDecor', () => openPetDecor());
 bus.on('lessonDone', () => setTimeout(() => { const n = syncUnitGear(); if (n.length) { bus.emit('save'); hud.toast(`👕 لباس جديد في خزانة البطل: ${n.map(g => g.name).join('، ')} (من الحقيبة 🎒)`); } }, 2500));   // قطعة لكل وحدة مكتملة   // من الحقيبة (والباب عند بيت البطل)   // إكمال وحدة يفتح مغامرتها
 bus.on('pauseWorld', on => { eng.paused = on; });
 bus.on('openAdventures', () => openAdventures());

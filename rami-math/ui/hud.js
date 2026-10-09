@@ -128,13 +128,14 @@ export const hud = {
           return Object.keys(c).length ? Object.keys(c).map(k => `<div class="bagrow"><span>${I[k] || k}</span><b>${ar(c[k])}</b></div>`).join('') : '<div class="bagrow muted"><span>🧰 الأدوات</span><b>تشتريها من دكان العم ناصر</b></div>'; })()}
         <button class="act ghost" id="sndBtn">${sound.on ? '🔊 الصوت يعمل' : '🔇 الصوت متوقف'}</button>
         <button class="act go" id="decoBtn">🛍️ متجر زينة القرية (💎 ${ar(s.gems || 0)})</button>
-        ${levelOf(s).n >= 2 ? `<button class="act ghost" id="petBtn">${s.pet && s.pet.hidden ? '🐪 أظهر الرفيق سهيل' : '🐪 الرفيق سهيل يرافقك (اضغط لإخفائه)'}</button>` : '<div class="bagrow muted"><span>🐪 رفيق صغير ينضم إليك في المستوى ٢</span></div>'}
+        ${levelOf(s).n >= 2 ? `<button class="act ghost" id="petDecBtn">🐪 زينة سهيل</button><button class="act ghost" id="petBtn">${s.pet && s.pet.hidden ? '🐪 أظهر الرفيق سهيل' : '🐪 الرفيق سهيل يرافقك (اضغط لإخفائه)'}</button>` : '<div class="bagrow muted"><span>🐪 رفيق صغير ينضم إليك في المستوى ٢</span></div>'}
         <button class="act ghost" id="musBtn">${music.on ? '🎵 الموسيقى تعمل' : '🔇 الموسيقى متوقفة'}</button>
         <button class="act ghost" id="codeBtn">🔑 رمز حفظ التقدّم</button>
         <button class="act ghost" id="ramBtn">🌙 أجواء رمضان: ${PREF_LABEL[ramadanPref()]}</button>
         ${installable() ? '<button class="act go" id="instBtn">📲 ثبّت اللعبة كتطبيق</button>' : ''}
         <button class="act go" id="advBtn">🗺️ المغامرات</button>
         <button class="act go" id="giveBtn">💚 صندوق الخير (تبرّع بنقاط الخير)</button>
+        <button class="act go" id="miniBtn">🎮 ألعاب الساحة (حساب ذهني ممتع)</button>
         <button class="act go" id="homeBtn">🏠 بيت البطل (الغرف والأثاث)</button>
         <button class="act go" id="wardBtn">🚪 خزانة البطل (الملابس والجوائز)</button>
         <div class="opsRow"><button class="act ghost" id="tourBtn">🧭 جولة تعريفية</button><button class="act ghost" id="vidBtn">🎬 الفيديو التعريفي</button></div>
@@ -163,6 +164,8 @@ export const hud = {
       if ($('instBtn')) $('instBtn').onclick = e => { e.stopPropagation(); install(); };
       $('advBtn').onclick = e => { e.stopPropagation(); bus.emit('openAdventures'); };
       $('giveBtn').onclick = e => { e.stopPropagation(); this.closePanel(); setTimeout(openCharity, 120); };
+      $('miniBtn').onclick = e => { e.stopPropagation(); this.closePanel(); setTimeout(() => bus.emit('openMini'), 120); };
+      if ($('petDecBtn')) $('petDecBtn').onclick = e => { e.stopPropagation(); this.closePanel(); setTimeout(() => bus.emit('openPetDecor'), 120); };
       $('homeBtn').onclick = e => { e.stopPropagation(); this.closePanel(); setTimeout(() => bus.emit('openHome'), 120); };
       $('wardBtn').onclick = e => { e.stopPropagation(); this.closePanel(); setTimeout(() => bus.emit('openWardrobe'), 120); };
       $('vidBtn').onclick = e => { e.stopPropagation(); this.closePanel(); showIntroVideo(); };

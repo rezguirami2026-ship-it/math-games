@@ -32,11 +32,14 @@ export function buildCamel() {
     return { hip, knee };
   });
   root.traverse(o => { if (o.isMesh) { o.castShadow = true; o.receiveShadow = true; } });
-  return { root, body, neck, head, tail, legs, yaw: 0, phase: 0 };
+  const bells = new THREE.Group(); [0, 1, 2].forEach(i => add(bells, new THREE.SphereGeometry(1.5, 8, 6), gold, (i - 1) * 2.6, -2 - Math.abs(i - 1), 2)); bells.position.set(0, 12, 6); neck.add(bells); bells.visible = false;
+  return { root, body, neck, head, tail, legs, yaw: 0, phase: 0, blanket, bells };
 }
 /* st = { x, y (موضع اللعبة), dir: 1|-1 (يمين/يسار), moving, phase, k (الحجم) } */
 export function animateCamel(C, st, dt, t) {
-  C.root.position.set(st.x, 0, st.y); C.root.scale.setScalar(st.k || 1);
+  C.root.position.set(st.x, st.hop || 0, st.y); C.root.scale.setScalar(st.k || 1);
+  if (st.saddle && C.saddle !== st.saddle) { C.saddle = st.saddle; C.blanket.material = C.blanket.material.clone(); C.blanket.material.color.set(st.saddle); }
+  if (C.bells) C.bells.visible = !!st.bells;
   // الاتجاه: من حركته الفعلية، وإلا يميناً/يساراً، وبدوران ناعم
   let want = C.yaw;
   if (C.lx != null && (st.x - C.lx) ** 2 + (st.y - C.ly) ** 2 > .04) want = Math.atan2(st.x - C.lx, st.y - C.ly); else if (!st.moving) want = st.dir > 0 ? Math.PI / 2 : -Math.PI / 2;

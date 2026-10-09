@@ -252,3 +252,28 @@ body:has(.wardrobe) .toast{display:none}
 .home .hmMsg{margin:8px 0;background:#EAF6EC;border:1.5px solid #9BD3A6;border-radius:12px;padding:6px 12px;font-weight:800;text-align:center;animation:pop .3s}
 .home .hmItems{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:10px 0}.home .hmIt{display:flex;align-items:center;justify-content:space-between;gap:6px;background:#F4EBD6;border-radius:12px;padding:6px 10px;border:1px solid rgba(227,176,75,.3)}
 .home .hmIt.own{background:#EAF6EC}.home .hmIt small{color:#1F6E3E;font-weight:800}.home .hmIt .act{padding:4px 10px;font-size:13px;min-height:34px}.home .hmIt .act[disabled]{opacity:.5}
+
+/* ألعاب الساحة وزينة سهيل */
+.mini .mgList{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:10px;margin:8px 0 12px}
+.mini .mgCard{display:flex;flex-direction:column;align-items:center;gap:4px;padding:12px 8px;border-radius:16px;border:1.5px solid #E3CFA0;background:linear-gradient(180deg,#FFFDF4,#F4EBD6);font:inherit;color:#2A1B66;text-align:center}
+.mini .mgCard>span{font-size:40px}.mini .mgCard b{font:900 17px Cairo,sans-serif}.mini .mgCard small{font-size:12.5px;color:#7A6A4A;line-height:1.5}.mini .mgCard em{font-style:normal;font-size:12px;background:#FFF1C8;border-radius:10px;padding:1px 10px;color:#8A5A00}
+.mini .mgCard.on{border-color:#E3A21A;box-shadow:0 0 0 2px rgba(227,176,75,.5)}.mini .mgCard .sw{width:44px;height:28px;border-radius:8px;border:2px solid #fff;box-shadow:0 0 0 2px #E3CFA0}.mini .mgCard .act{padding:4px 12px;font-size:13px;min-height:34px}.mini .act[disabled]{opacity:.5}
+.mini .mgHead{display:flex;align-items:center;justify-content:space-between;font:900 19px Cairo,sans-serif;margin-bottom:8px}
+.mini .mgQ{text-align:center;font:900 26px Cairo,sans-serif;color:#1F4E79;margin:10px 0 6px}.mini .mgMeta{text-align:center;font-size:13px;color:#7A6A4A}
+.mini .mgMsg{text-align:center;border-radius:12px;padding:6px 12px;margin:6px 0;font-weight:800;animation:pop .3s}.mini .mgMsg.good{background:#EAF6EC;color:#1F6E3E}.mini .mgMsg.bad{background:#FFF4D6;color:#7A4A00}
+.mini .mgOpts{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.mini .mgTrack{background:linear-gradient(180deg,#F3D79C,#E2B86E);border-radius:14px;padding:10px;display:flex;flex-direction:column;gap:10px}
+.mini .mgLane{position:relative;height:46px;border-bottom:2px dashed rgba(120,80,30,.4)}.mini .mgFlag{position:absolute;left:4px;top:6px;font-size:26px}
+.mini .mgCamel{position:absolute;top:0;font-size:36px;font-style:normal;transition:right .6s cubic-bezier(.3,1.4,.5,1);transform:scaleX(-1)}.mini .mgCamel em{position:absolute;top:-6px;left:50%;transform:translateX(-50%) scaleX(-1);font:900 10px Cairo;color:#fff;border-radius:8px;padding:0 6px;white-space:nowrap}
+.mini .mgSea{position:relative;height:250px;border-radius:14px;overflow:hidden;background:linear-gradient(180deg,#9FDCFF 0,#3FA3F5 22%,#1F6FB2 100%)}
+.mini .mgBoat{position:absolute;top:0;right:12px;font-size:34px}
+.mini .mgFish{position:absolute;left:0;border:0;background:rgba(255,255,255,.88);border-radius:22px;padding:3px 12px;display:flex;align-items:center;gap:6px;font:900 20px Cairo;color:#1F4E79;animation:mgSwim 8s linear infinite;box-shadow:0 3px 8px rgba(0,0,0,.2)}
+.mini .mgFish span{font-size:24px}@keyframes mgSwim{0%{left:-30%}100%{left:100%}}
+.mini .mgPalm{position:relative;height:270px;border-radius:14px;background:linear-gradient(180deg,#BFE3F2,#F3E4C0);overflow:hidden}
+.mini .mgTrunk{position:absolute;left:47%;bottom:0;width:6%;height:70%;background:repeating-linear-gradient(0deg,#8A5A30 0 10px,#7A4A22 10px 14px);border-radius:6px}
+.mini .mgFronds{position:absolute;left:0;right:0;top:4%;text-align:center;font-size:58px;letter-spacing:-18px}
+.mini .mgDate{position:absolute;border:2px solid #E3B04B;background:#FFF8E1;border-radius:16px;padding:2px 10px;display:flex;align-items:center;gap:4px;font:900 20px Cairo;color:#5A2A10;transition:all .3s}
+.mini .mgDate.gone{opacity:0;transform:translateY(60px) scale(.5);pointer-events:none}.mini .mgDate.shake{animation:chShake .4s}
+.mini .mgBasket{position:absolute;bottom:8px;right:12px;font:900 22px Cairo;background:#fff;border-radius:14px;padding:2px 12px}
+.mini .mgEnd{text-align:center}.mini .mgBig{font-size:72px;animation:pop .5s}
+.mini .mgDate .dt{width:22px;height:22px;display:inline-block;background:radial-gradient(circle at 30% 30%,#B5651D 0 4px,transparent 5px),radial-gradient(circle at 70% 30%,#8A4A1A 0 4px,transparent 5px),radial-gradient(circle at 50% 65%,#7A3A12 0 4.5px,transparent 5.5px),radial-gradient(circle at 25% 75%,#A0561C 0 3.5px,transparent 4.5px),radial-gradient(circle at 75% 75%,#6B3410 0 3.5px,transparent 4.5px)}
