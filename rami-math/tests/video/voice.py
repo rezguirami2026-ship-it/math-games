@@ -17,7 +17,8 @@ def dur(path):
 async def main():
     timing = []
     for sc in S['scenes']:
-        for i, (who, text) in enumerate(sc['lines']):
+        for i, line in enumerate(sc['lines']):
+            who, text = line[0], (line[2] if len(line) > 2 else line[1])   # النص المشكول للنطق إن وُجد
             v = S['voices'][who]; f = os.path.join(OUT, f"{sc['id']}_{i}.mp3")
             if not os.path.exists(f):
                 await edge_tts.Communicate(text, v['voice'], rate=v['rate'], pitch=v['pitch']).save(f)

@@ -207,7 +207,7 @@ async function start(state) {
   }
 }
 /* ── العرض ثلاثي الأبعاد (renderer3d): يُحمَّل فقط عند طلبه، ويرجع إلى الرسم الحالي إن لم يدعم الجهاز WebGL أو فشل التحميل ── */
-const V3D = 'نسخة 3D · ٧٦'; window.__BUILD = V3D.replace('نسخة 3D · ', '');   // تُعرض في شاشة التحميل وفي الزاوية: للتأكد أن المتصفح حمّل آخر نسخة
+const V3D = 'نسخة 3D · ٧٧'; window.__BUILD = V3D.replace('نسخة 3D · ', '');   // تُعرض في شاشة التحميل وفي الزاوية: للتأكد أن المتصفح حمّل آخر نسخة
 const want3d = () => gfx.d3();
 function loadingScreen() {
   const el = document.createElement('div'); el.className = 'load3d';
@@ -647,7 +647,8 @@ bus.on('challenge', id => {   // انتهت مهمة العالم: يُفتح ا
   setTimeout(go, 500);
 });
 bus.on('lessonDone', id => track('level_completed', id));
-bus.on('lessonDone', () => checkAdventureUnlocks());   // إكمال وحدة يفتح مغامرتها
+bus.on('lessonDone', () => checkAdventureUnlocks());
+bus.on('openWardrobe', () => openWardrobe());   // من الحقيبة (والباب عند بيت البطل)   // إكمال وحدة يفتح مغامرتها
 bus.on('pauseWorld', on => { eng.paused = on; });
 bus.on('openAdventures', () => openAdventures());
 bus.on('lessonDone', id => {

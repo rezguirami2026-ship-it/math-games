@@ -2,6 +2,9 @@
 // node ops-test.mjs [مجلد اللقطات]   (يحتاج خادم اللعبة على 8000)
 import { chromium } from 'playwright-core';
 import { startServer, stats } from './ops-server.mjs';
+import { APP_VERSION } from '../core/version.js';
+// أرقام الإصدارات في السيناريوهات تُحسب من إصدار اللعبة الحالي (لا أرقام ثابتة تتقادم)
+const NEXT = APP_VERSION.split('.').map((n, i) => i === 1 ? +n + 1 : i === 2 ? 0 : +n).join('.');
 const sleep = ms => new Promise(r => setTimeout(r, ms)), OPS = 'http://localhost:8787';
 const results = []; const ok = (name, cond, info = '') => { results.push([cond ? '✅' : '❌', name, info]); };
 const { server } = await startServer(8787);
@@ -58,9 +61,9 @@ const lastBody = await page.evaluate(async () => (await import('/core/ops.js')).
 const lc1 = await lc();
 ok('   الدفعة المكررة لا تُعدّ مرتين (رقم دفعة فريد)', lc1 === lc0 + 1 && lastBody === null, `${lc0} → ${lc1}`);
 // ٩. تحديث متوفر
-await adm('config', { latest: { v: '1.1.0', notes: ['إضافة مغامرة جديدة', 'إصلاح الأخطاء', 'تحسين الأداء'] } }); await push(); await sleep(3500);
+await adm('config', { latest: { v: NEXT, notes: ['إضافة مغامرة جديدة', 'إصلاح الأخطاء', 'تحسين الأداء'] } }); await push(); await sleep(3500);
 let modal = await modalTxt();
-ok('9. تحديث متوفر: نافذة «تحديث جديد متوفر» مع الملاحظات', /on/.test(modal) && /تحديث جديد متوفر/.test(modal) && /1\.1\.0/.test(modal) && /مغامرة جديدة/.test(modal));
+ok('9. تحديث متوفر: نافذة «تحديث جديد متوفر» مع الملاحظات', /on/.test(modal) && /تحديث جديد متوفر/.test(modal) && modal.includes(NEXT) && /مغامرة جديدة/.test(modal));
 await page.click('#opsLater').catch(() => {}); await sleep(300);
 // ١١. إعلان
 await adm('config', { ann: { on: true, icon: '🎉', title: 'مغامرة جديدة!', body: 'تمت إضافة مغامرة إنقاذ القرية.' } }); await push(); await sleep(3500);
@@ -72,16 +75,16 @@ modal = await modalTxt(); const b1 = B(); await push();
 ok('12. صيانة: الرسالة تظهر، واللعب مستمر، والإرسال متوقف', /on/.test(modal) && /الصيانة/.test(modal) && B() === b1 && await page.evaluate(() => !!window.__game.W), `batches during maint +${B() - b1}`);
 await page.click('#opsOk').catch(() => {}); await adm('config', { maint: { on: false } });
 // ١٠. تحديث إجباري (الجهاز يعرف بانتهاء الصيانة عند جلب الإعدادات)
-await adm('config', { min: '1.1.0' });
+await adm('config', { min: NEXT });
 await page.evaluate(async () => { const m = await import('/core/ops.js'); const s = m._ops.state(); s.cfgAt = 0; s.last = Date.now(); await m.flush('launch'); }); await sleep(3500);
 modal = await modalTxt();
 ok('10. تحديث إجباري: شاشة «يجب تحديث اللعبة» بلا زر إغلاق', /must/.test(modal) && /يجب تحديث اللعبة/.test(modal) && !(await page.$('#opsModal.on #opsLater')), modal.slice(0, 60));
-await adm('config', { min: '1.0.0', latest: { v: '1.0.0', notes: [] }, ann: { on: false } });
+await adm('config', { min: '1.0.0', latest: { v: APP_VERSION, notes: [] }, ann: { on: false } });
 // ١٣. الإصدار
 const vers = await adm('versions');
 await page.evaluate(() => document.getElementById('opsModal').className = 'opsModal');
 await page.click('#bBag'); await sleep(300); await page.click('#aboutBtn'); await sleep(200); const about = await page.textContent('#panel');
-ok('13. الإصدار في «حول اللعبة» وتوزيع الإصدارات وسجل الإصدارات السابقة', /v1\.0\.0/.test(about) && vers.versions.some(v => v.v === '1.0.0') && (vers.cfg.history || []).length >= 1, JSON.stringify(vers.versions));
+ok('13. الإصدار في «حول اللعبة» وتوزيع الإصدارات وسجل الإصدارات السابقة', about.includes('v' + APP_VERSION) && vers.versions.some(v => v.v === APP_VERSION) && (vers.cfg.history || []).length >= 1, JSON.stringify(vers.versions));
 await page.click('[data-close]').catch(() => {});
 // ١٤. لوحة التحكم
 const ap = await ctx.newPage(); await ap.goto(OPS + '/admin'); await ap.fill('#tok', 'test-admin'); await ap.click('#go'); await sleep(800);

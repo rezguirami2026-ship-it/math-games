@@ -15,7 +15,7 @@ const sleep = ms => new Promise(r => setTimeout(r, ms));
 // ── الجدول الزمني: بداية كل سطر داخل مشهده، ومدة كل مشهد، وموضع كل صوت في الفيديو كله ──
 let clock = 0; const PLAN = SCRIPT.scenes.map(sc => {
   let t = LEAD; const lines = sc.lines.map(([who, text], i) => { const d = TIMING.find(x => x.scene === sc.id && x.i === i).dur, l = { who, text, start: t, dur: d }; t += d + GAP; return l; });
-  const dur = +(t - GAP + TAIL).toFixed(3), p = { id: sc.id, label: sc.label, lines, dur, at: clock }; clock += dur; return p;
+  const dur = +Math.max(sc.hold || 0, t - GAP + TAIL).toFixed(3), p = { id: sc.id, label: sc.label, lines, dur, at: clock }; clock += dur; return p;
 });
 fs.writeFileSync(path.join(OUT, 'plan.json'), JSON.stringify({ total: clock, scenes: PLAN, audio: PLAN.flatMap(p => p.lines.map((l, i) => ({ file: path.join(OUT, 'voice', `${p.id}_${i}.mp3`), at: +(p.at + l.start).toFixed(3) }))) }, null, 1));
 console.log('المدة الكلية', clock.toFixed(1), 'ث');
@@ -75,6 +75,15 @@ const focus = (x, y) => B.ev(([x, y]) => { window.__game.eng.focus = { x, y }; }
 const ease = k => k < .5 ? 2 * k * k : 1 - Math.pow(-2 * k + 2, 2) / 2;
 // تحليق الكاميرا بين نقطتين خلال sec
 const glide = (cap, a, bb, sec) => cap.shoot(sec, ({ i, arg }) => { const [a, b, n] = arg, k = Math.min(1, i / n), e = k < .5 ? 2 * k * k : 1 - Math.pow(-2 * k + 2, 2) / 2; window.__game.eng.focus = { x: a[0] + (b[0] - a[0]) * e, y: a[1] + (b[1] - a[1]) * e }; }, [a, bb, Math.round(sec * FPS)]);
+
+// ═════ ٠. صفحة الإعداد: صورة المعلم وشعارا المدرسة والوزارة (الصور من مجلد المعلم، تُحقن أثناء التصوير ولا تُحفظ في المستودع) ═════
+{
+  const DL = process.env.CRED_DIR || path.join(OUT, '..', 'cred');   // me.jpg و school.png و moe.png (الشعاران مقصوصان بلا هوامش)
+  const data = f => `data:image/${f.endsWith('.png') ? 'png' : 'jpeg'};base64,` + fs.readFileSync(path.join(DL, f)).toString('base64');
+  const img = { me: data('me.jpg'), school: data('school.png'), moe: data('moe.png') };
+  if (!ONLY || ONLY.includes('credits')) { await B.overlayOn(); await B.ev(i => window.__vo.credits(i), img); await B.skip(.3); }
+  await scene(B, 'credits', async cap => { await cap.fill(); }, { credits: true, hud: false });
+}
 
 // ═════ ١. المقدمة: بطاقة العنوان فوق القرية ═════
 await focus(760, 640); await B.skip(1);
@@ -166,7 +175,11 @@ await scene(B, 'extras', async cap => {
   await B.ev(async () => (await import('/world/decor.js')).openDecorShop()); await cap.shoot(1.6);
   await cap.shoot(2.4, () => { const s = document.querySelector('#panel .sheet'); if (s) s.scrollTop += 6; });
   await B.ev(() => { document.getElementById('panel').classList.remove('on'); window.__game.game.busy = false; });
-  await B.ev(async () => (await import('/ui/wardrobe.js')).openWardrobe()); await cap.shoot(3.6);
+  // من الحقيبة إلى خزانة البطل كما يفعل الطالب، ثم ارتداء الوشاح
+  await B.ev(() => { const s = window.__game.state; ['bag', 'flask', 'cape', 'gold', 'shovel'].forEach(k => s.gear.owned[k] = 1); document.getElementById('bBag').click(); });
+  await cap.shoot(1.1, () => { const b = document.getElementById('wardBtn'); if (b) b.scrollIntoView({ block: 'center' }); });
+  await B.ev(() => document.getElementById('wardBtn').click()); await cap.shoot(1.4);
+  await B.ev(() => { const b = document.querySelector('#panel [data-g="cape"]'); if (b) b.click(); }); await cap.shoot(1.6);
   await B.ev(() => { const o = document.getElementById('wardOut'); if (o) o.click(); window.__game.game.busy = false; });
   // ساحة القرية بزينتها، والبطل يمشي ومعه الجمل
   await B.ev(() => { const p = window.__game.W.player; p.x = 960; p.y = 520; p.route = null; window.__game.eng.focus = null; window.__game.eng.onTap({ x: 1240, y: 520 }); });

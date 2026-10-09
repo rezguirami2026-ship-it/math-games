@@ -6,7 +6,8 @@
   #voCap{position:fixed;left:50%;bottom:22px;transform:translateX(-50%) translateY(20px);width:min(980px,90vw);display:flex;align-items:center;gap:18px;direction:rtl;z-index:9998;
     padding:14px 22px 14px 26px;border-radius:26px;background:linear-gradient(135deg,rgba(24,18,64,.92),rgba(20,60,96,.9));border:2.5px solid #E3B04B;box-shadow:0 14px 40px rgba(0,0,0,.45);opacity:0;transition:opacity .25s,transform .3s}
   #voCap.on{opacity:1;transform:translateX(-50%)}
-  #voPic{flex:none;width:112px;height:112px;border-radius:50%;background:radial-gradient(circle at 50% 35%,#FFF6DA,#F2D79A);border:4px solid #E3B04B;box-shadow:0 0 0 4px rgba(255,255,255,.18)}
+  #voPic{flex:none;position:relative;width:118px;height:118px;border-radius:50%;overflow:hidden;background:radial-gradient(circle at 50% 30%,#FFF6DA,#F2D79A 60%,#E2B862);border:4px solid #E3B04B;box-shadow:0 0 0 4px rgba(255,255,255,.18),inset 0 -8px 16px rgba(120,70,0,.25)}
+  #voPic canvas{position:absolute;inset:0;width:100%;height:100%}
   #voCap .who{display:inline-block;font:900 20px Cairo,sans-serif;color:#3A2400;background:linear-gradient(180deg,#FFF1B8,#FFD54A);border-radius:14px;padding:1px 14px;margin-bottom:4px}
   #voCap.g .who{background:linear-gradient(180deg,#FFD6E4,#FF8FB3);color:#4A0F28}
   #voCap p{margin:0;font:800 29px/1.55 Cairo,sans-serif;color:#fff;text-shadow:0 2px 0 rgba(0,0,0,.35)}
@@ -26,26 +27,59 @@
     filter:drop-shadow(0 6px 0 rgba(120,70,0,.6)) drop-shadow(0 0 30px rgba(255,200,60,.5));animation:tPop 1s cubic-bezier(.3,1.6,.5,1) both}
   #voTitle .rib{display:inline-block;margin-top:8px;font:900 34px Cairo,sans-serif;color:#fff;padding:6px 34px;border-radius:40px;background:linear-gradient(90deg,#1F6E73,#1F4E79);border:3px solid #E3B04B;animation:tPop 1s .3s cubic-bezier(.3,1.6,.5,1) both}
   #voTitle .sub{margin-top:14px;font:800 24px Cairo,sans-serif;color:#FFE3A0;animation:tPop 1s .6s both}
-  #voTitle canvas{position:absolute;bottom:150px;width:250px;height:300px}
-  #voTitle .hb{right:15%}#voTitle .hg{left:15%}
+  #voTitle canvas{position:absolute;bottom:150px;width:270px;height:400px}
+  #voTitle .hb{right:9%}#voTitle .hg{left:9%}
+  #voTitle .glow{position:absolute;bottom:120px;width:300px;height:60px;border-radius:50%;background:radial-gradient(rgba(255,214,90,.45),transparent 70%)}
+  #voTitle .gb{right:9%}#voTitle .gg{left:9%}
   #voTitle .cta{margin-top:26px;display:inline-block;font:900 34px Cairo,sans-serif;color:#3A2400;padding:12px 44px;border-radius:40px;background:linear-gradient(180deg,#FFF1B8,#FFD54A 55%,#E3A21A);box-shadow:0 7px 0 #8A5A00;animation:tPop .8s both,ctaB 1.4s 1s ease-in-out infinite}
   @keyframes tPop{from{opacity:0;transform:scale(.6)}}
   @keyframes ctaB{50%{transform:scale(1.06)}}
   #voChip{position:fixed;top:96px;right:28px;z-index:9998;direction:rtl;font:900 30px Cairo,sans-serif;color:#fff;padding:8px 22px;border-radius:18px;background:rgba(10,8,34,.78);border:2px solid #E3B04B;opacity:0;transition:opacity .3s}
-  #voChip.on{opacity:1}`;
+  #voChip.on{opacity:1}
+  #voCred{position:fixed;inset:0;z-index:9996;display:none;direction:rtl;overflow:hidden;background:radial-gradient(ellipse at 70% 45%,#174E7E 0%,#0B2A4A 45%,#051528 100%)}
+  #voCred.on{display:block}
+  #voCred .pat{position:absolute;inset:0;opacity:.13;background:repeating-linear-gradient(45deg,transparent 0 26px,#E3B04B 26px 28px),repeating-linear-gradient(-45deg,transparent 0 26px,#E3B04B 26px 28px)}
+  #voCred .rays{position:absolute;right:6%;top:18%;width:520px;height:520px;border-radius:50%;background:radial-gradient(rgba(140,200,255,.35),transparent 65%);animation:cGlow 4s ease-in-out infinite}
+  @keyframes cGlow{50%{opacity:.6;transform:scale(1.08)}}
+  #voCred .band{position:absolute;top:0;left:50%;transform:translateX(-50%);width:700px;height:182px;border-radius:0 0 350px 350px/0 0 130px 130px;background:linear-gradient(180deg,#FFFDF6,#F6EBD2);box-shadow:0 0 0 5px #E3B04B,0 14px 40px rgba(0,0,0,.45);display:flex;align-items:center;justify-content:center;gap:34px;animation:cDown 1s cubic-bezier(.3,1.4,.5,1) both}
+  #voCred .band img{height:150px;mix-blend-mode:multiply}
+  #voCred .band .moe{height:150px}
+  #voCred .band i{width:3px;height:120px;background:linear-gradient(#fff0,#C9971C,#fff0)}
+  @keyframes cDown{from{transform:translate(-50%,-110%)}}
+  #voCred .arch{position:absolute;right:7%;bottom:-6px;width:400px;height:540px;border-radius:200px 200px 0 0;overflow:hidden;border:7px solid #E3B04B;border-bottom:0;box-shadow:0 0 0 3px rgba(255,255,255,.25),0 0 60px rgba(255,214,90,.35),0 30px 60px rgba(0,0,0,.5);background:#DCE3E8;animation:cRise 1.1s .4s cubic-bezier(.3,1.2,.5,1) both}
+  #voCred .arch img{width:100%;height:100%;object-fit:cover;object-position:50% 6%}
+  #voCred .arch::after{content:"";position:absolute;inset:0;background:linear-gradient(180deg,transparent 62%,rgba(5,21,40,.6))}
+  @keyframes cRise{from{opacity:0;transform:translateY(80px) scale(.94)}}
+  #voCred .card{position:absolute;left:6%;top:222px;width:600px;text-align:center;animation:cFade .9s 1s both}
+  #voCred .orn{display:flex;align-items:center;justify-content:center;gap:12px;color:#E3B04B;font-size:26px}
+  #voCred .orn b{height:2px;width:150px;background:linear-gradient(90deg,transparent,#E3B04B,transparent)}
+  #voCred .box{margin:14px auto;padding:20px 26px 24px;border:3px solid #E3B04B;border-radius:28px;background:linear-gradient(180deg,rgba(11,42,74,.88),rgba(5,21,40,.92));box-shadow:inset 0 0 0 6px rgba(227,176,75,.18),0 18px 40px rgba(0,0,0,.4);position:relative;overflow:hidden}
+  #voCred .box small{display:block;font:800 30px Cairo,sans-serif;color:#F3F6FF;animation:cFade .8s 1.4s both}
+  #voCred .box strong{display:block;margin-top:4px;font:900 76px/1.5 Cairo,sans-serif;padding:0 14px 10px;background:linear-gradient(180deg,#FFF6D0,#FFD54A 50%,#C98A12);-webkit-background-clip:text;background-clip:text;color:transparent;filter:drop-shadow(0 3px 0 rgba(0,0,0,.35));animation:cFade .9s 1.8s both}
+  #voCred .box::after{content:"";position:absolute;top:0;bottom:0;width:120px;left:-160px;background:linear-gradient(100deg,transparent,rgba(255,255,255,.3),transparent);animation:cShine 2.4s 2.6s ease-in-out infinite}
+  @keyframes cShine{to{left:120%}}
+  #voCred .sch{font:800 26px Cairo,sans-serif;color:#FFE3A0;animation:cFade .8s 2.3s both}
+  #voCred .game{margin-top:8px;font:700 22px Cairo,sans-serif;color:#C9D8EA;animation:cFade .8s 2.7s both}
+  @keyframes cFade{from{opacity:0;transform:translateY(16px)}}
+  #voCred .rib{position:absolute;left:-140px;bottom:-250px;width:780px;height:340px;border-radius:50%;border-top:10px solid #E3B04B;transform:rotate(-12deg);opacity:.85}
+  #voCred .rib2{left:-190px;bottom:-292px;border-top-width:4px;opacity:.5}`;
   const st = document.createElement('style'); st.textContent = css; document.head.appendChild(st);
   document.body.classList.add('vid');
   const el = (h) => { const d = document.createElement('div'); d.innerHTML = h.trim(); const n = d.firstChild; document.body.appendChild(n); return n; };
-  const cap = el('<div id="voCap"><canvas id="voPic" width="224" height="224"></canvas><div><span class="who"></span><p></p></div></div>');
+  const cap = el('<div id="voCap"><div id="voPic"><canvas class="pb" width="240" height="240"></canvas><canvas class="pg" width="240" height="240"></canvas></div><div><span class="who"></span><p></p></div></div>');
   const lbl = el('<div id="voLbl"></div>'), fade = el('<div id="voFade"></div>'), chip = el('<div id="voChip"></div>');
-  const title = el('<div id="voTitle"><div class="tIn"><h1>قرية الخير</h1><div class="rib">مغامرة رامي ماث</div><div class="sub"></div><div class="ctaW"></div></div><canvas class="hb" width="500" height="600"></canvas><canvas class="hg" width="500" height="600"></canvas></div>');
-  let drawHuman = null, heroLook = null;
-  Promise.all([import('/character/human.js'), import('/ui/screens.js')]).then(([h, s]) => { drawHuman = h.drawHuman; heroLook = s.heroLook; });
+  const cred = el('<div id="voCred"><div class="pat"></div><div class="rays"></div><div class="rib"></div><div class="rib rib2"></div><div class="band"><img class="sch" alt=""><i></i><img class="moe" alt=""></div><div class="arch"><img class="me" alt=""></div><div class="card"><div class="orn"><b></b>✦<b></b></div><div class="box"><small>إعداد وتنفيذ الأستاذ</small><strong>رامي الرزقي</strong></div><div class="sch">مدرسة الخوير للتعليم الأساسي (٥–٩)</div><div class="game">لعبة «قرية الخير» · رياضيات الصف السادس</div><div class="orn" style="margin-top:14px"><b></b>✦<b></b></div></div></div>');
+  const title = el('<div id="voTitle"><div class="tIn"><h1>قرية الخير</h1><div class="rib">مغامرة رامي ماث</div><div class="sub"></div><div class="ctaW"></div></div><span class="glow gb"></span><span class="glow gg"></span><canvas class="hb" width="600" height="800"></canvas><canvas class="hg" width="600" height="800"></canvas></div>');
+  let drawHuman = null, heroLook = null, H3 = null;
+  Promise.all([import('/character/human.js'), import('/ui/screens.js'), import('/tests/video/hero3d.js')]).then(([h, s, m]) => { drawHuman = h.drawHuman; heroLook = s.heroLook;
+    const L = { b: heroLook({ kind: 'boy', skin: '#C98E5F', color: '#2F6FB2' }), g: heroLook({ kind: 'girl', skin: '#D9A374', color: '#2E8B57' }) };
+    H3 = { pb: m.hero3d(cap.querySelector('.pb'), L.b, { bust: true }), pg: m.hero3d(cap.querySelector('.pg'), L.g, { bust: true }), hb: m.hero3d(title.querySelector('.hb'), L.b), hg: m.hero3d(title.querySelector('.hg'), L.g) }; });
   const LOOK = () => ({ b: heroLook({ kind: 'boy', skin: '#C98E5F', color: '#2F6FB2' }), g: heroLook({ kind: 'girl', skin: '#D9A374', color: '#2E8B57' }) });
   let S = { lines: [], label: '', dur: 0, title: null, dips: [], chips: [] }, curKey = '';
   const V = window.__vo = {
+    credits(img) { cred.querySelector('img.sch').src = img.school; cred.querySelector('img.moe').src = img.moe; cred.querySelector('img.me').src = img.me; },
     scene(s) { S = Object.assign({ lines: [], label: '', dur: 0, title: null, dips: [], chips: [], hud: true, capTop: false }, s); curKey = ''; document.body.classList.toggle('noHud', S.hud === false); lbl.classList.toggle('low', !!S.capTop); lbl.textContent = S.label; lbl.classList.remove('on'); cap.classList.remove('on');
-      title.classList.toggle('on', !!S.title); if (S.title) { title.querySelector('.sub').textContent = S.title.sub || ''; title.querySelector('.ctaW').innerHTML = S.title.cta ? `<span class="cta">${S.title.cta}</span>` : ''; } },
+      title.classList.toggle('on', !!S.title); cred.classList.toggle('on', !!S.credits); if (S.title) { title.querySelector('.sub').textContent = S.title.sub || ''; title.querySelector('.ctaW').innerHTML = S.title.cta ? `<span class="cta">${S.title.cta}</span>` : ''; } },
     frame(t) {
       // الإظلام: أول المشهد وآخره، وعند كل قطع داخلي
       let f = 0; if (t < .35) f = 1 - t / .35; if (S.dur - t < .35) f = Math.max(f, 1 - (S.dur - t) / .35);
@@ -55,13 +89,10 @@
       const ln = S.lines.find(l => t >= l.start - .05 && t < l.start + l.dur + .35);
       if (ln) { const key = ln.start + ln.who; if (key !== curKey) { curKey = key; cap.className = ln.who + (S.capTop ? ' top' : ''); cap.querySelector('.who').textContent = ln.who === 'b' ? 'البطل' : 'البطلة'; cap.querySelector('p').textContent = ln.text; void cap.offsetWidth; } cap.classList.add('on'); }
       else cap.classList.remove('on');
-      if (!drawHuman) return;
-      const L = LOOK(), speaking = ln && t < ln.start + ln.dur ? ln.who : null;
-      const pc = cap.querySelector('canvas'), x = pc.getContext('2d'); x.setTransform(1, 0, 0, 1, 0, 0); x.clearRect(0, 0, 224, 224);
-      if (ln) { x.save(); x.beginPath(); x.arc(112, 112, 112, 0, 7); x.clip(); drawHuman(x, Object.assign({}, L[ln.who], { x: 112, y: 505, s: 9.5, dir: 'down', anim: speaking ? 'talk' : 'idle', animT: (t * 1.6) % 1 })); x.restore(); }
-      if (S.title) [['hb', 'b'], ['hg', 'g']].forEach(([c, w]) => { const cv = title.querySelector('.' + c), y = cv.getContext('2d'); y.setTransform(1, 0, 0, 1, 0, 0); y.clearRect(0, 0, 500, 600);
-        y.fillStyle = 'rgba(255,214,90,.25)'; y.beginPath(); y.ellipse(250, 572, 150, 24, 0, 0, 7); y.fill();
-        drawHuman(y, Object.assign({}, L[w], { x: 250, y: 570, s: 6.2, dir: 'down', anim: speaking === w ? 'talk' : (S.title.cheer ? 'celebrate' : 'wave'), animT: (t * (speaking === w ? 1.6 : .8) + (w === 'g' ? .5 : 0)) % 1 })); });
+      if (!H3) return;
+      const speaking = ln && t < ln.start + ln.dur ? ln.who : null;
+      if (ln) { const w = ln.who; cap.querySelector('.pb').style.visibility = w === 'b' ? 'visible' : 'hidden'; cap.querySelector('.pg').style.visibility = w === 'g' ? 'visible' : 'hidden'; H3['p' + w].render(t, speaking ? 'talk' : null); }
+      if (S.title) ['b', 'g'].forEach(w => H3['h' + w].render(t + (w === 'g' ? .4 : 0), speaking === w ? 'talk' : (S.title.cheer ? 'celebrate' : (Math.floor(t / 2.2) % 2 ? 'wave' : null))));
     }
   };
 })();

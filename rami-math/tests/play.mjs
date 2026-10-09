@@ -11,6 +11,7 @@ import { chromium } from 'playwright-core';
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..');
 const SHOW = process.argv.includes('--show');
 const UPTO = +((process.argv.find(a => a.startsWith('--upto=')) || '').split('=')[1] || Infinity);   // للتجربة السريعة: أول N درساً فقط
+const FROM = +((process.argv.find(a => a.startsWith('--from=')) || '').split('=')[1] || 0);   // التشغيل على دفعات: الدروس قبل FROM تُعلَّم منجزة ثم يبدأ الاختبار منه
 const ar = n => String(n).replace(/\d/g, d => '٠١٢٣٤٥٦٧٨٩'[d]);
 const sleep = ms => new Promise(r => setTimeout(r, ms));
 
@@ -944,9 +945,16 @@ try {
   W.caravan = await G(async () => { const c = await import('./world/caravan.js'); return { ST8: c.ST8 }; });
   W.workshop = await G(async () => { const w = await import('./world/workshop.js'); return { ST9: w.ST9 }; });
   const lessons = await G(async () => (await import('./content/lessons.js')).LESSONS.map(l => ({ id: l.id, title: l.title, giver: l.giver, u: l.u })));
-  for (const g of GATES) expect(await pathLen(g.a, g.b) === 0, `${g.name} مفتوحة قبل وقتها`);
+  if (!FROM) for (const g of GATES) expect(await pathLen(g.a, g.b) === 0, `${g.name} مفتوحة قبل وقتها`);
+  if (FROM) {   // الدروس السابقة منجزة (بنجمة) ثم إعادة التحميل لتُبنى البوابات من الحفظ
+    await G(ids => { const g = window.__game, s = g.state; ids.forEach(id => { s.quests.done[id] = Date.now(); const d = g.quests.data(id); d.stars = d.stars || 1; d.chStage = 0; }); s.levelSeen = 10; }, lessons.slice(0, FROM).map(l => l.id));
+    await G(async () => (await import('./core/events.js')).bus.emit('save')); await sleep(800);
+    await page.reload(); await sleep(1500); await page.click('#bCont'); await until(() => G(() => !!window.__game.W), 'العودة إلى القرية'); await settle();
+    console.log(`⏩ بدء من الدرس ${FROM + 1}: «${lessons[FROM].title}»`);
+  }
   let played = 0;
-  for (const l of lessons) {
+  for (const [idx, l] of lessons.entries()) {
+    if (idx < FROM) continue;
     if (played >= UPTO) break;
     if (!S[l.id]) { console.log(`⏸  توقف عند «${l.title}» (${l.id}): لم يُكتب حله في الاختبار بعد`); break; }
     const t0 = Date.now(), e0 = errors.length;
@@ -965,7 +973,7 @@ try {
         expect(await G(() => window.__game.state.finales[0].plays === 1), 'سجل الختام'); await panelClick('#acEnd'); await settle();
         console.log('👑 مغامرة ختام الوحدة الأولى: ١٠ جولات');
       }
-      if (played === 2) {   // المستويات: بعد ثلاثة دروس ونشاط واحد يرتقي إلى المستوى ٢، ويُعرض الاحتفال
+      if (idx === 2) {   // المستويات: بعد ثلاثة دروس ونشاط واحد يرتقي إلى المستوى ٢، ويُعرض الاحتفال
         await until(() => G(() => window.__game.state.levelSeen >= 2 && document.getElementById('lvlN').textContent === '٢'), 'الارتقاء إلى المستوى ٢', 8000);
         if (await G(() => !!document.querySelector('#panel .lvUp'))) { await G(() => document.querySelector('#panel [data-close]').click()); await settle(); }   // قد يكون الاحتفال ظهر قبلها
         console.log('⭐ ارتقى إلى المستوى ٢ وظهر الاحتفال');
@@ -980,7 +988,7 @@ try {
         await G(() => document.querySelector('#panel [data-close]').click()); await settle();
         console.log(`💎 ${gm} جوهرة، واشترى أصيص زهور لساحة البئر`);
       }
-      if (played === 0 && ch) {   // النشاط الاختياري بعد أول درس: من رحلة الدروس، ثم إعادة اللعب
+      if (idx === 0 && ch) {   // النشاط الاختياري بعد أول درس: من رحلة الدروس، ثم إعادة اللعب
         await G(id => window.__game.activity(id), l.id);
         await until(() => G(() => !!document.querySelector('#panel #acGo')), 'شاشة بداية النشاط', 5000); await panelClick('#acGo');
         await solveRounds(() => G(id => { const a = window.__game.state.activities[id]; return a.run ? a.run.ch : { i: 6 }; }, l.id));
@@ -1016,14 +1024,14 @@ try {
       else if (g.after === l.id) console.log(`🚪 ${g.name} فُتحت في وقتها`);
     }
   }
-  if (played === lessons.length) {   // النهاية: الهدف يشير إلى منصة التخرّج
+  if (FROM + played === lessons.length) {   // النهاية: الهدف يشير إلى منصة التخرّج
     const obj = await G(() => document.getElementById('objective').textContent);
     if (obj.includes('التخرّج')) console.log('🎓 ظهر هدف منصة التخرّج'); else { failures++; console.log(`❌ الهدف بعد آخر درس: «${obj}»`); }
-    const ach = await G(() => window.__game.state.achievements), want = ['unit1', 'unit2', 'unit3', 'unit4', 'term1', 't2u1', 't2u2', 't2u3', 't2u4', 't2u5', 'all69'], miss = want.filter(a => !ach[a]);
+    const ach = await G(() => window.__game.state.achievements), want = ['unit1', 'unit2', 'unit3', 'unit4', 'term1', 't2u1', 't2u2', 't2u3', 't2u4', 't2u5', 'all69'], miss = want.filter(a => !ach[a]).filter(a => !FROM || want.indexOf(a) >= want.length - 4)   // في وضع الدفعات: إنجازات الوحدات التي لُعبت في هذه الدفعة فقط;
     if (miss.length) { failures++; console.log('❌ إنجازات الوحدات الناقصة: ' + miss.join('، ')); } else console.log('🏆 إنجازات الوحدات كلها مفتوحة');
   }
   if (!failures) {   // رمز التقدّم: نسخ من الحقيبة، مسح الجهاز، رفض رمز تالف، ثم استعادة كاملة
-    try { await checkProgressCode(played); console.log('🔑 رمز التقدّم: نُسخ، ورُفض الرمز التالف، واستُعيدت المغامرة كاملة'); }
+    try { await checkProgressCode(FROM + played); console.log('🔑 رمز التقدّم: نُسخ، ورُفض الرمز التالف، واستُعيدت المغامرة كاملة'); }
     catch (e) { failures++; console.log('❌ رمز التقدّم: ' + e.message); }
   }
   console.log(`\nالنتيجة: نجح ${played} من ${lessons.length} درساً${failures ? ` — وفشل ${failures}` : ''}`);
