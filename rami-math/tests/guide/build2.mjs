@@ -9,7 +9,8 @@ const ROOT = path.resolve(path.dirname(new URL(import.meta.url).pathname.replace
 const marks = JSON.parse(fs.readFileSync(path.join(W, 'img', 'marks.json'), 'utf8'));
 const perf = JSON.parse(fs.readFileSync(path.join(W, 'perf.json'), 'utf8'));
 const url = p => 'file:///' + p.replace(/\\/g, '/');
-const IMGF = n => path.join(W, 'img', n + '.jpg'), IMG = n => url(IMGF(n));
+const IMGF = n => path.join(W, 'img', n + '.jpg'), NEED = {}, OPT = path.join(W, 'opt');
+const IMG = (n, dw = 900) => { NEED[n] = Math.max(NEED[n] || 0, Math.round(dw * 2)); return url(path.join(OPT, n + '.jpg')); };
 const CRED = n => url(path.join(W, 'cred', n));
 const FONT = f => url(path.join(ROOT, 'assets', 'fonts', f));
 const AR = n => String(n).replace(/[0-9]/g, d => '٠١٢٣٤٥٦٧٨٩'[d]).replace(/\./g, '٫');
@@ -24,7 +25,7 @@ function fig(name, cap, notes = [], { w = 700, cols = 1, gutter = 40, legend = '
   // العمود i (يبدأ من اليمين): يعرض الشريحة [i*colH, (i+1)*colH)
   const colX = i => totalW - G - (i + 1) * w - i * gap;
   let html = `<div class="fbox" style="width:${totalW}px;height:${colH}px">`;
-  for (let i = 0; i < cols; i++) html += `<div class="fcol" style="left:${colX(i)}px;width:${w}px;height:${Math.min(colH, full - i * colH)}px"><img src="${IMG(name)}" style="width:${w}px;top:${-i * colH}px"></div>`;
+  for (let i = 0; i < cols; i++) html += `<div class="fcol" style="left:${colX(i)}px;width:${w}px;height:${Math.min(colH, full - i * colH)}px"><img src="${IMG(name, w)}" style="width:${w}px;top:${-i * colH}px"></div>`;
   // العلامات: إطار حول العنصر، ورقم في الهامش الأيمن أو الأيسر، وخط أفقي بينهما
   const items = ms.map(r => { const ci = Math.min(cols - 1, Math.floor((r.y + r.h / 2) * s / colH)), x0 = colX(ci) + r.x * s, y0 = r.y * s - ci * colH;
     const bx = { x: x0 - 3, y: y0 - 3, w: r.w * s + 6, h: r.h * s + 6 }, cy = bx.y + bx.h / 2;
@@ -65,11 +66,11 @@ const P = (m, t) => (perf.find(p => p.mode === m && p.thr === t) || {}).fps;
 
 // ═══════════════════ الصفحات ═══════════════════
 const pages = [];
-pages.push(`<section class="page cover"><img class="cbg" src="${IMG('home')}"><div class="cshade"></div>
-  <div class="clogos"><img src="${CRED('moe.png')}"><i></i><img src="${CRED('school.png')}"></div>
+pages.push(`<section class="page cover"><img class="cbg" src="${IMG('home', 450)}"><div class="cshade"></div>
+  <div class="clogos"><img src="${CRED('moe.jpg')}"><i></i><img src="${CRED('school.jpg')}"></div>
   <div class="ctext"><div class="ctag">دليل تشغيلي وتعريفي</div><h1>قرية الخير</h1><div class="csub">لعبة تعليمية تفاعلية في الرياضيات<br>الصف السادس · سلطنة عُمان</div></div>
-  <div class="cphoto"><img src="${CRED('me.jpg')}"></div>
-  <div class="cby"><small>إعداد وتنفيذ</small><b>الأستاذ رامي الرزقي</b><span>مدرسة الخوير للتعليم الأساسي (٥–٩)</span><em>الإصدار ١٫١٤٫٠ · ${AR(new Date().getFullYear())}</em></div></section>`);
+  <div class="cphoto"><img src="${CRED('me-s.jpg')}"></div>
+  <div class="cby"><small>إعداد وتنفيذ</small><b>الأستاذ رامي الرزقي</b><span>مدرسة الخوير للتعليم الأساسي (٥–٩)</span><em>الإصدار <bdi dir="ltr">v1.14.0</bdi> · ${AR(new Date().getFullYear())}</em></div></section>`);
 pages.push('__TOC__');
 
 pages.push(page('١. التعريف باللعبة', 'فكرة اللعبة وأهدافها', `
@@ -296,7 +297,19 @@ code{direction:ltr;unicode-bidi:embed;background:#EAF2FA;padding:1px 8px;border-
 .cphoto img{width:100%;height:100%;object-fit:cover;object-position:50% 6%}
 .cby{position:absolute;left:0;right:0;top:1010px;text-align:center}.cby small{display:block;font-size:18px;color:#C9D8EA}.cby b{display:block;font:900 44px/1.4 Cairo;color:#FFD54A}.cby span{display:block;font-size:19px;color:#FFE3A0}.cby em{display:block;font-style:normal;font-size:15px;color:#C9D8EA;margin-top:8px}`;
 
-const html = `<!doctype html><html lang="ar" dir="rtl"><head><meta charset="utf-8"><title>دليل قرية الخير</title><style>${CSS}</style></head><body>${pages.join('\n')}</body></html>`;
+// تخفيف الملف: الظلال والمرشّحات والزخرفة المتكررة تتحول في PDF إلى آلاف الصور؛ نستبدلها بحدود وألوان مسطّحة بالمظهر نفسه تقريباً
+const LIGHT = `*{box-shadow:none!important;filter:none!important}.page::before{display:none}
+.fcol{outline:2.5px solid #E3B04B;outline-offset:0}.card,.step,.chart{border:1.5px solid #E7D3A6}.tbl{border:1px solid #E3CFA0}
+.clogos{border:4px solid #E3B04B;border-top:0}.cphoto{border-width:6px}
+.cover h1{text-shadow:0 4px 0 rgba(0,0,0,.35)}.cover h1{-webkit-text-fill-color:#FFD54A;color:#FFD54A;background:none}`;
+const html = `<!doctype html><html lang="ar" dir="rtl"><head><meta charset="utf-8"><title>دليل قرية الخير</title><style>${CSS}${LIGHT}</style></head><body>${pages.join('\n')}</body></html>`;
+// تجهيز الصور المصغّرة قبل فتح الصفحة
+import('child_process').then(() => {});
+const { execFileSync } = await import('child_process');
+const FF = execFileSync('python', ['-c', 'import imageio_ffmpeg; print(imageio_ffmpeg.get_ffmpeg_exe())']).toString().trim();
+fs.mkdirSync(OPT, { recursive: true });
+for (const [n, need] of Object.entries(NEED)) { const src = IMGF(n), w0 = jpgSize(src).w, tw = Math.min(w0, need);
+  execFileSync(FF, ['-y', '-loglevel', 'error', '-i', src, '-vf', `scale=${tw}:-2:flags=lanczos${n === 'home' && need <= 900 ? ',gblur=sigma=4' : ''}`, '-q:v', n === 'home' && need <= 900 ? '8' : '5', path.join(OPT, n + '.jpg')]); }
 const HTMLF = path.join(W, 'guide2.html'); fs.writeFileSync(HTMLF, html);
 const b = await chromium.launch({ channel: 'chrome' }); const pg = await b.newPage({ viewport: { width: PW, height: PH } });
 await pg.goto(url(HTMLF)); await pg.evaluate(() => document.fonts.ready); await new Promise(r => setTimeout(r, 1500));
