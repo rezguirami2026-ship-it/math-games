@@ -17,6 +17,7 @@ import { openHome, homeExterior } from './ui/herohome.js';
 import { decorItems, initGems, DECOR } from './world/decor.js';
 import { updatePet, petItems, pet3d, petHop, setSniff, petOn } from './world/pet.js';
 import { openMiniGames, openPetDecor } from './ui/minigames.js';
+import { eventPeople, eventMark, openVisitor, openTeller, isNight, checkSecrets, secretItems, VISITOR, TELLER } from './ui/events.js';
 import { treasureItems, nearTreasure, openTreasure, TREASURES } from './world/treasure.js';
 import { CHAPTER, introLines, npcLines } from './story/dialogues.js';
 import { startTour } from './ui/tour.js';
@@ -213,7 +214,7 @@ async function start(state) {
   }
 }
 /* ── العرض ثلاثي الأبعاد (renderer3d): يُحمَّل فقط عند طلبه، ويرجع إلى الرسم الحالي إن لم يدعم الجهاز WebGL أو فشل التحميل ── */
-const V3D = 'نسخة 3D · ٨٦'; window.__BUILD = V3D.replace('نسخة 3D · ', '');   // تُعرض في شاشة التحميل وفي الزاوية: للتأكد أن المتصفح حمّل آخر نسخة
+const V3D = 'نسخة 3D · ٨٧'; window.__BUILD = V3D.replace('نسخة 3D · ', '');   // تُعرض في شاشة التحميل وفي الزاوية: للتأكد أن المتصفح حمّل آخر نسخة
 const want3d = () => gfx.d3();
 function loadingScreen() {
   const el = document.createElement('div'); el.className = 'load3d';
@@ -245,7 +246,7 @@ async function init3D() {
     try { await Promise.race([document.fonts.load('900 88px Cairo', 'مستودع الطرود ٠١٢٣'), new Promise(r => setTimeout(r, 2500))]); } catch (e) {}   // لافتات المباني تُقاس بخط Cairo نفسه (وإلا قُصّ النص)
     let q = 'auto'; try { q = localStorage.getItem('ramimath_q') || 'auto'; } catch (e) {}   // تلقائية: تبدأ عالية وتنخفض وحدها إن كان الجهاز بطيئاً
     eng.l3 = await R.create3D({ quality: q === 'low' ? 'low' : 'high', world: WORLD, paintGround: paintStaticGround, onProgress: k => load.set(k) });
-    eng.l3.ground = paintDynamicGround; eng.l3.people = people3d; eng.l3.pet = pet3d; eng.l3.gates = () => W.gateK; eng.l3.allDone = allDone; eng.l3.ramadan = () => SEASON.ramadan; eng.l3.signal = () => W.signalGreen;
+    eng.l3.ground = paintDynamicGround; eng.l3.people = people3d; eng.l3.pet = pet3d; eng.l3.gates = () => W.gateK; eng.l3.allDone = allDone; eng.l3.ramadan = () => SEASON.ramadan || isNight(); eng.l3.signal = () => W.signalGreen;
     eng.l3.vehicles = () => { const s = game.state, m = s.missions.convoy, out = W.trucks.map(tr => ({ id: 't' + tr.i, x: tr.x, y: tr.y, load: m.loads[tr.i], covered: tr.covered, shake: tr.shake, sag: tr.sag }));
       if (quests.isStarted('division1') || quests.isDone('division1')) out.push({ id: 'van', x: convoy.VAN.x, y: convoy.VAN.y, load: m.van || 0, covered: !!s.world.delivered, s: .72 }); return out; };
     // فقد سياق الرسم (الهاتف يحرّر ذاكرة الرسوم حين تُصغَّر اللعبة أو تُقفل الشاشة) يترك المشهد أسود: نحفظ ونعيد التحميل عند العودة،
@@ -414,6 +415,7 @@ function currentActions() {
       out.push({ key: k, label: '🔒 أغلق الصمام', kind: 'go', run: () => tanks.seal(W, tk.i), disabled: lv <= 0 });
     }
   }
+  eventPeople().forEach(n => { if (nearest([{ x: n.x, y: n.y + 10 }], 70)) out.push({ key: 'ev' + n.id, label: '💬 ' + n.name, kind: 'go', run: () => n.id === 'teller' ? openTeller() : openVisitor() }); });
   if (nearest([{ x: WELL.x, y: WELL.y + 40 }], 95)) out.push({ key: 'mini', label: '🎮 ألعاب الساحة', run: () => openMiniGames() });
   if (nearest([HERO_DOOR], 70)) out.push({ key: 'door', label: '🏠 بيت البطل', run: () => openHome(openWardrobe) });
   if (s.world.delivered) {
@@ -459,6 +461,7 @@ const routeLeft = pl => { if (!pl.target) return 0; let d = Math.hypot(pl.target
 function update(dt) {
   updateKids(dt);   // طلاب المدرسة يلعبون
   updateCrowd(dt);   // أهل القرية المتجولون (يزدادون مع التقدّم)
+  checkSecrets(W.player, m => hud.toast(m));   // الممرات السرية ليلاً
   if (petOn() && (W.sniffT = (W.sniffT || 0) + dt) > .5) {   // سهيل يشمّ الكنز القريب
     W.sniffT = 0; const open = gateState(), tr = TREASURES.find(t => !(game.state.treasure || {})[t.id] && (t.g < 0 || open[t.g]) && Math.hypot(W.player.x - t.x, W.player.y - t.y) < 260); setSniff(tr);
     if (tr && !(W.sniffed = W.sniffed || {})[tr.id]) { W.sniffed[tr.id] = 1; hud.toast('🐪 سهيل يشمّ شيئاً… كنز مخفي قريب منك! 🎁'); }
@@ -487,7 +490,7 @@ function update(dt) {
 function render(ctx, view, t) {
   if (eng.l3) return render3d(ctx, view, t);
   CAM.x = view.x + view.w / 2; CAM.y = view.y + view.h / 2;   // منظور الكاميرا: ما ارتفع يبتعد عن مركز الشاشة
-  SEASON.ramadan = ramadanOn(); eng.mood = SEASON.ramadan ? 'dusk' : 'day';   // أجواء رمضان: غروب دافئ وفوانيس
+  SEASON.ramadan = ramadanOn(); eng.mood = SEASON.ramadan || isNight() ? 'dusk' : 'day';   // أجواء رمضان: غروب دافئ وفوانيس
   const s = game.state, m = s.missions.convoy, now = Date.now(), c = cur();
   drawGround(ctx, view);
   // أرض المناطق: فقط ما يقترب من الشاشة (الظلال تمتد قليلاً جنوباً وشرقاً)
@@ -512,14 +515,14 @@ function render(ctx, view, t) {
 /* العرض ثلاثي الأبعاد: المشهد رُسم في canvas الخلفي؛ هنا العناصر القائمة (الشخصيات، أدوات الدروس، الفقاعات) فوقه */
 function render3d(ctx, view, t) {
   const L = eng.l3, dpr = eng.dpr, setT = m => ctx.setTransform(dpr * m[0], dpr * m[1], dpr * m[2], dpr * m[3], dpr * m[4], dpr * m[5]);
-  SEASON.ramadan = ramadanOn(); eng.mood = SEASON.ramadan ? 'dusk' : 'day';
+  SEASON.ramadan = ramadanOn(); eng.mood = SEASON.ramadan || isNight() ? 'dusk' : 'day';
   const list = worldItems(view, t, true);
   // يُرسم فقط ما أمام الكاميرا وبمقياس معقول: الصفوف خلف الكاميرا أو قريبة منها جداً كانت تُرسم مقلوبة وضخمة (مستطيلات كبيرة تتحرك على الشاشة)
   const ok = m => m[0] > 0 && m[3] > 0 && m[0] < 4 && m[3] < 4 && isFinite(m[4]) && isFinite(m[5]), V = L.view;
   list.filter(d => !V || (d.y > V.y - 400 && d.y < V.y + V.h + 260)).sort((a, b) => a.y - b.y).forEach(d => { const m = L.itemTransform(d.y); if (!ok(m)) return; setT(m); d.draw(ctx); });
   setT(L.itemTransform(W.player.y)); heroExtras(ctx);
   drawFx(ctx);
-  ctx.setTransform(dpr, 0, 0, dpr, 0, 0); drawMarks3d(ctx, t); drawGuide3d(ctx, t);
+  ctx.setTransform(dpr, 0, 0, dpr, 0, 0); drawMarks3d(ctx, t); drawEventMarks3d(ctx, t); drawGuide3d(ctx, t);
 }
 /* السهم إلى الهدف على حافة الشاشة (بإحداثيات الشاشة في 3D) */
 function drawGuide3d(ctx, t) {
@@ -560,7 +563,8 @@ function worldItems(view, t, three) {
   if (!three) list.push({ y: HERO_DOOR.y - 13, draw: cc => signboard(cc, HERO_DOOR.x + 52, HERO_DOOR.y - 66, '🏠 بيت البطل') });   // لافتة على جدار بيت البطل (في 3D على الواجهة نفسها)
   const giverMark = n => c && c.ready && MODS[c.id] && c.giver === n.id && !quests.isStarted(c.id) ? '!' : null;
   // الشخصيات خارج الشاشة لا تُرسم (كانت كلها تُرسم في كل إطار)
-  list.push(...homeExterior(HOUSES[2], view), ...(three ? [] : crowdItems(drawNpc, view)));
+  list.push(...homeExterior(HOUSES[2], view), ...(three ? [] : crowdItems(drawNpc, view)), ...secretItems(view));
+  if (!three) eventPeople().forEach(n => list.push({ y: n.y, x: n.x, lean: .5, draw: cc => drawNpc(cc, n, eventMark(n.id)) }));
   list.push(...kidsItems(drawNpc, view, three), ...decorItems(view), ...treasureItems(view, gateState(), t), ...petItems(view, t, three));
   if (!three) W.npcs.filter(n => npcVisible(n, s) && n.x > view.x - 60 && n.x < view.x + view.w + 60 && n.y > view.y - 20 && n.y < view.y + view.h + 110).forEach(n => list.push({ y: n.y, x: n.x, lean: .5, draw: cc => drawNpc(cc, n, giverMark(n)) }));   // في 3D: الشخصيات مجسّمة (people3d)
   const pl = W.player, mod = curMod(), hand = mod && mod.hand && c && quests.isStarted(c.id) ? mod.hand(quests.data(c.id)) : null;
@@ -577,6 +581,7 @@ function people3d() {
     out.push({ id: n.id, look: n, lookKey: n.id, x: n.x, y: n.y, moving: n.moving, phase: n.phase, dir: n.dir, anim: n.anim && !n.moving ? n.anim.name : null, animT: n.anim ? n.anim.t : 0, carry: 0, face: Math.hypot(n.x - pl.x, n.y - pl.y) < 150 ? pl : null }); });
   out.push(...kidsPeople3d(v));   // طلاب المدرسة
   out.push(...crowdPeople3d(v));   // أهل القرية المتجولون
+  eventPeople().forEach(n => out.push({ id: n.id, look: n, lookKey: n.id + n.name, x: n.x, y: n.y, moving: false, phase: 0, dir: 'down', anim: n.anim ? n.anim.name : null, animT: n.anim ? n.anim.t : 0 }));   // زائر اليوم والراوي ليلاً
   return out;
 }
 /* علامة المهمة فوق رأس من ينتظر البطل (فوق المجسّم، على الشاشة) */
@@ -700,4 +705,11 @@ function villageCheer(id) {
   document.body.appendChild(fx); setTimeout(() => fx.remove(), 3200);
   const s = game.state, k = (s.thankI = ((s.thankI || 0) + 1) % THANKS.length), l = LESSONS.find(x => x.id === id), g = l && W.npcs.find(n => n.id === l.giver);
   setTimeout(() => hud.toast('💬 ' + (g ? g.name + ': ' : '') + THANKS[k].replace('{n}', s.hero.name)), 1800);
+}
+
+/* علامة زائر اليوم والراوي في 3D */
+function drawEventMarks3d(ctx, t) {
+  eventPeople().forEach(n => { if (!eventMark(n.id)) return; const p = eng.l3.project(n.x, n.y, heightOf(n) + 22 + Math.sin(t * 3) * 3);
+    ctx.save(); ctx.translate(p.x, p.y); ctx.fillStyle = n.id === 'teller' ? '#9C6BFF' : '#2E9E5B'; ctx.beginPath(); ctx.arc(0, 0, 12, 0, 7); ctx.fill(); ctx.strokeStyle = '#FFF6E2'; ctx.lineWidth = 2; ctx.stroke();
+    ctx.fillStyle = '#fff'; ctx.font = '900 15px Cairo, sans-serif'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.fillText('!', 0, 1); ctx.restore(); });
 }

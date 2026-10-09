@@ -21,6 +21,9 @@ export const DECOR = [
   { id: 'festlamp', icon: '🏮', name: 'فانوس المهرجان الكبير', price: 0, reward: true, x: 990, y: 600 },
   { id: 'minilight', icon: '🗼', name: 'الفنار الصغير', price: 0, reward: true, x: 1300, y: 430 },
   { id: 'cairn', icon: '🗻', name: 'رُجمة جبل شمس', price: 0, reward: true, x: 1180, y: 600 },
+  { id: 'falcon', icon: '🦅', name: 'منصة الصقر', price: 0, reward: true, x: 1335, y: 600 },
+  { id: 'dhowModel', icon: '⛵', name: 'نموذج السفينة العُمانية', price: 0, reward: true, x: 900, y: 560 },
+  { id: 'goldDallah', icon: '☕', name: 'الدلّة الذهبية الكبيرة', price: 0, reward: true, x: 1020, y: 610 },
   { id: 'cooler', icon: '🚰', name: 'برّادة ماء القرية', price: 0, reward: true, x: 1290, y: 590 },   // من «صندوق الخير»
   { id: 'qindeel', icon: '🪔', name: 'قنديل الخير', price: 0, reward: true, x: 915, y: 500 },
   { id: 'astrolabe', icon: '🧭', name: 'إسطرلاب الفلكي حمدان', price: 0, reward: true, x: 1240, y: 520 }   // جائزة مغامرة «إنقاذ القرية» (لا تُباع)
@@ -76,6 +79,9 @@ const DRAW = {
     c.fillStyle = '#D63A3A'; c.fillRect(x - 9, y - 18, 18, 8); c.fillRect(x - 7, y - 40, 14, 7); c.fillStyle = `rgba(255,214,90,${.6 + Math.sin(t * 3) * .3})`; c.beginPath(); c.arc(x, y - 62, 7, 0, 7); c.fill(); c.fillStyle = '#5A4632'; c.fillRect(x - 8, y - 70, 16, 3); },
   cooler(c, x, y) { sh(c, x, y, 14); c.fillStyle = '#9AA6B0'; c.fillRect(x - 12, y - 40, 24, 40); c.fillStyle = '#E8EEF2'; c.fillRect(x - 10, y - 38, 20, 22); c.fillStyle = '#2F9BD6'; c.fillRect(x - 10, y - 14, 20, 4);
     c.fillStyle = '#5E6874'; c.fillRect(x - 4, y - 12, 8, 3); c.strokeStyle = '#3E4A55'; c.lineWidth = 1; c.strokeRect(x - 12, y - 40, 24, 40); c.fillStyle = '#7FD3F5'; c.beginPath(); c.arc(x, y - 30, 4, 0, 7); c.fill(); },
+  falcon(c, x, y) { sh(c, x, y, 14); c.fillStyle = '#7A4A2A'; c.fillRect(x - 2, y - 40, 4, 40); c.fillRect(x - 14, y - 42, 28, 4); c.fillStyle = '#8A6A4A'; c.beginPath(); c.ellipse(x, y - 52, 8, 11, 0, 0, 7); c.fill(); c.fillStyle = '#E8DCC8'; c.beginPath(); c.ellipse(x, y - 49, 5, 7, 0, 0, 7); c.fill(); c.fillStyle = '#5A3A1E'; c.beginPath(); c.arc(x, y - 63, 5, 0, 7); c.fill(); c.fillStyle = '#E3B04B'; c.beginPath(); c.moveTo(x + 4, y - 63); c.lineTo(x + 9, y - 61); c.lineTo(x + 4, y - 60); c.fill(); },
+  dhowModel(c, x, y) { sh(c, x, y, 18); c.fillStyle = '#B8AE98'; c.fillRect(x - 16, y - 10, 32, 10); c.fillStyle = '#8A5A30'; c.beginPath(); c.moveTo(x - 20, y - 16); c.lineTo(x + 22, y - 16); c.lineTo(x + 14, y - 8); c.lineTo(x - 14, y - 8); c.fill(); c.fillStyle = '#5A3A1E'; c.fillRect(x - 1, y - 50, 2, 34); c.fillStyle = '#F4F1E8'; c.beginPath(); c.moveTo(x + 1, y - 48); c.lineTo(x + 18, y - 20); c.lineTo(x + 1, y - 20); c.fill(); },
+  goldDallah(c, x, y) { sh(c, x, y, 14); c.fillStyle = '#C9971C'; c.beginPath(); c.ellipse(x, y - 12, 12, 12, 0, 0, 7); c.fill(); c.fillRect(x - 5, y - 34, 10, 14); c.beginPath(); c.moveTo(x + 4, y - 24); c.quadraticCurveTo(x + 22, y - 34, x + 20, y - 44); c.lineWidth = 4; c.strokeStyle = '#C9971C'; c.stroke(); c.fillStyle = '#FFE08A'; c.beginPath(); c.arc(x - 3, y - 16, 4, 0, 7); c.fill(); c.fillStyle = '#9A6A10'; c.beginPath(); c.arc(x, y - 36, 4, 0, 7); c.fill(); },
   qindeel(c, x, y, t) { sh(c, x, y, 16); c.fillStyle = '#6B6470'; c.fillRect(x - 10, y - 8, 20, 8); c.fillRect(x - 3, y - 46, 6, 40); c.fillStyle = `rgba(255,200,80,${.3 + Math.sin(t * 2.5) * .1})`; c.beginPath(); c.arc(x, y - 58, 24, 0, 7); c.fill();
     c.fillStyle = '#C9971C'; c.beginPath(); c.ellipse(x, y - 52, 13, 6, 0, 0, 7); c.fill(); c.fillStyle = '#FFE08A'; c.beginPath(); c.moveTo(x, y - 74); c.quadraticCurveTo(x + 7, y - 60, x, y - 56); c.quadraticCurveTo(x - 7, y - 60, x, y - 74); c.fill(); },
   cairn(c, x, y) { sh(c, x, y, 16); [[0, 0, 16], [-2, -12, 13], [1, -22, 10], [0, -30, 7]].forEach(([dx, dy, r], i) => { c.fillStyle = ['#9C9488', '#B8AE98', '#A89E8C', '#C9BFA9'][i]; c.beginPath(); c.ellipse(x + dx, y - 6 + dy, r, r * .55, 0, 0, 7); c.fill(); }); },
