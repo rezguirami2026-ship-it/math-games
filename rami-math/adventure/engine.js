@@ -319,7 +319,7 @@ export function runAdventure(def, onExit) {
   function burst(x, y, n, col) { for (let i = 0; i < n; i++) { const a = Math.random() * 7, s = 40 + Math.random() * 90; fx.push({ x, y, vx: Math.cos(a) * s, vy: Math.sin(a) * s - 60, life: .7 + Math.random() * .4, col: col || ['#FFD54A', '#FF7AB6', '#7CD6FF'][i % 3] }); } }
 
   /* ── الحلقة ── */
-  let raf = 0, last = performance.now();
+  let raf = 0, last = performance.now(), goalT = 0;
   function step(now) {
     const dt = Math.min(.05, (now - last) / 1000); last = now; t += dt;
     if (!locked && !caught) { update(dt); followStep(dt); }
@@ -330,6 +330,7 @@ export function runAdventure(def, onExit) {
     ents.forEach(e => { if ((e.kind === 'gate' || e.kind === 'door' || e.kind === 'cage') && !e.open && e.when && e.when(A)) { A.set(e.id, { open: true }); sfx('gate'); A.shake(.4); toast(e.openMsg || '🔓 انفتح شيء ما!'); } });
     for (let i = fx.length - 1; i >= 0; i--) { const p = fx[i]; p.life -= dt; p.x += p.vx * dt; p.y += p.vy * dt; p.vy += 160 * dt; if (p.life <= 0) fx.splice(i, 1); }
     shakeK = Math.max(0, shakeK - dt * 2.5); if (cine < 1) cine += dt / 4.5;
+    goalT -= dt; if (goalT <= 0) { goalT = .5; goal(); }   // الهدف يتحدّث وحده (مثلاً عند دخول مكان)
     if (r3) {
       cam.x += (P.x * T - cam.x) * Math.min(1, dt * 6); cam.y += (P.y * T - cam.y) * Math.min(1, dt * 6);
       r3.frame({ areaId: S.area, map, theme: area.theme, dark: (S.flags.weather && S.flags.weather.dark != null) ? S.flags.weather.dark : area.dark != null ? area.dark : THEMES[area.theme].night, tileAt, ents, P, t, A, caught,
