@@ -1,6 +1,7 @@
 // واجهة اللعب: العالم يأخذ الشاشة، والأدوات صغيرة. حوار وأزرار سياقية ولوحات بسيطة.
 import { game } from '../core/state.js';
 import { startTour } from './tour.js';
+import { heroTitle } from './album.js';
 import { openCharity } from './charity.js';
 import { showIntroVideo } from './introvideo.js';
 import { ar } from '../core/util.js';
@@ -119,7 +120,7 @@ export const hud = {
         <div class="lvList">${LEVELS.map((l, i) => `<div class="lv${i % 9}${i < L.n ? ' on' : ''}${i === L.n - 1 ? ' now' : ''}"><span>${l.icon}</span><b>${l.title}</b><small>${ar(l.xp)}</small></div>`).join('')}</div>`;
     }
     if (kind === 'bag') {
-      body = `<h3>🎒 حقيبة ${s.hero.name}</h3>
+      body = `<h3>🎒 حقيبة ${s.hero.name}${heroTitle(s) ? ` <small class="bagTitle">🎖️ ${heroTitle(s)}</small>` : ''}</h3>
         <div class="bagrow"><span>📦 صناديق بين يديك</span><b>${ar(s.carry)}</b></div>
         <div class="bagrow"><span>💚 نقاط الخير</span><b>${ar(s.good)}</b></div>
         <div class="bagrow"><span>🎁 الكنوز المكتشفة</span><b>${ar(Object.keys(s.treasure || {}).length)} / ١٦</b></div>
@@ -135,6 +136,7 @@ export const hud = {
         ${installable() ? '<button class="act go" id="instBtn">📲 ثبّت اللعبة كتطبيق</button>' : ''}
         <button class="act go" id="advBtn">🗺️ المغامرات</button>
         <button class="act go" id="giveBtn">💚 صندوق الخير (تبرّع بنقاط الخير)</button>
+        <button class="act go" id="albumBtn">📸 ألبوم الذكريات والألقاب</button>
         <button class="act go" id="miniBtn">🎮 ألعاب الساحة (حساب ذهني ممتع)</button>
         <button class="act go" id="homeBtn">🏠 بيت البطل (الغرف والأثاث)</button>
         <button class="act go" id="wardBtn">🚪 خزانة البطل (الملابس والجوائز)</button>
@@ -164,6 +166,7 @@ export const hud = {
       if ($('instBtn')) $('instBtn').onclick = e => { e.stopPropagation(); install(); };
       $('advBtn').onclick = e => { e.stopPropagation(); bus.emit('openAdventures'); };
       $('giveBtn').onclick = e => { e.stopPropagation(); this.closePanel(); setTimeout(openCharity, 120); };
+      $('albumBtn').onclick = e => { e.stopPropagation(); this.closePanel(); setTimeout(() => bus.emit('openAlbum'), 120); };
       $('miniBtn').onclick = e => { e.stopPropagation(); this.closePanel(); setTimeout(() => bus.emit('openMini'), 120); };
       if ($('petDecBtn')) $('petDecBtn').onclick = e => { e.stopPropagation(); this.closePanel(); setTimeout(() => bus.emit('openPetDecor'), 120); };
       $('homeBtn').onclick = e => { e.stopPropagation(); this.closePanel(); setTimeout(() => bus.emit('openHome'), 120); };

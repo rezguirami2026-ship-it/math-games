@@ -17,6 +17,7 @@ import { openHome, homeExterior } from './ui/herohome.js';
 import { decorItems, initGems, DECOR } from './world/decor.js';
 import { updatePet, petItems, pet3d, petHop, setSniff, petOn } from './world/pet.js';
 import { openMiniGames, openPetDecor } from './ui/minigames.js';
+import { openAlbum, heroTitle, drawTitle } from './ui/album.js';
 import { eventPeople, eventMark, openVisitor, openTeller, isNight, checkSecrets, secretItems, VISITOR, TELLER } from './ui/events.js';
 import { treasureItems, nearTreasure, openTreasure, TREASURES } from './world/treasure.js';
 import { CHAPTER, introLines, npcLines } from './story/dialogues.js';
@@ -169,7 +170,7 @@ function areaCheck(dt) {   // يتغير الاسم بعد ثبات اللاعب
   if ((W.areaT += dt) < .5) return;
   W.area = a; W.areaT = 0;
   const v = s.world.visited = s.world.visited || {}, isNew = !v[a.id] && a.id !== 'village';
-  v[a.id] = 1; bus.emit('save');
+  v[a.id] = v[a.id] || Date.now(); bus.emit('save');   // تاريخ أول زيارة (لألبوم الذكريات)
   hud.region(a.icon, a.name, areaSub(a), isNew); sfx(isNew ? 'newRegion' : 'region');
   if (isNew) sparkle(pl.x, pl.y - 50, 20);
 }
@@ -214,7 +215,7 @@ async function start(state) {
   }
 }
 /* ── العرض ثلاثي الأبعاد (renderer3d): يُحمَّل فقط عند طلبه، ويرجع إلى الرسم الحالي إن لم يدعم الجهاز WebGL أو فشل التحميل ── */
-const V3D = 'نسخة 3D · ٨٧'; window.__BUILD = V3D.replace('نسخة 3D · ', '');   // تُعرض في شاشة التحميل وفي الزاوية: للتأكد أن المتصفح حمّل آخر نسخة
+const V3D = 'نسخة 3D · ٨٨'; window.__BUILD = V3D.replace('نسخة 3D · ', '');   // تُعرض في شاشة التحميل وفي الزاوية: للتأكد أن المتصفح حمّل آخر نسخة
 const want3d = () => gfx.d3();
 function loadingScreen() {
   const el = document.createElement('div'); el.className = 'load3d';
@@ -522,7 +523,7 @@ function render3d(ctx, view, t) {
   list.filter(d => !V || (d.y > V.y - 400 && d.y < V.y + V.h + 260)).sort((a, b) => a.y - b.y).forEach(d => { const m = L.itemTransform(d.y); if (!ok(m)) return; setT(m); d.draw(ctx); });
   setT(L.itemTransform(W.player.y)); heroExtras(ctx);
   drawFx(ctx);
-  ctx.setTransform(dpr, 0, 0, dpr, 0, 0); drawMarks3d(ctx, t); drawEventMarks3d(ctx, t); drawGuide3d(ctx, t);
+  ctx.setTransform(dpr, 0, 0, dpr, 0, 0); drawMarks3d(ctx, t); drawEventMarks3d(ctx, t); { const ttl = heroTitle(); if (ttl) { const p = eng.l3.project(W.player.x, W.player.y, heightOf(hero()) + 14); drawTitle(ctx, p.x, p.y, ttl); } } drawGuide3d(ctx, t);
 }
 /* السهم إلى الهدف على حافة الشاشة (بإحداثيات الشاشة في 3D) */
 function drawGuide3d(ctx, t) {
@@ -569,6 +570,7 @@ function worldItems(view, t, three) {
   if (!three) W.npcs.filter(n => npcVisible(n, s) && n.x > view.x - 60 && n.x < view.x + view.w + 60 && n.y > view.y - 20 && n.y < view.y + view.h + 110).forEach(n => list.push({ y: n.y, x: n.x, lean: .5, draw: cc => drawNpc(cc, n, giverMark(n)) }));   // في 3D: الشخصيات مجسّمة (people3d)
   const pl = W.player, mod = curMod(), hand = mod && mod.hand && c && quests.isStarted(c.id) ? mod.hand(quests.data(c.id)) : null;
   const pa = pl.anim ? pl.anim.name : pl.moving ? (pl.speed > 160 ? 'run' : 'walk') : 'idle';
+  const ttl = heroTitle(); if (ttl && !three) list.push({ y: pl.y + .5, x: pl.x, lean: .5, draw: cc => drawTitle(cc, pl.x, pl.y - 66, ttl) });
   if (!three) list.push({ y: pl.y, x: pl.x, lean: .5, draw: cc => drawHuman(cc, Object.assign(hero(), { x: pl.x, y: pl.y, dir: pl.dir, phase: pl.phase, moving: pl.moving, carry: hand ? Math.min(hand.n, 6) : s.carry, bend: pl.act === 'plant', anim: pa, animT: pl.anim ? pl.anim.t : 0 })) });
   return list;
 }
@@ -675,6 +677,7 @@ bus.on('openWardrobe', () => openWardrobe());
 bus.on('openHome', () => openHome(openWardrobe));
 bus.on('openMini', () => openMiniGames());
 bus.on('openPetDecor', () => openPetDecor());
+bus.on('openAlbum', () => openAlbum());
 bus.on('lessonDone', () => setTimeout(() => { const n = syncUnitGear(); if (n.length) { bus.emit('save'); hud.toast(`👕 لباس جديد في خزانة البطل: ${n.map(g => g.name).join('، ')} (من الحقيبة 🎒)`); } }, 2500));   // قطعة لكل وحدة مكتملة   // من الحقيبة (والباب عند بيت البطل)   // إكمال وحدة يفتح مغامرتها
 bus.on('pauseWorld', on => { eng.paused = on; });
 bus.on('openAdventures', () => openAdventures());

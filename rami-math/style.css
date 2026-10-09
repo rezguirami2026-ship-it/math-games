@@ -277,3 +277,13 @@ body:has(.wardrobe) .toast{display:none}
 .mini .mgBasket{position:absolute;bottom:8px;right:12px;font:900 22px Cairo;background:#fff;border-radius:14px;padding:2px 12px}
 .mini .mgEnd{text-align:center}.mini .mgBig{font-size:72px;animation:pop .5s}
 .mini .mgDate .dt{width:22px;height:22px;display:inline-block;background:radial-gradient(circle at 30% 30%,#B5651D 0 4px,transparent 5px),radial-gradient(circle at 70% 30%,#8A4A1A 0 4px,transparent 5px),radial-gradient(circle at 50% 65%,#7A3A12 0 4.5px,transparent 5.5px),radial-gradient(circle at 25% 75%,#A0561C 0 3.5px,transparent 4.5px),radial-gradient(circle at 75% 75%,#6B3410 0 3.5px,transparent 4.5px)}
+
+/* ألبوم الذكريات والألقاب */
+.album .alGrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:14px;margin:10px 0}
+.album .alCard{margin:0;background:#fff;padding:8px 8px 10px;border-radius:6px;box-shadow:0 6px 16px rgba(60,40,10,.18);transform:rotate(var(--r));transition:transform .2s}
+.album .alCard:hover{transform:rotate(0) scale(1.03)}.album .alCard canvas{width:100%;display:block;border-radius:3px}
+.album .alCard figcaption{text-align:center;margin-top:6px;line-height:1.5}.album .alCard b{display:block;font-size:14px;color:#1F4E79}.album .alCard small{display:block;font-size:12px;color:#7A6A4A}.album .alCard em{display:block;font-style:normal;font-size:11.5px;color:#C9971C;font-weight:800}
+.album .alTitles{display:grid;grid-template-columns:repeat(auto-fill,minmax(170px,1fr));gap:8px;margin:8px 0 12px}
+.album .alT{border:1.5px solid #E3CFA0;background:#fff;border-radius:14px;padding:6px 10px;font:inherit;text-align:center;color:#2A1B66}.album .alT b{display:block;font-size:14px}.album .alT small{display:block;font-size:11.5px;color:#7A6A4A}
+.album .alT.on{background:linear-gradient(180deg,#FFF1B8,#FFD54A);border-color:#E3A21A}.album .alT.lock{opacity:.55}
+.bagTitle{font-size:13px;color:#8A5A00;background:#FFF1C8;border-radius:10px;padding:1px 10px;margin-right:6px}
