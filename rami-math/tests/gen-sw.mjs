@@ -11,7 +11,7 @@ try { execFileSync(process.execPath, ['--experimental-vm-modules', join(ROOT, 't
 catch (e) { console.log(String(e.stdout || '')); console.log('⛔ أُلغي توليد sw.js: أصلح خطأ الصياغة أولاً'); process.exit(1); }
 const SKIP = new Set(['tests', 'server', 'node_modules', '.git', 'sw.js', 'CLAUDE.md', 'README.md']);
 const files = [];
-(function walk(d) { for (const f of readdirSync(d)) { if (SKIP.has(f)) continue; const p = join(d, f); if (statSync(p).isDirectory()) walk(p); else files.push(relative(ROOT, p).replace(/\\/g, '/')); } })(ROOT);
+(function walk(d) { for (const f of readdirSync(d)) { if (SKIP.has(f) || /.mp4$/.test(f)) continue; const p = join(d, f);   // الفيديو لا يُخزَّن مع التطبيق (كبير): يُشغَّل من الشبكة if (statSync(p).isDirectory()) walk(p); else files.push(relative(ROOT, p).replace(/\\/g, '/')); } })(ROOT);
 files.sort();
 const h = createHash('sha1'); files.forEach(f => { h.update(f); h.update(readFileSync(join(ROOT, f))); });
 const VERSION = h.digest('hex').slice(0, 10);
@@ -26,7 +26,7 @@ self.addEventListener('install', e => { e.waitUntil(caches.open(CACHE).then(c =>
 self.addEventListener('message', e => { if (e.data === 'skip') self.skipWaiting(); });
 self.addEventListener('activate', e => { e.waitUntil(caches.keys().then(ks => Promise.all(ks.filter(k => k.startsWith('qaryat-alkhair-') && k !== CACHE).map(k => caches.delete(k)))).then(() => self.clients.claim())); });
 self.addEventListener('fetch', e => {
-  const r = e.request, u = new URL(r.url); if (r.method !== 'GET' || u.origin !== location.origin) return;
+  const r = e.request, u = new URL(r.url); if (r.method !== 'GET' || u.origin !== location.origin || /.mp4$/.test(u.pathname)) return;
   const key = r.mode === 'navigate' ? './index.html' : r;
   e.respondWith(caches.open(CACHE).then(c => c.match(key, { ignoreSearch: true }).then(hit => hit || fetch(r).then(res => { if (res.ok && r.mode !== 'navigate') c.put(key, res.clone()); return res; }).catch(() => c.match('./index.html')))));
 });

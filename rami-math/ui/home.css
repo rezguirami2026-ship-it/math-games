@@ -209,3 +209,21 @@
   .h2hero canvas{position:relative;z-index:1}
 }
 @keyframes hflagWave{0%,100%{transform:skewY(0) scaleX(1)}50%{transform:skewY(-4deg) scaleX(.94)}}
+
+/* ── الفيديو التعريفي (ui/introvideo.js) ── */
+.ivid{position:fixed;inset:0;z-index:90;display:grid;place-items:center;padding:calc(var(--safeT,0px) + 12px) 12px 12px;background:radial-gradient(ellipse at 50% 40%,rgba(40,28,100,.92),rgba(6,4,18,.96));direction:rtl;animation:pop .3s}
+.ivid.out{opacity:0;transition:opacity .25s}
+.ividIn{width:min(960px,100%);text-align:center}
+.ividHead{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:10px;color:#FFE3A0;font:900 clamp(17px,4vw,24px) Cairo,sans-serif}
+.ividX{width:42px;height:42px;border-radius:50%;border:2px solid #E3B04B;background:rgba(255,255,255,.1);color:#fff;font-size:18px;flex:none}
+.ividBox{position:relative;border-radius:18px;overflow:hidden;background:#000;box-shadow:0 0 0 3px #E3B04B,0 20px 50px rgba(0,0,0,.6);aspect-ratio:16/9;max-height:72vh;margin:0 auto}
+.ividBox video{width:100%;height:100%;display:block;object-fit:contain;background:#000}
+.ividPlay{position:absolute;inset:0;margin:auto;width:110px;height:110px;border-radius:50%;border:4px solid #fff;color:#3A2400;font-size:46px;
+  background:radial-gradient(circle at 35% 30%,#FFF4C4,#FFD54A 50%,#E3A21A);box-shadow:0 0 0 10px rgba(255,213,74,.3),0 12px 30px rgba(0,0,0,.5);animation:ividP 1.6s ease-in-out infinite}
+.ividPlay span{display:block;transform:translateX(-4px)}
+@keyframes ividP{50%{transform:scale(1.08);box-shadow:0 0 0 18px rgba(255,213,74,.15),0 12px 30px rgba(0,0,0,.5)}}
+.ividErr{position:absolute;inset:0;display:grid;place-items:center;margin:0;padding:20px;color:#FFE3A0;font:800 17px/1.7 Cairo,sans-serif}
+.ividFoot{display:flex;gap:10px;justify-content:center;flex-wrap:wrap;margin-top:14px}
+.ividFoot .act{padding:10px 22px;font-size:16px}
+.ividGo.pulse{animation:grandGlow 1.4s ease-in-out infinite}
+.ivid [hidden]{display:none!important}

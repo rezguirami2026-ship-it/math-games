@@ -129,6 +129,7 @@ export function homeHTML(saved) {
     </nav>
     <div class="h2more">
       ${saved ? '<button class="hpill" id="bNew">✨ مغامرة جديدة</button>' : ''}
+      <button class="hpill" id="bVid">🎬 فيديو تعريفي</button>
       <button class="hpill" id="bCode">🔑 لديّ رمز تقدّم</button>
       <button class="hpill" data-p="sta">📊 تقدّمي</button>
       <button class="hpill" data-p="set">⚙️ الإعدادات</button>

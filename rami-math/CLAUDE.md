@@ -110,3 +110,4 @@
 - **التحميل عند الحاجة**: `adventure/engine.js` و`render3d.js` (ومعه Three.js) لا يُستوردان عند البدء؛ `playAdventure` يستوردهما. لا تستورد من `renderer3d/index.js` في ملفات تُحمَّل في العرض العادي (يجرّ Three.js كله).
 - `ui/tour.js`: دليل البداية بعد مقدمة القصة (`state.tourDone`)، ويُعاد من الحقيبة. يتخطاه الاختبار الآلي (`navigator.webdriver`) إلا مع `?tour=1`.
 - لافتات المباني (`signMesh` في renderer3d/omani.js): النص يُوسَّط بقياس ارتفاع الحروف الفعلي ويصغر إن لم يتسع، وفتحات التهوية ورؤوس الجذوع والمرازيم تُبعد عن مكان اللافتة.
+- **الفيديو التعريفي** `assets/video/intro.mp4` (لا يُخزَّن في sw.js، يُشغَّل من الشبكة): `ui/introvideo.js` يعرضه أول فتح فوق الشاشة الرئيسية، وزر «🎬» في الرئيسية والحقيبة. إعادة إنتاجه من `tests/video/`: `python voice.py <OUT>/voice` (أصوات edge-tts العُمانية) ← `node make.mjs <OUT> [مشاهد]` (لقطات بوقت افتراضي vtime.js مع طبقة overlay.js) ← `python music.py` ← `python mux.py`. النص في `script.json`.

@@ -1,6 +1,7 @@
 // واجهة اللعب: العالم يأخذ الشاشة، والأدوات صغيرة. حوار وأزرار سياقية ولوحات بسيطة.
 import { game } from '../core/state.js';
 import { startTour } from './tour.js';
+import { showIntroVideo } from './introvideo.js';
 import { ar } from '../core/util.js';
 import { drawHuman } from '../character/human.js';
 import { ACH } from '../achievements/achievements.js';
@@ -132,7 +133,7 @@ export const hud = {
         <button class="act ghost" id="ramBtn">🌙 أجواء رمضان: ${PREF_LABEL[ramadanPref()]}</button>
         ${installable() ? '<button class="act go" id="instBtn">📲 ثبّت اللعبة كتطبيق</button>' : ''}
         <button class="act go" id="advBtn">🗺️ المغامرات</button>
-        <button class="act ghost" id="tourBtn">🧭 جولة تعريفية باللعبة</button>
+        <div class="opsRow"><button class="act ghost" id="tourBtn">🧭 جولة تعريفية</button><button class="act ghost" id="vidBtn">🎬 الفيديو التعريفي</button></div>
         <div class="opsRow"><button class="act ghost" id="aboutBtn">ℹ️ حول اللعبة</button><button class="act ghost" id="supBtn">🛟 الدعم الفني</button></div>
         <button class="act ghost" id="d3Btn">🎮 العرض: ${gfx.d3() ? 'ثلاثي الأبعاد' : 'عادي'}</button>
         ${gfx.d3() ? `<button class="act ghost" id="qBtn">✨ الجودة: ${{ auto: 'تلقائية', high: 'عالية', low: 'منخفضة' }[gfx.q()]}</button>` : ''}`;
@@ -157,6 +158,7 @@ export const hud = {
       $('decoBtn').onclick = e => { e.stopPropagation(); openDecorShop(); };
       if ($('instBtn')) $('instBtn').onclick = e => { e.stopPropagation(); install(); };
       $('advBtn').onclick = e => { e.stopPropagation(); bus.emit('openAdventures'); };
+      $('vidBtn').onclick = e => { e.stopPropagation(); this.closePanel(); showIntroVideo(); };
       $('tourBtn').onclick = e => { e.stopPropagation(); this.closePanel(); setTimeout(() => startTour(true), 250); };
       $('aboutBtn').onclick = e => { e.stopPropagation(); openAbout(); };
       $('supBtn').onclick = e => { e.stopPropagation(); openSupport(); };

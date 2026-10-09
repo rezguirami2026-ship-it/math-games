@@ -1,5 +1,6 @@
 // شاشات البداية: العنوان، اختيار البطل، بطاقة الفصل. لا قوائم دروس ولا لوحات.
 import { drawHuman, SKINS, ACCENTS } from '../character/human.js';
+import { showIntroVideo } from './introvideo.js';
 import { importCode } from '../save/save.js';
 import { LESSONS } from '../content/lessons.js';
 import { ar } from '../core/util.js';
@@ -37,6 +38,8 @@ export const screens = {
     if (saved) $('bCont').onclick = () => { stopAll(); el.className = 'screen'; onContinue(); };
     $('bNew').onclick = () => { if (saved && !confirm('ستبدأ مغامرة جديدة ويُمسح عالمك الحالي. هل أنت متأكد؟')) return; this.hero(onNew); };
     $('bCode').onclick = () => { stopAll(); this.restore(saved, { onContinue, onNew, onRestore }); };
+    $('bVid').onclick = () => showIntroVideo();
+    showIntroVideo({ first: true });   // أول فتح للعبة على الجهاز
   },
   /* استعادة المغامرة برمز التقدّم: يُعرض اسم البطل وتقدّمه قبل التأكيد */
   restore(saved, cb) {
