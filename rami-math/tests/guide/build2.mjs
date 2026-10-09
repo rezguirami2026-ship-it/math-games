@@ -1,0 +1,316 @@
+// الدليل التشغيلي بصفحات طولية (A4 بنسبة 1:1.414): كل لقطة كاملة بلا قصّ، والأرقام في هامش خارج الصورة
+// تُشير إلى الزر بإطار رفيع وخط، فلا تغطّي أي كتابة. اللوحات الطويلة تُعرض في عمودين متتاليين (العمود الأيمن أولاً).
+// الاستعمال: node build2.mjs <مجلد العمل: img/ و cred/ و perf.json> <ملف PDF> [أرقام صفحات للمعاينة…]
+import { chromium } from 'playwright-core';
+import fs from 'fs';
+import path from 'path';
+const W = process.argv[2], OUTPDF = process.argv[3];
+const ROOT = path.resolve(path.dirname(new URL(import.meta.url).pathname.replace(/^\/([A-Z]:)/, '$1')), '..', '..');
+const marks = JSON.parse(fs.readFileSync(path.join(W, 'img', 'marks.json'), 'utf8'));
+const perf = JSON.parse(fs.readFileSync(path.join(W, 'perf.json'), 'utf8'));
+const url = p => 'file:///' + p.replace(/\\/g, '/');
+const IMGF = n => path.join(W, 'img', n + '.jpg'), IMG = n => url(IMGF(n));
+const CRED = n => url(path.join(W, 'cred', n));
+const FONT = f => url(path.join(ROOT, 'assets', 'fonts', f));
+const AR = n => String(n).replace(/[0-9]/g, d => '٠١٢٣٤٥٦٧٨٩'[d]).replace(/\./g, '٫');
+const PW = 900, PH = 1273;
+function jpgSize(f) { const d = fs.readFileSync(f); let i = 2; while (i < d.length) { const m = d[i + 1], L = d.readUInt16BE(i + 2); if (m === 0xC0 || m === 0xC2) return { w: d.readUInt16BE(i + 7), h: d.readUInt16BE(i + 5) }; i += 2 + L; } }
+
+/* لقطة مرقّمة: w عرض العمود بالبكسل، cols عدد الأعمدة للصور الطويلة. الأرقام في الهامش الجانبي الأقرب للعنصر. */
+function fig(name, cap, notes = [], { w = 700, cols = 1, gutter = 40, legend = 'below' } = {}) {
+  const sz = jpgSize(IMGF(name)), ms = (marks[name] || []).filter(r => notes.some(([n]) => n === r.n));
+  const baseW = ms.length ? ms[0].W : sz.w, baseH = ms.length ? ms[0].H : sz.h, s = w / baseW, full = baseH * s;
+  const colH = Math.ceil(full / cols), gap = 18, G = ms.length ? gutter : 0, totalW = cols * w + (cols - 1) * gap + 2 * G;
+  // العمود i (يبدأ من اليمين): يعرض الشريحة [i*colH, (i+1)*colH)
+  const colX = i => totalW - G - (i + 1) * w - i * gap;
+  let html = `<div class="fbox" style="width:${totalW}px;height:${colH}px">`;
+  for (let i = 0; i < cols; i++) html += `<div class="fcol" style="left:${colX(i)}px;width:${w}px;height:${Math.min(colH, full - i * colH)}px"><img src="${IMG(name)}" style="width:${w}px;top:${-i * colH}px"></div>`;
+  // العلامات: إطار حول العنصر، ورقم في الهامش الأيمن أو الأيسر، وخط أفقي بينهما
+  const items = ms.map(r => { const ci = Math.min(cols - 1, Math.floor((r.y + r.h / 2) * s / colH)), x0 = colX(ci) + r.x * s, y0 = r.y * s - ci * colH;
+    const bx = { x: x0 - 3, y: y0 - 3, w: r.w * s + 6, h: r.h * s + 6 }, cy = bx.y + bx.h / 2;
+    const right = cols > 1 ? ci === 0 : (x0 + bx.w / 2) > totalW / 2;
+    return { n: r.n, bx, cy, right }; });
+  ['right', 'left'].forEach(side => { const L = items.filter(it => (side === 'right') === it.right).sort((a, b) => a.cy - b.cy); let last = -99; L.forEach(it => { it.ty = Math.max(it.cy, last + 30); it.ty = Math.min(it.ty, colH - 14); last = it.ty; }); });
+  let svg = `<svg class="fsvg" width="${totalW}" height="${colH}" viewBox="0 0 ${totalW} ${colH}">`;
+  items.forEach(it => { const b = it.bx, tx = it.right ? totalW - G / 2 : G / 2, ex = it.right ? Math.min(totalW - G, b.x + b.w) : Math.max(G, b.x);
+    svg += `<rect x="${b.x}" y="${b.y}" width="${b.w}" height="${b.h}" rx="7" fill="none" stroke="#E3A21A" stroke-width="2.5"/><rect x="${b.x}" y="${b.y}" width="${b.w}" height="${b.h}" rx="7" fill="none" stroke="#fff" stroke-width=".8" opacity=".9"/>`;
+    svg += `<polyline points="${ex},${it.cy} ${(ex + tx) / 2},${it.cy} ${(ex + tx) / 2},${it.ty} ${tx + (it.right ? -12 : 12)},${it.ty}" fill="none" stroke="#E3A21A" stroke-width="2"/>`;
+    svg += `<circle cx="${tx}" cy="${it.ty}" r="13" fill="#1F4E79" stroke="#E3B04B" stroke-width="2.5"/><text x="${tx}" y="${it.ty + 5}" text-anchor="middle" font-size="14" font-weight="900" fill="#FFE3A0" font-family="Cairo">${AR(it.n)}</text>`; });
+  html += svg + '</svg></div>';
+  const lg = notes.length ? `<ol class="legend ${legend}">${notes.map(([n, t]) => `<li><b>${AR(n)}</b><span>${t}</span></li>`).join('')}</ol>` : '';
+  return `<figure class="fig ${legend === 'side' ? 'side' : ''}"><div>${html}<figcaption style="max-width:${totalW}px">${cap}</figcaption></div>${lg}</figure>`;
+}
+const img = (name, cap, w = 780, cols = 1) => fig(name, cap, [], { w, cols });
+
+let pageNo = 0; const TOC = [];
+function page(chapter, title, body) {
+  pageNo++; if (chapter && !TOC.find(t => t.ch === chapter)) TOC.push({ ch: chapter, p: pageNo });
+  return `<section class="page"><header><span class="ch">${chapter || ''}</span><span class="brand">✦ قرية الخير · الدليل التشغيلي</span></header>${title ? `<h2>${title}</h2>` : ''}<div class="body">${body}</div>
+    <footer><span>إعداد الأستاذ رامي الرزقي · مدرسة الخوير للتعليم الأساسي (٥–٩)</span><span class="pn">${AR(pageNo)}</span></footer></section>`;
+}
+function perfChart() {
+  const modes = [['2D', 'ثنائي الأبعاد', '#2F9BD6'], ['3D-low', 'ثلاثي (جودة منخفضة)', '#2E8B57'], ['3D-high', 'ثلاثي (جودة عالية)', '#E3A21A']], thr = [1, 4, 6];
+  const Wd = 760, Hd = 300, max = 60, bw = 56, grp = modes.length * bw;
+  let s = `<svg viewBox="0 0 ${Wd} ${Hd + 50}" width="${Wd}" height="${Hd + 50}" style="direction:ltr">`;
+  [0, 15, 30, 45, 60].forEach(v => { const y = Hd - v / max * (Hd - 20); s += `<line x1="40" x2="${Wd}" y1="${y}" y2="${y}" stroke="${v === 30 ? '#C0392B' : '#D8CBB0'}" stroke-dasharray="${v === 30 ? '6 4' : ''}"/><text x="32" y="${y + 5}" text-anchor="end" font-size="13" fill="#5A4A2A">${AR(v)}</text>`; });
+  s += `<text x="${Wd - 4}" y="${Hd - 30 / max * (Hd - 20) - 6}" text-anchor="end" font-size="12" fill="#C0392B">حدّ السلاسة المستهدف (٣٠)</text>`;
+  thr.forEach((t, gi) => { const x0 = 80 + gi * (grp + 70);
+    modes.forEach(([k, , col], mi) => { const r = perf.find(p => p.mode === k && p.thr === t); const v = r && r.fps ? r.fps : 0, h = v / max * (Hd - 20);
+      s += `<rect x="${x0 + mi * bw}" y="${Hd - h}" width="${bw - 8}" height="${h}" rx="5" fill="${col}"/><text x="${x0 + mi * bw + (bw - 8) / 2}" y="${Hd - h - 6}" text-anchor="middle" font-size="13" font-weight="900" fill="#2A1B66">${AR(v)}</text>`; });
+    s += `<text x="${x0 + grp / 2}" y="${Hd + 26}" text-anchor="middle" font-size="14" font-weight="900" fill="#2A1B66">${t === 1 ? 'سرعة المعالج الكاملة' : `معالج أبطأ ${AR(t)} مرات`}</text>`; });
+  s += `<line x1="40" x2="${Wd}" y1="${Hd}" y2="${Hd}" stroke="#5A4A2A"/></svg>`;
+  return `<div class="chart">${s}<div class="chartLeg">${modes.map(([, n, c]) => `<span><i style="background:${c}"></i>${n}</span>`).join('')}</div></div>`;
+}
+const P = (m, t) => (perf.find(p => p.mode === m && p.thr === t) || {}).fps;
+
+// ═══════════════════ الصفحات ═══════════════════
+const pages = [];
+pages.push(`<section class="page cover"><img class="cbg" src="${IMG('home')}"><div class="cshade"></div>
+  <div class="clogos"><img src="${CRED('moe.png')}"><i></i><img src="${CRED('school.png')}"></div>
+  <div class="ctext"><div class="ctag">دليل تشغيلي وتعريفي</div><h1>قرية الخير</h1><div class="csub">لعبة تعليمية تفاعلية في الرياضيات<br>الصف السادس · سلطنة عُمان</div></div>
+  <div class="cphoto"><img src="${CRED('me.jpg')}"></div>
+  <div class="cby"><small>إعداد وتنفيذ</small><b>الأستاذ رامي الرزقي</b><span>مدرسة الخوير للتعليم الأساسي (٥–٩)</span><em>الإصدار ١٫١٤٫٠ · ${AR(new Date().getFullYear())}</em></div></section>`);
+pages.push('__TOC__');
+
+pages.push(page('١. التعريف باللعبة', 'فكرة اللعبة وأهدافها', `
+  <p class="lead">«قرية الخير» عالم مفتوح يتجوّل فيه الطالب ببطله، ويساعد أهل القرية في مهام يومية حقيقية. كل مهمة درس من منهج الرياضيات للصف السادس، والرياضيات فيها هي طريقة اللعب نفسها: يحمل الصناديق بالقيمة المكانية، ويبني السياج بالمساحة والمحيط، وينزل البئر بالأعداد السالبة.</p>
+  ${img('world-start', 'العالم المفتوح: البطل في قرية الخير، والهدف الحالي ظاهر أعلى الشاشة')}
+  <div class="two"><div><h3>الأهداف التعليمية</h3><ul><li>تغطية <b>الدروس التسعة والستين</b> لمنهج الصف السادس بترتيبها الرسمي، في <b>تسع وحدات</b> عبر فصلين دراسيين.</li><li>تحويل المفهوم المجرد إلى فعل ملموس، ثم قياس الفهم بتحدٍّ مرتبط بمخرجات التعلم الرسمية.</li><li>تعزيز المثابرة: الخطأ يقابله تلميح يساعد، لا عقاب ولا خسارة.</li></ul></div>
+  <div><h3>الفئة المستهدفة</h3><p>طلاب الصف السادس في سلطنة عُمان، والمعلمون وأولياء الأمور.</p><h3>مبادئ التصميم</h3><div class="chips"><span>⏱️ بلا مؤقت</span><span>🤝 بلا عقاب</span><span>💡 تلميح عند الخطأ</span><span>🔤 عربية من اليمين</span><span>🔢 أرقام عربية</span><span>📴 تعمل بلا إنترنت</span></div></div></div>`));
+pages.push(page('١. التعريف باللعبة', 'بنية اللعبة: تسع وحدات في تسع مناطق', `
+  <p>كل وحدة دراسية لها منطقة في العالم، تحيط بها أسوار وبوابة تنفتح حين يُكمل الطالب الوحدة السابقة، فيتقدّم في العالم كما يتقدّم في المنهج.</p>
+  <div class="two"><table class="tbl"><tr><th>الفصل</th><th>الوحدة</th><th>المنطقة</th></tr>
+  <tr><td rowspan="4">الأول</td><td>١. الأعداد</td><td>🏡 قرية الخير</td></tr><tr><td>٢. القياس</td><td>🛒 السوق الأسبوعي</td></tr><tr><td>٣. الهندسة</td><td>⚓ الميناء</td></tr><tr><td>٤. الأعداد (٢)</td><td>🏰 القلعة</td></tr>
+  <tr><td rowspan="5">الثاني</td><td>١. القياس</td><td>🎪 ساحة المهرجان</td></tr><tr><td>٢. معالجة البيانات</td><td>📊 بستان البيانات</td></tr><tr><td>٣. العدد</td><td>🏪 سوق الجمعية</td></tr><tr><td>٤. القياس (٢)</td><td>🐪 طريق القافلة</td></tr><tr><td>٥. الهندسة</td><td>🛠️ ورشة البنّاء</td></tr></table>
+  ${fig('map', 'خريطة العالم: المناطق بألوانها، والمقفلة مظلّلة بقفل', [], { w: 380 })}</div>
+  <p class="note">بعد آخر درس تظهر «منصة التخرّج» هدفاً أخيراً. ومن لوحة الخريطة تُفتح «رحلة الدروس»: كل الدروس بالترتيب، ومنها الأنشطة ومهمة اليوم.</p>
+  <div class="two">${img('festival', 'لافتة المنطقة عند دخول ساحة المهرجان أول مرة', 380)}${img('datayard', 'بستان البيانات: منطقة وحدة معالجة البيانات', 380)}</div>`));
+
+pages.push(page('٢. طريقة تشغيل اللعبة', 'الوصول إلى اللعبة وتثبيتها', `<div class="two"><div>
+  <h3>على المتصفح</h3><p>تُفتح من الرابط:<br><code>rezguirami2026-ship-it.github.io/math-games/rami-math</code><br>وتعمل على متصفحات الحاسوب والهواتف والأجهزة اللوحية الحديثة.</p>
+  <h3>كتطبيق</h3><ul><li><b>الحاسوب والأندرويد:</b> من الحقيبة «📲 ثبّت اللعبة كتطبيق» حين يتيحه المتصفح.</li><li><b>تطبيق أندرويد</b> مستقل باسم اللعبة وأيقونتها، تصله التحديثات تلقائياً.</li></ul></div><div>
+  <h3>بلا إنترنت</h3><p>بعد الفتح الأول تُحفظ ملفات اللعبة على الجهاز فتعمل دون اتصال، عدا <b>الفيديو التعريفي</b> لكبر حجمه.</p>
+  <h3>التحديثات</h3><p>تُنزَّل النسخة الجديدة في الخلفية وتُطبَّق حين لا يكون الطالب في منتصف مهمة، دون فقدان التقدّم.</p></div></div>
+  ${fig('video', 'الفيديو التعريفي يظهر عند أول فتح للعبة على الجهاز، ويمكن مشاهدته لاحقاً من الشاشة الرئيسية أو الحقيبة', [['1', 'زر التشغيل: المتصفحات تشترط لمسة لتشغيل الصوت'], ['2', 'بدء اللعب أو تخطّي الفيديو']], { w: 700 })}`));
+pages.push(page('٢. طريقة تشغيل اللعبة', 'الشاشة الرئيسية وإنشاء البطل', `
+  ${fig('home', 'الشاشة الرئيسية', [['1', 'ابدأ المغامرة (أو «تابع المغامرة» إن وُجد حفظ)'], ['2', 'رحلة الدروس'], ['3', 'الإنجازات'], ['4', 'حسابي'], ['5', 'فيديو تعريفي'], ['6', 'لديّ رمز تقدّم']], { w: 700 })}
+  ${fig('hero', 'اختيار البطل', [['1', 'بطل'], ['2', 'بطلة'], ['3', 'لون البشرة'], ['4', 'لون التطريز'], ['5', 'اسم البطل'], ['6', 'الانطلاق إلى القرية']], { w: 700 })}`));
+pages.push(page('٢. طريقة تشغيل اللعبة', 'واجهة اللعب الأساسية', `
+  <p>يمشي البطل إلى حيث يضغط الطالب، ويتفاعل مع الشخصيات والأشياء من أزرار الفعل أسفل الشاشة.</p>
+  ${fig('world-start', 'العالم وعناصر الواجهة', [['1', 'المستوى ولقبه'], ['2', 'نقاط الخير 💚'], ['3', 'الجواهر 💎'], ['4', 'الحقيبة'], ['5', 'الخريطة ورحلة الدروس'], ['6', 'الأوسمة والإنجازات'], ['7', 'الهدف الحالي (والسهم الذهبي يدلّ على مكانه)'], ['8', 'أزرار الفعل: تحدّث، احمل، ضع…']], { w: 720 })}
+  <div class="two">${img('tour', 'جولة تعريفية من ٨ خطوات بعد مقدمة القصة، تُعاد من الحقيبة', 380)}${img('dialog', 'الحوار: فقاعة فوق رأس المتكلم، والضغط يتقدّم بالحديث', 380)}</div>`));
+
+pages.push(page('٣. الألعاب والتحديات', 'الدرس مهمة حقيقية في العالم', `
+  <p class="lead">لا تُعرض الدروس شاشاتِ أسئلة، بل مهامّ يؤديها البطل بالحركة والتفاعل. أمثلة من اللعبة:</p>
+  <table class="tbl"><tr><th>الدرس</th><th>المهمة في العالم</th><th>الفعل الرياضي</th></tr>
+  <tr><td>القيمة المكانية</td><td>شحنة الآلاف</td><td>حمل صناديق الآلاف والمئات والعشرات والآحاد إلى العربة</td></tr><tr><td>العوامل والمضاعفات</td><td>صفوف البستان</td><td>زراعة الفسائل في صفوف متساوية</td></tr>
+  <tr><td>المساحة والمحيط</td><td>سياج الحظيرة</td><td>بناء حظيرة بمساحة ومحيط محددين</td></tr><tr><td>الأعداد الصحيحة</td><td>بئر القلعة</td><td>النزول والصعود بالأعداد السالبة</td></tr>
+  <tr><td>المخططات الدائرية</td><td>تقسيم الأرض</td><td>توزيع المزرعة بالقطاعات</td></tr><tr><td>النسب المئوية</td><td>تخفيضات العيد</td><td>حساب الخصم</td></tr><tr><td>السنوات الكبيسة</td><td>جدار القرن</td><td>تمييز السنوات الكبيسة</td></tr></table>
+  ${fig('mission', 'مهمة «شحنة الآلاف»: البطل يحمل الصناديق إلى العربة حتى يطابق الطلب', [['1', 'الهدف الحالي وتقدّم الجولة'], ['2', 'أفعال المهمة: احمل صندوقاً، أعِد صندوقاً…']], { w: 720 })}`));
+pages.push(page('٣. الألعاب والتحديات', 'تحدّي الشخصية: أسئلة متنوعة بلا مؤقت', `
+  <p>بعد كل مهمة يأتي «تحدّي الشخصية»: <b>ثماني جولات</b> بأنواع مختلفة، مرتبطة بمخرجات التعلم الرسمية للدرس، وبأعداد جديدة كل مرة.</p>
+  <div class="chips"><span>اختيار من متعدد</span><span>أكثر من إجابة</span><span>إدخال عدد</span><span>ترتيب</span><span>بناء</span><span>تصنيف</span><span>توصيل</span><span>صح أو خطأ</span><span>سهم على خط الأعداد</span><span>بطاقات الذاكرة</span><span>اكتشف الخطأ</span></div>
+  ${img('challenge', 'سؤال من التحدي', 640)}
+  ${fig('challenge-hint', 'بعد إجابة خاطئة: يظهر تلميح يوضّح الفكرة دون كشف الإجابة، ويبقى السؤال حتى يحلّه الطالب', [['1', 'رسالة التلميح']], { w: 640 })}
+  <p class="note">كل إجابة صحيحة تمنح <b>جوهرة 💎</b>، والنجوم (١–٣) تعكس الإجابات الصحيحة من المحاولة الأولى.</p>`));
+pages.push(page('٣. الألعاب والتحديات', 'أنشطة إضافية للتعلّم والتكرار', `<div class="grid2c">
+  <div class="card"><b>🎲 نشاط الدرس</b><p>من «رحلة الدروس»: ٦ جولات من مولّد الدرس نفسه، يكرّرها الطالب متى شاء، ويُحفظ أفضل نتائجه.</p></div>
+  <div class="card"><b>⚡ تحدّي الخبير</b><p>يُفتح بعد ثلاث نجوم في الدرس: جولات أصعب لمن أتقن.</p></div>
+  <div class="card"><b>📅 مهمة اليوم</b><p>مراجعة قصيرة من ٣ جولات من الدروس السابقة، مع سلسلة أيام متتالية.</p></div>
+  <div class="card"><b>👑 ختام الوحدة</b><p>مغامرة مراجعة من ١٠ جولات في نهاية الوحدة.</p></div>
+  <div class="card"><b>🎁 الكنوز المخفية</b><p>١٦ كنزاً في أركان العالم، يُفتح كل منها بلغز من درس أنجزه الطالب.</p></div>
+  <div class="card"><b>🎓 منصة التخرّج</b><p>الهدف الأخير بعد الدروس التسعة والستين.</p></div></div>
+  <div class="two" style="margin-top:16px">${img('fort', 'القلعة', 380)}${img('harbor', 'الميناء', 380)}</div>`));
+
+pages.push(page('٤. المهمات والمغامرات', 'المغامرات التسع: مغامرة بعد كل وحدة', `
+  <p>المغامرات <b>بلا حساب</b>: قصص وشخصيات وألغاز تكافئ الطالب على إنهاء الوحدة. لكل مغامرة خمس نجوم مخفية، وجائزة تظهر في ساحة القرية، ووسام.</p>
+  <table class="tbl"><tr><th>الوحدة</th><th>المغامرة</th><th>ما يفعله البطل</th><th>الجائزة</th></tr>
+  <tr><td>١</td><td>🏘️ إنقاذ القرية</td><td>تسلّل بين الحراس وإنقاذ الأهالي وإيقاد المنارات</td><td>الوشاح والتمثال</td></tr><tr><td>٢</td><td>🌪️ العاصفة الكبرى</td><td>الاحتماء من الريح، إصلاح الجسر، قرع الجرس</td><td>جرس الوادي</td></tr>
+  <tr><td>٣</td><td>🏝️ الجزيرة المفقودة</td><td>شقّ الأدغال، لغز المرايا، بناء الطوف</td><td>المرساة الذهبية</td></tr><tr><td>٤</td><td>🏛️ سر المدينة القديمة</td><td>رموز البوابة، تماثيل تُدار، المذبح</td><td>قرص الشمس</td></tr>
+  <tr><td>٥</td><td>🏮 فوانيس المهرجان</td><td>ترتيب ألوان الراية، حوار بالاختيار</td><td>فانوس المهرجان</td></tr><tr><td>٦</td><td>🗼 الفنار والضباب</td><td>جرار الزيت، عدسات الفنار، مرآة الشعاع</td><td>الفنار الصغير</td></tr>
+  <tr><td>٧</td><td>🏜️ مهمة في الصحراء</td><td>الاهتداء بالنجوم وعبور الكثبان</td><td>الإسطرلاب</td></tr><tr><td>٨</td><td>⛰️ قمة جبل شمس</td><td>ريّ المدرّجات، الجسر المعلّق، صندوق القمة</td><td>رُجمة القمة</td></tr>
+  <tr><td>٩</td><td>🏰 القلعة المظلمة</td><td>الجسر بين الحراس، نور القمر، حوار سيد الظلال</td><td>قنديل الخير</td></tr></table>
+  ${fig('adv-list', 'لوحة المغامرات من الحقيبة (كاملة في عمودين: يُقرأ العمود الأيمن ثم الأيسر)', [['1', 'قاعة الأبطال'], ['2', 'بطاقة مغامرة مفتوحة: قصتها وزر البدء']], { w: 300, cols: 2 })}`));
+pages.push(page('٤. المهمات والمغامرات', 'اللعب داخل المغامرة', `
+  ${fig('adv-castle', 'مغامرة «القلعة المظلمة» ثلاثية الأبعاد: الماسة الذهبية فوق الهدف دائماً', [['1', 'اسم المغامرة والهدف الحالي'], ['2', 'النجوم المخفية التي وُجدت'], ['3', 'سجل المهام'], ['4', 'تلميح'], ['5', 'حفظ والخروج']], { w: 720 })}
+  <div class="two">${img('adv-log', 'سجل المهام: ما أُنجز وما بقي', 380)}${img('adv-dialog', 'حوار الشخصيات بصورة المتكلم', 380)}</div>
+  <div class="two">${img('adv-mountain', 'قمة جبل شمس: الوادي بين الجروف', 380)}${img('adv-lighthouse', 'الفنار والضباب', 380)}</div>`));
+pages.push(page('٤. المهمات والمغامرات', 'قاعة الأبطال والاحتفال الكبير', `
+  ${img('hall', 'قاعة الأبطال: أوسمة المغامرات التسع ونجومها وجوائزها', 720)}
+  <div class="two">${img('grand', 'الاحتفال الكبير بعد المغامرات التسع: لقب «بطل قرية الخير الأكبر» والوسام الذهبي', 380)}${img('certificate', 'شهادة بطولة باسم الطالب تُحفظ صورة', 380)}</div>`));
+
+pages.push(page('٥. الشخصيات والتخصيص', 'خزانة البطل', `<div class="two">
+  ${fig('wardrobe', 'خزانة البطل كاملة (عمودان: الأيمن ثم الأيسر)', [['1', 'البطل بما يرتديه'], ['2', 'عدد القطع المملوكة'], ['3', 'الجواهر المتاحة'], ['4', 'قطعة ملبوسة بإطار ذهبي، وزر «اخلع»'], ['5', 'قطعة من متجر الأزياء، وزر «اشترِ» بالجواهر']], { w: 255, cols: 2 })}</div>
+  <h3>كيف تُفتح القطع</h3><ul><li><b>بالمهام:</b> حقيبة المغامر، قربة الماء، مجرفة المزارع، التطريز الذهبي (بزراعة ٣ نخلات).</li>
+  <li><b>بإكمال الوحدات (٩ قطع):</b> نظارة المستكشف، عصا الرحّالة، سترة البحّار، حقيبة المراسل، البشت المذهّب، وشاح المهرجان، التطريز الفضي، سترة القافلة، تاج قرية الخير.</li>
+  <li><b>بالمغامرات:</b> وشاح حامي القرية، ووسام البطل الأكبر الذهبي.</li><li><b>بالجواهر (متجر الأزياء):</b> ٣ أحذية، و٣ ألوان مصرّ للبطل، و٣ ألوان لحاف للبطلة.</li></ul>
+  <p class="note">قطعتان من خانة واحدة لا تُلبسان معاً. <b>التسريحة غير متاحة</b>: البطل يرتدي الكمّة أو المصرّ والبطلة اللحاف، فاستُعيض عنها بتغيير غطاء الرأس.</p>`));
+pages.push(page('٥. الشخصيات والتخصيص', 'البطل في العالم', `
+  ${img('hero-dressed', 'البطل في الساحة بما اختاره من الخزانة، والجمل «سهيل» يرافقه (من المستوى ٢)، وجوائز المغامرات في الساحة', 760)}
+  <p>تظهر القطع الملبوسة على البطل في العالم وفي المغامرات وفي الاحتفال، بالعرضين ثنائي وثلاثي الأبعاد. ومعاينة الخزانة مجسّم يدور فيُرى الوشاح والبشت من الخلف.</p>
+  ${img('wardrobe2', 'الخزانة على الشاشة كاملة: متجر الأزياء، و«اشترِ» بالجواهر', 760)}`));
+
+pages.push(page('٦. حقيبة البطل', 'محتويات الحقيبة ووظائفها', `
+  ${fig('bag', 'الحقيبة كاملة', [['1', 'متجر زينة القرية'], ['2', 'المغامرات'], ['3', 'صندوق الخير'], ['4', 'خزانة البطل'], ['5', 'الصوت'], ['6', 'الموسيقى'], ['7', 'رمز حفظ التقدّم'], ['8', 'جولة تعريفية'], ['9', 'الفيديو التعريفي'], ['10', 'حول اللعبة'], ['11', 'الدعم الفني'], ['12', 'العرض: عادي أو ثلاثي الأبعاد'], ['13', 'جودة الرسوم']], { w: 400, gutter: 44, legend: 'side' })}
+  <p class="note">أعلى الحقيبة معلومات البطل: ما يحمله الآن، ونقاط الخير، والكنوز المكتشفة، والمستوى، والأدوات المشتراة من الدكان.</p>`));
+
+pages.push(page('٧. الأوسمة والإنجازات', 'المستويات والأوسمة', `<div class="two">
+  <div><h3>المستويات العشرة</h3><p>تُحسب نقاط الخبرة من التقدّم الفعلي ولا تنقص أبداً: ١٠ لكل درس + ٥ لكل نجمة، و٣ لكل مرة يُلعب فيها النشاط (حتى ٥ مرات).</p>
+  <div class="chips"><span>🌱 مستكشف صغير</span><span>🧭 مستكشف</span><span>🤝 مساعد القرية</span><span>🏡 صديق الأهالي</span><span>🛤️ حارس الطريق</span><span>🏪 بطل السوق</span><span>🏰 فارس القلعة</span><span>🌟 نجم المهرجان</span><span>🗝️ أمين القرية</span><span>👑 حكيم قرية الخير</span></div>
+  ${fig('level', 'لوحة «مستواي»: اللقب والتقدّم نحو المستوى التالي', [], { w: 330 })}</div>
+  <div><h3>الأوسمة (٢٨ وساماً)</h3><p>لكل وسام شرط واضح وشريط تقدّم ظاهر، مثل «المثابر» (٢٠ جولة بعد محاولة خاطئة)، وأوسمة المغامرات التسع، و«يد الخير» و«القلب الكريم» للعطاء، وإنجازات لكل وحدة ولإكمال الفصلين.</p>
+  ${fig('achievements', 'أول اثني عشر وساماً من لوحة الأوسمة: المفتوح ملوّن، والمقفل بشرطه وتقدّمه', [], { w: 380 })}
+  <p class="note">لا وسام مرتبط بالسرعة: المكافأة للجهد والمثابرة.</p></div></div>`));
+
+pages.push(page('٨. نقاط الخير والقيم', 'نقاط الخير وصندوق الخير', `<div class="two"><div>
+  <h3>كيف تُكتسب 💚</h3><ul><li>إنجاز مهمة الدرس ومساعدة أهل القرية (غالباً ٤٠ نقطة).</li><li>إنهاء نشاط الدرس (٥ + ٥ لكل نجمة).</li><li>مهام خاصة، مثل ملء خزانات البيوت وإطلاق قافلة المزرعة.</li></ul>
+  <h3>كيف تُستعمل</h3><ul><li><b>زراعة النخيل</b> في القرية (٢٠ نقطة للنخلة)، وثلاث نخلات تفتح «التطريز الذهبي».</li>
+  <li><b>صندوق الخير:</b> التبرّع لأعمال تنفع أهل القرية: إفطار صائم، سقيا الماء، كتب لمكتبة المدرسة، كسوة العيد. يشكر صاحب الحاجة الطالب، ويظهر أثر دائم (برّادة ماء في الساحة)، ووسامان للعطاء.</li></ul>
+  <p class="note">التبرّع لا يمنح جواهر مقابله: الغاية القيمة نفسها، أن يرى الطالب أثر عطائه في غيره.</p></div>
+  ${fig('charity', 'صندوق الخير بعد التبرّع لسقيا الماء', [['1', 'النقاط وعدد التبرعات ومجموعها'], ['2', 'شكر صاحب الحاجة'], ['3', 'زر التبرّع']], { w: 380 })}</div>`));
+
+pages.push(page('٩. التقدّم وحفظ الإنجازات', 'الحفظ التلقائي ورمز التقدّم', `
+  <h3>الحفظ التلقائي</h3><p>يُحفظ التقدّم على الجهاز نفسه بعد كل خطوة مهمة (إنهاء درس، شراء، مغامرة…)، فيجده الطالب كما تركه حين يعود، حتى دون إنترنت.</p>
+  <h3>رمز التقدّم</h3><p>من الحقيبة ← «🔑 رمز حفظ التقدّم» يظهر رمز نصّي يحمل المغامرة كلها: الدروس والنجوم والجوائز والمغامرات. ينسخه الطالب ويحتفظ به أو يرسله لمعلمه. وللاستعادة: الشاشة الرئيسية ← «لديّ رمز تقدّم» ← لصق الرمز؛ تعرض اللعبة اسم البطل وعدد دروسه قبل التأكيد، وترفض الرمز التالف.</p>
+  ${fig('code', 'رمز التقدّم في الحقيبة', [['1', 'الرمز'], ['2', 'نسخ الرمز']], { w: 520 })}
+  <p class="note">لا يوجد حساب على خادم ولا مزامنة تلقائية بين الأجهزة: النقل يكون برمز التقدّم. ومسح بيانات المتصفح يمسح الحفظ، لذا يُنصح بنسخ الرمز دورياً.</p>`));
+
+pages.push(page('١٠. الدعم الفني وحل المشكلات', 'الدعم الفني داخل اللعبة', `
+  <p>من الحقيبة ← «🛟 الدعم الفني» يختار الطالب نوع الرسالة: <b>الإبلاغ عن مشكلة، اقتراح، اللعبة توقفت، مساعدة</b>، ويكتب وصفه. تصل الرسالة إلى لوحة تحكم المعلم مع رقم تثبيت مجهول (لا اسم ولا بيانات شخصية)، وتُحفظ على الجهاز إن لم يتوفر إنترنت وتُرسل لاحقاً. وفي «ℹ️ حول اللعبة» رقم الإصدار والنسخة، وما تجمعه اللعبة من إحصاءات مجهولة.</p>
+  <div class="two">${img('support', 'نموذج الدعم الفني', 380)}${img('about', 'حول اللعبة: الإصدار والخصوصية', 380)}</div>
+  <p class="note">لا تتضمن اللعبة رقم هاتف أو بريداً للدعم؛ القناة الوحيدة هي نموذج الدعم الفني داخلها.</p>
+  <h3>مشكلات شائعة وحلولها</h3>
+  <table class="tbl"><tr><th>المشكلة</th><th>السبب المحتمل</th><th>الحل</th></tr>
+  <tr><td>بطء أو تقطّع</td><td>العرض ثلاثي الأبعاد على جهاز محدود</td><td>الحقيبة ← «✨ الجودة: منخفضة» أو «🎮 العرض: عادي» (وتفعلها اللعبة تلقائياً عند البطء الشديد)</td></tr>
+  <tr><td>لا تُفتح أول مرة</td><td>لا اتصال عند الفتح الأول</td><td>الاتصال بالإنترنت مرة واحدة</td></tr><tr><td>الفيديو لا يعمل</td><td>يحتاج اتصالاً</td><td>مشاهدته لاحقاً عند توفر الإنترنت</td></tr>
+  <tr><td>ضاع التقدّم</td><td>مسح بيانات المتصفح أو تغيير الجهاز</td><td>«لديّ رمز تقدّم» ← لصق الرمز المحفوظ</td></tr><tr><td>لم يظهر التحديث</td><td>يُطبَّق حين لا يكون الطالب في مهمة</td><td>إغلاق اللعبة وفتحها</td></tr>
+  <tr><td>لا صوت</td><td>الصوت متوقف أو لم يلمس الطالب الشاشة</td><td>«🔊 الصوت» و«🎵 الموسيقى» ثم لمسة</td></tr><tr><td>لا يعرف ماذا يفعل</td><td>—</td><td>الهدف أعلى الشاشة، والسهم الذهبي، والتلميح 💡، والجولة التعريفية</td></tr></table>`));
+
+pages.push(page('١١. الإعدادات والتحكم', 'الإعدادات المتاحة', `
+  <table class="tbl"><tr><th>الإعداد</th><th>مكانه</th><th>الوظيفة</th></tr>
+  <tr><td>🔊 الصوت</td><td>الحقيبة</td><td>المؤثرات الصوتية تشغيل/إيقاف</td></tr><tr><td>🎵 الموسيقى</td><td>الحقيبة</td><td>موسيقى خلفية مولّدة لكل منطقة ومغامرة</td></tr>
+  <tr><td>🎮 العرض</td><td>الحقيبة</td><td>ثلاثي الأبعاد أو عادي (ثنائي الأبعاد)</td></tr><tr><td>✨ الجودة</td><td>الحقيبة (في 3D)</td><td>تلقائية / عالية / منخفضة</td></tr>
+  <tr><td>🌙 أجواء رمضان</td><td>الحقيبة</td><td>تلقائي حسب الشهر الهجري، أو تشغيل/إيقاف</td></tr><tr><td>🐪 الرفيق سهيل</td><td>الحقيبة</td><td>إظهار الجمل المرافق أو إخفاؤه</td></tr><tr><td>🧭 الجولة / 🎬 الفيديو</td><td>الحقيبة والرئيسية</td><td>إعادة الشرح في أي وقت</td></tr></table>
+  <div class="two" style="align-items:flex-start"><div><h3>التحكم</h3><ul><li><b>اللمس أو الفأرة:</b> الضغط على الأرض للمشي، وعلى الشخصيات والأشياء للتفاعل، وأزرار الفعل أسفل الشاشة.</li><li><b>لوحة المفاتيح:</b> الأسهم للمشي في المغامرات.</li></ul>
+  <h3>على الهاتف</h3><p>الواجهة نفسها بتخطيط يناسب الشاشة الصغيرة والوضع الأفقي، وقد فُحصت على أربعة مقاسات هواتف.</p></div>
+  <div class="two">${img('phone-world', 'العالم على هاتف', 190)}${img('phone-bag', 'الحقيبة على هاتف', 190)}</div></div>`));
+
+pages.push(page('١٢. المميزات التعليمية والتقنية', 'ما يميّز «قرية الخير»', `<div class="grid2c">
+  <div class="card"><b>📘 مطابقة المنهج</b><p>٦٩ درساً بالترتيب الرسمي، وتحديات مرتبطة بمخرجات التعلم، وقواعد المعلم في كتابة الأعداد.</p></div>
+  <div class="card"><b>🎮 الرياضيات فعل</b><p>المفهوم يُطبَّق بالحركة داخل العالم، ثم يُقاس بالتحدي، ثم يُثبَّت بالنشاط ومهمة اليوم.</p></div>
+  <div class="card"><b>💡 تعلّم من الخطأ</b><p>تلميح بعد كل خطأ، بلا عقاب ولا مؤقت، ووسام للمثابرة.</p></div>
+  <div class="card"><b>💚 قيم</b><p>نقاط الخير، وزراعة النخيل، وصندوق الخير، وقصص عن التعاون واللطف.</p></div>
+  <div class="card"><b>📴 بلا إنترنت وبلا تثبيت</b><p>تطبيق ويب تقدّمي يعمل على الحاسوب والهاتف، ويُثبَّت كتطبيق.</p></div>
+  <div class="card"><b>🧊 عرضان</b><p>ثلاثي الأبعاد للأجهزة القادرة، وثنائي الأبعاد للمحدودة، بالمحتوى نفسه كاملاً.</p></div>
+  <div class="card"><b>🔒 خصوصية</b><p>لا تُرسل أسماء ولا بيانات شخصية؛ إحصاءات مجهولة قليلة فقط.</p></div>
+  <div class="card"><b>✅ اختبار آلي شامل</b><p>تُلعب الدروس الـ٦٩ والمغامرات التسع آلياً قبل كل نشر.</p></div></div>
+  ${img('adv-temple', 'معبد الشمس في مغامرة «سر المدينة القديمة»: إضاءة وظلال ثلاثية الأبعاد', 760)}`));
+
+pages.push(page('١٣. ثنائي الأبعاد وثلاثي الأبعاد', 'المكان نفسه بالعرضين', `
+  ${img('world-2d', 'العرض العادي (2D): رسم مسطّح بمنظور مائل خفيف، سريع وخفيف على الجهاز', 760)}
+  ${img('hero-dressed', 'العرض ثلاثي الأبعاد (3D): مجسّمات وإضاءة وظلال وعمق ومنظور', 760)}
+  <p class="cap2">ساحة القرية في الحالتين: المحتوى والمهام واحدة، والفرق في طريقة الرسم واستهلاك موارد الجهاز.</p>`));
+pages.push(page('١٣. ثنائي الأبعاد وثلاثي الأبعاد', 'مزايا كل تقنية', `<div class="two"><div class="card"><b>🟦 ثنائي الأبعاد (2D)</b><ul>
+  <li>يعمل على الأجهزة محدودة الإمكانات وبلا معالج رسومات قوي.</li><li>استجابة سريعة واستهلاك أقل للبطارية والذاكرة.</li><li>وضوح كامل للنصوص والأرقام والرسوم الرياضية.</li><li>كافٍ تماماً لأنشطة لا تحتاج عمقاً بصرياً.</li></ul></div>
+  <div class="card"><b>🟩 ثلاثي الأبعاد (3D)</b><ul><li>عوالم قابلة للاستكشاف بعمق ومنظور حقيقي.</li><li>شخصيات بشرية مجسّمة بمفاصل وحركات طبيعية.</li><li>إضاءة وظلال وطقس (ليل، مطر، ضباب، غروب).</li><li>يتطلّب معالج رسومات يدعم WebGL، وذاكرة ومعالجاً أقوى.</li></ul></div></div>
+  ${img('adv-mountain-2d', 'مغامرة «قمة جبل شمس» في 2D', 700)}${img('adv-mountain', 'المغامرة نفسها في 3D: جروف صخرية ورُجَم', 700)}`));
+pages.push(page('١٣. ثنائي الأبعاد وثلاثي الأبعاد', 'كيف تختار اللعبة العرض المناسب', `
+  <div class="flow"><div class="step"><b>١</b><span>هل يدعم الجهاز WebGL؟</span><small>لا ← العرض العادي (2D)</small></div>
+  <div class="step"><b>٢</b><span>هل الجهاز محدود؟</span><small>ذاكرة ٣ غيغابايت أو أقل، أو جهاز لمس بأربع أنوية أو أقل ← 2D</small></div>
+  <div class="step"><b>٣</b><span>قياس أول ٥ ثوانٍ في 3D</span><small>أقل من ٢٦ إطاراً/ث ← خفض الجودة</small></div>
+  <div class="step"><b>٤</b><span>إن بقي بطيئاً جداً</span><small>أقل من ١٥ إطاراً/ث ← انتقال إلى 2D مع رسالة للطالب</small></div></div>
+  <h3>توصيات عامة حسب فئة الجهاز</h3>
+  <table class="tbl"><tr><th>الفئة</th><th>أمثلة عامة</th><th>التوصية</th></tr>
+  <tr><td>ضعيف</td><td>هواتف وأجهزة لوحية قديمة، ذاكرة ≤ ٣ غيغابايت</td><td>العرض العادي (2D) — تختاره اللعبة تلقائياً</td></tr>
+  <tr><td>متوسط</td><td>حواسيب برسوميات مدمجة، هواتف حديثة متوسطة</td><td>3D بجودة منخفضة (أو تلقائية)</td></tr><tr><td>قوي</td><td>حواسيب ببطاقة رسوميات، هواتف رائدة</td><td>3D بجودة عالية</td></tr></table>
+  <p class="note">هذه توصيات عامة؛ النتائج المقيسة فعلاً في الصفحة التالية. واختيار الطالب من «🎮 العرض» يبقى محترماً فلا تغيّره اللعبة.</p>
+  <h3>الموازنة بين الجودة والسلاسة</h3>
+  <table class="tbl"><tr><th>العنصر</th><th>جودة عالية</th><th>جودة منخفضة</th></tr><tr><td>دقة الرسم</td><td>حتى كثافة شاشة الجهاز</td><td>حتى ١٫٣ من كثافة الشاشة</td></tr>
+  <tr><td>المؤثرات اللاحقة (توهج، تنعيم)</td><td>مفعّلة</td><td>متوقفة</td></tr><tr><td>تحديث الظلال</td><td>كل إطارين</td><td>كل ثلاثة إطارات</td></tr><tr><td>دقة خريطة الظلال</td><td>٢٠٤٨ (الحاسوب)</td><td>١٠٢٤</td></tr></table>
+  <p>تُخفض الجودة أولاً لأنها أقل أثراً على المظهر، ثم يُنتقل إلى 2D لأن التقطّع يضر بالتعلم أكثر من بساطة الرسم. ومحرك المغامرات ومكتبة الرسوم ثلاثية الأبعاد لا تُحمَّلان إلا عند الحاجة، فيقلّ ما يُنزَّل عند الفتح في العرض العادي بنحو ٤٥٪.</p>`));
+pages.push(page('١٣. ثنائي الأبعاد وثلاثي الأبعاد', 'نتائج اختبار الأداء المقيسة', `${perfChart()}
+  <div class="two"><div><h3>ظروف القياس</h3><ul><li>حاسوب التطوير: معالج AMD Ryzen 5 PRO 5650U (٦ أنوية) برسوميات Radeon مدمجة، ذاكرة ١٥ غيغابايت، Windows 11.</li><li>متصفح Chrome مُدار آلياً، نافذة ١٢٨٠×٧٢٠، ساحة القرية والبطل يمشي، ٥ ثوانٍ لكل قياس.</li><li>«معالج أبطأ» إبطاء محاكى للمعالج فقط لتقريب الأجهزة الأضعف؛ معالج الرسومات لم يُبطَّأ.</li></ul></div>
+  <div><h3>القراءة</h3><ul><li>2D يبلغ ${AR(P('2D', 1))} إطاراً/ث بسرعة كاملة، ويبقى الأعلى عند الإبطاء.</li><li>3D بجودة منخفضة ${AR(P('3D-low', 1))} إطاراً/ث على هذا الحاسوب: مناسب.</li><li>3D بجودة عالية ${AR(P('3D-high', 1))} إطاراً/ث على الرسوميات المدمجة: دون الحدّ، فتخفض اللعبة الجودة تلقائياً.</li></ul></div></div>
+  <p class="note">قيم مقيسة على جهاز واحد في بيئة اختبار آلية؛ الأجهزة الأخرى قد تختلف.</p>`));
+
+pages.push(page('حدود الإصدار الحالي', 'ميزات غير متوفرة في هذا الإصدار', `<table class="tbl"><tr><th>الميزة</th><th>الحالة</th></tr>
+  <tr><td>تسريحة الشعر</td><td>غير متاحة؛ يُخصَّص غطاء الرأس (كمّة/مصرّ للبطل، لحاف للبطلة) بما يناسب الزي العُماني</td></tr>
+  <tr><td>تقرير تقدّم للمعلم أو لوحة فصل</td><td>غير متاحة؛ يرسل الطالب رمز التقدّم لمعلمه، ولوحة التحكم تعرض إحصاءات مجهولة عامة لا بيانات طلاب بأسمائهم</td></tr>
+  <tr><td>حسابات ومزامنة تلقائية بين الأجهزة</td><td>غير متاحة؛ النقل برمز التقدّم</td></tr><tr><td>اللعب الجماعي</td><td>غير متاح؛ اللعبة فردية</td></tr>
+  <tr><td>تعليق صوتي للشخصيات داخل اللعبة</td><td>غير متاح؛ الحوار مكتوب، والصوت في الفيديو التعريفي فقط</td></tr><tr><td>الفيديو التعريفي دون إنترنت</td><td>غير متاح؛ يحتاج اتصالاً لكبر حجمه</td></tr></table>
+  <h2 style="margin-top:34px">الخاتمة: القيمة التعليمية والتقنية</h2>
+  <p class="lead">تقدّم «قرية الخير» منهج الرياضيات للصف السادس كاملاً في عالم عُماني حيّ، يتعلّم فيه الطالب بالفعل لا بالتلقين: يطبّق المفهوم بيده داخل العالم، ثم يُقاس فهمه بتحدٍّ مرتبط بمخرجات التعلم، ثم يُكافأ بمغامرة وقصة وقيمة.</p>
+  <ul><li><b>تعليمياً:</b> ٦٩ درساً، وتحدٍّ لكل درس بأحد عشر نوعاً من الأسئلة، وتلميحات تعلّم من الخطأ، وأنشطة للتكرار والمراجعة.</li><li><b>تحفيزياً:</b> مستويات وأوسمة ونجوم وجواهر، وتسع مغامرات، وخزانة بطل، واحتفال وشهادة لمن يُكمل.</li>
+  <li><b>قيمياً:</b> نقاط الخير، وصندوق الخير، وقصص عن التعاون واللطف والإصغاء.</li><li><b>تقنياً:</b> تعمل بلا إنترنت وعلى كل الأجهزة، بعرضين يختار بينهما الجهاز تلقائياً، واختبار آلي شامل قبل كل تحديث.</li></ul>`));
+pages.push(page('المراجع', 'المراجع التقنية', `<ol class="refs">
+  <li>Khronos Group. <i>WebGL Overview</i>. https://www.khronos.org/webgl/</li><li>MDN Web Docs. <i>WebGL API</i>. https://developer.mozilla.org/en-US/docs/Web/API/WebGL_API</li>
+  <li>three.js. <i>Documentation</i>. https://threejs.org/docs/</li><li>MDN Web Docs. <i>Progressive web apps</i>. https://developer.mozilla.org/en-US/docs/Web/Progressive_web_apps</li>
+  <li>MDN Web Docs. <i>Service Worker API</i>. https://developer.mozilla.org/en-US/docs/Web/API/Service_Worker_API</li><li>MDN Web Docs. <i>Web Audio API</i>. https://developer.mozilla.org/en-US/docs/Web/API/Web_Audio_API</li>
+  <li>MDN Web Docs. <i>Window: localStorage property</i>. https://developer.mozilla.org/en-US/docs/Web/API/Window/localStorage</li><li>MDN Web Docs. <i>Navigator: deviceMemory property</i>. https://developer.mozilla.org/en-US/docs/Web/API/Navigator/deviceMemory</li>
+  <li>Chrome DevTools Protocol. <i>Emulation domain</i>. https://chromedevtools.github.io/devtools-protocol/tot/Emulation/</li><li>web.dev. <i>Rendering performance</i>. https://web.dev/articles/rendering-performance</li></ol>
+  <p class="note">مصادر المحتوى التعليمي: منهج الرياضيات للصف السادس في سلطنة عُمان (ترتيب الدروس ومخرجات التعلم كما اعتمدها المعلّم). كل ما في هذا الدليل من وظائف وصور مأخوذ من الإصدار ١٫١٤٫٠ من اللعبة نفسها.</p>`));
+
+const ix = pages.indexOf('__TOC__');
+pageNo = 1; const tocPage = (() => { const p = page(null, 'الفهرس', `<div class="toc">${TOC.map(t => `<div><span>${t.ch}</span><i></i><b>${AR(t.p)}</b></div>`).join('')}</div>`); return p; })();
+pages[ix] = tocPage.replace(/<span class="pn">[^<]*<\/span>/, `<span class="pn">${AR(1)}</span>`);
+
+const CSS = `
+@font-face{font-family:Cairo;font-weight:700;src:url(${FONT('cairo-arabic-700-normal.woff2')}) format('woff2')}
+@font-face{font-family:Cairo;font-weight:900;src:url(${FONT('cairo-arabic-900-normal.woff2')}) format('woff2')}
+@font-face{font-family:Cairo;font-weight:700;src:url(${FONT('cairo-latin-700-normal.woff2')}) format('woff2');unicode-range:U+0000-00FF}
+@font-face{font-family:Cairo;font-weight:900;src:url(${FONT('cairo-latin-900-normal.woff2')}) format('woff2');unicode-range:U+0000-00FF}
+@page{size:${PW}px ${PH}px;margin:0}
+*{box-sizing:border-box}html,body{margin:0;padding:0}
+body{font-family:Cairo,'Segoe UI',sans-serif;font-weight:700;direction:rtl;color:#22204A;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+.page{width:${PW}px;height:${PH}px;position:relative;overflow:hidden;page-break-after:always;background:linear-gradient(180deg,#FFFDF7,#FBF3E1);padding:74px 50px 56px}
+.page::before{content:"";position:absolute;inset:0;opacity:.05;background:repeating-linear-gradient(45deg,transparent 0 22px,#C9971C 22px 23px),repeating-linear-gradient(-45deg,transparent 0 22px,#C9971C 22px 23px);pointer-events:none}
+header{position:absolute;top:0;left:0;right:0;height:48px;display:flex;align-items:center;justify-content:space-between;padding:0 50px;background:linear-gradient(90deg,#1F4E79,#2F6B73);color:#FFF6E2;border-bottom:4px solid #E3B04B}
+header .ch{font:900 17px Cairo}header .brand{font-size:13px;opacity:.9}
+h2{margin:0 0 12px;font:900 28px/1.35 Cairo;color:#1F4E79;position:relative;padding-right:16px}h2::before{content:"";position:absolute;right:0;top:8px;bottom:8px;width:6px;border-radius:3px;background:#E3B04B}
+h3{margin:10px 0 4px;font:900 18px Cairo;color:#2F6B73}
+p,li{font-size:15px;line-height:1.75;margin:0 0 6px}ul{margin:0 0 6px;padding-right:20px}.lead{font-size:16.5px;line-height:1.85}
+.note{font-size:13.5px;background:#FFF4D6;border-right:4px solid #E3B04B;border-radius:8px;padding:6px 12px;color:#5A4200;margin:8px 0}
+footer{position:absolute;bottom:0;left:0;right:0;height:38px;display:flex;align-items:center;justify-content:space-between;padding:0 50px;font-size:12.5px;color:#7A6A4A;border-top:1px solid #E7D9B8;background:#FFFBF0}
+footer .pn{font:900 15px Cairo;color:#fff;background:#1F4E79;border-radius:12px;padding:0 12px}
+.two{display:flex;gap:20px;justify-content:center;align-items:flex-start}.two>div{flex:1;min-width:0}.two>.fig{flex:none}
+.fig{margin:10px auto;display:flex;flex-direction:column;align-items:center}.fig.side{flex-direction:row;align-items:flex-start;gap:24px;justify-content:center}
+.fbox{position:relative}.fcol{position:absolute;top:0;overflow:hidden;border-radius:10px;box-shadow:0 0 0 2.5px #E3B04B,0 8px 22px rgba(30,20,60,.22);background:#fff}.fcol img{position:absolute;left:0;display:block}
+.fsvg{position:absolute;inset:0;overflow:visible;pointer-events:none}
+figcaption{font-size:13.5px;color:#4A3E2A;text-align:center;margin:8px auto 0;line-height:1.6}
+.legend{list-style:none;padding:0;margin:8px auto 0;display:flex;flex-wrap:wrap;gap:6px 16px;max-width:800px;justify-content:center}.legend.side{flex-direction:column;flex-wrap:nowrap;max-width:320px;margin:0;gap:9px}
+.legend li{display:flex;align-items:center;gap:8px;font-size:14.5px;margin:0;line-height:1.5}.legend b{flex:none;width:26px;height:26px;border-radius:50%;background:#1F4E79;color:#FFE3A0;text-align:center;font:900 14px/22px Cairo;border:2px solid #E3B04B}
+.tbl{border-collapse:collapse;width:100%;font-size:14px;background:#fff;border-radius:10px;overflow:hidden;box-shadow:0 0 0 1px #E3CFA0;margin:6px 0}
+.tbl th{background:#1F4E79;color:#FFF6E2;padding:6px 10px;font-weight:900;text-align:right}.tbl td{padding:5px 10px;border-top:1px solid #EFE3C8;vertical-align:top;line-height:1.55}.tbl tr:nth-child(even) td{background:#FFF9EC}
+.chips{display:flex;flex-wrap:wrap;gap:7px;margin:6px 0 8px}.chips span{background:#EAF2FA;border:1px solid #A9C6E2;color:#1F4E79;border-radius:16px;padding:2px 11px;font-size:13.5px}
+.card{background:#fff;border-radius:14px;padding:12px 14px;box-shadow:0 0 0 1.5px #E7D3A6,0 6px 16px rgba(60,40,10,.08)}.card b{display:block;font:900 17px Cairo;color:#1F4E79;margin-bottom:4px}.card p{font-size:14px;margin:0}
+.grid2c{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.cap2{text-align:center;font-size:15px}
+.flow{display:grid;grid-template-columns:1fr 1fr;gap:10px}.step{background:#fff;border-radius:14px;padding:10px 12px;box-shadow:0 0 0 1.5px #E7D3A6;text-align:center}.step b{display:inline-block;width:30px;height:30px;border-radius:50%;background:#1F4E79;color:#FFE3A0;font:900 16px/30px Cairo}
+.step span{display:block;font:900 15px Cairo;margin:4px 0}.step small{font-size:13px;color:#5A4A2A;line-height:1.6;display:block}
+.chart{background:#fff;border-radius:14px;padding:12px;box-shadow:0 0 0 1.5px #E7D3A6;margin:6px 0 12px}.chart text{font-family:Cairo}
+.chartLeg{display:flex;gap:16px;justify-content:center;font-size:13.5px}.chartLeg i{display:inline-block;width:14px;height:14px;border-radius:4px;margin-left:6px;vertical-align:middle}
+.toc div{display:flex;align-items:baseline;gap:8px;font:900 19px/2.4 Cairo}.toc i{flex:1;border-bottom:2px dotted #C9B48A}.toc b{color:#1F4E79}
+.refs li{direction:ltr;text-align:left;font-size:14px;font-family:'Segoe UI',Arial,sans-serif;font-weight:400}.refs{padding-left:24px}
+code{direction:ltr;unicode-bidi:embed;background:#EAF2FA;padding:1px 8px;border-radius:6px;font-size:13px}
+.cover{padding:0;background:#0B2A4A}.cbg{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;filter:blur(3px) saturate(1.1)}
+.cshade{position:absolute;inset:0;background:linear-gradient(180deg,rgba(5,21,40,.6) 0%,rgba(11,42,74,.88) 40%,rgba(5,21,40,.96) 100%)}
+.clogos{position:absolute;top:0;left:50%;transform:translateX(-50%);height:170px;width:600px;display:flex;align-items:center;justify-content:center;gap:34px;background:linear-gradient(180deg,#FFFDF6,#F6EBD2);border-radius:0 0 40px 40px;box-shadow:0 0 0 4px #E3B04B,0 14px 30px rgba(0,0,0,.4)}
+.clogos img{height:136px;mix-blend-mode:multiply}.clogos i{width:3px;height:110px;background:linear-gradient(#fff0,#C9971C,#fff0)}
+.ctext{position:absolute;top:210px;left:0;right:0;text-align:center;color:#fff}
+.ctag{display:inline-block;font:900 22px Cairo;color:#3A2400;background:linear-gradient(180deg,#FFF1B8,#FFD54A 55%,#E3A21A);border-radius:24px;padding:3px 24px}
+.cover h1{margin:6px 0 0;font:900 104px/1.2 Cairo;background:linear-gradient(180deg,#FFFFFF,#FFE88A 45%,#E3A21A);-webkit-background-clip:text;background-clip:text;color:transparent;filter:drop-shadow(0 4px 0 rgba(0,0,0,.35))}
+.csub{font-size:22px;color:#E8F0FA;line-height:1.7}
+.cphoto{position:absolute;left:50%;transform:translateX(-50%);top:560px;width:330px;height:430px;border-radius:165px 165px 24px 24px;overflow:hidden;border:6px solid #E3B04B;box-shadow:0 0 60px rgba(255,214,90,.35)}
+.cphoto img{width:100%;height:100%;object-fit:cover;object-position:50% 6%}
+.cby{position:absolute;left:0;right:0;top:1010px;text-align:center}.cby small{display:block;font-size:18px;color:#C9D8EA}.cby b{display:block;font:900 44px/1.4 Cairo;color:#FFD54A}.cby span{display:block;font-size:19px;color:#FFE3A0}.cby em{display:block;font-style:normal;font-size:15px;color:#C9D8EA;margin-top:8px}`;
+
+const html = `<!doctype html><html lang="ar" dir="rtl"><head><meta charset="utf-8"><title>دليل قرية الخير</title><style>${CSS}</style></head><body>${pages.join('\n')}</body></html>`;
+const HTMLF = path.join(W, 'guide2.html'); fs.writeFileSync(HTMLF, html);
+const b = await chromium.launch({ channel: 'chrome' }); const pg = await b.newPage({ viewport: { width: PW, height: PH } });
+await pg.goto(url(HTMLF)); await pg.evaluate(() => document.fonts.ready); await new Promise(r => setTimeout(r, 1500));
+const n = await pg.evaluate(() => document.querySelectorAll('.page').length);
+const over = await pg.evaluate(() => [...document.querySelectorAll('.page')].map((p, i) => { const b = p.querySelector('.body'); if (!b) return null; const pr = p.getBoundingClientRect(); const bot = Math.max(...[...b.querySelectorAll('*')].filter(e => !e.closest('.fcol')).map(e => e.getBoundingClientRect().bottom)); return bot > pr.bottom - 40 ? `${i + 1}(+${Math.round(bot - pr.bottom + 40)})` : null; }).filter(Boolean));
+await pg.pdf({ path: OUTPDF, width: PW + 'px', height: PH + 'px', printBackground: true, preferCSSPageSize: true });
+for (const k of process.argv.slice(4)) { const i = +k; const el = (await pg.$$('.page'))[i - 1]; if (el) await el.screenshot({ path: path.join(W, `q${i}.png`) }); }
+await b.close();
+console.log('صفحات', n, '| فيضان:', over.join(' ') || 'لا شيء', '| PDF:', (fs.statSync(OUTPDF).size / 1048576).toFixed(1), 'MB');
