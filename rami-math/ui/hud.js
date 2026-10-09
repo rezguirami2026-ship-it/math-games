@@ -135,6 +135,7 @@ export const hud = {
         ${installable() ? '<button class="act go" id="instBtn">📲 ثبّت اللعبة كتطبيق</button>' : ''}
         <button class="act go" id="advBtn">🗺️ المغامرات</button>
         <button class="act go" id="giveBtn">💚 صندوق الخير (تبرّع بنقاط الخير)</button>
+        <button class="act go" id="homeBtn">🏠 بيت البطل (الغرف والأثاث)</button>
         <button class="act go" id="wardBtn">🚪 خزانة البطل (الملابس والجوائز)</button>
         <div class="opsRow"><button class="act ghost" id="tourBtn">🧭 جولة تعريفية</button><button class="act ghost" id="vidBtn">🎬 الفيديو التعريفي</button></div>
         <div class="opsRow"><button class="act ghost" id="aboutBtn">ℹ️ حول اللعبة</button><button class="act ghost" id="supBtn">🛟 الدعم الفني</button></div>
@@ -162,6 +163,7 @@ export const hud = {
       if ($('instBtn')) $('instBtn').onclick = e => { e.stopPropagation(); install(); };
       $('advBtn').onclick = e => { e.stopPropagation(); bus.emit('openAdventures'); };
       $('giveBtn').onclick = e => { e.stopPropagation(); this.closePanel(); setTimeout(openCharity, 120); };
+      $('homeBtn').onclick = e => { e.stopPropagation(); this.closePanel(); setTimeout(() => bus.emit('openHome'), 120); };
       $('wardBtn').onclick = e => { e.stopPropagation(); this.closePanel(); setTimeout(() => bus.emit('openWardrobe'), 120); };
       $('vidBtn').onclick = e => { e.stopPropagation(); this.closePanel(); showIntroVideo(); };
       $('tourBtn').onclick = e => { e.stopPropagation(); this.closePanel(); setTimeout(() => startTour(true), 250); };

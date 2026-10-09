@@ -37,7 +37,7 @@ export function fader(obj, foot, H) {
 export function buildVillage({ quality }) {
   const group = new THREE.Group(), fades = [];
   const put = (obj, b, H) => { group.add(obj); fades.push(fader(obj, { x: b.x, y: b.y, w: b.w, h: b.h }, H)); };
-  HOUSES.forEach((b, i) => put(b.mosque ? omaniMosque(b, MINARET) : omaniHouse(i === 2 ? Object.assign({}, b, { sign: '🚪 خزانة البطل' }) : b, { tower: TOWERS[i] }), b, (b.H || 96) * 1.6));   // بيت البطل: لافتة الخزانة على واجهته
+  HOUSES.forEach((b, i) => put(b.mosque ? omaniMosque(b, MINARET) : omaniHouse(i === 2 ? Object.assign({}, b, { sign: '🏠 بيت البطل' }) : b, { tower: TOWERS[i] }), b, (b.H || 96) * 1.6));   // بيت البطل: لافتة الخزانة على واجهته
   SOUTH.forEach(b => put(omaniHouse(Object.assign({}, b, { H: H_SOUTH, style: 'shop' })), b, H_SOUTH * 1.6));
   put(warehouse(WAREHOUSE, H_WARE), WAREHOUSE, H_WARE * 1.6);
   put(omaniHouse(SCHOOL), SCHOOL, SCHOOL.H * 1.6);   // مدرسة القرية

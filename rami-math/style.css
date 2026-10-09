@@ -243,3 +243,12 @@ body:has(.wardrobe) .toast{display:none}
 .charity .chCause>div{flex:1}.charity .chCause b{display:block}.charity .chCause small{color:#7A6A4A;font-weight:700}
 .charity .act[disabled]{opacity:.5;filter:grayscale(.6)}
 .charity .chNote{text-align:center;font-style:italic;margin-top:10px}
+
+/* بيت البطل */
+.home .hmTop{display:flex;flex-wrap:wrap;gap:8px;justify-content:center;margin:4px 0 8px}.home .hmTop span{background:#FFF4D6;border:1px solid #E3CFA0;border-radius:14px;padding:3px 12px;font-weight:800}
+.home .hmTabs{display:flex;flex-wrap:wrap;gap:6px;justify-content:center;margin-bottom:8px}.home .hmTabs button{font:800 14px Cairo,sans-serif;border:1.5px solid #E3CFA0;background:#fff;border-radius:16px;padding:4px 12px;color:#2A1B66}
+.home .hmTabs button.on{background:linear-gradient(180deg,#FFF1B8,#FFD54A);border-color:#E3A21A}.home .hmTabs button.lock{opacity:.55}
+.home canvas{width:100%;max-width:680px;aspect-ratio:680/380;display:block;margin:0 auto;border-radius:16px;box-shadow:0 0 0 3px #E3B04B}
+.home .hmMsg{margin:8px 0;background:#EAF6EC;border:1.5px solid #9BD3A6;border-radius:12px;padding:6px 12px;font-weight:800;text-align:center;animation:pop .3s}
+.home .hmItems{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:10px 0}.home .hmIt{display:flex;align-items:center;justify-content:space-between;gap:6px;background:#F4EBD6;border-radius:12px;padding:6px 10px;border:1px solid rgba(227,176,75,.3)}
+.home .hmIt.own{background:#EAF6EC}.home .hmIt small{color:#1F6E3E;font-weight:800}.home .hmIt .act{padding:4px 10px;font-size:13px;min-height:34px}.home .hmIt .act[disabled]{opacity:.5}

@@ -12,6 +12,8 @@ import { WORLD, PILE, SIGNAL, TREE_SPOTS, FARM, HOUSES, WAREHOUSE, ROADS, SOUTH,
 import { makeTrucks, truckColliders, drawTruck, drawPile, drawSignal, drawSpot, updateFx, drawFx, moveAlong, say, bubble, sparkle, dust } from './world/entities.js';
 import { makeNpcs, npcVisible, updateNpc, drawNpc } from './npc/npc.js';
 import { updateKids, kidsItems, kidsPeople3d } from './world/school.js';
+import { updateCrowd, crowdItems, crowdPeople3d } from './world/crowd.js';
+import { openHome, homeExterior } from './ui/herohome.js';
 import { decorItems, initGems, DECOR } from './world/decor.js';
 import { updatePet, petItems, pet3d } from './world/pet.js';
 import { treasureItems, nearTreasure, openTreasure, TREASURES } from './world/treasure.js';
@@ -210,7 +212,7 @@ async function start(state) {
   }
 }
 /* ── العرض ثلاثي الأبعاد (renderer3d): يُحمَّل فقط عند طلبه، ويرجع إلى الرسم الحالي إن لم يدعم الجهاز WebGL أو فشل التحميل ── */
-const V3D = 'نسخة 3D · ٨٤'; window.__BUILD = V3D.replace('نسخة 3D · ', '');   // تُعرض في شاشة التحميل وفي الزاوية: للتأكد أن المتصفح حمّل آخر نسخة
+const V3D = 'نسخة 3D · ٨٥'; window.__BUILD = V3D.replace('نسخة 3D · ', '');   // تُعرض في شاشة التحميل وفي الزاوية: للتأكد أن المتصفح حمّل آخر نسخة
 const want3d = () => gfx.d3();
 function loadingScreen() {
   const el = document.createElement('div'); el.className = 'load3d';
@@ -328,7 +330,7 @@ function interactables() {
   if (s.world.delivered) TREE_SPOTS.forEach((sp, i) => { if (!s.world.trees[i]) out.push({ x: sp.x, y: sp.y - 10, hit: 32, approach: { x: sp.x, y: sp.y + 28 } }); });
   const c = cur(), mod = curMod();
   if (mod && mod.taps && quests.isStarted(c.id)) mod.taps(quests.data(c.id)).filter(t => t.approach).forEach(t => out.push(t));
-  out.push({ x: HERO_DOOR.x, y: HERO_DOOR.y - 30, hit: 40, approach: { x: HERO_DOOR.x, y: HERO_DOOR.y + 10 }, arrive: () => openWardrobe() });
+  out.push({ x: HERO_DOOR.x, y: HERO_DOOR.y - 30, hit: 40, approach: { x: HERO_DOOR.x, y: HERO_DOOR.y + 10 }, arrive: () => openHome(openWardrobe) });
   return out;
 }
 function onTap(p) {
@@ -411,7 +413,7 @@ function currentActions() {
       out.push({ key: k, label: '🔒 أغلق الصمام', kind: 'go', run: () => tanks.seal(W, tk.i), disabled: lv <= 0 });
     }
   }
-  if (nearest([HERO_DOOR], 70)) out.push({ key: 'door', label: '🚪 خزانة البطل', run: () => openWardrobe() });
+  if (nearest([HERO_DOOR], 70)) out.push({ key: 'door', label: '🏠 بيت البطل', run: () => openHome(openWardrobe) });
   if (s.world.delivered) {
     const sp = nearest(TREE_SPOTS.map((p, i) => ({ x: p.x, y: p.y + 10, i })).filter(o => !s.world.trees[o.i]), 66);
     if (sp) out.push({ key: 'spot' + sp.i, label: s.good >= TREE_COST ? `🌱 ازرع نخلة (${ar(TREE_COST)} 💚)` : `🌱 تحتاج ${ar(TREE_COST)} 💚`, kind: 'green', run: () => plant(W, sp.i), disabled: s.good < TREE_COST });
@@ -453,6 +455,7 @@ const routeLeft = pl => { if (!pl.target) return 0; let d = Math.hypot(pl.target
 /* ── التحديث ── */
 function update(dt) {
   updateKids(dt);   // طلاب المدرسة يلعبون
+  updateCrowd(dt);   // أهل القرية المتجولون (يزدادون مع التقدّم)
   updatePet(dt, W.player, (x, y) => blocked(x, y));   // الرفيق سهيل يتبع البطل على أثره
   const s = game.state, pl = W.player;
   pl.speed = routeLeft(pl) > 280 ? 215 : 150;   // يجري في الطرق الطويلة ويمشي قرب الهدف
@@ -547,9 +550,10 @@ function worldItems(view, t, three) {
     list.push({ y: O.y - 14, x: O.x + 30, draw: cc => bigSign(cc, O.x + 30, O.y - 14, 'بستان العم حمد', { fs: 18, h: 30, bg: '#2E7D5B', line: '#FFE7A0' }) },
       { y: G.y + G.h + 20, x: G.x + G.w / 2, draw: cc => bigSign(cc, G.x + G.w / 2, G.y + G.h + 20, quests.isDone('decimalAdd') ? 'حديقة المدرسة 🌼' : 'حديقة المدرسة', { fs: 18, h: 26, bg: '#B0476A', line: '#FFE7A0' }) });
   }
-  if (!three) list.push({ y: HERO_DOOR.y - 13, draw: cc => signboard(cc, HERO_DOOR.x + 52, HERO_DOOR.y - 66, '🚪 خزانة البطل') });   // لافتة على جدار بيت البطل (في 3D على الواجهة نفسها)
+  if (!three) list.push({ y: HERO_DOOR.y - 13, draw: cc => signboard(cc, HERO_DOOR.x + 52, HERO_DOOR.y - 66, '🏠 بيت البطل') });   // لافتة على جدار بيت البطل (في 3D على الواجهة نفسها)
   const giverMark = n => c && c.ready && MODS[c.id] && c.giver === n.id && !quests.isStarted(c.id) ? '!' : null;
   // الشخصيات خارج الشاشة لا تُرسم (كانت كلها تُرسم في كل إطار)
+  list.push(...homeExterior(HOUSES[2], view), ...(three ? [] : crowdItems(drawNpc, view)));
   list.push(...kidsItems(drawNpc, view, three), ...decorItems(view), ...treasureItems(view, gateState(), t), ...petItems(view, t, three));
   if (!three) W.npcs.filter(n => npcVisible(n, s) && n.x > view.x - 60 && n.x < view.x + view.w + 60 && n.y > view.y - 20 && n.y < view.y + view.h + 110).forEach(n => list.push({ y: n.y, x: n.x, lean: .5, draw: cc => drawNpc(cc, n, giverMark(n)) }));   // في 3D: الشخصيات مجسّمة (people3d)
   const pl = W.player, mod = curMod(), hand = mod && mod.hand && c && quests.isStarted(c.id) ? mod.hand(quests.data(c.id)) : null;
@@ -565,6 +569,7 @@ function people3d() {
   W.npcs.forEach(n => { if (npcVisible(n, s) && n.x > v.x - 80 && n.x < v.x + v.w + 80 && n.y > v.y - 60 && n.y < v.y + v.h + 80)
     out.push({ id: n.id, look: n, lookKey: n.id, x: n.x, y: n.y, moving: n.moving, phase: n.phase, dir: n.dir, anim: n.anim && !n.moving ? n.anim.name : null, animT: n.anim ? n.anim.t : 0, carry: 0, face: Math.hypot(n.x - pl.x, n.y - pl.y) < 150 ? pl : null }); });
   out.push(...kidsPeople3d(v));   // طلاب المدرسة
+  out.push(...crowdPeople3d(v));   // أهل القرية المتجولون
   return out;
 }
 /* علامة المهمة فوق رأس من ينتظر البطل (فوق المجسّم، على الشاشة) */
@@ -655,6 +660,7 @@ bus.on('lessonDone', id => track('level_completed', id));
 bus.on('lessonDone', () => checkAdventureUnlocks());
 bus.on('lessonDone', id => villageCheer(id));   // أهل القرية القريبون يحتفلون، وقصاصات ملوّنة، وشكر مختلف كل مرة
 bus.on('openWardrobe', () => openWardrobe());
+bus.on('openHome', () => openHome(openWardrobe));
 bus.on('lessonDone', () => setTimeout(() => { const n = syncUnitGear(); if (n.length) { bus.emit('save'); hud.toast(`👕 لباس جديد في خزانة البطل: ${n.map(g => g.name).join('، ')} (من الحقيبة 🎒)`); } }, 2500));   // قطعة لكل وحدة مكتملة   // من الحقيبة (والباب عند بيت البطل)   // إكمال وحدة يفتح مغامرتها
 bus.on('pauseWorld', on => { eng.paused = on; });
 bus.on('openAdventures', () => openAdventures());
