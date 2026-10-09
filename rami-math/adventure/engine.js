@@ -13,7 +13,7 @@ import { gfx, WEAK } from '../ui/hud.js';
 import { webglOK } from '../renderer3d/index.js';
 
 const SOLID_KINDS = new Set(['npc', 'chest', 'block', 'gate', 'door', 'sign', 'fire', 'beacon', 'cage', 'tent', 'crates', 'barrel', 'boat', 'well', 'lever', 'banner', 'house', 'rot', 'tablet', 'crystal', 'beam', 'fence', 'pillar']);
-const ACT_KINDS = new Set(['npc', 'chest', 'lever', 'sign', 'door', 'gate', 'cage', 'beacon', 'boat', 'fire', 'safe', 'block', 'well', 'tent', 'banner', 'house', 'rot', 'tablet', 'crystal', 'animal', 'pillar', 'site']);
+const ACT_KINDS = new Set(['npc', 'chest', 'lever', 'sign', 'door', 'gate', 'cage', 'beacon', 'boat', 'fire', 'safe', 'block', 'well', 'tent', 'banner', 'house', 'rot', 'tablet', 'crystal', 'animal', 'pillar', 'site', 'beam']);
 const esc = s => String(s).replace(/[&<>]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;' }[c]));
 const wait = ms => new Promise(r => setTimeout(r, ms));
 
@@ -337,7 +337,7 @@ export function runAdventure(def, onExit) {
         look: e => e.look || def.cast[e.who].look, itemIcon: A.itemIcon, pressed: A.pressed,
         heroLook: heroLookWorn(game.state), heroKey: JSON.stringify(heroLookWorn(game.state)), lantern: A.has('lantern'), goalAt: goalAt(),
         fx: fx.map(p => ({ x: p.x, y: p.y, h: Math.max(0, -p.vy * .1), col: p.col })), cam, zoom: Z / (W < H ? .9 : 1.1), userZoom, cine, shake: shakeK,
-        tilesV, beams, symbols: def.symbols || ['🌙', '☀️', '⭐', '🌴'], wind: area.wind ? { gust, dx: area.wind.dx, dy: area.wind.dy, on: !(area.wind.until && area.wind.until(A)) } : null, weather: Object.assign({ rain: area.rain, sand: area.sand }, S.flags.weather || {}), defItems: items,
+        tilesV, beams, symbols: def.symbols || ['🌙', '☀️', '⭐', '🌴'], wind: area.wind ? { gust, dx: area.wind.dx, dy: area.wind.dy, on: !(area.wind.until && area.wind.until(A)) } : null, weather: Object.assign({ rain: area.rain, sand: area.sand, fog: area.fog && !(area.fogUntil && area.fogUntil(A)) }, S.flags.weather || {}), defItems: items,
         cutList: () => Object.keys(S.cut).filter(k => k.startsWith(S.area + ':')).map(k => k.slice(S.area.length + 1)),
         canCut: k => { const [x, y] = k.split(',').map(Number), ch = map[y][x]; return (ch === '"' && A.has(def.cutTool || 'sickle')) || (ch === 'R' && A.has(def.breakTool || 'hammer')); } });
     } else draw();

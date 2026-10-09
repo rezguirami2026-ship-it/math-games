@@ -139,7 +139,7 @@ export function createAdv3D(canvas) {
       case 'torchw': { P.add(dark, cyl(2, 2, 40, 0, 20, 0, 6), { uv: false }); G.add(P.build()); const f = flame(.8); f.position.y = 40; G.add(f); G.userData.light = 1; break; }
       case 'site': { const g = new THREE.Group(); const ring = new THREE.Mesh(new THREE.RingGeometry(20, 26, 4), new THREE.MeshBasicMaterial({ color: '#FFD54A', transparent: true, opacity: .7, side: THREE.DoubleSide })); ring.rotation.x = -Math.PI / 2; ring.rotation.z = Math.PI / 4; ring.position.y = 1.5; g.add(ring); G.add(g); G.userData.site = ring;
         const b = buildModel(e.model || 'raft'); b.visible = !!e.built; G.add(b); G.userData.built = b; if (e.model === 'altar') { const base = new THREE.Mesh(box(50, 30, 40, 0, 15, 0, 3), material('stone', '#C9BFA9')); G.add(base); G.userData.altarBase = base; } break; }
-      case 'boat': { G.add(buildModel('dhow')); break; }
+      case 'boat': { G.add(buildModel(e.wreck ? 'wreck' : 'dhow')); break; }
       case 'npc': case 'guard': { const Pp = buildPerson(V.look(e)); Pp.root.position.set(x, 0, z); people.set(e, Pp); shadowed(Pp.root); scene.add(Pp.root);
         if (e.kind === 'guard') { const cone = new THREE.Mesh(new THREE.CircleGeometry((e.range || 4) * T, 24, -(e.fov || .5), (e.fov || .5) * 2), new THREE.MeshBasicMaterial({ color: '#FFD54A', transparent: true, opacity: .28, depthWrite: false, side: THREE.DoubleSide }));
           cone.rotation.x = -Math.PI / 2; cone.position.y = 1.5; G.add(cone); G.userData.cone = cone; const lan = new THREE.Mesh(sphere(4, 14, 40, 6), glow('#FFC86A')); G.add(lan); }
@@ -190,7 +190,7 @@ export function createAdv3D(canvas) {
       for (let i = 0; i < 5; i++) { const pl = new THREE.Mesh(new THREE.BoxGeometry(3, 4, 40), dk); pl.position.set(-48 + i * 22, 20.5, 0); g.add(pl); }
       const mast = new THREE.Mesh(new THREE.CylinderGeometry(3, 3, 64, 6), dk); mast.position.set(-6, 52, 0); mast.rotation.z = .55; g.add(mast);
       const sail = new THREE.Mesh(new THREE.PlaneGeometry(44, 40), std('#EFE3CC', { side: THREE.DoubleSide })); sail.position.set(-22, 50, 6); sail.rotation.set(.3, .5, .55); g.add(sail);
-      g.rotation.z = .12; g.rotation.y = .5;
+      if (kind === 'wreck') { g.rotation.z = .12; g.rotation.y = .5; } else { mast.rotation.z = 0; mast.position.set(0, 52, 0); sail.position.set(14, 58, 0); sail.rotation.set(0, Math.PI / 2, 0); g.position.y = -6; }
     }
     g.add(P.build()); return shadowed(g);
   }
@@ -205,16 +205,17 @@ export function createAdv3D(canvas) {
   function flame(s) { const g = new THREE.Group(); const o = new THREE.Mesh(new THREE.ConeGeometry(9 * s, 26 * s, 8), new THREE.MeshBasicMaterial({ color: '#FF8A1E', transparent: true, opacity: .92 })); o.position.y = 13 * s; const i = new THREE.Mesh(new THREE.ConeGeometry(5 * s, 16 * s, 8), new THREE.MeshBasicMaterial({ color: '#FFE070' })); i.position.y = 9 * s; g.add(o, i); g.userData.flame = 1; return g; }
 
   /* ── الطقس: الظلام والسماء والضباب تتغير بنعومة (عاصفة تهدأ، ليل، غبار)، والمطر والرمل جزيئات حول الكاميرا ── */
-  const wz = { dark: -1, sand: 0, rain: 0 };
+  const wz = { dark: -1, sand: 0, rain: 0, fog: 0 };
   let rain = null, rainbowM = null;
   const C = (a, b, k) => new THREE.Color(a).lerp(new THREE.Color(b), k);
   function weatherFrame(V, dt) {
     const w = V.weather || {}, k = Math.min(1, dt * 1.5);
-    wz.dark = wz.dark < 0 ? V.dark : wz.dark + (V.dark - wz.dark) * k; wz.sand += ((w.sand ? 1 : 0) - wz.sand) * k; wz.rain += ((w.rain ? 1 : 0) - wz.rain) * k;
+    wz.dark = wz.dark < 0 ? V.dark : wz.dark + (V.dark - wz.dark) * k; wz.sand += ((w.sand ? 1 : 0) - wz.sand) * k; wz.rain += ((w.rain ? 1 : 0) - wz.rain) * k; wz.fog += ((w.fog ? 1 : 0) - wz.fog) * k * .5;
     const d = wz.dark, storm = Math.max(wz.rain * .6, 0);
     const sky = d > .4 ? C('#6E8AB8', '#0E1530', Math.min(1, (d - .1) / .7)) : C('#8CC4EE', '#6E8AB8', Math.min(1, d / .4));
     if (storm) sky.lerp(new THREE.Color('#4A5568'), storm); if (wz.sand > .01) sky.lerp(new THREE.Color('#D9A86A'), wz.sand * .8);
-    scene.background.copy(sky); scene.fog.color.copy(sky); scene.fog.far = 2600 - wz.sand * 1700 - storm * 900; scene.fog.near = 900 - wz.sand * 700 - storm * 300;
+    scene.background.copy(sky); scene.fog.color.copy(sky); if (wz.fog > .01) sky.lerp(new THREE.Color('#9AA6B4'), wz.fog * .85); scene.background.copy(sky); scene.fog.color.copy(sky);
+    scene.fog.far = 2600 - wz.sand * 1700 - storm * 900 - wz.fog * 1550; scene.fog.near = 900 - wz.sand * 700 - storm * 300 - wz.fog * 760;   // ضباب الميناء: الرؤية قريبة
     hemi.color.copy(C('#CFE4FA', '#5A6AA8', Math.min(1, d * 1.6))); hemi.groundColor.copy(C('#8A6A48', '#2A2030', Math.min(1, d * 1.6))); hemi.intensity = 1.05 - d * .55;
     sun.color.copy(C('#FFE9C4', '#9FB4FF', Math.min(1, d * 1.6))); sun.intensity = Math.max(.35, 2.5 - d * 2.6 - storm * 1.2);
     // قوس قزح بعد العاصفة: قريب من الكاميرا أمامها فيُرى من الزاوية العالية

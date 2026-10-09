@@ -49,7 +49,7 @@ export default {
     beach: {
       theme: 'island', map: rows(B), dark: 0,
       ents: [
-        { id: 'wreck', kind: 'boat', x: 5, y: 16 }, { id: 'c_wreck', kind: 'chest', x: 8, y: 16, item: 'machete' },
+        { id: 'wreck', kind: 'boat', x: 5, y: 16, wreck: true }, { id: 'c_wreck', kind: 'chest', x: 8, y: 16, item: 'machete' },
         { id: 'saif', kind: 'npc', who: 'saif', x: 4, y: 13, face: 'right', mark: A => A.flag('met') ? null : '!' },
         { id: 'fire1', kind: 'safe', x: 9, y: 13 },
         { id: 'pk1', kind: 'item', x: 13, y: 16, item: 'plank' }, { id: 'pk2', kind: 'item', x: 19, y: 13, item: 'plank' }, { id: 'pk3', kind: 'item', x: 23, y: 17, item: 'plank' },
