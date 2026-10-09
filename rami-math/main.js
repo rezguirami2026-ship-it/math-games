@@ -16,6 +16,7 @@ import { decorItems, initGems, DECOR } from './world/decor.js';
 import { updatePet, petItems, pet3d } from './world/pet.js';
 import { treasureItems, nearTreasure, openTreasure, TREASURES } from './world/treasure.js';
 import { CHAPTER, introLines, npcLines } from './story/dialogues.js';
+import { startTour } from './ui/tour.js';
 import * as convoy from './missions/convoy.js';
 import { plant } from './missions/planting.js';
 import * as tanks from './missions/tanks.js';
@@ -202,10 +203,11 @@ async function start(state) {
     await screens.chapter(CHAPTER.n, CHAPTER.title);
     await hud.dialog(introLines(state.hero.name), people());
     state.story.introDone = true; saveNow(state);
+    if (!state.tourDone) { await new Promise(r => setTimeout(r, 2600)); await startTour(); }
   }
 }
 /* ── العرض ثلاثي الأبعاد (renderer3d): يُحمَّل فقط عند طلبه، ويرجع إلى الرسم الحالي إن لم يدعم الجهاز WebGL أو فشل التحميل ── */
-const V3D = 'نسخة 3D · ٧٤'; window.__BUILD = V3D.replace('نسخة 3D · ', '');   // تُعرض في شاشة التحميل وفي الزاوية: للتأكد أن المتصفح حمّل آخر نسخة
+const V3D = 'نسخة 3D · ٧٥'; window.__BUILD = V3D.replace('نسخة 3D · ', '');   // تُعرض في شاشة التحميل وفي الزاوية: للتأكد أن المتصفح حمّل آخر نسخة
 const want3d = () => gfx.d3();
 function loadingScreen() {
   const el = document.createElement('div'); el.className = 'load3d';
@@ -458,7 +460,7 @@ function update(dt) {
   updateFx(dt);
   if (!W.stones) areaCheck(dt);
   // شبكة أمان: انشغال بلا حوار ولا لوحة ولا شاشة لأكثر من ١٥ ثانية يعني خللاً؛ نحرّر اللاعب ونسجّل الخطأ
-  const uiOpen = ['dialog', 'panel', 'screen'].some(id => document.getElementById(id).classList.contains('on'));
+  const uiOpen = ['dialog', 'panel', 'screen'].some(id => document.getElementById(id).classList.contains('on')) || !!document.querySelector('.hall, .grand, .tour');   // القاعة والاحتفال والجولة نوافذ أيضاً
   if (game.busy && !uiOpen && !W.stones) { if ((W.busyT = (W.busyT || 0) + dt) > 15) { game.busy = false; W.busyT = 0; report('انشغال عالق', cur() ? cur().id : '-', new Error('game.busy بقي true بلا نافذة مفتوحة')); } } else W.busyT = 0;
   ambience(W.area ? W.area.id : 'village', dt);   // أصوات المنطقة: ريح، موج، همهمة، طيور، أجراس…
   if (W.tapMark) { W.tapMark.t += dt; if (W.tapMark.t > .6) W.tapMark = null; }

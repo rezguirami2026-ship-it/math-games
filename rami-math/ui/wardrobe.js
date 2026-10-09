@@ -10,12 +10,13 @@ export const GEAR = [
   { id: 'flask', icon: '💧', name: 'قربة الماء', how: 'تُفتح بملء خزانات البيوت' },
   { id: 'shovel', icon: '⛏️', name: 'مجرفة المزارع', how: 'تُفتح بإتمام مشتريات الدكان' },
   { id: 'gold', icon: '⭐', name: 'التطريز الذهبي', how: 'يُفتح بزراعة ثلاث نخلات' },
-  { id: 'cape', icon: '🦸', name: 'وشاح حامي القرية', how: 'يُفتح بإكمال مغامرة «إنقاذ القرية»' }
+  { id: 'cape', icon: '🦸', name: 'وشاح حامي القرية', how: 'يُفتح بإكمال مغامرة «إنقاذ القرية»' },
+  { id: 'medal', icon: '🏅', name: 'وسام البطل الأكبر الذهبي', how: 'يُفتح بإكمال المغامرات التسع' }
 ];
 export const GOLD = '#C9971C';
 export function heroLookWorn(s) {
   const L = heroLook(s.hero), w = s.gear.worn;
-  L.gear = { bag: !!w.bag, flask: !!w.flask, shovel: !!w.shovel, cape: w.cape ? '#B0243C' : false };
+  L.gear = { bag: !!w.bag, flask: !!w.flask, shovel: !!w.shovel, cape: w.cape ? '#B0243C' : false, medal: !!w.medal };
   if (w.gold) L.accent = GOLD;
   return L;
 }

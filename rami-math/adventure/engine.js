@@ -6,11 +6,13 @@ import { drawHuman } from '../character/human.js';
 import { heroLookWorn } from '../ui/wardrobe.js';
 import { game } from '../core/state.js';
 import { bus } from '../core/events.js';
-import { sfx, thunder } from '../core/sound.js';
+import { sfx, thunder, advMusic } from '../core/sound.js';
 import { ar } from '../core/util.js';
-import { createAdv3D } from './render3d.js';
 import { gfx, WEAK } from '../ui/hud.js';
-import { webglOK } from '../renderer3d/index.js';
+// لا نستورد شيئاً من عارض العالم ثلاثي الأبعاد هنا: يُحمَّل عارض المغامرة (وThree.js) عند الحاجة فقط من index.js
+const webglOK = () => { try { const c = document.createElement('canvas'); return !!(window.WebGLRenderingContext && (c.getContext('webgl2') || c.getContext('webgl'))); } catch (e) { return false; } };
+let createAdv3D = null; export const setAdv3D = f => { createAdv3D = f; };
+export const want3D = () => webglOK() && !WEAK && gfx.d3();
 
 const SOLID_KINDS = new Set(['npc', 'chest', 'block', 'gate', 'door', 'sign', 'fire', 'beacon', 'cage', 'tent', 'crates', 'barrel', 'boat', 'well', 'lever', 'banner', 'house', 'rot', 'tablet', 'crystal', 'beam', 'fence', 'pillar']);
 const ACT_KINDS = new Set(['npc', 'chest', 'lever', 'sign', 'door', 'gate', 'cage', 'beacon', 'boat', 'fire', 'safe', 'block', 'well', 'tent', 'banner', 'house', 'rot', 'tablet', 'crystal', 'animal', 'pillar', 'site', 'beam']);
@@ -34,7 +36,7 @@ export function runAdventure(def, onExit) {
   document.body.appendChild(root);
   const cv = root.querySelector('.advCv'), ctx = cv.getContext('2d'), $ = s => root.querySelector(s);
   let r3 = null;   // العرض ثلاثي الأبعاد هو الافتراضي، والرسم ثنائي الأبعاد احتياط للأجهزة الضعيفة أو بلا WebGL
-  try { if (webglOK() && !WEAK && gfx.d3()) { r3 = createAdv3D($('.advCv3')); $('.advCv3').hidden = false; cv.hidden = true; } } catch (e) { console.warn('[adv3d]', e); r3 = null; }
+  try { if (createAdv3D && want3D()) { r3 = createAdv3D($('.advCv3')); $('.advCv3').hidden = false; cv.hidden = true; } } catch (e) { console.warn('[adv3d]', e); r3 = null; }
   let W = 0, H = 0, dpr = 1, Z = 1;
   function resize() { dpr = Math.min(devicePixelRatio || 1, 2); W = innerWidth; H = innerHeight; cv.width = W * dpr; cv.height = H * dpr; cv.style.width = W + 'px'; cv.style.height = H + 'px';
     Z = Math.max(.62, Math.min(1.5, Math.min(W / ((W < H ? 9 : 15) * T), H / ((W < H ? 13 : 10) * T)))); if (r3) r3.resize(W, H); }
@@ -345,6 +347,7 @@ export function runAdventure(def, onExit) {
     raf = requestAnimationFrame(step);
   }
   function update(dt) {
+    advMusic(S.flags.party ? def.id + '_win' : def.id);   // لحن المغامرة (ولحن الاحتفال بعد النصر)
     let vx = 0, vy = 0;
     if (keys.ArrowLeft || keys.a) vx--; if (keys.ArrowRight || keys.d) vx++; if (keys.ArrowUp || keys.w) vy--; if (keys.ArrowDown || keys.s) vy++;
     if (vx || vy) P.path = null;

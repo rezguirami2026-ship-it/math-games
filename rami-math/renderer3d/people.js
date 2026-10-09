@@ -186,6 +186,15 @@ export function buildPerson(look) {
   if (look.vest) { const v = mesh(new THREE.LatheGeometry([[6.6, 15.5], [8.1, 13], [7.9, 8], [6.4, 0]].map(([a, b]) => new THREE.Vector2(a, b)), 24, Math.PI * .58, Math.PI * 1.84), cloth(look.vest)); v.scale.z = .86; v.position.y = robeTop - 16; torso.add(v); }
   if (look.apron) { const a = mesh(G.box, cloth(look.apron)); a.scale.set(10, 19, .6); a.position.set(0, robeTop - 17, 7.8); a.rotation.x = -.08; torso.add(a); const str = mesh(G.box, cloth(look.apron)); str.scale.set(1, 7, .4); [-3.5, 3.5].forEach(dx => { const s2 = str.clone(); s2.position.set(dx, robeTop - 4, 6.4); torso.add(s2); }); }
   if (look.postbag) { const b = mesh(G.box, mat('#8B5A2B', .75)); b.scale.set(6, 7, 2.6); b.position.set(7.4, robeTop - 21, 1); torso.add(b); const st = mesh(G.box, mat('#6B4520', .75)); st.scale.set(1.2, 20, .6); st.rotation.z = .55; st.position.set(1, robeTop - 10, 6.3); torso.add(st); }
+  if (look.gear && look.gear.cape) {   // وشاح حامي القرية: نصف أسطوانة مفتوحة خلف الظهر تتسع نحو الأسفل
+    const ch = robeTop - 6, cp = mesh(new THREE.CylinderGeometry(8, 11.5, ch, 20, 1, true, Math.PI * .58, Math.PI * .84), new THREE.MeshStandardMaterial({ color: look.gear.cape, roughness: .7, side: THREE.DoubleSide }));
+    cp.scale.z = .9; cp.position.set(0, 6 + ch / 2, -.6); torso.add(cp);
+    const hem = mesh(new THREE.CylinderGeometry(11.6, 11.6, 1.2, 20, 1, true, Math.PI * .58, Math.PI * .84), new THREE.MeshStandardMaterial({ color: '#E3B04B', metalness: .5, roughness: .4, side: THREE.DoubleSide })); hem.scale.z = .9; hem.position.set(0, 6.6, -.6); torso.add(hem);
+  }
+  if (look.gear && look.gear.medal) {   // وسام البطل الأكبر الذهبي على الصدر
+    const rib = mat('#C0392B', .7); [-1, 1].forEach(sd => { const r = mesh(G.box, rib); r.scale.set(1.6, 6, .5); r.position.set(sd * 1.6, robeTop - 5, 7.4); r.rotation.z = sd * .35; torso.add(r); });
+    const disc = mesh(new THREE.CylinderGeometry(2.6, 2.6, .8, 20), mat('#FFD54A', .25, { metalness: .9, emissive: '#7A5200', emissiveIntensity: .35 })); disc.rotation.x = Math.PI / 2; disc.position.set(0, robeTop - 9.5, 7.9); torso.add(disc);
+  }
   if (look.gear && look.gear.bag) { const b = mesh(G.box, mat(acc, .7)); b.scale.set(9, 11, 4); b.position.set(0, robeTop - 11, -8); torso.add(b); }
   // الذراعان: كتف ← مرفق ← يد
   const shY = robeTop - 2.5, upper = adult ? 10.5 : 9.5, fore = adult ? 9.8 : 9;

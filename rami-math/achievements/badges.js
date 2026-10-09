@@ -44,6 +44,7 @@ export const BADGES = [
   { id: 'b_adv_mountain', icon: '⛰️', name: 'متسلّق القمم', desc: 'أكمل مغامرة «قمة جبل شمس»', prog: s => [((s.adventures || {}).mountain || {}).done ? 1 : 0, 1] },
   { id: 'b_adv_desert', icon: '🏜️', name: 'دليل الصحراء', desc: 'أكمل مغامرة «مهمة في الصحراء»', prog: s => [((s.adventures || {}).desert || {}).done ? 1 : 0, 1] },
   { id: 'b_adv_castle', icon: '👑', name: 'بطل قرية الخير', desc: 'أكمل مغامرة «القلعة المظلمة»', prog: s => [((s.adventures || {}).castle || {}).done ? 1 : 0, 1] },
+  { id: 'b_adv_all', icon: '👑', name: 'بطل قرية الخير الأكبر', desc: 'أكمل المغامرات التسع كلها', prog: s => [['rescue', 'storm', 'island', 'oldcity', 'lanterns', 'lighthouse', 'desert', 'mountain', 'castle'].filter(k => ((s.adventures || {})[k] || {}).done).length, 9] },
   { id: 'b_lvl10', icon: '👑', name: 'حكيم القرية', desc: 'صل إلى المستوى ١٠', prog: s => [levelOf(s).n, 10] },
   ...DOMAIN.map(([k, icon, name, ids]) => ({ id: 'b_' + k, icon, name, desc: `ثلاث نجوم في ${ids.length === 6 ? 'ستة' : ids.length === 5 ? 'خمسة' : ids.length === 8 ? 'ثمانية' : 'تسعة'} دروس من هذا المجال`, prog: s => [full(s, ids), ids.length] })),
   ...UNITS.map((u, i) => { const ids = LESSONS.filter(l => l.u === i).map(l => l.id); return { id: 'b_u' + i, icon: UNIT_ICON[i] || '⭐', name: `نجوم ${u.title}`, desc: `ثلاث نجوم في كل دروس وحدة ${u.title} (${u.term === 1 ? 'الفصل الأول' : 'الفصل الثاني'})`, prog: s => [full(s, ids), ids.length] }; })

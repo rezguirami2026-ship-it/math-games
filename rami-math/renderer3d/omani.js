@@ -28,15 +28,23 @@ export function signMesh(text, h = 16) {
   const key = text + '|' + h;
   if (!signCache.has(key)) {
     // دقة مضاعفة (خط ٨٨) حتى يبقى النص حاداً عند التقريب وعلى الشاشات الكثيفة؛ ويُعاد الرسم إذا لم يكن خط Cairo قد حُمّل بعد
-    const S = 2, F = `900 ${44 * S}px Cairo, sans-serif`, c = document.createElement('canvas'), x = c.getContext('2d'); x.font = F;
-    const tw = Math.ceil(x.measureText(text).width * 1.12) + 56 * S; c.width = tw; c.height = 76 * S;   // هامش ١٢٪ احتياطاً لعرض الخط
-    const paint = () => { x.clearRect(0, 0, c.width, c.height); x.font = F; x.direction = 'rtl';
-      x.fillStyle = '#2F6B73'; x.beginPath(); x.roundRect(3 * S, 3 * S, tw - 6 * S, 70 * S, 14 * S); x.fill(); x.lineWidth = 5 * S; x.strokeStyle = '#E3B04B'; x.stroke();
-      x.fillStyle = '#FFF6E2'; x.textAlign = 'center'; x.textBaseline = 'middle'; x.fillText(text, tw / 2, 41 * S); };
+    const S = 2, CH = 80, F = `900 ${40 * S}px Cairo, sans-serif`, c = document.createElement('canvas'), x = c.getContext('2d'); x.font = F;
+    const tw = Math.ceil(x.measureText(text).width * 1.12) + 64 * S; c.width = tw; c.height = CH * S;   // هامش ١٢٪ احتياطاً لعرض الخط، ومكان للزخرفة على الطرفين
+    const paint = () => { x.clearRect(0, 0, c.width, c.height); x.direction = 'rtl'; x.textAlign = 'center'; x.textBaseline = 'alphabetic';
+      const gr = x.createLinearGradient(0, 0, 0, CH * S); gr.addColorStop(0, '#3A8A93'); gr.addColorStop(1, '#1D535C');
+      x.fillStyle = gr; x.beginPath(); x.roundRect(3 * S, 3 * S, tw - 6 * S, (CH - 6) * S, 14 * S); x.fill(); x.lineWidth = 5 * S; x.strokeStyle = '#E3B04B'; x.stroke();
+      x.lineWidth = 1.5 * S; x.strokeStyle = 'rgba(255,227,160,.5)'; x.beginPath(); x.roundRect(10 * S, 10 * S, tw - 20 * S, (CH - 20) * S, 9 * S); x.stroke();   // إطار داخلي رفيع
+      [19 * S, tw - 19 * S].forEach(cx => { x.fillStyle = '#E3B04B'; x.beginPath(); x.moveTo(cx, (CH / 2 - 8) * S); x.lineTo(cx + 5 * S, CH / 2 * S); x.lineTo(cx, (CH / 2 + 8) * S); x.lineTo(cx - 5 * S, CH / 2 * S); x.closePath(); x.fill(); });   // زخرفة معينية على الطرفين
+      // النص في وسط الإطار الداخلي تماماً بقياس ارتفاع الحروف الفعلي (النقاط والأحرف النازلة)، ويصغر الخط إن لم يتسع
+      let fs = 40 * S, m; const room = (CH - 30) * S, wRoom = tw - 54 * S;
+      for (let k = 0; k < 8; k++) { x.font = `900 ${fs}px Cairo, sans-serif`; m = x.measureText(text); const hh = m.actualBoundingBoxAscent + m.actualBoundingBoxDescent; if (hh <= room && m.width <= wRoom) break; fs *= Math.min(room / hh, wRoom / m.width, .97); }
+      const by = CH / 2 * S + (m.actualBoundingBoxAscent - m.actualBoundingBoxDescent) / 2;
+      x.fillStyle = 'rgba(8,30,36,.55)'; x.fillText(text, tw / 2 + 1.5 * S, by + 1.5 * S);
+      x.fillStyle = '#FFF6E2'; x.fillText(text, tw / 2, by); };
     paint();
     const t = new THREE.CanvasTexture(c); t.colorSpace = THREE.SRGBColorSpace; t.anisotropy = 16;
     if (document.fonts && !document.fonts.check(F, text)) document.fonts.load(F, text).then(() => { paint(); t.needsUpdate = true; }).catch(() => {});
-    signCache.set(key, { mat: new THREE.MeshStandardMaterial({ map: t, roughness: .6 }), aspect: tw / (76 * S) });
+    signCache.set(key, { mat: new THREE.MeshStandardMaterial({ map: t, roughness: .6 }), aspect: tw / (CH * S) });
   }
   const s = signCache.get(key), m = new THREE.Mesh(new THREE.BoxGeometry(h * s.aspect, h, 1.2), [M.wood(), M.wood(), M.wood(), M.wood(), s.mat, M.wood()]);
   m.castShadow = true; return m;
@@ -81,12 +89,12 @@ function parapet(P, x0, z0, w, d, H, mat, spout = true) {
   const n = Math.max(3, Math.round(w / 15)), nd = Math.max(2, Math.round(d / 15));
   for (let i = 0; i < n; i++) { const x = x0 + (i + .5) * w / n; P.add(mat, merlon(x, H + ph, z0 + d - t / 2)); P.add(mat, merlon(x, H + ph, z0 + t / 2)); }
   for (let i = 1; i < nd - 1; i++) { const z = z0 + (i + .5) * d / nd; P.add(mat, merlon(x0 + t / 2, H + ph, z, Math.PI / 2)); P.add(mat, merlon(x0 + w - t / 2, H + ph, z, Math.PI / 2)); }
-  if (spout) [.22, .78].forEach(k => P.add(M.wood('#6B4520'), box(3.2, 3.2, 13, x0 + w * k, H + 2, z0 + d + 5)));
+  if (spout) (Array.isArray(spout) ? spout : [.22, .78]).forEach(k => P.add(M.wood('#6B4520'), box(3.2, 3.2, 13, x0 + w * k, H + 2, z0 + d + 5)));
 }
 /* رؤوس الجسور الخشبية (الدعون) بارزة من الجدار تحت السطح: صف على الواجهة والجانبين */
-function beamEnds(P, x0, z0, w, d, y, k) {
+function beamEnds(P, x0, z0, w, d, y, k, gap = 0) {   // gap: نصف عرض اللافتة، فلا تبرز رؤوس الجذوع فوقها
   const bw = material('wood', '#6E4524'), n = Math.max(4, Math.round(w / 17)), nd = Math.max(3, Math.round(d / 17));
-  for (let i = 0; i < n; i++) P.add(bw, cyl(1.7, 1.7, 7, 0, 0, 0, 7).rotateX(Math.PI / 2).translate(x0 + (i + .5) * w / n, y, z0 + d - k + 3));
+  for (let i = 0; i < n; i++) if (Math.abs((i + .5) * w / n - w / 2) >= gap) P.add(bw, cyl(1.7, 1.7, 7, 0, 0, 0, 7).rotateX(Math.PI / 2).translate(x0 + (i + .5) * w / n, y, z0 + d - k + 3));
   for (let i = 0; i < nd; i++) { const z = z0 + (i + .5) * d / nd; P.add(bw, cyl(1.7, 1.7, 7, 0, 0, 0, 7).rotateZ(Math.PI / 2).translate(x0 + k - 3, y, z)); P.add(bw, cyl(1.7, 1.7, 7, 0, 0, 0, 7).rotateZ(Math.PI / 2).translate(x0 + w - k + 3, y, z)); }
 }
 /* نافذة عُمانية مستطيلة: عتب خشبي بارز، إطار جص، شبك حديدي بقضبان، ومصراعان خشبيان */
@@ -156,9 +164,9 @@ export function omaniHouse(b, opts = {}) {
   P.add(M.stoneDark(), box(w + 5, 12, d + 5, x0 + w / 2, 6, z0 + d / 2, 1.5));   // قاعدة حجرية
   P.add(wallM, taper(box(w, H, d, x0 + w / 2, H / 2, z0 + d / 2, 3), x0 + w / 2, z0 + d / 2, 0, H, .025));   // الجسم: يضيق قليلاً نحو الأعلى
   P.add(trimM, box(w * .975 + 2, 3.2, d * .975 + 2, x0 + w / 2, H - 2, z0 + d / 2));                   // إفريز تحت الحاجز
-  beamEnds(P, x0, z0, w, d, H - 9, w * .0125);
+  beamEnds(P, x0, z0, w, d, H - 9, w * .0125, b.sign ? w * .47 : 0);
   P.add(material('plaster', b.wall || '#EFE3CC', { roof: 1 }), box(w - 9, 1.2, d - 9, x0 + w / 2, H + .6, z0 + d / 2));
-  parapet(P, x0, z0, w, d, H, wallM);
+  parapet(P, x0, z0, w, d, H, wallM, b.sign ? [.04, .96] : true);   // المرازيم على الطرفين حين توجد لافتة
   // الواجهة: باب في الوسط، نافذتان، وفتحات تهوية
   const shop = b.style === 'shop', mosque = b.style === 'mosque';
   const dw = shop ? 40 : (b.doorW || 34), dh = Math.round((b.doorH || 66) * 1.18);
@@ -169,7 +177,7 @@ export function omaniHouse(b, opts = {}) {
   const wx = w > 160 ? [x0 + 30, x0 + w - 30] : [x0 + 24, x0 + w - 24];
   if (!shop) wx.forEach(x => rectWin ? windowRect(P, x, wy + 2, zf, 20, 28, trimM, '#7A4A2A') : windowArch(P, x, wy, zf, ww, wh, trimM, mosque ? null : '#2F6B73'));
   else [x0 + 26, x0 + w - 26].forEach(x => windowArch(P, x, 30, zf, 26, 42, trimM, null));
-  vents(P, x0 + w / 2, H - 16, zf);
+  if (!b.sign) vents(P, x0 + w / 2, H - 16, zf);   // فتحات التهوية مكان اللافتة: تُترك حين يحمل المبنى لافتة حتى لا تتداخل معها
   if (H >= 180) {   // طابق ثانٍ: إفريز، نوافذ علوية، ومشربية بارزة فوق الباب
     const fy = Math.round(H * .5);
     P.add(trimM, box(w + 3, 5, 3, x0 + w / 2, fy, zf + 1.5));
@@ -196,7 +204,7 @@ export function omaniHouse(b, opts = {}) {
   const g = P.build();
   if (b.sign) {   // لافتة الاسم كبيرة واضحة أعلى الواجهة (لا تتجاوز عرض المبنى)
     let sh = 32, s = signMesh(b.sign, sh); const sw = s.geometry.parameters.width; if (sw > w * .9) { sh *= w * .9 / sw; s = signMesh(b.sign, Math.round(sh)); }
-    s.position.set(x0 + w / 2, Math.max(dh + 16 + sh / 2, H - sh / 2 - 8), zf + 2.6); g.add(s);
+    s.position.set(x0 + w / 2, Math.max(dh + 14 + sh / 2, H - sh / 2 - 15), zf + 4.2); g.add(s);
   }
   g.userData = { H, foot: { x: x0, z: z0, w, d } };
   return g;

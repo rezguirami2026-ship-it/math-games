@@ -132,3 +132,28 @@ export function musicTick(area) {
     }
   } catch (e) {}
 }
+
+/* ── أصوات الاحتفال الكبير: قرع طبول متصاعد، رنين الأوسمة (يعلو مع كل وسام)، نفير احتفالي، هتاف وألعاب نارية ── */
+function noise(d, f, vol, when, type = 'bandpass', q = .8) {
+  if (!sound.on) return;
+  try { AC = AC || new (window.AudioContext || window.webkitAudioContext)(); const n = Math.floor(AC.sampleRate * d), b = AC.createBuffer(1, n, AC.sampleRate), x = b.getChannelData(0);
+    for (let i = 0; i < n; i++) x[i] = (Math.random() * 2 - 1) * Math.pow(1 - i / n, 1.5);
+    const s = AC.createBufferSource(), fl = AC.createBiquadFilter(), g = AC.createGain(); s.buffer = b; fl.type = type; fl.frequency.value = f; fl.Q.value = q; g.gain.value = vol;
+    s.connect(fl); fl.connect(g); g.connect(AC.destination); s.start(AC.currentTime + (when || 0)); } catch (e) {}
+}
+export function cheer(k, i = 0) {
+  if (k === 'roll') for (let j = 0; j < 22; j++) tone(95 + j * 2, .09, 'triangle', .05 + j * .004, j * .07);
+  if (k === 'medal') { const f = 660 * Math.pow(2, (i % 9) / 12); tone(f, .9, 'sine', .07); tone(f * 2, .6, 'sine', .03, .02); tone(f * 3, .35, 'sine', .015, .03); }
+  if (k === 'fanfare') { [[523, 0, .18], [523, .18, .12], [523, .3, .12], [698, .42, .5], [659, .95, .18], [698, 1.13, .18], [784, 1.31, .9]].forEach(([f, w, d]) => { tone(f, d + .1, 'sawtooth', .035, w); tone(f, d + .15, 'triangle', .07, w); tone(f / 2, d + .2, 'triangle', .05, w); });
+    [0, .42, 1.31].forEach(w => tone(65, .4, 'sine', .25, w)); }
+  if (k === 'crowd') { noise(2.2, 900, .22, 0, 'bandpass', .6); noise(1.8, 1500, .12, .3, 'bandpass', .9); [0, .25, .5, .8, 1.1].forEach(w => noise(.08, 2500, .25, w + Math.random() * .1, 'highpass')); }
+  if (k === 'boom') { tone(80 + Math.random() * 30, .5, 'sine', .22); noise(.6, 3000, .08, .05, 'highpass'); for (let j = 0; j < 6; j++) noise(.03, 4000, .06, .15 + Math.random() * .5, 'highpass'); }
+  if (k === 'sparkle') [0, .07, .14, .21].forEach((w, j) => tone(1800 + j * 260, .18, 'sine', .03, w));
+}
+/* ── موسيقى المغامرات: لحن لكل مغامرة على الطريقة نفسها (تُستدعى من حلقة المغامرة) ── */
+Object.assign(MUS, {
+  rescue: ['hijaz', 164.8, 96, true], storm: ['nahawand', 146.8, 104, true], island: ['rast', 196, 88, false], oldcity: ['hijaz', 146.8, 76, false],
+  lanterns: ['rast', 220, 108, true], lighthouse: ['nahawand', 174.6, 72, false], desert: ['hijaz', 164.8, 84, true], mountain: ['rast', 174.6, 80, false],
+  castle: ['nahawand', 130.8, 70, true], castle_win: ['rast', 220, 112, true]
+});
+export function advMusic(id) { if (!AC) return; musicTick(id); }

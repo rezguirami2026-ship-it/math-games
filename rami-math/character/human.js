@@ -98,6 +98,7 @@ export function drawHuman(ctx, h) {
   if (G.flask) flask(ctx, P, rot, shV);
   if (G.cape && back) cape(ctx, shV, hipV, G.cape, side, ph);
   outfit(ctx, h, rot, P, hipV, shV, side, back);   // سترة، مريلة، حقيبة بريد
+  if (G.medal && !back) medal(ctx, shV, side);
   if (side) { if (h.carry) boxes(ctx, h.carry, AR[1].wr[0] - 3, AR[1].wr[1] + 1); drawArm(ctx, AR[1], robe, skin, acc, female, false, L); }
   else { drawArm(ctx, AR[0], robe, skin, acc, female, false, L); drawArm(ctx, AR[1], robe, skin, acc, female, false, -L); if (!back && h.carry) boxes(ctx, h.carry, -6.5, AR[0].wr[1] + 1); }
   if (G.shovel && back) shovelGear(ctx, shV);
@@ -322,6 +323,12 @@ function cape(ctx, shV, hipV, col, side, ph) {   // وشاح حامي القري
   ctx.fillStyle = col; ctx.beginPath(); ctx.moveTo(-w, shV + 2); ctx.lineTo(w, shV + 2); ctx.quadraticCurveTo(f + 1, (shV + hipV) / 2, f + sw, by);
   ctx.quadraticCurveTo(sw, by + 3, -f + sw, by); ctx.quadraticCurveTo(-f - 1, (shV + hipV) / 2, -w, shV + 2); ctx.fill(); ctx.strokeStyle = INK; ctx.lineWidth = .8; ctx.stroke();
   ctx.strokeStyle = '#E3B04B'; ctx.lineWidth = 1.3; ctx.beginPath(); ctx.moveTo(f + sw - 1, by - 1); ctx.quadraticCurveTo(sw, by + 2, -f + sw + 1, by - 1); ctx.stroke();
+}
+function medal(ctx, shV, side) {   // وسام البطل الأكبر: شريطان على شكل V وقرص ذهبي على الصدر
+  const cx = side ? 2 : 0, cy = shV + 13;
+  ctx.fillStyle = '#C0392B'; ctx.beginPath(); ctx.moveTo(cx - 4.5, shV + 1); ctx.lineTo(cx - 1.2, cy - 2); ctx.lineTo(cx + 1.2, cy - 2); ctx.lineTo(cx + 4.5, shV + 1); ctx.lineTo(cx + 2, shV + 1); ctx.lineTo(cx, cy - 6); ctx.lineTo(cx - 2, shV + 1); ctx.closePath(); ctx.fill();
+  ctx.fillStyle = '#FFD54A'; ctx.beginPath(); ctx.arc(cx, cy, 3.8, 0, 7); ctx.fill(); ctx.strokeStyle = '#9A6A10'; ctx.lineWidth = .8; ctx.stroke();
+  ctx.fillStyle = '#FFF4C4'; ctx.beginPath(); ctx.arc(cx - 1, cy - 1, 1.2, 0, 7); ctx.fill();
 }
 function shovelGear(ctx, shV) {
   ctx.lineCap = 'round'; ctx.strokeStyle = INK; ctx.lineWidth = 3.2; ctx.beginPath(); ctx.moveTo(-10, shV + 34); ctx.lineTo(9, shV - 6); ctx.stroke();
