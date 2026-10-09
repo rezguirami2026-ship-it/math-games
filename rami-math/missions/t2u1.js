@@ -2,7 +2,7 @@
 import { ar, wait, rr, clamp } from '../core/util.js';
 import { bubble } from '../world/entities.js';
 import { sfx } from '../core/sound.js';
-import { R, shuffle, near, changed, dec, finish, panel, sheetOpen, sheetClose, hiDPI, msgBox, setMsg, btn, numPad, counters } from './bench.js';
+import { R, shuffle, near, changed, dec, finish, panel, sheetOpen, sheetClose, hiDPI, msgBox, setMsg, btn, numPad, counters , qMsg } from './bench.js';
 import { ST5, GUEST } from '../world/festival.js';
 import { building3d, boxShadow } from '../world/art.js';
 
@@ -47,7 +47,7 @@ export const massCapacity1 = Object.assign({
       };
       render(msg, kind);
     } else {
-      sheetOpen(`<h3>💧 إبريق القياس</h3>${msgBox(msg || `املأ الإبريق بـ <b>${L(r.ml)}</b> من ماء الورد`, kind)}<canvas id="jug" width="300" height="190"></canvas>
+      sheetOpen(`<h3>💧 إبريق القياس</h3>${qMsg(msg, kind, `املأ الإبريق بـ <b>${L(r.ml)}</b> من ماء الورد`)}<canvas id="jug" width="300" height="190"></canvas>
         <div class="row2"><button class="act" id="pour">💧 صبّ (اضغط مطولاً)</button><button class="act ghost" id="back">↩ أرجع ٥٠ مل</button></div>
         <div class="row2"><button class="act ghost" id="benchOut">رجوع</button><button class="act go" id="benchGo">✓ هذا المقدار</button></div>`);
       const c = hiDPI(panel().querySelector('#jug'));
@@ -78,7 +78,7 @@ export const massCapacity2 = Object.assign({
   goal: d => `🍲 اضبط مقادير وصفات الجدة ${step(d, 3)}`,
   open(W, d, msg, kind) {
     const r = d.rounds[d.r], f = r.p / 4;
-    sheetOpen(`<h3>🍲 وصفة أم سعيد</h3><div class="recipe"><b>لـ ٤ أشخاص:</b> ${r.ing.map(([n, u, v]) => `${n} ${ar(v)} ${u}`).join(' — ')}</div>${msgBox(msg || `اليوم سنطبخ لـ <b>${ar(r.p)}</b> أشخاص. اضبط كل مقدار`, kind)}<div id="cnt"></div>
+    sheetOpen(`<h3>🍲 وصفة أم سعيد</h3><div class="recipe"><b>لـ ٤ أشخاص:</b> ${r.ing.map(([n, u, v]) => `${n} ${ar(v)} ${u}`).join(' — ')}</div>${qMsg(msg, kind, `اليوم سنطبخ لـ <b>${ar(r.p)}</b> أشخاص. اضبط كل مقدار`)}<div id="cnt"></div>
       <div class="row2"><button class="act ghost" id="benchOut">رجوع</button><button class="act go" id="benchGo">🍲 اطبخ</button></div>`);
     const holder = panel().querySelector('#cnt');
     holder.innerHTML = ['a', 'b', 'c'].map((k, i) => `<div class="cnt"><span>${r.ing[i][0]} (${r.ing[i][1]})</span><button class="act ghost" data-c="${k}" data-v="-10">−١٠</button><b id="cv_${k}">${ar(d[k])}</b><button class="act ghost" data-c="${k}" data-v="10">+١٠</button><button class="act ghost" data-c="${k}" data-v="100">+١٠٠</button></div>`).join('');
@@ -105,7 +105,7 @@ export const timeConvert = Object.assign({
   open(W, d, msg, kind) {
     const r = d.rounds[d.r];
     if (r.t === 'c') {
-      sheetOpen(`<h3>⏰ ساعة البرج</h3>${msgBox(msg || r.text, kind)}<canvas id="clk" width="200" height="200"></canvas>
+      sheetOpen(`<h3>⏰ ساعة البرج</h3>${qMsg(msg, kind, r.text)}<canvas id="clk" width="200" height="200"></canvas>
         <div class="row2"><button class="act ghost" data-m="-60">−١ س</button><button class="act ghost" data-m="-5">−٥ د</button><button class="act ghost" data-m="5">+٥ د</button><button class="act ghost" data-m="60">+١ س</button></div>
         <div class="row2"><button class="act ghost" id="benchOut">رجوع</button><button class="act go" id="benchGo">⏰ اضبط الساعة</button></div>`);
       const c = hiDPI(panel().querySelector('#clk'));
@@ -120,7 +120,7 @@ export const timeConvert = Object.assign({
       btn('benchOut', () => { sheetClose(); changed(); });
       btn('benchGo', async () => { if (((d.tm - r.ans) % 720 + 720) % 720 === 0) await this.next(W, d); else { sfx('cough'); setMsg(`الساعة تشير إلى ${hm(d.tm)}، وهذا ليس الموعد. ${r.text}`, 'bad'); } });
     } else {
-      sheetOpen(`<h3>⏳ عدّاد الانتظار</h3>${msgBox(msg || r.text, kind)}<div id="cnt"></div><div class="row2"><button class="act ghost" id="benchOut">رجوع</button><button class="act go" id="benchGo">⏳ ثبّت العدّاد</button></div>`);
+      sheetOpen(`<h3>⏳ عدّاد الانتظار</h3>${qMsg(msg, kind, r.text)}<div id="cnt"></div><div class="row2"><button class="act ghost" id="benchOut">رجوع</button><button class="act go" id="benchGo">⏳ ثبّت العدّاد</button></div>`);
       counters(panel().querySelector('#cnt'), [['n', '⏳ ساعات', 200]], d);
       btn('benchOut', () => { sheetClose(); changed(); });
       btn('benchGo', async () => { if (d.n === r.ans) await this.next(W, d); else { sfx('cough'); setMsg(`العدّاد لا يساوي المدة. تذكّر: اليوم ٢٤ ساعة`, 'bad'); } });
@@ -140,7 +140,7 @@ export const timeZones1 = Object.assign({
   open(W, d, msg, kind) {
     const r = d.rounds[d.r], rel = r.df > 0 ? `تسبق مسقط بـ${dec(r.df)} ساعة` : `متأخرة عن مسقط بـ${dec(-r.df)} ساعة`;
     if (!d.tm) d.tm = r.m;
-    sheetOpen(`<h3>🌍 ساعة ${r.city}</h3>${msgBox(msg || `الساعة في مسقط الآن <b>${hm24(r.m)}</b>، و${r.city} ${rel}. اضبط ساعة ${r.city}`, kind)}
+    sheetOpen(`<h3>🌍 ساعة ${r.city}</h3>${qMsg(msg, kind, `الساعة في مسقط الآن <b>${hm24(r.m)}</b>، و${r.city} ${rel}. اضبط ساعة ${r.city}`)}
       <div class="dclock"><small>${r.city}</small><b id="dc">${hm24(d.tm)}</b></div>
       <div class="row2"><button class="act ghost" data-m="-60">−١ س</button><button class="act ghost" data-m="-15">−١٥ د</button><button class="act ghost" data-m="15">+١٥ د</button><button class="act ghost" data-m="60">+١ س</button></div>
       <div class="row2"><button class="act ghost" id="benchOut">رجوع</button><button class="act go" id="benchGo">🌍 ثبّت الساعة</button></div>`);
@@ -164,7 +164,7 @@ export const areaPerimeter = Object.assign({
   open(W, d, msg, kind) {
     const r = d.rounds[d.r];
     const text = r.t === 'A' ? `غرفة مساحتها <b>${ar(r.A)} م²</b> وعرضها <b>${ar(r.w)} م</b>. اضبط طولها.` : r.t === 'P' ? `حديقة محيطها <b>${ar(r.P)} م</b> وطولها <b>${ar(r.l)} م</b>. اضبط عرضها.` : 'غرفة الاستقبال على شكل حرف L. كم متراً مربعاً من البلاط تحتاج أرضيتها؟';
-    sheetOpen(`<h3>🏠 مخطط ${ar(d.r + 1)}</h3>${msgBox(msg || text, kind)}<canvas id="plan" width="300" height="190"></canvas><div id="ctl"></div><button class="act ghost" id="benchOut">رجوع</button>`);
+    sheetOpen(`<h3>🏠 مخطط ${ar(d.r + 1)}</h3>${qMsg(msg, kind, text)}<canvas id="plan" width="300" height="190"></canvas><div id="ctl"></div><button class="act ghost" id="benchOut">رجوع</button>`);
     const c = hiDPI(panel().querySelector('#plan')), u = 18, ox = 20, oy = 16;
     const grid = () => { c.strokeStyle = 'rgba(42,27,102,.10)'; c.lineWidth = 1; for (let x = ox; x <= 290; x += u) { c.beginPath(); c.moveTo(x, oy); c.lineTo(x, 182); c.stroke(); } for (let y = oy; y <= 182; y += u) { c.beginPath(); c.moveTo(ox, y); c.lineTo(290, y); c.stroke(); } };
     const lab = (t, x, y) => { c.fillStyle = '#2A1B66'; c.font = '900 13px Cairo, sans-serif'; c.textAlign = 'center'; c.fillText(t, x, y); };

@@ -20,7 +20,7 @@ const panel = () => document.getElementById('panel');
 function sheetOpen(html) { const el = panel(); el.innerHTML = `<div class="sheet bench">${html}</div>`; el.classList.add('on'); game.busy = true; return el; }
 function sheetClose() { const el = panel(); el.classList.remove('on'); el.innerHTML = ''; game.busy = false; }
 function hiDPI(cv) { const r = 2, w = cv.width, h = cv.height; cv.width = w * r; cv.height = h * r; cv.style.width = w + 'px'; cv.style.height = h + 'px'; const c = cv.getContext('2d'); c.scale(r, r); return c; }
-const msgBox = (t, kind) => `<div class="speech ${kind || ''}" id="benchMsg">${t}</div>`;
+import { msgBox, qMsg } from './bench.js';
 const setMsg = (t, kind) => { const m = document.getElementById('benchMsg'); if (m) { m.className = 'speech ' + (kind || ''); m.innerHTML = t; } };
 
 /* ── رسم الأشكال والمجسمات ── */
@@ -113,7 +113,7 @@ export const shapes3D = {
   open(W, d, msg, kind) {
     const s = SOLIDS[d.rounds[d.r]];
     const row = (k, lab) => `<div class="cnt"><span>${lab}</span><button class="act ghost" data-k="${k}" data-v="-1">−</button><b id="c_${k}">${ar(d[k])}</b><button class="act ghost" data-k="${k}" data-v="1">+</button></div>`;
-    sheetOpen(`<h3>🔧 طاولة الهياكل: ${s.name}</h3>${msgBox(msg || `جهّز ما يلزم لصنع هيكل <b>${s.name}</b>`, kind)}
+    sheetOpen(`<h3>🔧 طاولة الهياكل: ${s.name}</h3>${qMsg(msg, kind, `جهّز ما يلزم لصنع هيكل <b>${s.name}</b>`)}
       <canvas id="solid" width="300" height="150"></canvas>
       ${row('v', '🔴 وصلات (رؤوس)')}${row('e', '📏 قضبان (أحرف)')}${row('f', '🟦 ألواح (أوجه)')}
       <div class="row2"><button class="act ghost" id="benchOut">رجوع</button><button class="act go" id="benchGo">🔧 اصنع الهيكل</button></div>`);
@@ -166,7 +166,7 @@ export const nets = {
   actions(W, d) { return near(W, { x: GIFT_TABLE.x, y: GIFT_TABLE.y + 16 }, 48) ? [{ key: 'gifts', label: '📦 لوح العلب', kind: 'go', run: () => this.open(W, d) }] : []; },
   open(W, d, msg, kind) {
     const CW = 5, CH = 4, Z = 44;
-    sheetOpen(`<h3>📦 لوح علب الهدايا</h3>${msgBox(msg || 'اضغط المربعات لتصمم شبكة من ستة وجوه، ثم اطوِها', kind)}
+    sheetOpen(`<h3>📦 لوح علب الهدايا</h3>${qMsg(msg, kind, 'اضغط المربعات لتصمم شبكة من ستة وجوه، ثم اطوِها')}
       <canvas id="net" width="${CW * Z + 8}" height="${CH * Z + 8}"></canvas>
       <div class="row2"><button class="act ghost" id="netClear">↺ امسح</button><button class="act ghost" id="benchOut">رجوع</button><button class="act go" id="benchGo">📦 اطوِ العلبة</button></div>`);
     const cv = document.getElementById('net'), c = hiDPI(cv);
@@ -210,7 +210,7 @@ export const triangleAngles = {
   actions(W, d) { return near(W, { x: ROOF_TABLE.x, y: ROOF_TABLE.y + 16 }, 48) ? [{ key: 'roof', label: '📐 طاولة الدعامات', kind: 'go', run: () => this.open(W, d) }] : []; },
   open(W, d, msg, kind) {
     const r = d.rounds[d.r];
-    sheetOpen(`<h3>📐 الدعامة ${ar(d.r + 1)}</h3>${msgBox(msg || r.text, kind)}
+    sheetOpen(`<h3>📐 الدعامة ${ar(d.r + 1)}</h3>${qMsg(msg, kind, r.text)}
       <canvas id="tri" width="320" height="170"></canvas>
       <div class="row2"><button class="act ghost" data-a="-10">−١٠°</button><button class="act ghost" data-a="-1">−١°</button><button class="act ghost" data-a="1">+١°</button><button class="act ghost" data-a="10">+١٠°</button></div>
       <div class="row2"><button class="act ghost" id="benchOut">رجوع</button><button class="act go" id="benchGo">📐 ثبّت الدعامة</button></div>`);
@@ -313,7 +313,7 @@ function imageMod(cfg) {
     actions(W, d) { return near(W, cfg.stand, 46) ? [{ key: cfg.id, label: `${cfg.icon} لوح ${cfg.place}`, kind: 'go', run: () => this.open(W, d) }] : []; },
     open(W, d, msg, kind) {
       const r = d.rounds[d.r], Z = 30, O = 15, N = 8;
-      sheetOpen(`<h3>${cfg.icon} ${cfg.title}</h3>${msgBox((msg || r.text) + ` (للشكل ${ar(r.shape.length)} رؤوس: ضع ${ar(r.shape.length)} نقاط)`, kind)}<canvas id="img" width="${N * Z + 2 * O}" height="${N * Z + 2 * O}" style="touch-action:none"></canvas>
+      sheetOpen(`<h3>${cfg.icon} ${cfg.title}</h3>${qMsg(msg, kind, r.text + ` (للشكل ${ar(r.shape.length)} رؤوس: ضع ${ar(r.shape.length)} نقاط)`)}<canvas id="img" width="${N * Z + 2 * O}" height="${N * Z + 2 * O}" style="touch-action:none"></canvas>
         <div class="row2"><button class="act ghost" id="imgClear">↺ امسح</button><button class="act ghost" id="benchOut">رجوع</button><button class="act go" id="benchGo">✓ تحقّق</button></div>`);
       const cv = document.getElementById('img'), c = hiDPI(cv), X = g => O + g * Z;
       const draw = () => {

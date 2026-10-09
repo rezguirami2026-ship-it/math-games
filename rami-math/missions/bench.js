@@ -17,6 +17,9 @@ export function sheetOpen(html) { const el = panel(); el.innerHTML = `<div class
 export function sheetClose() { const el = panel(); el.classList.remove('on'); el.innerHTML = ''; game.busy = false; }
 export function hiDPI(cv) { const r = 2, w = cv.width, h = cv.height; cv.width = w * r; cv.height = h * r; cv.style.width = w + 'px'; cv.style.height = h + 'px'; const c = cv.getContext('2d'); c.scale(r, r); return c; }
 export const msgBox = (t, kind) => `<div class="speech ${kind || ''}" id="benchMsg">${t}</div>`;
+/* رسالة الطاولة: رسالة النجاح لا تُخفي السؤال التالي أبداً (إن لم تذكره الرسالة نفسها يُضاف تحتها) */
+const plain = t => String(t).replace(/<[^>]+>/g, '').replace(/\s+/g, ' ').trim();
+export const qMsg = (msg, kind, q) => { if (!msg) return msgBox(q, kind); if (kind !== 'ok' || !q) return msgBox(msg, kind); const pq = plain(q); return msgBox(plain(msg).includes(pq.slice(0, 14)) ? msg : `${msg}<div class="nextQ">${q}</div>`, kind); };
 export const setMsg = (t, kind) => { const m = document.getElementById('benchMsg'); if (m) { m.className = 'speech ' + (kind || ''); m.innerHTML = t; } };
 export const btn = (id, fn) => { const b = document.getElementById(id); if (b) b.onclick = e => { e.stopPropagation(); fn(); }; };
 /* لوحة أرقام: تقبل الفاصلة العشرية والسالب، وتعيد القيمة عند الضغط على زر التأكيد */

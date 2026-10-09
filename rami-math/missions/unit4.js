@@ -2,7 +2,7 @@
 import { ar, wait, rr, clamp } from '../core/util.js';
 import { say, puff, bubble } from '../world/entities.js';
 import { sfx } from '../core/sound.js';
-import { R, shuffle, near, changed, dec, sg, finish, panel, sheetOpen, sheetClose, hiDPI, msgBox, setMsg, btn, numPad, counters } from './bench.js';
+import { R, shuffle, near, changed, dec, sg, finish, panel, sheetOpen, sheetClose, hiDPI, msgBox, setMsg, btn, numPad, counters , qMsg } from './bench.js';
 import { BW, ST4, B4, H_B } from '../world/fort.js';
 import { PAL, INK, onRoof, bigSign, tag } from '../world/art.js';
 import { rial } from './shop.js';
@@ -65,7 +65,7 @@ export const hieroNumbers = Object.assign({
     const r = d.rounds[d.r];
     if (r.t === 'w') {
       const sum = () => d.cur.reduce((a, b) => a + b, 0);
-      sheetOpen(`<h3>🏺 باب القاعة ${ar(d.r + 1)}</h3>${msgBox(msg || `انقش العدد <b>${ar(r.v)}</b> بالرموز المصرية القديمة لتفتح الباب`, kind)}
+      sheetOpen(`<h3>🏺 باب القاعة ${ar(d.r + 1)}</h3>${qMsg(msg, kind, `انقش العدد <b>${ar(r.v)}</b> بالرموز المصرية القديمة لتفتح الباب`)}
         <div class="hiero" id="ins"></div>
         <div class="row2">${[1000, 100, 10, 1].map(v => `<button class="act ghost glyb" data-g="${v}">${GLY[v]}</button>`).join('')}<button class="act ghost" id="gBack">⌫</button></div>
         <div class="row2"><button class="act ghost" id="benchOut">رجوع</button><button class="act go" id="benchGo">🔓 افتح الباب</button></div>`);
@@ -76,7 +76,7 @@ export const hieroNumbers = Object.assign({
       btn('benchOut', () => { sheetClose(); changed(); });
       btn('benchGo', async () => { if (sum() === r.v) { d.cur = []; await this.next(W, d); } else { sfx('cough'); setMsg('الباب لا ينفتح: النقش لا يساوي العدد المطلوب', 'bad'); } });
     } else {
-      sheetOpen(`<h3>🏺 الباب الأخير</h3>${msgBox(msg || 'اقرأ النقش على الباب واكتب العدد الذي يمثله', kind)}<div class="hiero">${glyphs(r.v)}</div><div id="pad"></div><button class="act ghost" id="benchOut">رجوع</button>`);
+      sheetOpen(`<h3>🏺 الباب الأخير</h3>${qMsg(msg, kind, 'اقرأ النقش على الباب واكتب العدد الذي يمثله')}<div class="hiero">${glyphs(r.v)}</div><div id="pad"></div><button class="act ghost" id="benchOut">رجوع</button>`);
       const pad = numPad(panel().querySelector('#pad'), '🔓 افتح', async v => { if (v === r.v) await this.next(W, d); else { sfx('cough'); pad.clear(); setMsg('الرقم لا يطابق النقش، اقرأه مرة أخرى', 'bad'); } }, { dot: false });
       btn('benchOut', () => { sheetClose(); changed(); });
     }
@@ -93,7 +93,7 @@ export const decimalSystem = Object.assign({
   goal: d => `⚖️ زِن ${dec(d.rounds[Math.min(d.r, 2)])} غرام من الذهب ${roundsDone(d, 3)}`,
   open(W, d, msg, kind) {
     const v = d.rounds[d.r];
-    sheetOpen(`<h3>⚖️ ميزان الذهب</h3>${msgBox(msg || `ضع على الكفة <b>${dec(v)}</b> غرام بالضبط`, kind)}<canvas id="pan" width="300" height="90"></canvas><div id="cnt"></div>
+    sheetOpen(`<h3>⚖️ ميزان الذهب</h3>${qMsg(msg, kind, `ضع على الكفة <b>${dec(v)}</b> غرام بالضبط`)}<canvas id="pan" width="300" height="90"></canvas><div id="cnt"></div>
       <div class="row2"><button class="act ghost" id="benchOut">رجوع</button><button class="act go" id="benchGo">⚖️ زِن</button></div>`);
     const c = hiDPI(panel().querySelector('#pan'));
     const draw = () => { c.clearRect(0, 0, 300, 90); c.fillStyle = '#C9A24A'; rr(c, 40, 70, 220, 8, 4); c.fill(); let x = 50;
@@ -122,7 +122,7 @@ export const decimalOperations = Object.assign({
   goal: d => `🍯 احسب مقادير الحلوى ${roundsDone(d, 3)}`,
   open(W, d, msg, kind) {
     const r = d.rounds[d.r];
-    sheetOpen(`<h3>🍯 مطبخ الحلوى</h3>${msgBox(msg || r.text, kind)}<div id="pad"></div><button class="act ghost" id="benchOut">رجوع</button>`);
+    sheetOpen(`<h3>🍯 مطبخ الحلوى</h3>${qMsg(msg, kind, r.text)}<div id="pad"></div><button class="act ghost" id="benchOut">رجوع</button>`);
     const pad = numPad(panel().querySelector('#pad'), '⚖️ زِن (كغ)', async v => { if (same(v, r.ans)) { sfx('win'); d.r++; changed(); if (d.r >= 3) { sheetClose(); await finish(W, 'decimalOperations', [{ who: 'aisha', text: 'المقادير مضبوطة، والحلوى ستكون أطيب حلوى في المهرجان!' }]); } else this.open(W, d, `✓ مضبوط! ${d.rounds[d.r].text}`, 'ok'); } else { sfx('cough'); pad.clear(); setMsg(`${dec(v)} كغ لا تكفي للوصفة أو تزيد عليها. ${r.text}`, 'bad'); } });
     btn('benchOut', () => { sheetClose(); changed(); });
   }
@@ -138,7 +138,7 @@ export const decimalApplications = Object.assign({
   goal: d => `🧺 اشترِ بالميزانية بالضبط ${roundsDone(d, 3)}`,
   open(W, d, msg, kind) {
     const r = d.rounds[d.r];
-    sheetOpen(`<h3>🧺 دكان الرحلة</h3>${msgBox(msg || `اختر <b>${ar(r.k)}</b> أصناف مجموع أسعارها <b>${rial(r.budget)}</b> بالضبط`, kind)}
+    sheetOpen(`<h3>🧺 دكان الرحلة</h3>${qMsg(msg, kind, `اختر <b>${ar(r.k)}</b> أصناف مجموع أسعارها <b>${rial(r.budget)}</b> بالضبط`)}
       <div class="board">${TRIP.map(([e, n, p], i) => `<button class="tag pick ${d.sel.includes(i) ? 'on' : ''}" data-i="${i}"><span>${e}</span><b>${n}</b><small>${rial(p)}</small></button>`).join('')}</div>
       <div class="row2"><button class="act ghost" id="benchOut">رجوع</button><button class="act go" id="benchGo">🧺 ادفع</button></div>`);
     panel().querySelectorAll('.pick').forEach(b => b.onclick = e => { e.stopPropagation(); const i = +b.dataset.i, k = d.sel.indexOf(i); if (k >= 0) d.sel.splice(k, 1); else if (d.sel.length < 4) d.sel.push(i); b.classList.toggle('on'); sfx('click'); });
@@ -162,7 +162,7 @@ export const integers = Object.assign({
   goal: d => `🪣 حرّك دلو البئر بحسب التعليمات ${roundsDone(d, 3)}`,
   open(W, d, msg, kind) {
     const r = d.rounds[d.r];
-    sheetOpen(`<h3>🪣 بئر القلعة</h3>${msgBox(msg || r.text, kind)}<canvas id="gauge" width="300" height="250"></canvas>
+    sheetOpen(`<h3>🪣 بئر القلعة</h3>${qMsg(msg, kind, r.text)}<canvas id="gauge" width="300" height="250"></canvas>
       <div class="row2"><button class="act ghost" id="up">▲ اصعد</button><button class="act ghost" id="down">▼ انزل</button></div>
       <div class="row2"><button class="act ghost" id="benchOut">رجوع</button><button class="act go" id="benchGo">🪣 ثبّت هنا</button></div>`);
     const c = hiDPI(panel().querySelector('#gauge')), Y = v => 125 - v * 11;
@@ -189,7 +189,7 @@ export const commonMultiples = Object.assign({
   goal: d => `🔔 متى يرنّ الجرسان معاً؟ ${roundsDone(d, 3)}`,
   open(W, d, msg, kind) {
     const [a, b] = d.rounds[d.r];
-    sheetOpen(`<h3>🔔 أجراس القلعة</h3>${msgBox(msg || `الجرس الأحمر يرنّ كل <b>${ar(a)}</b> دقائق، والأزرق كل <b>${ar(b)}</b> دقائق. متى يرنّان معاً أول مرة؟`, kind)}
+    sheetOpen(`<h3>🔔 أجراس القلعة</h3>${qMsg(msg, kind, `الجرس الأحمر يرنّ كل <b>${ar(a)}</b> دقائق، والأزرق كل <b>${ar(b)}</b> دقائق. متى يرنّان معاً أول مرة؟`)}
       <canvas id="tl" width="320" height="90"></canvas>
       <div class="row2"><button class="act ghost" data-m="-5">−٥</button><button class="act ghost" data-m="-1">−١</button><button class="act ghost" data-m="1">+١</button><button class="act ghost" data-m="5">+٥</button></div>
       <div class="row2"><button class="act ghost" id="benchOut">رجوع</button><button class="act go" id="benchGo">🔔 اقرع عند الدقيقة المختارة</button></div>`);
@@ -247,7 +247,7 @@ export const multiplyStrategies2 = Object.assign({
   goal: d => `🌾 احسب أوزان طلبات المخزن ${roundsDone(d, 3)}`,
   open(W, d, msg, kind) {
     const r = d.rounds[d.r], [a, b, c] = r.fact;
-    sheetOpen(`<h3>🌾 مخزن الحبوب</h3><div class="factb">الحقيقة المعروفة: <b>${ar(a)} × ${ar(b)} = ${ar(c)}</b></div>${msgBox(msg || `الطلب: <b>${ar(r.q[0])} × ${ar(r.q[1])}</b> كيلوغرام. كم الوزن؟`, kind)}<div id="pad"></div><button class="act ghost" id="benchOut">رجوع</button>`);
+    sheetOpen(`<h3>🌾 مخزن الحبوب</h3><div class="factb">الحقيقة المعروفة: <b>${ar(a)} × ${ar(b)} = ${ar(c)}</b></div>${qMsg(msg, kind, `الطلب: <b>${ar(r.q[0])} × ${ar(r.q[1])}</b> كيلوغرام. كم الوزن؟`)}<div id="pad"></div><button class="act ghost" id="benchOut">رجوع</button>`);
     const pad = numPad(panel().querySelector('#pad'), '⚖️ زِن الطلب', async v => { if (v === r.ans) { sfx('win'); d.r++; changed(); if (d.r >= 3) { sheetClose(); await finish(W, 'multiplyStrategies2', [{ who: 'khamis', text: 'استنتجتَ كل طلب من حقيقة واحدة! هذا هو الحساب الذكي.' }]); } else this.open(W, d, '✓ الوزن صحيح! الطلب التالي…', 'ok'); } else { sfx('cough'); pad.clear(); setMsg('الميزان لا يتوازن. استنتج من الحقيقة المعروفة', 'bad'); } }, { dot: false });
     btn('benchOut', () => { sheetClose(); changed(); });
   }
@@ -262,7 +262,7 @@ export const divisibility = Object.assign({
   goal: d => `🌴 اسحب أكياس التمر المناسبة ${roundsDone(d, 3)}`,
   open(W, d, msg, kind) {
     const n = d.rounds[d.r], RULE = { 3: 'على ٣', 9: 'على ٩', 4: 'على ٤', 5: 'على ٥', 6: 'على ٦' };
-    sheetOpen(`<h3>🌴 سير أكياس التمر</h3>${msgBox(msg || `اسحب الأكياس التي تُقسم تمراتها <b>${RULE[n]}</b> بالتساوي (${ar(d.got)} من ${ar(3)})`, kind)}<canvas id="belt" width="320" height="130" style="touch-action:none"></canvas><button class="act ghost" id="benchOut">رجوع</button>`);
+    sheetOpen(`<h3>🌴 سير أكياس التمر</h3>${qMsg(msg, kind, `اسحب الأكياس التي تُقسم تمراتها <b>${RULE[n]}</b> بالتساوي (${ar(d.got)} من ${ar(3)})`)}<canvas id="belt" width="320" height="130" style="touch-action:none"></canvas><button class="act ghost" id="benchOut">رجوع</button>`);
     const cv = panel().querySelector('#belt'), c = hiDPI(cv); let sacks = [], last = 0, live = true, spawn = 0;
     const mk = () => { let v = R(100, 999); if (Math.random() < .5) v = Math.ceil(v / n) * n; return { v, x: 340, ok: v % n === 0 }; };
     const loop = now => { if (!live || !document.getElementById('belt')) return; const dt = last ? Math.min(.05, (now - last) / 1000) : 0; last = now; spawn -= dt; if (spawn <= 0) { sacks.push(mk()); spawn = 1.25; }
@@ -288,7 +288,7 @@ export const multiplyT2 = Object.assign({
   open(W, d, msg, kind) {
     const [a, b] = d.rounds[d.r], a1 = Math.floor(a / 10) * 10, a0 = a % 10, b1 = Math.floor(b / 10) * 10, b0 = b % 10;
     const parts = [[a1, b1], [a1, b0], [a0, b1], [a0, b0]];
-    sheetOpen(`<h3>🧱 سطح ${ar(a)} × ${ar(b)}</h3>${msgBox(msg || 'اكتب عدد البلاط في كل جزء، ثم المجموع', kind)}
+    sheetOpen(`<h3>🧱 سطح ${ar(a)} × ${ar(b)}</h3>${qMsg(msg, kind, 'اكتب عدد البلاط في كل جزء، ثم المجموع')}
       <div class="amodel"><i></i><b>${ar(a1)}</b><b>${ar(a0)}</b><b>${ar(b1)}</b>${parts.slice(0, 2).map((p, i) => `<input inputmode="numeric" data-p="${i}" placeholder="${ar(p[0])}×${ar(p[1])}">`).join('')}<b>${ar(b0)}</b>${parts.slice(2).map((p, i) => `<input inputmode="numeric" data-p="${i + 2}" placeholder="${ar(p[0])}×${ar(p[1])}">`).join('')}</div>
       <div class="cnt"><span>المجموع</span><input inputmode="numeric" id="tot" class="totin"></div>
       <div class="row2"><button class="act ghost" id="benchOut">رجوع</button><button class="act go" id="benchGo">🧱 بلّط السطح</button></div>`);
@@ -318,7 +318,7 @@ export const division2 = Object.assign({
   goal: d => `🍬 اضبط آلة التعبئة ${roundsDone(d, 3)}`,
   open(W, d, msg, kind) {
     const r = d.rounds[d.r]; d.n = 0; d.left = 0;
-    sheetOpen(`<h3>🍬 آلة التعبئة</h3>${msgBox(msg || r.text, kind)}<div id="cnt"></div><div class="row2"><button class="act ghost" id="benchOut">رجوع</button><button class="act go" id="benchGo">⚙️ شغّل الآلة</button></div>`);
+    sheetOpen(`<h3>🍬 آلة التعبئة</h3>${qMsg(msg, kind, r.text)}<div id="cnt"></div><div class="row2"><button class="act ghost" id="benchOut">رجوع</button><button class="act go" id="benchGo">⚙️ شغّل الآلة</button></div>`);
     counters(panel().querySelector('#cnt'), r.t === 'qr' ? [['n', '📦 علب ممتلئة', 60], ['left', '🍬 قطع متبقية', 20]] : [['n', r.t === 'up' ? '🚌 حافلات' : '🍽️ في كل طبق', 60]], d);
     btn('benchOut', () => { sheetClose(); changed(); });
     btn('benchGo', async () => {
@@ -345,7 +345,7 @@ export const specialNumbers = Object.assign({
   goal: d => `🛡️ حل ألغاز حجارة البوابة ${roundsDone(d, 3)}`,
   open(W, d, msg, kind) {
     const r = d.rounds[d.r], rd = RIDDLES[r.k];
-    sheetOpen(`<h3>🛡️ لغز البوابة ${ar(d.r + 1)}</h3>${msgBox(msg || rd.text, kind)}<div class="stones">${r.nums.map((v, i) => `<button class="stone ${d.sel.includes(i) ? 'on' : ''}" data-i="${i}">${ar(v)}</button>`).join('')}</div>
+    sheetOpen(`<h3>🛡️ لغز البوابة ${ar(d.r + 1)}</h3>${qMsg(msg, kind, rd.text)}<div class="stones">${r.nums.map((v, i) => `<button class="stone ${d.sel.includes(i) ? 'on' : ''}" data-i="${i}">${ar(v)}</button>`).join('')}</div>
       <div class="row2"><button class="act ghost" id="benchOut">رجوع</button><button class="act go" id="benchGo">🛡️ افتح البوابة</button></div>`);
     panel().querySelectorAll('.stone').forEach(b => b.onclick = e => { e.stopPropagation(); const i = +b.dataset.i, k = d.sel.indexOf(i); if (k >= 0) d.sel.splice(k, 1); else d.sel.push(i); b.classList.toggle('on'); sfx('click'); });
     btn('benchOut', () => { sheetClose(); changed(); });

@@ -4,7 +4,7 @@ import { ar, wait, rr, clamp } from '../core/util.js';
 import { say, bubble } from '../world/entities.js';
 import { sfx } from '../core/sound.js';
 import { drawHuman } from '../character/human.js';
-import { R, shuffle, near, changed, finish, panel, sheetOpen, sheetClose, hiDPI, msgBox, setMsg, btn, numPad } from './bench.js';
+import { R, shuffle, near, changed, finish, panel, sheetOpen, sheetClose, hiDPI, msgBox, setMsg, btn, numPad , qMsg } from './bench.js';
 import { ST6, PIEFIELD, PALMS6, VISITORS } from '../world/festival.js';
 
 const at = (st, key, label) => ({
@@ -39,7 +39,7 @@ export const lineGraphs = Object.assign({
     const r = d.rounds[d.r], maxD = r.s * 5;
     if (r.t === 'plot') {
       sheetOpen(`<h3>📈 لوح الرحلة</h3><table class="tt"><tr><th>الزمن (س)</th>${[1, 2, 3, 4, 5].map(t => `<td>${ar(t)}</td>`).join('')}</tr><tr><th>المسافة (كم)</th>${[1, 2, 3, 4, 5].map(t => `<td>${ar(r.s * t)}</td>`).join('')}</tr></table>
-        ${msgBox(msg || 'اضغط على الرسم لتضع نقطة كل ساعة في مكانها، ثم ارسم الخط', kind)}<canvas id="gr" width="320" height="222" style="touch-action:none"></canvas>
+        ${qMsg(msg, kind, 'اضغط على الرسم لتضع نقطة كل ساعة في مكانها، ثم ارسم الخط')}<canvas id="gr" width="320" height="222" style="touch-action:none"></canvas>
         <div class="row2"><button class="act ghost" id="benchOut">رجوع</button><button class="act go" id="benchGo">📈 ارسم الخط</button></div>`);
       const cv = panel().querySelector('#gr'), c = hiDPI(cv);
       const draw = () => { const { X, Y } = graphFrame(c, maxD); const ps = [0, 1, 2, 3, 4, 5].filter(t => d.pts[t] !== undefined || t === 0);
@@ -81,7 +81,7 @@ export const pieCharts = Object.assign({
   open(W, d, msg, kind) {
     const r = d.rounds[d.r];
     if (r.t !== 'n') {
-      sheetOpen(`<h3>🥧 خطة الحقل</h3>${msgBox(msg || r.text + ' اضبط نسبة كل قطاع.', kind)}<canvas id="pie" width="300" height="150"></canvas>
+      sheetOpen(`<h3>🥧 خطة الحقل</h3>${qMsg(msg, kind, r.text + ' اضبط نسبة كل قطاع.')}<canvas id="pie" width="300" height="150"></canvas>
         ${NAMES.map((nm, i) => `<div class="cnt"><span style="color:${COLS[i]}">● ${nm}</span><button class="act ghost" data-i="${i}" data-v="-5">−٥٪</button><b id="pv${i}">${ar(d.p[i])}٪</b><button class="act ghost" data-i="${i}" data-v="5">+٥٪</button></div>`).join('')}
         <div class="row2"><button class="act ghost" id="benchOut">رجوع</button><button class="act go" id="benchGo">🌱 ازرع القطاعات</button></div>`);
       const c = hiDPI(panel().querySelector('#pie')); const draw = () => { c.clearRect(0, 0, 300, 150); drawPie(c, 150, 75, 68, d.p); };
@@ -94,7 +94,7 @@ export const pieCharts = Object.assign({
         if (k >= 0) { sfx('cough'); setMsg(`قطاع ${NAMES[k]} لا يطابق الخطة`, 'bad'); return; }
         sfx('win'); d.r++; d.p = [0, 0, 0]; changed(); this.open(W, d, '✓ الحقل مقسّم كما في الخطة!', 'ok'); });
     } else {
-      sheetOpen(`<h3>🥧 شتلات الليمون</h3>${msgBox(msg || `زرعنا <b>${ar(r.N)}</b> شتلة، و<b>${ar(r.p)}٪</b> منها شتلات ليمون. كم شتلة ليمون زرعنا؟`, kind)}<canvas id="pie" width="300" height="150"></canvas><div id="pad"></div><button class="act ghost" id="benchOut">رجوع</button>`);
+      sheetOpen(`<h3>🥧 شتلات الليمون</h3>${qMsg(msg, kind, `زرعنا <b>${ar(r.N)}</b> شتلة، و<b>${ar(r.p)}٪</b> منها شتلات ليمون. كم شتلة ليمون زرعنا؟`)}<canvas id="pie" width="300" height="150"></canvas><div id="pad"></div><button class="act ghost" id="benchOut">رجوع</button>`);
       const c = hiDPI(panel().querySelector('#pie')); drawPie(c, 150, 75, 68, [r.p, 100 - r.p, 0]);
       const pad = numPad(panel().querySelector('#pad'), '🌱 عدد الشتلات', async v => { if (v === r.ans) { sfx('win'); d.r++; changed(); sheetClose(); await finish(W, 'pieCharts', [{ who: 'sara', text: 'الحقل الدائري مزروع بنسبه الصحيحة! انظر إلى ألوانه.' }]); } else { sfx('cough'); pad.clear(); setMsg(`ليس ${v}. احسب ${ar(r.p)}٪ من ${ar(r.N)}`, 'bad'); } }, { dot: false });
       btn('benchOut', () => { sheetClose(); changed(); });
@@ -117,7 +117,7 @@ export const statsAverage = Object.assign({
   open(W, d, msg, kind) {
     const r = d.rounds[d.r];
     if (r.t === 'eq') {
-      sheetOpen(`<h3>🧺 سلال التمر</h3>${msgBox(msg || 'اضغط سلة لتأخذ منها تمرة، ثم اضغط سلة أخرى لتضعها فيها، حتى تتساوى السلال الخمس', kind)}<canvas id="bk" width="320" height="170" style="touch-action:none"></canvas>
+      sheetOpen(`<h3>🧺 سلال التمر</h3>${qMsg(msg, kind, 'اضغط سلة لتأخذ منها تمرة، ثم اضغط سلة أخرى لتضعها فيها، حتى تتساوى السلال الخمس')}<canvas id="bk" width="320" height="170" style="touch-action:none"></canvas>
         <div class="row2"><button class="act ghost" id="benchOut">رجوع</button><button class="act go" id="benchGo">🧺 تساوت السلال</button></div>`);
       const cv = panel().querySelector('#bk'), c = hiDPI(cv), X = i => 34 + i * 63;
       const draw = () => { c.clearRect(0, 0, 320, 170); d.bk.forEach((n, i) => { c.fillStyle = d.hand === i ? '#FFE7A0' : '#C98A3A'; rr(c, X(i) - 24, 128, 48, 30, 6); c.fill(); for (let k = 0; k < n; k++) { c.fillStyle = '#7A3E12'; c.beginPath(); c.ellipse(X(i) - 8 + (k % 2) * 16, 122 - Math.floor(k / 2) * 11, 7, 5, 0, 0, 7); c.fill(); } });
@@ -163,7 +163,7 @@ export const usingStats = {
   open(W, d, msg, kind) {
     const tally = [0, 1, 2].map(k => d.ans.filter((x, i) => x === k && d.asked[i]).length);
     const marks = n => '<span class="tl">' + '|'.repeat(n).replace(/\|\|\|\|\|/g, '<s>||||</s> ') + '</span>';
-    sheetOpen(`<h3>📊 لوح الاستبيان</h3><div class="clip">${GAMES3.map((g, k) => `<div><b>${g}</b>${marks(tally[k])}</div>`).join('')}</div>${msgBox(msg || 'مثّل علامات العدّ بأعمدة، ثم اعرض المخطط', kind)}
+    sheetOpen(`<h3>📊 لوح الاستبيان</h3><div class="clip">${GAMES3.map((g, k) => `<div><b>${g}</b>${marks(tally[k])}</div>`).join('')}</div>${qMsg(msg, kind, 'مثّل علامات العدّ بأعمدة، ثم اعرض المخطط')}
       <canvas id="bars" width="300" height="140"></canvas>${GAMES3.map((g, k) => `<div class="cnt"><span>${g}</span><button class="act ghost" data-k="${k}" data-v="-1">−</button><b id="bv${k}">${ar(d.bars[k])}</b><button class="act ghost" data-k="${k}" data-v="1">+</button></div>`).join('')}
       <div class="row2"><button class="act ghost" id="benchOut">رجوع</button><button class="act go" id="benchGo">📊 اعرض المخطط</button></div>`);
     const c = hiDPI(panel().querySelector('#bars'));
@@ -200,7 +200,7 @@ export const probabilityLang = Object.assign({
   goal: d => `🎡 لوّن دوّار المهرجان ${step(d, 3)}`,
   open(W, d, msg, kind) {
     const task = TASKS[d.rounds[d.r]];
-    sheetOpen(`<h3>🎡 دوّار المهرجان</h3>${msgBox(msg || task.text + '. اضغط القطاعات لتلوينها.', kind)}<canvas id="sp" width="240" height="240" style="touch-action:none"></canvas>
+    sheetOpen(`<h3>🎡 دوّار المهرجان</h3>${qMsg(msg, kind, task.text + '. اضغط القطاعات لتلوينها.')}<canvas id="sp" width="240" height="240" style="touch-action:none"></canvas>
       <div class="row2"><button class="act ghost" id="benchOut">رجوع</button><button class="act go" id="benchGo">🎡 أدِر الدوّار</button></div>`);
     const cv = panel().querySelector('#sp'), c = hiDPI(cv);
     const draw = () => { c.clearRect(0, 0, 240, 240); c.save(); c.translate(120, 124); c.rotate(d.rot); for (let i = 0; i < 8; i++) { c.fillStyle = d.red[i] ? '#E2475C' : '#4DABF7'; c.beginPath(); c.moveTo(0, 0); c.arc(0, 0, 100, i * Math.PI / 4, (i + 1) * Math.PI / 4); c.closePath(); c.fill(); c.strokeStyle = '#fff'; c.lineWidth = 3; c.stroke(); } c.restore();

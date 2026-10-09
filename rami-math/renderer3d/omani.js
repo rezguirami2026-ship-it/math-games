@@ -194,7 +194,10 @@ export function omaniHouse(b, opts = {}) {
     jar(P, x0 + 16, H + 1, z0 + d - 18, .9); jar(P, x0 + 27, H + 1, z0 + d - 15, .7, '#C27A48');
   }
   const g = P.build();
-  if (b.sign) { const s = signMesh(b.sign, 19); s.position.set(x0 + w / 2, dh + 31, zf + 2.2); g.add(s); }
+  if (b.sign) {   // لافتة الاسم كبيرة واضحة أعلى الواجهة (لا تتجاوز عرض المبنى)
+    let sh = 32, s = signMesh(b.sign, sh); const sw = s.geometry.parameters.width; if (sw > w * .9) { sh *= w * .9 / sw; s = signMesh(b.sign, Math.round(sh)); }
+    s.position.set(x0 + w / 2, Math.max(dh + 16 + sh / 2, H - sh / 2 - 8), zf + 2.6); g.add(s);
+  }
   g.userData = { H, foot: { x: x0, z: z0, w, d } };
   return g;
 }

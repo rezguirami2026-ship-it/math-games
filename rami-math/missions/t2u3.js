@@ -2,7 +2,7 @@
 import { ar, wait, rr, clamp } from '../core/util.js';
 import { bubble } from '../world/entities.js';
 import { sfx } from '../core/sound.js';
-import { R, shuffle, near, changed, dec, sg, finish, panel, sheetOpen, sheetClose, hiDPI, msgBox, setMsg, btn, numPad, counters } from './bench.js';
+import { R, shuffle, near, changed, dec, sg, finish, panel, sheetOpen, sheetClose, hiDPI, msgBox, setMsg, btn, numPad, counters , qMsg } from './bench.js';
 import { ST7 } from '../world/coop.js';
 
 const at = (st, key, label) => ({
@@ -149,7 +149,7 @@ export const operationLaws = Object.assign({
     if (r.t === 'k') return kp(this, W, d, { title: '⚙️ الآلة العكسية', text: r.text, ans: r.ans, opts: { dot: false }, n: 3, id: 'operationLaws', msg, kind, lines: [{ who: 'adil', text: 'الآلة تعمل بإتقان! تعرف ترتيب العمليات وعكسها.' }], hint: 'جرّب العكس: اطرح أولاً ثم اقسم.' });
     if (!d.cur) d.cur = r.tk.slice();
     const tk = d.cur, done = tk.length === 1;
-    sheetOpen(`<h3>⚙️ آلة الأقواس</h3>${msgBox(msg || (done ? `النتيجة: ${ar(tk[0])}` : 'اضغط العملية التي تُنفَّذ أولاً'), kind)}
+    sheetOpen(`<h3>⚙️ آلة الأقواس</h3>${qMsg(msg, kind, (done ? `النتيجة: ${ar(tk[0])}` : 'اضغط العملية التي تُنفَّذ أولاً'))}
       <div class="expr">${tk.map((x, i) => typeof x === 'number' ? `<span class="num">${ar(x)}</span>` : '+−×÷'.includes(x) ? `<button class="tok" data-i="${i}">${x}</button>` : `<span class="par">${x}</span>`).join('')}</div>
       <div class="row2"><button class="act ghost" id="benchOut">رجوع</button>${done ? '<button class="act go" id="benchGo">✓ التالي</button>' : ''}</div>`);
     panel().querySelectorAll('.tok').forEach(b => b.onclick = e => {

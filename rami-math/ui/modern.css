@@ -451,3 +451,4 @@ body:has(.adv) #toast,body:has(.adv) .region,body:has(.adv) #hud{display:none!im
 @media (max-width:480px){#ttCard{top:auto;bottom:calc(var(--safeB) + 80px)}}
 .advFlash{position:absolute;inset:0;background:#EAF2FF;opacity:0;pointer-events:none;z-index:2}.advFlash.on{animation:advBolt .7s ease-out}
 @keyframes advBolt{0%{opacity:0}8%{opacity:.75}16%{opacity:.1}24%{opacity:.55}100%{opacity:0}}
+.speech .nextQ{margin-top:6px;padding-top:6px;border-top:1px dashed rgba(42,27,102,.25);color:#2A1B66;font-weight:800}

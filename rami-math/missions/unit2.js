@@ -30,7 +30,7 @@ function ruler(c, x0, y, ppm, maxMm) {
   }
   c.fillStyle = '#7A6A4A'; c.font = '700 9px Cairo, sans-serif'; c.textAlign = 'left'; c.fillText('سم', x0 + maxMm * ppm + 2, y + 28);
 }
-const msgBox = (t, kind) => `<div class="speech ${kind || ''}" id="benchMsg">${t}</div>`;
+import { msgBox, qMsg } from './bench.js';
 
 /* ═══ ١١. رسم وقياس الخطوط — «ورشة النجار» ═══ */
 export const lengthMeasure = {
@@ -46,7 +46,7 @@ export const lengthMeasure = {
   actions(W, d) { return near(W, { x: BENCH.x, y: BENCH.y + 16 }, 48) ? [{ key: 'bench', label: '🪚 طاولة النجار', kind: 'go', run: () => this.open(W, d) }] : []; },
   open(W, d, msg, kind) {
     const r = d.rounds[d.r];
-    sheetOpen(`<h3>🪚 طاولة النجار</h3>${msgBox(msg || `اقطع قطعة طولها <b>${r.txt}</b>`, kind)}
+    sheetOpen(`<h3>🪚 طاولة النجار</h3>${qMsg(msg, kind, `اقطع قطعة طولها <b>${r.txt}</b>`)}
       <canvas id="cut" width="340" height="120"></canvas>
       <div class="row2"><button class="act ghost" data-d="-10">−١ سم</button><button class="act ghost" data-d="-1">−١ ملم</button><button class="act ghost" data-d="1">+١ ملم</button><button class="act ghost" data-d="10">+١ سم</button></div>
       <div class="row2"><button class="act ghost" id="benchOut">رجوع</button><button class="act go" id="benchGo">🪚 اقطع</button></div>`);
@@ -103,7 +103,7 @@ export const lineDrawing = {
   actions(W, d) { return near(W, { x: BOARD.x, y: BOARD.y + 14 }, 46) ? [{ key: 'board', label: '✏️ لوح المدرب', kind: 'go', run: () => this.open(W, d) }] : []; },
   open(W, d, msg, kind) {
     const r = d.rounds[d.r]; d.end = 0;
-    sheetOpen(`<h3>✏️ لوح المدرب</h3>${msgBox(msg || `اسحب القلم على المسطرة لترسم خطاً طوله <b>${r.txt}</b>`, kind)}
+    sheetOpen(`<h3>✏️ لوح المدرب</h3>${qMsg(msg, kind, `اسحب القلم على المسطرة لترسم خطاً طوله <b>${r.txt}</b>`)}
       <canvas id="draw" width="340" height="130" style="touch-action:none"></canvas>
       <div class="row2"><button class="act ghost" id="benchOut">رجوع</button><button class="act go" id="benchGo">✏️ ثبّت الخط</button></div>`);
     const cv = document.getElementById('draw'), c = hiDPI(cv), x0 = 18, ppm = 2.5;
@@ -295,7 +295,7 @@ export const calendars = {
     let cells = '';
     for (let i = 0; i < first; i++) cells += '<span></span>';
     for (let dd = 1; dd <= days; dd++) cells += `<button class="day" data-day="${dd}">${ar(dd)}</button>`;
-    sheetOpen(`<h3>📅 تقويم المهرجان</h3>${msgBox(msg || r.text, kind)}
+    sheetOpen(`<h3>📅 تقويم المهرجان</h3>${qMsg(msg, kind, r.text)}
       <div class="calhead"><button class="act ghost" id="calPrev">▶</button><b>${MON[M]} ${ar(Y)}</b><button class="act ghost" id="calNext">◀</button></div>
       <div class="cal">${['أحد', 'اثنين', 'ثلاثاء', 'أربعاء', 'خميس', 'جمعة', 'سبت'].map(w => `<i>${w}</i>`).join('')}${cells}</div>
       <button class="act ghost" id="benchOut">رجوع</button>`);
