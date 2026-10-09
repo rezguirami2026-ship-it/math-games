@@ -17,7 +17,7 @@
 - `missions/quests.js` — نظام المهام: الدرس التالي لا يبدأ قبل إنهاء السابق. البيانات في `quests.data(id)`.
 - `missions/unit1..4.js` (الفصل الأول) و`missions/t2u1..5.js` (الفصل الثاني) — آليات الدروس.
 - `missions/bench.js` — أدوات مشتركة: `sheetOpen/sheetClose` (المنظر القريب)، `numPad`، `counters`، `finish`، `ar`، `dec`، `sg`.
-- `world/` — المناطق: `village.js` (القرية والحجم الكلي `WORLD`)، `market.js`، `harbor.js`، `fort.js`، `festival.js`، `coop.js`، `caravan.js`، `workshop.js`، و`nav.js` (A* بكومة).
+- `world/` — المناطق: `village.js` (القرية والحجم الكلي `WORLD`)، `market.js`، `harbor.js`، `fort.js`، `festival.js`، `datayard.js` («بستان البيانات» جنوب المهرجان، آخر عنصر في `REGIONS` حتى لا تتغير فهارس البوابات)، `coop.js`، `caravan.js`، `workshop.js`، و`nav.js` (A* بكومة).
 - `npc/npc.js` — كل الشخصيات ومواضعها. `ui/` — الواجهة والخزانة. `core/` — المحرك والحالة والحفظ.
 
 ## الطبقة البصرية (2.5D)

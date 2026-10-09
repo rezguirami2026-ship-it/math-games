@@ -27,6 +27,7 @@ const AMB = {   // wind: [المستوى، تردد المرشح، دورة ال
   harbor: { wind: [.05, 650, 7, .9], murmur: 0, ev: [['gull', 8, 16]] },
   fort: { wind: [.03, 900, 11, .55], murmur: .012, ev: [['bell', 24, 40], ['bird', 16, 26]] },
   festival: { wind: [.006, 500, 9, .3], murmur: .06, ev: [['drum', 5, 9], ['coin', 10, 18]] },
+  datayard: { wind: [.015, 600, 10, .35], murmur: .02, ev: [['bird', 6, 12]] },
   coop: { wind: [.006, 500, 9, .3], murmur: .05, ev: [['coin', 7, 13], ['clack', 9, 16]] },
   caravan: { wind: [.05, 1100, 9, .6], murmur: 0, ev: [['camel', 9, 17]] },
   workshop: { wind: [.012, 600, 10, .35], murmur: .02, ev: [['hammer', 4, 8]] }
@@ -101,7 +102,7 @@ export function setMusic(v) { music.on = v; try { localStorage.setItem('ramimath
 const SCALES = { hijaz: [0, 1, 4, 5, 7, 8, 10, 12], rast: [0, 2, 3.5, 5, 7, 9, 10.5, 12], nahawand: [0, 2, 3, 5, 7, 8, 11, 12] };
 const MUS = {   // [المقام، الأساس (هرتز)، الإيقاع (نبضة/دقيقة)، طبلة؟]
   village: ['rast', 196, 84, false], market: ['hijaz', 220, 104, true], harbor: ['nahawand', 174.6, 76, false], fort: ['hijaz', 146.8, 88, true],
-  festival: ['rast', 220, 112, true], coop: ['nahawand', 196, 92, true], caravan: ['hijaz', 164.8, 80, true], workshop: ['rast', 174.6, 96, false]
+  festival: ['rast', 220, 112, true], datayard: ['nahawand', 220, 92, false], coop: ['nahawand', 196, 92, true], caravan: ['hijaz', 164.8, 80, true], workshop: ['rast', 174.6, 96, false]
 };
 let M = null;
 function phrase(seed) { let a = seed, x = 3; const r = () => (a = (a * 9301 + 49297) % 233280) / 233280; return Array.from({ length: 16 }, (_, i) => { if (i % 4 === 3 && r() < .4) return null; x = Math.max(0, Math.min(7, x + Math.round((r() - .5) * 3))); return x; }); }

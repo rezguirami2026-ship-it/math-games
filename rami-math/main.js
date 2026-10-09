@@ -49,6 +49,7 @@ import { ramadanOn } from './core/season.js';
 import { caravanColliders, drawCaravanGround, caravanDrawables } from './world/caravan.js';
 import { coopColliders, drawCoopGround, coopDrawables } from './world/coop.js';
 import { festivalColliders, drawFestivalGround, festivalDrawables, FUNPARK } from './world/festival.js';
+import { datayardColliders, drawDatayardGround, datayardDrawables } from './world/datayard.js';
 import { fortColliders, drawFortGround, fortDrawables, CASTLE, MOAT } from './world/fort.js';
 import { harborColliders, drawHarborGround, harborDrawables, PIER_Y } from './world/harbor.js';
 import { drawWorldMap } from './ui/worldmap.js';
@@ -127,14 +128,15 @@ const REGIONS = [
   { u: 3, walls: festivalColliders, draw: festivalDrawables },                  // ساحة المهرجان (نهاية الفصل الأول)
   { u: 5, walls: coopColliders, draw: coopDrawables },                        // سوق الجمعية
   { u: 6, walls: caravanColliders, draw: caravanDrawables },                    // طريق القافلة
-  { u: 7, walls: workshopColliders, draw: (open, t) => workshopDrawables(open, t, allDone()) }   // ورشة البنّاء
+  { u: 7, walls: workshopColliders, draw: (open, t) => workshopDrawables(open, t, allDone()) },   // ورشة البنّاء
+  { u: 4, walls: datayardColliders, draw: datayardDrawables }                   // بستان البيانات (أُضيف آخراً لتبقى فهارس البوابات السابقة كما هي)
 ];
 /* حالة البوابات والجدران تُحسب عند إنهاء درس فقط، لا في كل إطار ولا في كل خطوة من إيجاد الطريق */
 let gates = null, walls = null;
 const gateState = () => gates || (gates = REGIONS.map(r => unitDone(r.u)));
 const resetGates = () => { gates = null; walls = null; };
 /* لحظة فتح البوابة: تنتظر حتى تظهر البوابة على الشاشة، ثم ينفتح المصراعان في ١٫٤ ثانية مع شرر وصوت */
-const GATE_PTS = [{ x: 1506, y: 640 }, { x: 2306, y: 640 }, { x: 1240, y: 1712 }, { x: 1240, y: 2600 }, { x: 1240, y: 3500 }, { x: 1240, y: 4500 }, { x: 1240, y: 5500 }];
+const GATE_PTS = [{ x: 1506, y: 640 }, { x: 2306, y: 640 }, { x: 1240, y: 1712 }, { x: 1240, y: 2600 }, { x: 1240, y: 3500 }, { x: 1240, y: 4500 }, { x: 1240, y: 5500 }, { x: 1240, y: 3040 }];
 const gateAnim = { pending: {}, at: {} };
 function gateOpenness(i, open, view) {
   if (!open) return 0;
@@ -149,6 +151,7 @@ const AREAS = [
   { id: 'market', icon: '🛒', name: 'السوق الأسبوعي', in: (x, y) => y < 1712 && x < 2300 },
   { id: 'harbor', icon: '⚓', name: 'الميناء', in: (x, y) => y < 1712 },
   { id: 'fort', icon: '🏰', name: 'القلعة', in: (x, y) => y < 2600 },
+  { id: 'datayard', icon: '📊', name: 'بستان البيانات', in: (x, y) => y >= 3052 && y < 3500 && x < 2500 },
   { id: 'festival', icon: '🎪', name: 'ساحة المهرجان', in: (x, y) => y < 3500 },
   { id: 'coop', icon: '🏪', name: 'سوق الجمعية', in: (x, y) => y < 4500 },
   { id: 'caravan', icon: '🐪', name: 'طريق القافلة', in: (x, y) => y < 5500 },
@@ -207,7 +210,7 @@ async function start(state) {
   }
 }
 /* ── العرض ثلاثي الأبعاد (renderer3d): يُحمَّل فقط عند طلبه، ويرجع إلى الرسم الحالي إن لم يدعم الجهاز WebGL أو فشل التحميل ── */
-const V3D = 'نسخة 3D · ٨١'; window.__BUILD = V3D.replace('نسخة 3D · ', '');   // تُعرض في شاشة التحميل وفي الزاوية: للتأكد أن المتصفح حمّل آخر نسخة
+const V3D = 'نسخة 3D · ٨٢'; window.__BUILD = V3D.replace('نسخة 3D · ', '');   // تُعرض في شاشة التحميل وفي الزاوية: للتأكد أن المتصفح حمّل آخر نسخة
 const want3d = () => gfx.d3();
 function loadingScreen() {
   const el = document.createElement('div'); el.className = 'load3d';
@@ -260,6 +263,7 @@ function paintStaticGround(ctx, v) {
   if (near(1500, 0, 2930, 1750)) drawMarketGround(ctx);
   if (near(2290, 0, 3400, 6600)) drawHarborGround(ctx, t);
   if (near(0, 1600, 2930, 2620)) drawFortGround(ctx, t);
+  if (near(0, 3040, 2500, 3520)) drawDatayardGround(ctx);
   if (near(0, 2580, 2930, 3520)) drawFestivalGround(ctx, t);
   if (near(0, 3480, 2930, 4520)) drawCoopGround(ctx);
   if (near(0, 4480, 2930, 5520)) drawCaravanGround(ctx, t);
@@ -481,6 +485,7 @@ function render(ctx, view, t) {
   if (near(1500, 0, 2930, 1750)) drawMarketGround(ctx);
   if (near(2290, 0, 3400, 6600)) drawHarborGround(ctx, t);
   if (near(0, 1600, 2930, 2620)) drawFortGround(ctx, t);
+  if (near(0, 3040, 2500, 3520)) drawDatayardGround(ctx);
   if (near(0, 2580, 2930, 3520)) drawFestivalGround(ctx, t);
   if (near(0, 3480, 2930, 4520)) drawCoopGround(ctx);
   if (near(0, 4480, 2930, 5520)) drawCaravanGround(ctx, t);

@@ -14,8 +14,9 @@ import { R3D as FEST } from '../world/festival.js';
 import { R3D as COOP } from '../world/coop.js';
 import { R3D as CARAVAN } from '../world/caravan.js';
 import { R3D as WORK } from '../world/workshop.js';
+import { R3D as DATA } from '../world/datayard.js';
 
-const ORDER = [MARKET, HARBOR, FORT, FEST, COOP, CARAVAN, WORK];   // بترتيب REGIONS في main.js (لحالة البوابات)
+const ORDER = [MARKET, HARBOR, FORT, FEST, COOP, CARAVAN, WORK, DATA];   // بترتيب REGIONS في main.js (لحالة البوابات)
 const flat = (c, r = .6, m = 0) => material('flat', c, { rough: r, metal: m });
 const STONE = () => material('stone', '#CDB58C'), WALLTOP = () => material('plaster', '#D8C49C');
 

@@ -897,6 +897,7 @@ const GATES = [
   { after: 'areaPerimeterT1', name: 'بوابة الميناء', a: { x: 2200, y: 640 }, b: { x: 2400, y: 640 } },
   { after: 'coordinates', name: 'بوابة القلعة', a: { x: 1240, y: 1660 }, b: { x: 1240, y: 1780 } },
   { after: 'specialNumbers', name: 'بوابة ساحة المهرجان', a: { x: 1240, y: 2540 }, b: { x: 1240, y: 2680 } },
+  { after: 'areaPerimeter', name: 'بوابة بستان البيانات', a: { x: 1240, y: 2990 }, b: { x: 1240, y: 3110 } },
   { after: 'probabilityLang', name: 'بوابة سوق الجمعية', a: { x: 1240, y: 3440 }, b: { x: 1240, y: 3580 } },
   { after: 'decimalFractions', name: 'بوابة طريق القافلة', a: { x: 1240, y: 4440 }, b: { x: 1240, y: 4580 } },
   { after: 'irregularShapes', name: 'بوابة ورشة البنّاء', a: { x: 1240, y: 5440 }, b: { x: 1240, y: 5580 } }

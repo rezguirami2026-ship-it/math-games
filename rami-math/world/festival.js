@@ -14,8 +14,8 @@ export const PIEFIELD = { x: 800, y: 3150, r: 72 };
 export const PALMS6 = [1060, 1110, 1160, 1210, 1260].map(x => ({ x, y: 3150 }));
 /* مدينة الألعاب (شرق الساحة): سياج بمدخل من جهة الساحة، دولاب هواء، دوّامة خيل، برج زحليقة، أراجيح، وكشك تذاكر.
    البطل يدخلها ويمشي بين الألعاب (العوائق: السياج وقواعد الألعاب فقط) */
-export const FUNPARK = { x: 2500, y: 2680, w: 390, h: 760, gate: [3000, 3100] };
-export const RIDES = { wheel: { x: 2790, y: 2810, r: 112 }, carousel: { x: 2660, y: 3170, r: 60 }, slide: { x: 2815, y: 3320 }, swings: { x: 2650, y: 3375 }, kiosk: { x: 2560, y: 2960 } };
+export const FUNPARK = { x: 2500, y: 2680, w: 390, h: 760, gate: [2930, 3025] };   // المدخل شمال سور «بستان البيانات»
+export const RIDES = { wheel: { x: 2790, y: 2810, r: 112 }, carousel: { x: 2660, y: 3170, r: 60 }, slide: { x: 2815, y: 3320 }, swings: { x: 2650, y: 3375 }, kiosk: { x: 2560, y: 3110 } };
 export function funparkColliders() {
   const F = FUNPARK, T = 8, [g0, g1] = F.gate, W = RIDES.wheel, C = RIDES.carousel, S = RIDES.slide, Q = RIDES.swings, K = RIDES.kiosk;
   return [
@@ -28,7 +28,7 @@ export function funparkColliders() {
     { x: K.x - 24, y: K.y - 20, w: 48, h: 26 }                                                                                    // كشك التذاكر
   ];
 }
-export const VISITORS = [[1450, 3070], [1560, 3330], [1720, 3060], [1830, 3400], [1960, 3110], [2060, 3330], [1500, 3230], [1890, 3240]].map(([x, y]) => ({ x, y }));
+export const VISITORS = [[1450, 3105], [1560, 3330], [1720, 3100], [1830, 3400], [1960, 3110], [2060, 3330], [1500, 3230], [1890, 3240]].map(([x, y]) => ({ x, y }));
 export function festivalColliders(open) {
   const c = [
     { x: 0, y: WALL4_Y, w: GATE4.x0, h: 12 }, { x: GATE4.x1, y: WALL4_Y, w: 2930 - GATE4.x1, h: 12 },
@@ -50,7 +50,7 @@ const PALMS_X = [{ x: 150, y: 2960 }, { x: 1320, y: 2700 }, { x: 260, y: 3420 },
 export const BUNTING = [[200, 760, 2900, 70], [870, 1360, 2980, 70], [1420, 2280, 2960, 70], [460, 1300, 3330, 60]];
 // زينة بلا تصادم في أطراف الساحة: بسطات المهرجان ومقاعد وشجيرات
 export const STALLS = [[620, 3420, '#2E8B57'], [1700, 3420, '#9C6BFF']];
-const BENCHES = [[960, 3010], [1240, 3010], [1500, 3430], [2450, 3430]];
+const BENCHES = [[960, 3000], [1080, 3000], [1500, 3430], [2450, 3430]];
 const SHRUBS = [[300, 3000], [1380, 3420], [2200, 3430], [900, 3430]];
 
 /* أرضية مدينة الألعاب: بلاط مطاطي ملون داخل السياج، وممر من المدخل */
