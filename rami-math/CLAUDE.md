@@ -105,4 +105,4 @@
 - `adventure/engine.js`: `runAdventure(def, onExit)` عالم بلاطات مستقل فوق اللعبة (اللعبة متوقفة: `eng.paused` عبر `bus('pauseWorld')`). مشي بالنقر/الأسهم، حوار بصورة المتكلم، أدوات، صناديق دفع على ألواح ضغط، رافعات، أبواب/بوابات (`needs` أو `when(A)`)، حراس بمخروط رؤية (إن رأوك: عودة هادئة لآخر نار `safe`)، عشب طويل `;` للاختباء، ظلام وأضواء، نجوم مخفية، حفظ في `state.adventures[id].st`.
 - `adventure/art.js`: الرسوم (بلاطات مخزنة، طرق وماء ناعمة، أشجار، عناصر). القصص في `adventure/stories/*.js` (بيانات الخرائط والشخصيات `cast` والمهام `goals` وسكربتات `on`/`onSolid`/`onLever` عبر واجهة `A`).
 - الجوائز عبر `def.grant(state)`: مثل الوشاح `gear.cape` (في human.js) والتمثال `decor.statue` والوسام `b_adv_rescue`.
-- الاختبار: `node tests/adv-test.mjs [مجلد اللقطات]` يلعب «إنقاذ القرية» كاملة (٣٠ فحصاً).
+- الاختبار: `node tests/adv-test.mjs [مجلد اللقطات] [--3d]` يلعب «إنقاذ القرية» كاملة، ولكل مغامرة ملفها: `adv-storm` و`adv-island` و`adv-oldcity` و`adv-lanterns` و`adv-lighthouse` و`adv-desert` و`adv-mountain` و`adv-castle` (يحتاج الخادم على 8000). المغامرات التسع واحدة لكل وحدة، والأخيرة «القلعة المظلمة» تجمع أصدقاء كل المغامرات في احتفال الختام.

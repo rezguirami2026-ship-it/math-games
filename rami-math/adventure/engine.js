@@ -325,7 +325,7 @@ export function runAdventure(def, onExit) {
     if (!locked && !caught) { update(dt); followStep(dt); }
     ents.forEach(e => { if (e.kind === 'guard') { updGuard(e, dt); if (!locked && !caught && sees(e)) getCaught(e); } if (e.kind === 'hazard') { updGuard(e, dt); if (!locked && !caught && touches(e)) getCaught(e); } if (e.kind === 'block' && e.px != null) { e.px += (e.x - e.px) * Math.min(1, dt * 14); e.py += (e.y - e.py) * Math.min(1, dt * 14); if (Math.abs(e.px - e.x) + Math.abs(e.py - e.y) < .01) { e.px = e.py = null; } } });
     if (area.tick) area.tick(A, dt);
-    if (ents.some(e => e.kind === 'beam')) traceBeams();
+    if (ents.some(e => e.kind === 'beam')) traceBeams(); else if (beams.length) beams = [];
     windStep(dt); lightning(dt);
     ents.forEach(e => { if ((e.kind === 'gate' || e.kind === 'door' || e.kind === 'cage') && !e.open && e.when && e.when(A)) { A.set(e.id, { open: true }); sfx('gate'); A.shake(.4); toast(e.openMsg || '🔓 انفتح شيء ما!'); } });
     for (let i = fx.length - 1; i >= 0; i--) { const p = fx[i]; p.life -= dt; p.x += p.vx * dt; p.y += p.vy * dt; p.vy += 160 * dt; if (p.life <= 0) fx.splice(i, 1); }

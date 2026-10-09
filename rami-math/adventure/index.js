@@ -19,7 +19,7 @@ export const ADVENTURES = [
   { id: 'lighthouse', unit: 5, icon: '🗼', title: 'الفنار والضباب', blurb: 'ضباب كثيف يغطي الميناء ومراكب الصيادين تائهة في البحر. أصلح الفنار القديم وأرشدها إلى البر.', load: () => import('./stories/lighthouse.js') },
   { id: 'desert', unit: 6, icon: '🏜️', title: 'مهمة في الصحراء', blurb: 'عاصفة رملية والجمل سهيل ضائع! اتبع آثاره، احفر الرمال، اهتدِ بالنجم القطبي، وأنقذه في الواحة.', load: () => import('./stories/desert.js') },
   { id: 'mountain', unit: 7, icon: '⛰️', title: 'قمة جبل شمس', blurb: 'رحلة إلى أعلى جبال عُمان: اسقِ المدرّجات بماء الفلج، أصلح الجسر المعلّق فوق الهاوية، تفادَ الصخور، وافتح صندوق الجد الأكبر عند الغروب.', load: () => import('./stories/mountain.js') },
-  { id: 'castle', unit: 8, icon: '🏰', title: 'القلعة المظلمة', blurb: 'المغامرة الكبرى: الوصول إلى القلعة، تجاوز الحراس، وكشف سرها الأخير.', soon: true }
+  { id: 'castle', unit: 8, icon: '🏰', title: 'القلعة المظلمة', blurb: 'المغامرة الكبرى: سيد الظلال سرق قنديل الخير! أصلح الجسر بين الحراس، حرّر زياد، وجّه نور القمر، واكشف سر القلعة… ثم احتفل مع كل أصدقائك.', load: () => import('./stories/castle.js') }
 ];
 export const advUnlocked = a => PREVIEW || finaleOpen(a.unit);   // ?preview=1: معاينة للمعلم بحفظ منفصل، كل المغامرات مفتوحة
 
