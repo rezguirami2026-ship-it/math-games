@@ -58,7 +58,7 @@ export default {
   rewards: ['💎 ٤٠ جوهرة', '🗻 رُجْمة حجرية من القمة في ساحة القرية', '🏅 وسام «متسلّق القمم»'],
   areas: {
     base: {
-      theme: 'village', map: rows(B), dark: 0,
+      theme: 'village', map: rows(B), dark: 0, scenery: { peaks: true, cliffs: true },
       ents: [
         { id: 'saeed', kind: 'npc', who: 'saeed', x: 12, y: 17, face: 'right', mark: A => A.flag('met') ? null : '!' },
         { id: 'huda', kind: 'npc', who: 'huda', x: 18, y: 12, face: 'left' },
@@ -93,13 +93,13 @@ export default {
       }
     },
     canyon: {
-      theme: 'ruins', map: rows(V), dark: 0,
+      theme: 'mountain', map: rows(V), dark: 0, scenery: { peaks: true, cliffs: true },
       wind: { period: 7, dur: 2.2, dx: -1, dy: 0, force: 2.4, zones: [[9, 12, 17, 20]], until: A => A.flag('bridge') },
       enter: A => { if (!A.flag('canyon')) { A.flag('canyon', true); A.say([{ who: 'narrator', text: 'الوادي العميق: جروف عالية، وريح قوية على الحافة، والجسر المعلّق مقطوع فوق الهاوية!' }]); } },
       ents: [
         { id: 'back', kind: 'exit', x: 0, y: 15, to: 'base', tx: 28, ty: 15 },
         { id: 'safeC', kind: 'safe', x: 2, y: 15 }, { id: 'safeC2', kind: 'safe', x: 10, y: 16 }, { id: 'safeC3', kind: 'safe', x: 22, y: 16 },
-        { id: 'r1', kind: 'pillar', x: 12, y: 15, h: 40, color: '#9C9488' }, { id: 'r2', kind: 'pillar', x: 15, y: 18, h: 40, color: '#9C9488' }, { id: 'r3', kind: 'pillar', x: 16, y: 13, h: 40, color: '#9C9488' }, { id: 'r4', kind: 'pillar', x: 11, y: 19, h: 40, color: '#9C9488' },
+        { id: 'r1', kind: 'pillar', style: 'cairn', x: 12, y: 15, h: 40, color: '#9C9488' }, { id: 'r2', kind: 'pillar', style: 'cairn', x: 15, y: 18, h: 40, color: '#9C9488' }, { id: 'r3', kind: 'pillar', style: 'cairn', x: 16, y: 13, h: 40, color: '#9C9488' }, { id: 'r4', kind: 'pillar', style: 'cairn', x: 11, y: 19, h: 40, color: '#9C9488' },
         { id: 'pk1', kind: 'item', x: 11, y: 13, item: 'plank' }, { id: 'pk2', kind: 'item', x: 14, y: 19, item: 'plank' }, { id: 'pk3', kind: 'item', x: 10, y: 4, item: 'plank' },
         { id: 'br1', kind: 'site', x: 18, y: 16, model: 'bridge' }, { id: 'br2', kind: 'site', x: 19, y: 16, model: 'bridge' }, { id: 'br3', kind: 'site', x: 20, y: 16, model: 'bridge' },
         { id: 'sgB', kind: 'sign', x: 17, y: 14, text: 'الجسر المعلّق مقطوع! الإطارات الذهبية فوق الهاوية أماكن الألواح الثلاثة.' },
@@ -112,14 +112,14 @@ export default {
       on: { br1: (A, e) => plank(A, e), br2: (A, e) => plank(A, e), br3: (A, e) => plank(A, e) }
     },
     summit: {
-      theme: 'ruins', map: rows(S), dark: .18,
+      theme: 'mountain', map: rows(S), dark: .18, scenery: { peaks: true, cliffs: true, clouds: true, sunset: true },
       enter: A => { if (!A.flag('summit')) { A.flag('summit', true); A.weather({ dark: .18 }); A.say([{ who: 'narrator', text: 'القمة! الغيوم تحتك، والشمس تميل نحو الغروب… وفي الوسط صندوق خشبي قديم عليه ثلاثة ألواح.' }, { who: 'hero', text: 'رسالة الجد الأكبر تقول: «من اليمين: النخلة، ثم الهلال، ثم النجمة».' }]); } },
       ents: [
         { id: 'back', kind: 'exit', x: 0, y: 8, to: 'canyon', tx: 28, ty: 16 },
         { id: 'safeS', kind: 'safe', x: 2, y: 8 },
         { id: 'box', kind: 'chest', x: 12, y: 5 },
         { id: 't1', kind: 'tablet', x: 11, y: 7, sym: 1 }, { id: 't2', kind: 'tablet', x: 12, y: 7, sym: 1 }, { id: 't3', kind: 'tablet', x: 13, y: 7, sym: 1 },
-        { id: 'cn1', kind: 'pillar', x: 7, y: 4, h: 34, color: '#B8AE98' }, { id: 'cn2', kind: 'pillar', x: 18, y: 4, h: 44, color: '#B8AE98' }, { id: 'cn3', kind: 'pillar', x: 18, y: 11, h: 30, color: '#B8AE98' },
+        { id: 'cn1', kind: 'pillar', style: 'cairn', x: 7, y: 4, h: 34, color: '#B8AE98' }, { id: 'cn2', kind: 'pillar', style: 'cairn', x: 18, y: 4, h: 44, color: '#B8AE98' }, { id: 'cn3', kind: 'pillar', style: 'cairn', x: 18, y: 11, h: 30, color: '#B8AE98' },
         { id: 's5', kind: 'star', x: 24, y: 2 }
       ],
       on: {

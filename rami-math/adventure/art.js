@@ -12,6 +12,7 @@ export const THEMES = {
   desert: { g: ['#F0CF8E', '#EAC67F', '#F3D79C'], g2: '#E2B86E', path: '#D9AE66', wall: ['#D9A86A', '#B8854A', '#8F6234'], floor: '#C79A62', water: ['#4BB3C8', '#2E93AE'], tree: 'cactus', grass: '#9AAE5A', night: 0 },
   ruins: { g: ['#D8CDB4', '#D0C4AA', '#DDD3BC'], g2: '#BFB397', path: '#C9BB9C', wall: ['#BFB49C', '#9C907A', '#78705C'], floor: '#B5A98E', water: ['#4FA0B8', '#33809A'], tree: 'round', grass: '#8FAE62', night: .1 },
   storm: { g: ['#C9B98E', '#C2B286', '#CFC096'], g2: '#B8A87A', path: '#A8936A', wall: ['#C9BCA0', '#A39578', '#7E7158'], floor: '#A88E6A', water: ['#5E8EA6', '#47768E'], tree: 'round', grass: '#6E8A4E', night: .3 },
+  mountain: { g: ['#B89878', '#B09070', '#C2A486'], g2: '#A6866A', path: '#A88B68', wall: ['#8C6E58', '#6E5644', '#4E3C30'], floor: '#9A7E64', water: ['#4FA0B8', '#33809A'], tree: 'round', grass: '#7FA84E', night: .1 },
   castle: { g: ['#7E7A86', '#78747F', '#85818D'], g2: '#6C6875', path: '#8E8A96', wall: ['#5A5664', '#46424F', '#332F3B'], floor: '#6A5E66', water: ['#3D4E7A', '#2C3A60'], tree: 'dead', grass: '#4E5A44', night: .55 }
 };
 

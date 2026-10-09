@@ -69,9 +69,13 @@ export function createAdv3D(canvas) {
     const br = new Parts(), wood = material('wood', '#8A5A30'); for (let y = 0; y < mh; y++) for (let x = 0; x < mw; x++) if (V.tileAt(x, y) === '=') br.add(wood, box(T + 2, 6, T - 6, x * T + T / 2, 5, y * T + T / 2)); root.add(br.build());
     // الجدران: أسوار من حجر بارتفاع حقيقي وشُرفات
     const wp = new Parts(), wm = material('stone', th.wall[0]), wt = material('plaster', th.wall[1]);
-    for (let y = 0; y < mh; y++) for (let x = 0; x < mw; x++) if (V.tileAt(x, y) === '#' && y >= mh - 2) wp.add(wm, box(T + .5, 22, T + .5, x * T + T / 2, 11, y * T + T / 2));   // الحافة القريبة من الكاميرا منخفضة فلا تحجب المشهد
-    for (let y = 0; y < mh - 2; y++) for (let x = 0; x < mw; x++) if (V.tileAt(x, y) === '#') { wp.add(wm, box(T + .5, 46, T + .5, x * T + T / 2, 23, y * T + T / 2)); wp.add(wt, box(T + 3, 5, T + 3, x * T + T / 2, 46, y * T + T / 2)); if ((x + y) % 2 === 0) wp.add(wm, box(T * .45, 10, T * .45, x * T + T / 2, 53, y * T + T / 2)); }
+    const cliffs = V.scenery && V.scenery.cliffs;
+    for (let y = 0; y < mh; y++) for (let x = 0; x < mw; x++) if (V.tileAt(x, y) === '#' && y >= mh - 2 && !cliffs) wp.add(wm, box(T + .5, 22, T + .5, x * T + T / 2, 11, y * T + T / 2));   // الحافة القريبة من الكاميرا منخفضة فلا تحجب المشهد
+    if (cliffs) root.add(rockWalls(V, mw, mh));
+    for (let y = 0; y < mh - 2; y++) for (let x = 0; x < mw; x++) if (V.tileAt(x, y) === '#' && cliffs) continue;
+    else if (V.tileAt(x, y) === '#') { wp.add(wm, box(T + .5, 46, T + .5, x * T + T / 2, 23, y * T + T / 2)); wp.add(wt, box(T + 3, 5, T + 3, x * T + T / 2, 46, y * T + T / 2)); if ((x + y) % 2 === 0) wp.add(wm, box(T * .45, 10, T * .45, x * T + T / 2, 53, y * T + T / 2)); }
     root.add(wp.build());
+    if (V.scenery) scenery(V.scenery, mw, mh);
     // الأشجار: نخيل/سدر/صبار/صخور حسب العالم
     const tl = [], low = []; for (let y = 0; y < mh; y++) for (let x = 0; x < mw; x++) if (V.tileAt(x, y) === 'T') (y >= mh - 2 ? low : tl).push({ x: x * T + T / 2, y: y * T + T / 2, s: .78, r: 18 });
     if (low.length) root.add(shrubs(low));   // أشجار الحافة القريبة من الكاميرا: شجيرات منخفضة بدل نخيل يغطي الرؤية
@@ -91,6 +95,39 @@ export function createAdv3D(canvas) {
     marker = new THREE.Group(); const dia = new THREE.Mesh(new THREE.OctahedronGeometry(8), glow('#FFC23D')); dia.scale.y = 1.5; marker.add(dia);
     const ring = new THREE.Mesh(new THREE.RingGeometry(18, 24, 32), new THREE.MeshBasicMaterial({ color: '#FFD54A', transparent: true, opacity: .7, side: THREE.DoubleSide })); ring.rotation.x = -Math.PI / 2; ring.position.y = -126; marker.add(ring); marker.visible = false; root.add(marker);
     fxPts = new THREE.Points(new THREE.BufferGeometry(), new THREE.PointsMaterial({ size: 7, vertexColors: true, transparent: true, depthWrite: false, blending: THREE.AdditiveBlending })); fxPts.frustumCulled = false; root.add(fxPts);
+  }
+  /* ── مناظر الجبل (area.scenery): قمم صخرية حول المشهد بطبقتين (القريبة بنية محمرّة والبعيدة يغطيها الضباب)، وجروف عالية بدل الأسوار ── */
+  function hash3(x, y) { const s = Math.sin(x * 127.1 + y * 311.7) * 43758.5453; return s - Math.floor(s); }
+  function peak(x, z, r, h, col, seed) {
+    const g = new THREE.ConeGeometry(r, h, 7, 4), p = g.attributes.position;
+    for (let i = 0; i < p.count; i++) { const y = p.getY(i), k = (y + h / 2) / h; if (k > .02 && k < .98) { const j = hash3(i + seed, seed * 3.1) - .5; p.setX(i, p.getX(i) * (1 + j * .35)); p.setZ(i, p.getZ(i) * (1 + (hash3(seed, i) - .5) * .35)); p.setY(i, y + j * h * .08); } }
+    g.computeVertexNormals(); g.translate(x, h / 2 - 4, z);
+    const m = new THREE.Mesh(g, std(col, { flatShading: true, roughness: 1 })); m.receiveShadow = true; return m;
+  }
+  /* جروف صخرية: كتلة صخر خشنة لكل بلاطة جدار (أعلى كلما بعدت عن الكاميرا)، وحجارة متناثرة على الأرض المكشوفة */
+  function rockWalls(V, mw, mh) {
+    const cols = ['#8C6448', '#7A5540', '#9A7258', '#6E4C3A'], P = new Parts(), mats = cols.map(c => std(c, { flatShading: true, roughness: 1 }));
+    for (let y = 0; y < mh; y++) for (let x = 0; x < mw; x++) {
+      const ch = V.tileAt(x, y), k = hash3(x, y), cx = x * T + T / 2, cz = y * T + T / 2;
+      if (ch === '#') {
+        const near = y >= mh - 2, h = near ? 18 + k * 10 : 70 + k * 70;
+        const g = new THREE.DodecahedronGeometry(T * .62, 0); g.scale(1 + k * .25, h / (T * 1.1), 1 + hash3(y, x) * .25); g.rotateY(k * 6); g.translate(cx + (k - .5) * 6, h / 2 - 2, cz + (hash3(y, x) - .5) * 6);
+        P.add(mats[Math.floor(k * 4)], g, { uv: false });
+        if (!near && k > .45) { const c = new THREE.DodecahedronGeometry(T * .32, 0); c.translate(cx + (k - .7) * 14, h - 4, cz); P.add(mats[(Math.floor(k * 9)) % 4], c, { uv: false }); }
+      } else if ((ch === '.' || ch === ',') && k < .045) {
+        const g = new THREE.DodecahedronGeometry(5 + k * 90, 0); g.scale(1.2, .6, 1); g.translate(cx + (k - .02) * 300, 2, cz); P.add(mats[Math.floor(hash3(y, x) * 4)], g, { uv: false });
+      }
+    }
+    return P.build();
+  }
+  function scenery(sc, mw, mh) {
+    const W = mw * T, H = mh * T, cols = ['#9A6B4E', '#8A5E44', '#A8765A', '#7A5440'];
+    if (sc.peaks) {
+      for (let i = 0; i < 14; i++) { const x = -500 + i * (W + 1000) / 13, k = hash3(i, 7); root.add(peak(x, -260 - k * 380, 230 + k * 160, 380 + hash3(i, 3) * 420, cols[i % 4], i * 13)); }   // الصف القريب شمالاً
+      for (let i = 0; i < 9; i++) { const x = -900 + i * (W + 1800) / 8; root.add(peak(x, -1150 - hash3(i, 9) * 300, 520, 900 + hash3(i, 5) * 500, '#B58E78', 90 + i)); }   // سلسلة بعيدة
+      for (let i = 0; i < 6; i++) { const z = -100 + i * (H + 200) / 5; root.add(peak(-330 - hash3(i, 2) * 200, z, 220, 300 + hash3(i, 4) * 260, cols[(i + 1) % 4], 40 + i)); root.add(peak(W + 330 + hash3(i, 6) * 200, z, 220, 300 + hash3(i, 8) * 260, cols[(i + 2) % 4], 60 + i)); }   // الجانبان
+      if (sc.clouds) for (let i = 0; i < 10; i++) { const c = new THREE.Mesh(new THREE.SphereGeometry(90 + hash3(i, 1) * 60, 10, 8), std('#FFF4EA', { transparent: true, opacity: .75, roughness: 1 })); c.scale.y = .32; c.position.set(-400 + i * (W + 800) / 9, 150 + hash3(i, 2) * 60, -520 - hash3(i, 3) * 200); root.add(c); }   // بحر الغيوم تحت القمة
+    }
   }
   function cactus(x, z) { const P = new Parts(), m = std('#5E9C48'); P.add(m, cyl(7, 8, 70, x, 35, z, 10), { uv: false }); P.add(m, cyl(5, 5, 28, x - 16, 42, z, 8), { uv: false }); P.add(m, box(16, 6, 6, x - 9, 30, z), { uv: false }); P.add(m, cyl(5, 5, 24, x + 15, 48, z, 8), { uv: false }); return P.build(); }
   function rockMesh(x, z, s, col) { const g = new THREE.DodecahedronGeometry(20 * s, 0); g.scale(1.2, .8, 1); g.translate(x, 14 * s, z); const m = new THREE.Mesh(g, std(col, { flatShading: true })); return shadowed(m); }
@@ -136,7 +173,9 @@ export function createAdv3D(canvas) {
       case 'crystal': { const c = new THREE.Mesh(new THREE.OctahedronGeometry(14), new THREE.MeshStandardMaterial({ color: '#7CD6FF', emissive: '#2A7AB8', emissiveIntensity: .4, metalness: .2, roughness: .15, transparent: true, opacity: .9 })); c.scale.y = 1.6; c.position.y = 34; P.add(material('stone', '#8C8478'), cyl(12, 15, 12, 0, 6, 0, 8)); G.add(P.build(), c); G.userData.crystal = c; break; }
       case 'beam': { P.add(material('stone', '#B8AE98'), cyl(12, 15, 30, 0, 15, 0, 10)); G.add(P.build()); const s = new THREE.Mesh(sphere(10, 0, 40, 0), glow('#FFD54A')); G.add(s); break; }
       case 'fence': { P.add(wood, box(e.vertical ? 6 : T, 6, e.vertical ? T : 6, 0, 22, 0)); P.add(wood, box(e.vertical ? 6 : T, 6, e.vertical ? T : 6, 0, 10, 0)); [-1, 1].forEach(s => P.add(wood, box(7, 32, 7, e.vertical ? 0 : s * T / 2.3, 16, e.vertical ? s * T / 2.3 : 0))); G.add(P.build()); break; }
-      case 'pillar': { P.add(material('stone', e.color || '#C9BFA9'), cyl(13, 15, e.h || 90, 0, (e.h || 90) / 2, 0, 12)); P.add(material('stone', '#B5AB97'), box(34, 8, 34, 0, (e.h || 90) + 4, 0)); G.add(P.build()); break; }
+      case 'pillar': if (e.style === 'cairn') {   // رُجمة: حجارة مكدّسة تصغر نحو الأعلى
+        const n = Math.max(3, Math.round((e.h || 40) / 11)); let y = 0; for (let i = 0; i < n; i++) { const r = 15 - i * (9 / n), g = new THREE.DodecahedronGeometry(r, 0); g.scale(1.15, .62, 1.05); g.rotateY(i * 1.7); y += r * .62; g.translate((i % 2 ? 2 : -2) * (i / n), y, (i % 3 - 1) * 1.5); y += r * .5; P.add(std(['#9C8670', '#8A735E', '#A8927A'][i % 3], { flatShading: true, roughness: 1 }), g, { uv: false }); }
+        G.add(P.build()); break; } else { P.add(material('stone', e.color || '#C9BFA9'), cyl(13, 15, e.h || 90, 0, (e.h || 90) / 2, 0, 12)); P.add(material('stone', '#B5AB97'), box(34, 8, 34, 0, (e.h || 90) + 4, 0)); G.add(P.build()); break; }
       case 'torchw': { P.add(dark, cyl(2, 2, 40, 0, 20, 0, 6), { uv: false }); G.add(P.build()); const f = flame(.8); f.position.y = 40; G.add(f); G.userData.light = 1; break; }
       case 'site': { const g = new THREE.Group(); const ring = new THREE.Mesh(new THREE.RingGeometry(20, 26, 4), new THREE.MeshBasicMaterial({ color: '#FFD54A', transparent: true, opacity: .7, side: THREE.DoubleSide })); ring.rotation.x = -Math.PI / 2; ring.rotation.z = Math.PI / 4; ring.position.y = 1.5; g.add(ring); G.add(g); G.userData.site = ring;
         const b = buildModel(e.model || 'raft'); b.visible = !!e.built; G.add(b); G.userData.built = b; if (e.model === 'altar') { const base = new THREE.Mesh(box(50, 30, 40, 0, 15, 0, 3), material('stone', '#C9BFA9')); G.add(base); G.userData.altarBase = base; } break; }
@@ -214,6 +253,7 @@ export function createAdv3D(canvas) {
     wz.dark = wz.dark < 0 ? V.dark : wz.dark + (V.dark - wz.dark) * k; wz.sand += ((w.sand ? 1 : 0) - wz.sand) * k; wz.rain += ((w.rain ? 1 : 0) - wz.rain) * k; wz.fog += ((w.fog ? 1 : 0) - wz.fog) * k * .5;
     const d = wz.dark, storm = Math.max(wz.rain * .6, 0);
     const sky = d > .4 ? C('#6E8AB8', '#0E1530', Math.min(1, (d - .1) / .7)) : C('#8CC4EE', '#6E8AB8', Math.min(1, d / .4));
+    if (V.scenery && V.scenery.sunset) sky.lerp(new THREE.Color('#F2A066'), .55);   // القمة عند الغروب
     if (storm) sky.lerp(new THREE.Color('#4A5568'), storm); if (wz.sand > .01) sky.lerp(new THREE.Color('#D9A86A'), wz.sand * .8);
     scene.background.copy(sky); scene.fog.color.copy(sky); if (wz.fog > .01) sky.lerp(new THREE.Color('#9AA6B4'), wz.fog * .85); scene.background.copy(sky); scene.fog.color.copy(sky);
     scene.fog.far = 2600 - wz.sand * 1700 - storm * 900 - wz.fog * 1550; scene.fog.near = 900 - wz.sand * 700 - storm * 300 - wz.fog * 760;   // ضباب الميناء: الرؤية قريبة

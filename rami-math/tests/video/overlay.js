@@ -20,13 +20,8 @@
     background:linear-gradient(180deg,#FFF1B8,#FFD54A 55%,#E3A21A);box-shadow:0 5px 0 #8A5A00,0 10px 26px rgba(0,0,0,.35);opacity:0;transform:translateX(30px);transition:all .4s cubic-bezier(.3,1.5,.5,1)}
   #voLbl.on{opacity:1;transform:none}
   #voFade{position:fixed;inset:0;background:#05030F;z-index:10001;pointer-events:none;opacity:0}
-  #voWipe{position:fixed;top:-12%;left:-20%;width:140%;height:124%;z-index:10000;pointer-events:none;visibility:hidden;display:grid;place-items:center;
-    background:linear-gradient(90deg,#FFE88A 0,#E3B04B 1.6%,#8A5A00 2.2%,transparent 2.2%,transparent 97.8%,#8A5A00 97.8%,#E3B04B 98.4%,#FFE88A 100%),
-      repeating-linear-gradient(45deg,transparent 0 30px,rgba(227,176,75,.13) 30px 32px),repeating-linear-gradient(-45deg,transparent 0 30px,rgba(227,176,75,.13) 30px 32px),
-      radial-gradient(ellipse at 50% 50%,#1D5A8E 0%,#0B2A4A 55%,#051528 100%);box-shadow:0 0 60px rgba(0,0,0,.6)}
-  #voWipe .wIn{transform:skewX(12deg);text-align:center;direction:rtl}
-  #voWipe .wStar{font-size:44px;color:#FFD54A;filter:drop-shadow(0 0 14px rgba(255,213,74,.8))}
-  #voWipe b{display:block;font:900 72px/1.2 Cairo,sans-serif;background:linear-gradient(180deg,#FFF6D0,#FFD54A 55%,#C98A12);-webkit-background-clip:text;background-clip:text;color:transparent;filter:drop-shadow(0 4px 0 rgba(0,0,0,.4))}
+  #voGlow{position:fixed;inset:0;z-index:10000;pointer-events:none;opacity:0;background:radial-gradient(ellipse at 50% 50%,#FFFBEA 0%,#FFE7A6 28%,rgba(255,196,90,.85) 55%,rgba(120,70,20,.55) 100%);mix-blend-mode:screen}
+  body.vid > :not(#voFade):not(#voGlow):not(#voCap):not(#voLbl):not(#voChip):not(style):not(script){transform:scale(var(--vz,1));filter:blur(var(--vb,0px)) brightness(var(--vr,1));transform-origin:50% 50%}
   #voTitle{position:fixed;inset:0;z-index:9997;display:none;place-items:center;direction:rtl;background:radial-gradient(ellipse at 50% 40%,rgba(30,22,80,.55),rgba(5,3,15,.85))}
   #voTitle.on{display:grid}
   #voTitle .tIn{text-align:center;transform:translateY(-70px)}
@@ -74,7 +69,7 @@
   document.body.classList.add('vid');
   const el = (h) => { const d = document.createElement('div'); d.innerHTML = h.trim(); const n = d.firstChild; document.body.appendChild(n); return n; };
   const cap = el('<div id="voCap"><div id="voPic"><canvas class="pb" width="240" height="240"></canvas><canvas class="pg" width="240" height="240"></canvas></div><div><span class="who"></span><p></p></div></div>');
-  const lbl = el('<div id="voLbl"></div>'), fade = el('<div id="voFade"></div>'), wipe = el('<div id="voWipe"><div class="wIn"><div class="wStar">✦</div><b>قرية الخير</b></div></div>'), chip = el('<div id="voChip"></div>');
+  const lbl = el('<div id="voLbl"></div>'), fade = el('<div id="voFade"></div>'), glow = el('<div id="voGlow"></div>'), chip = el('<div id="voChip"></div>');
   const cred = el('<div id="voCred"><div class="pat"></div><div class="rays"></div><div class="rib"></div><div class="rib rib2"></div><div class="band"><img class="sch" alt=""><i></i><img class="moe" alt=""></div><div class="arch"><img class="me" alt=""></div><div class="card"><div class="orn"><b></b>✦<b></b></div><div class="box"><small>إعداد وتنفيذ الأستاذ</small><strong>رامي الرزقي</strong></div><div class="sch">مدرسة الخوير للتعليم الأساسي (٥–٩)</div><div class="game">لعبة «قرية الخير» · رياضيات الصف السادس</div><div class="orn" style="margin-top:14px"><b></b>✦<b></b></div></div></div>');
   const title = el('<div id="voTitle"><div class="tIn"><h1>قرية الخير</h1><div class="rib">مغامرة رامي ماث</div><div class="sub"></div><div class="ctaW"></div></div><span class="glow gb"></span><span class="glow gg"></span><canvas class="hb" width="600" height="800"></canvas><canvas class="hg" width="600" height="800"></canvas></div>');
   let drawHuman = null, heroLook = null, H3 = null;
@@ -89,12 +84,13 @@
       title.classList.toggle('on', !!S.title); cred.classList.toggle('on', !!S.credits); if (S.title) { title.querySelector('.sub').textContent = S.title.sub || ''; title.querySelector('.ctaW').innerHTML = S.title.cta ? `<span class="cta">${S.title.cta}</span>` : ''; } },
     frame(t) {
       // الإظلام: أول المشهد وآخره، وعند كل قطع داخلي
-      // الانتقال: لوح «قرية الخير» يعبر الشاشة من اليمين إلى اليسار ويغطيها لحظة القطع؛ الإظلام فقط في أول الفيديو وآخره
-      const WD = .5, ez = k => k < .5 ? 4 * k * k * k : 1 - Math.pow(-2 * k + 2, 3) / 2; let f = 0, wx = null;
-      if (t < WD) { if (S.first) f = 1 - t / WD; else wx = -ez(t / WD); }
-      if (S.dur - t < WD) { const k = 1 - (S.dur - t) / WD; if (S.last) f = Math.max(f, k); else wx = 1 - ez(Math.min(1, k)); }
-      S.dips.forEach(d => { if (t > d - WD && t <= d) wx = 1 - ez((t - (d - WD)) / WD); else if (t > d && t < d + WD) wx = -ez((t - d) / WD); });
-      fade.style.opacity = Math.max(0, Math.min(1, f)); wipe.style.visibility = wx == null ? 'hidden' : 'visible'; if (wx != null) wipe.style.transform = `translateX(${wx * 135}%) skewX(-12deg)`;
+      // الانتقال: تقريب خفيف وضبابية تذوب في توهج ذهبي دافئ لحظة القطع، ثم يخرج المكان الجديد من التوهج. الإظلام فقط في أول الفيديو وآخره
+      const WD = .45, sm = k => k * k * (3 - 2 * k); let f = 0, g = 0;
+      if (t < WD) { if (S.first) f = 1 - t / WD; else g = 1 - sm(t / WD); }
+      if (S.dur - t < WD) { const k = Math.min(1, 1 - (S.dur - t) / WD); if (S.last) f = Math.max(f, k); else g = Math.max(g, sm(k)); }
+      S.dips.forEach(d => { const k = Math.abs(t - d); if (k < WD) g = Math.max(g, sm(1 - k / WD)); });
+      fade.style.opacity = Math.max(0, Math.min(1, f)); glow.style.opacity = (g * .92).toFixed(3);
+      const bs = document.body.style; bs.setProperty('--vz', (1 + g * .09).toFixed(4)); bs.setProperty('--vb', (g * 9).toFixed(2) + 'px'); bs.setProperty('--vr', (1 + g * .35).toFixed(3));
       lbl.classList.toggle('on', !!S.label && t > .4 && S.dur - t > .3);
       const ch = S.chips.find(c => t >= c.from && t < c.to); chip.textContent = ch ? ch.text : ''; chip.classList.toggle('on', !!ch);
       const ln = S.lines.find(l => t >= l.start - .05 && t < l.start + l.dur + .35);

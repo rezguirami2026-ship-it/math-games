@@ -335,7 +335,7 @@ export function runAdventure(def, onExit) {
     goalT -= dt; if (goalT <= 0) { goalT = .5; goal(); }   // الهدف يتحدّث وحده (مثلاً عند دخول مكان)
     if (r3) {
       cam.x += (P.x * T - cam.x) * Math.min(1, dt * 6); cam.y += (P.y * T - cam.y) * Math.min(1, dt * 6);
-      r3.frame({ areaId: S.area, map, theme: area.theme, dark: (S.flags.weather && S.flags.weather.dark != null) ? S.flags.weather.dark : area.dark != null ? area.dark : THEMES[area.theme].night, tileAt, ents, P, t, A, caught,
+      r3.frame({ areaId: S.area, map, theme: area.theme, scenery: area.scenery, dark: (S.flags.weather && S.flags.weather.dark != null) ? S.flags.weather.dark : area.dark != null ? area.dark : THEMES[area.theme].night, tileAt, ents, P, t, A, caught,
         look: e => e.look || def.cast[e.who].look, itemIcon: A.itemIcon, pressed: A.pressed,
         heroLook: heroLookWorn(game.state), heroKey: JSON.stringify(heroLookWorn(game.state)), lantern: A.has('lantern'), goalAt: goalAt(),
         fx: fx.map(p => ({ x: p.x, y: p.y, h: Math.max(0, -p.vy * .1), col: p.col })), cam, zoom: Z / (W < H ? .9 : 1.1), userZoom, cine, shake: shakeK,

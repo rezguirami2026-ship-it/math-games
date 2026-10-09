@@ -59,6 +59,7 @@ async function scene(P, id, run, extra = {}) {
     reload: async () => { await P.reload(); await P.overlayOn(); await P.ev(s => window.__vo.scene(s), spec); }
   };
   const t0 = Date.now(); await run(cap); await cap.fill();
+  fs.writeFileSync(path.join(OUT, `cuts_${id}.json`), JSON.stringify({ at: plan.at, dur: plan.dur, dips: spec.dips || [], first: spec.first, last: spec.last }));
   console.log(`✅ ${id}: ${plan.dur.toFixed(1)} ث (${end} لقطة) في ${((Date.now() - t0) / 1000).toFixed(0)} ث`);
 }
 
@@ -203,6 +204,7 @@ const ADV = [['rescue', '🏘️ إنقاذ القرية'], ['storm', '🌪️ �
     await B.ev(async id => { window.__adv = null; (await import('/adventure/index.js')).playAdventure(id); }, id);
     await B.until(() => !!window.__adv, 'فتح المغامرة', 30);
     for (let i = 0; i < 30; i++) { await B.ev(() => { const d = document.querySelector('.advDlg.on'); if (d && !d.querySelector('[data-o]')) d.click(); }); await B.skip(.25); }
+    if (id === 'mountain') { await B.ev(() => { window.__adv.goto('canyon', 6, 15); }); await B.skip(2); for (let i = 0; i < 20; i++) { await B.ev(() => { const d = document.querySelector('.advDlg.on'); if (d) d.click(); }); await B.skip(.2); } }   // الجبل: لقطة من الوادي بين الجروف
     await B.ev(() => { const A = window.__adv, h = A.hero(); A.tapTile(h.x + 4, h.y); });
   };
   // اللقطة الأولى: لوحة المغامرات، ثم كل مغامرة
