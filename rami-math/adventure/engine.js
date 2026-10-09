@@ -441,7 +441,7 @@ export function runAdventure(def, onExit) {
   function exit() { save(); cleanup(); onExit && onExit({ done: false }); }
   async function finish() {
     if (done) return; done = true; locked = true;
-    const first = !R.done, got = S.stars; R.done = true; R.at = R.at || Date.now();   // تاريخ أول إكمال (لألبوم الذكريات) R.plays++; R.best = Math.max(R.best, got); R.st = null;
+    const first = !R.done, got = S.stars; R.done = true; R.at = R.at || Date.now(); R.plays++; R.best = Math.max(R.best, got); R.st = null;   // R.at: تاريخ أول إكمال (لألبوم الذكريات)
     const rw = first ? def.rewards || [] : []; if (first && def.grant) def.grant(game.state);
     bus.emit('adventureDone', def.id); bus.emit('gems'); bus.emit('save'); sfx('win'); burst(P.x * T, P.y * T - 30, 60);
     const card = document.createElement('div'); card.className = 'advEnd'; card.innerHTML = `<div class="advEndCard"><div class="advEndIcon">${esc(def.icon)}</div><h2>${esc(def.title)}</h2><p class="advEndSub">أكملتَ المغامرة! 🎉</p>
