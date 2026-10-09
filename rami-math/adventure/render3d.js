@@ -132,6 +132,7 @@ export function createAdv3D(canvas) {
         return shadowed(G); }
       case 'rot': { G.add(rotMesh(e.style || 'statue')); G.userData.rot = G.children[0]; G.userData.rot.rotation.y = -(e.r || 0) * Math.PI / 2; break; }
       case 'tablet': { P.add(material('stone', '#B8AE98'), box(36, 46, 14, 0, 23, 0, 2)); G.add(P.build()); const sp = sprite(iconTexture((V.symbols || [])[e.sym || 0] || '?', '#8C7A5A'), 30); sp.material.depthTest = true; sp.position.set(0, 30, 9); G.add(sp); G.userData.tab = sp; break; }
+      case 'crystal': if (e.style === 'field') { P.add(material('stone', '#9A8466'), box(T - 4, 8, T - 4, 0, 4, 0, 2)); P.add(material('soil', '#6B4A2E'), box(T - 12, 3, T - 12, 0, 9.5, 0)); G.add(P.build()); const sp = new THREE.Group(), leaf = std('#5FAE45', { roughness: .8 }); for (let i = 0; i < 9; i++) { const m = new THREE.Mesh(new THREE.ConeGeometry(4, 16, 5), leaf); m.position.set(((i % 3) - 1) * 12, 18, (Math.floor(i / 3) - 1) * 12); sp.add(m); } sp.scale.set(1, .15, 1); G.add(sp); G.userData.field = sp; break; }
       case 'crystal': { const c = new THREE.Mesh(new THREE.OctahedronGeometry(14), new THREE.MeshStandardMaterial({ color: '#7CD6FF', emissive: '#2A7AB8', emissiveIntensity: .4, metalness: .2, roughness: .15, transparent: true, opacity: .9 })); c.scale.y = 1.6; c.position.y = 34; P.add(material('stone', '#8C8478'), cyl(12, 15, 12, 0, 6, 0, 8)); G.add(P.build(), c); G.userData.crystal = c; break; }
       case 'beam': { P.add(material('stone', '#B8AE98'), cyl(12, 15, 30, 0, 15, 0, 10)); G.add(P.build()); const s = new THREE.Mesh(sphere(10, 0, 40, 0), glow('#FFD54A')); G.add(s); break; }
       case 'fence': { P.add(wood, box(e.vertical ? 6 : T, 6, e.vertical ? T : 6, 0, 22, 0)); P.add(wood, box(e.vertical ? 6 : T, 6, e.vertical ? T : 6, 0, 10, 0)); [-1, 1].forEach(s => P.add(wood, box(7, 32, 7, e.vertical ? 0 : s * T / 2.3, 16, e.vertical ? s * T / 2.3 : 0))); G.add(P.build()); break; }
@@ -199,7 +200,7 @@ export function createAdv3D(canvas) {
   function drawBeams(list) {
     let n = 0; list.forEach(pts => { for (let i = 0; i + 1 < pts.length; i++) { let m = beamPool[n]; if (!m) { m = new THREE.Mesh(new THREE.CylinderGeometry(3, 3, 1, 8, 1, true), new THREE.MeshBasicMaterial({ color: '#FFE27A', transparent: true, opacity: .85, depthWrite: false })); scene.add(m); beamPool.push(m); }
       const [a, b] = [pts[i], pts[i + 1]], ax = a[0] * T + T / 2, az = a[1] * T + T / 2, bx = b[0] * T + T / 2, bz = b[1] * T + T / 2, len = Math.hypot(bx - ax, bz - az);
-      m.visible = len > 1; m.scale.set(1, len, 1); m.position.set((ax + bx) / 2, 38, (az + bz) / 2); m.rotation.set(Math.PI / 2, 0, -Math.atan2(bx - ax, bz - az) + Math.PI); m.rotation.order = 'YXZ'; m.rotation.set(Math.PI / 2, Math.atan2(bx - ax, bz - az), 0); n++; } });
+      m.visible = len > 1; m.material.color.set(pts.color || '#FFE27A'); m.scale.set(1, len, 1); m.position.set((ax + bx) / 2, 38, (az + bz) / 2); m.rotation.set(Math.PI / 2, 0, -Math.atan2(bx - ax, bz - az) + Math.PI); m.rotation.order = 'YXZ'; m.rotation.set(Math.PI / 2, Math.atan2(bx - ax, bz - az), 0); n++; } });
     for (let i = n; i < beamPool.length; i++) beamPool[i].visible = false;
   }
   function flame(s) { const g = new THREE.Group(); const o = new THREE.Mesh(new THREE.ConeGeometry(9 * s, 26 * s, 8), new THREE.MeshBasicMaterial({ color: '#FF8A1E', transparent: true, opacity: .92 })); o.position.y = 13 * s; const i = new THREE.Mesh(new THREE.ConeGeometry(5 * s, 16 * s, 8), new THREE.MeshBasicMaterial({ color: '#FFE070' })); i.position.y = 9 * s; g.add(o, i); g.userData.flame = 1; return g; }
@@ -266,6 +267,7 @@ export function createAdv3D(canvas) {
         if (e.kind === 'hazard') nearL.push([px, 30, pz, .35]); }
       if (o.userData.rot) { const tgt = -(e.r || 0) * Math.PI / 2; let d = tgt - o.userData.rot.rotation.y; d = Math.atan2(Math.sin(d), Math.cos(d)); o.userData.rot.rotation.y += d * Math.min(1, dt * 8); }
       if (o.userData.tab && o.userData.symNow !== e.sym) { o.userData.symNow = e.sym; o.userData.tab.material.map = iconTexture((V.symbols || [])[e.sym || 0] || '?', '#8C7A5A'); o.userData.tab.material.needsUpdate = true; }
+      if (o.userData.field) { const k = (e.lit || e.wet) ? 1 : .15, f = o.userData.field; f.scale.y += (k - f.scale.y) * Math.min(1, dt * 2); f.rotation.y = (e.lit || e.wet) ? Math.sin(t * 2 + e.x) * .05 : 0; }
       if (o.userData.crystal) { o.userData.crystal.material.emissiveIntensity = e.lit ? 2.2 + Math.sin(t * 8) * .4 : .4; o.userData.crystal.rotation.y = t * (e.lit ? 2 : .4); if (e.lit) nearL.push([o.position.x, 40, o.position.z, 1.2]); }
       if (o.userData.site) { o.userData.site.visible = !e.built; o.userData.site.material.opacity = .4 + Math.sin(t * 4) * .3; o.userData.built.visible = !!e.built; }
       if (e.kind === 'npc' || e.kind === 'guard') {

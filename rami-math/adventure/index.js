@@ -18,7 +18,7 @@ export const ADVENTURES = [
   { id: 'lanterns', unit: 4, icon: '🏮', title: 'فوانيس المهرجان', blurb: 'ليلة المهرجان… واختفت الفوانيس السحرية! تتبّع اللص الغامض بين الأكشاك والألعاب وأعِد النور إلى الساحة.', load: () => import('./stories/lanterns.js') },
   { id: 'lighthouse', unit: 5, icon: '🗼', title: 'الفنار والضباب', blurb: 'ضباب كثيف يغطي الميناء ومراكب الصيادين تائهة في البحر. أصلح الفنار القديم وأرشدها إلى البر.', load: () => import('./stories/lighthouse.js') },
   { id: 'desert', unit: 6, icon: '🏜️', title: 'مهمة في الصحراء', blurb: 'عاصفة رملية والجمل سهيل ضائع! اتبع آثاره، احفر الرمال، اهتدِ بالنجم القطبي، وأنقذه في الواحة.', load: () => import('./stories/desert.js') },
-  { id: 'mountain', unit: 7, icon: '⛰️', title: 'قمة جبل شمس', blurb: 'رحلة تسلّق إلى قمة جبل شمس: أودية وجسور معلّقة وصخور تتساقط، وماعز جبلية، وكنز الراعي القديم.', soon: true },
+  { id: 'mountain', unit: 7, icon: '⛰️', title: 'قمة جبل شمس', blurb: 'رحلة إلى أعلى جبال عُمان: اسقِ المدرّجات بماء الفلج، أصلح الجسر المعلّق فوق الهاوية، تفادَ الصخور، وافتح صندوق الجد الأكبر عند الغروب.', load: () => import('./stories/mountain.js') },
   { id: 'castle', unit: 8, icon: '🏰', title: 'القلعة المظلمة', blurb: 'المغامرة الكبرى: الوصول إلى القلعة، تجاوز الحراس، وكشف سرها الأخير.', soon: true }
 ];
 export const advUnlocked = a => PREVIEW || finaleOpen(a.unit);   // ?preview=1: معاينة للمعلم بحفظ منفصل، كل المغامرات مفتوحة

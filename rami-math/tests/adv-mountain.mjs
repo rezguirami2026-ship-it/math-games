@@ -1,0 +1,48 @@
+// اختبار «قمة جبل شمس» كاملة بالنقر كاللاعب: node adv-mountain.mjs [مجلد اللقطات] [--3d]
+import { openAdventure, sleep } from './adv-lib.mjs';
+const out = process.argv[2] && !process.argv[2].startsWith('--') ? process.argv[2] : null, d3 = process.argv.includes('--3d');
+const T = await openAdventure('mountain', { d3 }); const { ok, tap, go, tile, st, ev, shot, page } = T;
+const pos = id => ev(id => { const e = window.__adv.ent(id); return e ? [e.x, e.y] : null; }, id);
+const val = (id, k) => ev(([id, k]) => (window.__adv.ent(id) || {})[k], [id, k]);
+await shot(out, 'mt-1');
+ok('البداية في قرية المدرّجات', (await st()).area === 'base' && /سعيد/.test((await st()).goal), (await st()).goal);
+await tap('saeed'); ok('١. الحديث مع الجد سعيد والرسالة', !!(await st()).flags.met && !!(await st()).inv.letter);
+await tap('sluice'); await sleep(600); ok('٢. فتح بوابة الفلج', !!(await st()).flags.falaj);
+await sleep(600); ok('الماء يصل إلى المدرّج الأول', !!(await st()).flags.w_fB);
+await tap('t2'); await sleep(600); ok('حجر القناة الثاني يوجّه الماء إلى مدرّج آخر', !!(await st()).flags.w_fC);
+await tap('t1'); await sleep(600); ok('٣. المدرّجات الثلاثة ارتوت', !!(await st()).flags.w_fA);
+await shot(out, 'mt-2');
+await tap('c_gear'); ok('٤. المطرقة والحبل', !!(await st()).inv.hammer && !!(await st()).inv.rope);
+for (const [x, y] of [[1, 13], [28, 20]]) await go(x, y);
+await go(29, 15); await sleep(1500); await T.act('Promise.resolve()');
+ok('٥. الوصول إلى الوادي', (await st()).area === 'canyon');
+await go(7, 16); await tile(8, 16); ok('٦. كسر الركام', await ev(() => !!window.__adv.S.cut['canyon:8,16']));
+const push = await ev(async () => { const A = window.__adv; A.tp(13, 17); const x0 = A.hero().x; await new Promise(r => setTimeout(r, 7600)); return [x0, A.hero().x]; });
+ok('الريح على الحافة تدفع البطل', push[1] < push[0], JSON.stringify(push));
+const shel = await ev(async () => { const A = window.__adv; A.tp(11, 15); const x0 = A.hero().x; await new Promise(r => setTimeout(r, 7600)); return [x0, A.hero().x]; });
+ok('غرب الصخرة يحتمي البطل', shel[1] === shel[0], JSON.stringify(shel));
+await ev(() => { window.__adv.S.flags.nowind = 1; });
+for (const p of ['pk1', 'pk2', 'pk3']) { const e = await pos(p); await go(e[0], e[1]); }
+ok('٧. ألواح الجسر الثلاثة', (await st()).inv.plank === 3);
+for (const [x, y] of [[26, 2], [2, 19]]) await go(x, y);
+await tile(18, 15); ok('الهاوية لا تُعبر قبل الجسر', (await st()).area === 'canyon' && !(await st()).flags.bridge);
+await go(17, 16); await tap('br1'); await tap('br2'); await tap('br3');
+ok('٨. إصلاح الجسر المعلّق', !!(await st()).flags.bridge && await ev(() => window.__adv.tileAt(19, 16) === '='));
+await shot(out, 'mt-3');
+const hit = await ev(async () => { const A = window.__adv, h = A.ent('fall1'); A.tp(Math.round(h.px), Math.round(h.py)); await new Promise(r => setTimeout(r, 2400)); return A.hero(); });
+ok('الصخرة المتساقطة تعيدك إلى نقطة آمنة', (hit.x === 22 && hit.y === 16) || (hit.x <= 10 && hit.y === 16) || hit.x === 2, JSON.stringify(hit));
+await ev(() => { window.__adv.S.flags.invisible = 1; });
+await go(29, 16); await sleep(1500); await T.act('Promise.resolve()');
+ok('٩. الوصول إلى القمة', (await st()).area === 'summit');
+await shot(out, 'mt-4');
+await tap('box'); ok('الصندوق مقفل قبل الرموز', !(await st()).flags.done);
+const sol = { t1: 2, t2: 0, t3: 3 };
+for (const t of ['t1', 't2', 't3']) for (let i = 0; i < 4 && (await val(t, 'sym')) !== sol[t]; i++) await tap(t);
+await sleep(600); ok('١٠. رموز الرسالة تفتح القفل', !!(await st()).flags.open);
+await go(24, 2);
+await page.evaluate(() => window.__adv.tapEnt('box'));
+for (let i = 0; i < 120 && !(await page.$('.advEnd')); i++) { await page.evaluate(() => document.querySelector('.advDlg.on')?.click()); await sleep(250); }
+ok('١١. الصندوق والغروب ينهيان المغامرة', !!(await page.$('.advEnd')));
+ok('النجوم الخمس', /٥ من ٥/.test(await page.textContent('.advEnd').catch(() => '')), await page.textContent('.advEndStars').catch(() => ''));
+await shot(out, 'mt-5');
+await T.done();

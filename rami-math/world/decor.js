@@ -20,6 +20,7 @@ export const DECOR = [
   { id: 'sundisk', icon: '☀️', name: 'قرص الشمس الذهبي', price: 0, reward: true, x: 970, y: 520 },
   { id: 'festlamp', icon: '🏮', name: 'فانوس المهرجان الكبير', price: 0, reward: true, x: 990, y: 600 },
   { id: 'minilight', icon: '🗼', name: 'الفنار الصغير', price: 0, reward: true, x: 1300, y: 430 },
+  { id: 'cairn', icon: '🗻', name: 'رُجمة جبل شمس', price: 0, reward: true, x: 1180, y: 600 },
   { id: 'astrolabe', icon: '🧭', name: 'إسطرلاب الفلكي حمدان', price: 0, reward: true, x: 1240, y: 520 }   // جائزة مغامرة «إنقاذ القرية» (لا تُباع)
 ];
 export const gems = () => (game.state && game.state.gems) || 0;
@@ -71,6 +72,7 @@ const DRAW = {
     c.fillStyle = '#E2475C'; c.beginPath(); c.ellipse(x, y - 70, 10, 13, 0, 0, 7); c.fill(); c.fillStyle = '#FFD54A'; c.fillRect(x - 6, y - 84, 12, 4); c.fillRect(x - 6, y - 60, 12, 3); },
   minilight(c, x, y, t) { sh(c, x, y, 14); c.fillStyle = '#F2F2F2'; c.beginPath(); c.moveTo(x - 10, y); c.lineTo(x - 6, y - 56); c.lineTo(x + 6, y - 56); c.lineTo(x + 10, y); c.fill();
     c.fillStyle = '#D63A3A'; c.fillRect(x - 9, y - 18, 18, 8); c.fillRect(x - 7, y - 40, 14, 7); c.fillStyle = `rgba(255,214,90,${.6 + Math.sin(t * 3) * .3})`; c.beginPath(); c.arc(x, y - 62, 7, 0, 7); c.fill(); c.fillStyle = '#5A4632'; c.fillRect(x - 8, y - 70, 16, 3); },
+  cairn(c, x, y) { sh(c, x, y, 16); [[0, 0, 16], [-2, -12, 13], [1, -22, 10], [0, -30, 7]].forEach(([dx, dy, r], i) => { c.fillStyle = ['#9C9488', '#B8AE98', '#A89E8C', '#C9BFA9'][i]; c.beginPath(); c.ellipse(x + dx, y - 6 + dy, r, r * .55, 0, 0, 7); c.fill(); }); },
   camel(c, x, y) { sh(c, x, y, 26); c.fillStyle = '#B48550'; c.fillRect(x - 24, y - 8, 48, 8); c.fillStyle = '#C9955A';
     [-14, -6, 8, 16].forEach(dx => c.fillRect(x + dx, y - 26, 4, 18)); c.beginPath(); c.ellipse(x, y - 30, 20, 9, 0, 0, 7); c.fill(); c.beginPath(); c.ellipse(x - 2, y - 38, 9, 7, 0, 0, 7); c.fill();
     c.beginPath(); c.moveTo(x + 16, y - 32); c.quadraticCurveTo(x + 26, y - 40, x + 24, y - 52); c.lineTo(x + 30, y - 52); c.quadraticCurveTo(x + 32, y - 40, x + 20, y - 28); c.fill(); c.beginPath(); c.ellipse(x + 30, y - 52, 6, 3.5, 0, 0, 7); c.fill(); c.fillStyle = '#2A1B66'; c.beginPath(); c.arc(x + 31, y - 53, 1, 0, 7); c.fill(); }

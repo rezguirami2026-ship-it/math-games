@@ -124,7 +124,7 @@ export function runAdventure(def, onExit) {
         if (SOLID_TILES.has(tileAt(x, y)) || solidEnt(entAt(x, y))) { pts.push([x - [1, 0, -1, 0][d] * .5, y - [0, 1, 0, -1][d] * .5]); break; }
       }
       if (pts.length === 1) pts.push([x, y]);
-      beams.push(pts);
+      pts.color = src.color; beams.push(pts);
     });
   }
 
@@ -407,7 +407,7 @@ export function runAdventure(def, onExit) {
       if (tileAt(Math.floor(P.x), Math.floor(P.y)) === ';') grass(Math.floor(P.x), Math.floor(P.y), true); } });
     ents.forEach(b => { const pl = b.kind === 'block' && b.to && A.ent(b.to); if (!pl || (b.x === pl.x && b.y === pl.y)) return; ctx.save(); ctx.setLineDash([8, 8]); ctx.lineDashOffset = -t * 30; ctx.strokeStyle = 'rgba(255,214,90,.85)'; ctx.lineWidth = 4;
       ctx.beginPath(); ctx.moveTo(b.x * T + T / 2, b.y * T + T * .7); ctx.lineTo(pl.x * T + T / 2, pl.y * T + T * .7); ctx.stroke(); ctx.restore(); });   // دليل: من الصندوق إلى لوحته
-    beams.forEach(pts => { ctx.strokeStyle = 'rgba(255,226,122,.9)'; ctx.lineWidth = 6; ctx.beginPath(); pts.forEach(([x, y], i) => i ? ctx.lineTo(x * T + T / 2, y * T + T / 2) : ctx.moveTo(x * T + T / 2, y * T + T / 2)); ctx.stroke(); });
+    beams.forEach(pts => { ctx.strokeStyle = pts.color || 'rgba(255,226,122,.9)'; ctx.lineWidth = 6; ctx.beginPath(); pts.forEach(([x, y], i) => i ? ctx.lineTo(x * T + T / 2, y * T + T / 2) : ctx.moveTo(x * T + T / 2, y * T + T / 2)); ctx.stroke(); });
     list.sort((a, b) => a.y - b.y).forEach(o => o.draw());
     fx.forEach(p => { ctx.globalAlpha = Math.min(1, p.life * 2); ctx.fillStyle = p.col; ctx.beginPath(); ctx.arc(p.x, p.y, 3.2, 0, 7); ctx.fill(); }); ctx.globalAlpha = 1;
     if (dk > .02) lighting(dk);
