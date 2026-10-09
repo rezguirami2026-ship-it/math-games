@@ -1,0 +1,50 @@
+// اختبار «مهمة في الصحراء» كاملة بالنقر كاللاعب: node adv-desert.mjs [مجلد اللقطات] [--3d]
+import { openAdventure, sleep } from './adv-lib.mjs';
+const out = process.argv[2] && !process.argv[2].startsWith('--') ? process.argv[2] : null, d3 = process.argv.includes('--3d');
+const T = await openAdventure('desert', { d3 }); const { ok, tap, go, tile, st, ev, shot } = T;
+const pos = id => ev(id => { const e = window.__adv.ent(id); return e ? [e.x, e.y] : null; }, id);
+const val = (id, k) => ev(([id, k]) => (window.__adv.ent(id) || {})[k], [id, k]);
+await shot(out, 'de-1');
+ok('البداية في المخيم تحت العاصفة الرملية', (await st()).area === 'camp' && /جابر/.test((await st()).goal), (await st()).goal);
+await tap('jaber'); ok('١. الحديث مع جابر', !!(await st()).flags.met);
+await go(28, 10); await sleep(500); ok('المخرج مقفل قبل الآثار والمجرفة', (await st()).area === 'camp');
+await T.act('Promise.resolve()');
+const push = await ev(async () => { const A = window.__adv; A.tp(20, 17); const x0 = A.hero().x; await new Promise(r => setTimeout(r, 7600)); return [x0, A.hero().x]; });
+ok('الريح الرملية تدفع البطل في المكان المكشوف', push[1] < push[0], JSON.stringify(push));
+const shel = await ev(async () => { const A = window.__adv; A.tp(13, 12); const x0 = A.hero().x; await new Promise(r => setTimeout(r, 7600)); return [x0, A.hero().x]; });
+ok('غرب الصناديق يحتمي البطل', shel[1] === shel[0], JSON.stringify(shel));
+await tap('c_skin'); ok('٢. القربة والرسن', !!(await st()).inv.skin && !!(await st()).inv.rope);
+await tap('c_shovel'); ok('٣. المجرفة', !!(await st()).inv.shovel);
+await ev(() => { window.__adv.S.flags.nowind = 1; });
+for (const p of ['pw1', 'pw2', 'pw3']) { const e = await pos(p); await go(e[0], e[1]); }
+ok('٤. آثار حوافر سهيل الثلاثة', (await st()).inv.paw === 3);
+await shot(out, 'de-2');
+for (const [x, y] of [[27, 17], [9, 2]]) await go(x, y);
+await go(29, 10); await sleep(1500); await T.act('Promise.resolve()');
+ok('٥. الخروج إلى الكثبان ليلاً', (await st()).area === 'dunes');
+await shot(out, 'de-3');
+await tap('hamdan'); ok('٦. الحديث مع الفلكي حمدان', !!(await st()).flags.hamdan);
+const sting = await ev(async () => { const A = window.__adv, h = A.ent('sc1'); A.tp(Math.round(h.px), Math.round(h.py)); await new Promise(r => setTimeout(r, 2400)); return A.hero(); });
+ok('العقرب يعيدك إلى مكان آمن', (sting.x === 1 || sting.x === 2) && sting.y === 10, JSON.stringify(sting));
+await ev(() => { window.__adv.S.flags.invisible = 1; });
+for (const [x, y] of [[8, 5], [14, 16], [22, 6]]) await tile(x, y);
+ok('٧. حفر الأكوام والعثور على جرس سهيل', !!(await st()).inv.bell && await ev(() => ['8,5', '14,16', '22,6'].every(k => window.__adv.S.cut['dunes:' + k])));
+await go(20, 9); await sleep(400);
+ok('البوابة مغلقة قبل لغز الأعمدة', !(await val('gate', 'open')));
+for (const v of ['v1', 'v2', 'v3']) for (let i = 0; i < 4 && (await val(v, 'r')) !== 2; i++) await tap(v);
+await sleep(800); ok('٨. الأعمدة نحو النجم القطبي تفتح البوابة', !!(await st()).flags.vanes && !!(await val('gate', 'open')));
+await shot(out, 'de-4');
+for (const [x, y] of [[24, 19], [2, 2]]) await go(x, y);
+await go(29, 10); await sleep(1500); await T.act('Promise.resolve()');
+ok('٩. دخول الواحة', (await st()).area === 'oasis');
+await shot(out, 'de-5');
+await tap('suhail'); ok('سهيل لا يقوم قبل الماء', !(await st()).flags.found);
+await tap('spring'); ok('١٠. ملء القربة من النبع', !!(await st()).inv.water);
+await tap('suhail'); ok('١١. سقي سهيل فيتبعك', !!(await st()).flags.found && !!(await val('suhail', 'follow')));
+await go(25, 15); await shot(out, 'de-6');
+await T.page.evaluate(() => window.__adv.tapTile(4, 12));   // الوصول يطلق حوار النهاية أثناء المشي: ننقر ونمرّر الحوارات حتى شاشة النهاية
+for (let i = 0; i < 120 && !(await T.page.$('.advEnd')); i++) { await T.page.evaluate(() => document.querySelector('.advDlg.on')?.click()); await sleep(250); }
+ok('١٢. قيادة سهيل إلى القافلة تنهي المغامرة', !!(await T.page.$('.advEnd')));
+ok('النجوم الخمس', /٥ من ٥/.test(await T.page.textContent('.advEnd').catch(() => '')), await T.page.textContent('.advEndStars').catch(() => ''));
+await shot(out, 'de-7');
+await T.done();
