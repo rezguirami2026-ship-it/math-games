@@ -41,7 +41,7 @@ async function scene(P, id, run, extra = {}) {
   const plan = PLAN.find(p => p.id === id); let t = 0;
   if (ONLY && !ONLY.includes(id)) { frameNo += Math.round(plan.dur * FPS); return; }   // تخطي مشهد: نحفظ ترقيم اللقطات
   await P.overlayOn();
-  const spec = Object.assign({ label: plan.label, lines: plan.lines, dur: plan.dur }, extra);
+  const spec = Object.assign({ label: plan.label, lines: plan.lines, dur: plan.dur, first: plan === PLAN[0], last: plan === PLAN[PLAN.length - 1] }, extra);
   await P.ev(s => window.__vo.scene(s), spec);
   const end = Math.round(plan.dur * FPS); let n = 0;
   const cap = {

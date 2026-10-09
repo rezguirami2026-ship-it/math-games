@@ -1,6 +1,6 @@
 // الفيديو التعريفي: يظهر تلقائياً أول مرة تُفتح فيها اللعبة على الجهاز (فوق الشاشة الرئيسية)، ويُعاد من زر «🎬 فيديو تعريفي».
 // المتصفحات تمنع التشغيل بالصوت قبل لمسة: نعرض صورة الغلاف وزر تشغيل كبيراً. الفيديو من الشبكة (لا يُخزَّن مع التطبيق).
-const SRC = 'assets/video/intro.mp4?v=3', POSTER = 'assets/video/intro-poster.jpg', KEY = 'ramimath_introvid';
+const SRC = 'assets/video/intro.mp4?v=4', POSTER = 'assets/video/intro-poster.jpg', KEY = 'ramimath_introvid';
 export const introSeen = () => { try { return localStorage.getItem(KEY) === '1'; } catch (e) { return true; } };
 const markSeen = () => { try { localStorage.setItem(KEY, '1'); } catch (e) {} };
 
