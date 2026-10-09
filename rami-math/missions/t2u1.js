@@ -30,7 +30,7 @@ export const massCapacity1 = Object.assign({
     if (r.t === 'w') {
       const label = r.how === 'kg' ? kg(r.g) : `${ar(r.g)} غرام`;
       const render = (m, k, tilt) => {
-        sheetOpen(`<h3>⚖️ ميزان المطبخ</h3>${msgBox(m || `على الكفة كيس طحين كتلته <b>${label}</b>. ضع الأثقال المناسبة في الكفة الأخرى`, k)}<canvas id="bal" width="300" height="120"></canvas>
+        sheetOpen(`<h3>⚖️ ميزان المطبخ</h3>${qMsg(m, k, `على الكفة كيس طحين كتلته <b>${label}</b>. ضع الأثقال المناسبة في الكفة الأخرى`)}<canvas id="bal" width="300" height="120"></canvas>
           <div class="tray">${d.tray.length ? d.tray.map((v, i) => `<button class="chip coin" data-t="${i}">${v >= 1000 ? ar(v / 1000) + ' كغ' : ar(v) + ' غ'}</button>`).join('') : '<span class="empty">ضع الأثقال هنا</span>'}</div>
           <div class="wallet">${WEIGHTS.map(v => `<button class="money coin" data-v="${v}">${v >= 1000 ? '١ كغ' : ar(v) + ' غ'}</button>`).join('')}</div>
           <div class="row2"><button class="act ghost" id="benchOut">رجوع</button><button class="act go" id="benchGo">⚖️ وازن</button></div>`);

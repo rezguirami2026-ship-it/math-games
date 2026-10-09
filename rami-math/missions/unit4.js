@@ -222,7 +222,7 @@ export const mentalAddSub = Object.assign({
   open(W, d, msg, kind) {
     const r = d.rounds[d.r];
     const render = (m, k) => {
-      sheetOpen(`<h3>🪙 كشك مريم — الزبون ${ar(d.r + 1)}</h3>${msgBox(m || `ثمن مشترياتي <b>${rial(r.p)}</b>، وهذه <b>${rial(r.P)}</b>. كم الباقي؟`, k)}
+      sheetOpen(`<h3>🪙 كشك مريم — الزبون ${ar(d.r + 1)}</h3>${qMsg(m, k, `ثمن مشترياتي <b>${rial(r.p)}</b>، وهذه <b>${rial(r.P)}</b>. كم الباقي؟`)}
         <div class="tray">${d.tray.length ? d.tray.map((v, i) => { const c = MONEY.find(x => x[0] === v); return `<button class="chip ${c[2] ? 'note' : 'coin'}" style="${c[2] ? 'background:' + c[2] : ''}" data-t="${i}">${c[1]}</button>`; }).join('') : '<span class="empty">ضع الباقي هنا</span>'}</div>
         <div class="wallet">${MONEY.map(([v, l, col]) => `<button class="money ${col ? 'note' : 'coin'}" style="${col ? 'background:' + col : ''}" data-v="${v}">${l}</button>`).join('')}</div>
         <div class="row2"><button class="act ghost" id="benchOut">رجوع</button><button class="act go" id="benchGo">🪙 أعطه الباقي</button></div>`);
