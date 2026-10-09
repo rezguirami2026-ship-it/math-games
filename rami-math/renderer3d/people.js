@@ -249,6 +249,13 @@ export function buildPerson(look) {
     const kt = mesh(G.kummaTop, mat('#F7F4EC', .85)); kt.scale.set(R * .97, 1, R * .97); kt.position.y = hy + R * 1.05; head.add(kt);
     const hair = mesh(G.dome, mat('#2A1C16', .7)); hair.scale.set(R * 1.01, R * .5, R * 1.01); hair.rotation.x = Math.PI; hair.position.set(0, hy + R * .42, -R * .08); hair.visible = false; head.add(hair);
   }
+  if (look.gear && look.gear.crown) {   // تاج قرية الخير فوق الرأس (فوق الكمة أو اللحاف)
+    const gold = mat('#FFD54A', .25, { metalness: .9, emissive: '#6A4500', emissiveIntensity: .3 }), cy = hy + R * (female ? 1.12 : 1.02) + (look.hat ? 2.5 : 0), cr = new THREE.Group(); cr.position.y = cy;
+    const band = mesh(new THREE.CylinderGeometry(R * .62, R * .66, R * .32, 28, 1, true), gold); band.material.side = THREE.DoubleSide; cr.add(band);
+    for (let i = 0; i < 8; i++) { const a = i / 8 * Math.PI * 2, sp = mesh(new THREE.ConeGeometry(R * .13, R * .42, 6), gold); sp.position.set(Math.sin(a) * R * .62, R * .34, Math.cos(a) * R * .62); cr.add(sp); }
+    [['#E2475C', 0], ['#2F9BD6', 1.1], ['#2E8B57', -1.1]].forEach(([c, a]) => { const j = mesh(G.sphere, mat(c, .2, { metalness: .3 })); j.scale.setScalar(R * .09); j.position.set(Math.sin(a) * R * .66, 0, Math.cos(a) * R * .66); cr.add(j); });
+    head.add(cr);
+  }
   if (look.glasses) [-1, 1].forEach(sd => { const g = mesh(G.ring, mat('#2B2B2B', .4)); g.scale.setScalar(2.3); g.position.set(sd * 2.9, hy + .3, R * .93); head.add(g); });
   // حمل الصناديق: كومة أمام الصدر
   const carry = new THREE.Group(); carry.position.set(0, shY - 12, 7.5); torso.add(carry);

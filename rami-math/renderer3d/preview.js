@@ -22,15 +22,16 @@ export function previewHero(canvas, look, opts = {}) {
   const ring = new THREE.Mesh(new THREE.TorusGeometry(27, 1.2, 8, 48), new THREE.MeshStandardMaterial({ color: '#E3B04B', metalness: .8, roughness: .3 })); ring.rotation.x = Math.PI / 2; sc.add(ring);
   if (opts.bust || opts.hero) { base.visible = ring.visible = false; }
   if (opts.hero) { const sh = new THREE.Mesh(new THREE.CircleGeometry(18, 32), new THREE.MeshBasicMaterial({ color: '#3A2410', transparent: true, opacity: .28 })); sh.rotation.x = -Math.PI / 2; sh.scale.set(1, .55, 1); sh.position.y = .2; sc.add(sh); }   // الشاشة الرئيسية: البطل من الخصر للأعلى بلا قاعدة
-  const cam = new THREE.PerspectiveCamera(26, W / H, 1, 1000); if (opts.bust) { cam.position.set(0, 50, 112); cam.lookAt(0, 40, 0); } else { cam.position.set(0, 44, 140); cam.lookAt(0, 33, 0); }
+  const cam = new THREE.PerspectiveCamera(26, W / H, 1, 1000); if (opts.bust) { cam.position.set(0, 50, 112); cam.lookAt(0, 40, 0); } else if (opts.full) { cam.position.set(0, 46, 190); cam.lookAt(0, 32, 0); } else { cam.position.set(0, 44, 140); cam.lookAt(0, 33, 0); }
   let P = null, lk = '', t = 0, last = performance.now(), raf = 0, waveT = 2 + Math.random() * 2;
   const loop = now => {
     const dt = Math.min(.05, (now - last) / 1000); last = now; t += dt;
     const L = look(), k = JSON.stringify(L);
     if (k !== lk) { if (P) sc.remove(P.root); P = buildPerson(L); P.lockDir = true; sc.add(P.root); lk = k; }
     waveT -= dt; const waving = waveT < 0 && waveT > -1.6; if (waveT < -1.6) waveT = 4 + Math.random() * 3;
-    P.lastX = null; animatePerson(P, { x: 0, y: 0, moving: false, dir: 'down', anim: waving ? 'wave' : null, animT: waving ? (-waveT / 1.6) : 0 }, dt, t);
-    P.yaw = Math.sin(t * .5) * .35; P.root.rotation.y = P.yaw;
+    const an = opts.anim || (waving ? 'wave' : null), at = opts.anim ? (t / .9) % 1 : (waving ? (-waveT / 1.6) : 0);   // opts.anim: حركة دائمة (احتفال)
+    P.lastX = null; animatePerson(P, { x: 0, y: 0, moving: false, dir: 'down', anim: an, animT: at }, dt, t);
+    P.yaw = opts.spin ? t * .7 : Math.sin(t * .5) * .35; P.root.rotation.y = P.yaw;   // spin: دوران كامل بطيء (الخزانة: يظهر الوشاح من الخلف)
     r.render(sc, cam); raf = requestAnimationFrame(loop);
   };
   raf = requestAnimationFrame(loop);

@@ -113,6 +113,7 @@ export function drawHuman(ctx, h) {
   if (h.glasses && !back) glasses(ctx, hx, hy + (female ? .5 : 0), side);
   if (h.hat) hat(ctx, h.hat, hx, hy, side, back, acc);
   else if (!female) (adult ? massar : kumma)(ctx, h, hx, hy, side, back, acc, detail);
+  if (G.crown) crown(ctx, hx, hy - B.R * (female ? 1.12 : 1.02) - (h.hat ? 3 : 0), side);
   ctx.restore();
   ctx.restore();
 
@@ -323,6 +324,14 @@ function cape(ctx, shV, hipV, col, side, ph) {   // وشاح حامي القري
   ctx.fillStyle = col; ctx.beginPath(); ctx.moveTo(-w, shV + 2); ctx.lineTo(w, shV + 2); ctx.quadraticCurveTo(f + 1, (shV + hipV) / 2, f + sw, by);
   ctx.quadraticCurveTo(sw, by + 3, -f + sw, by); ctx.quadraticCurveTo(-f - 1, (shV + hipV) / 2, -w, shV + 2); ctx.fill(); ctx.strokeStyle = INK; ctx.lineWidth = .8; ctx.stroke();
   ctx.strokeStyle = '#E3B04B'; ctx.lineWidth = 1.3; ctx.beginPath(); ctx.moveTo(f + sw - 1, by - 1); ctx.quadraticCurveTo(sw, by + 2, -f + sw + 1, by - 1); ctx.stroke();
+}
+function crown(ctx, cx, y, side) {   // تاج قرية الخير: خمس شُرَف ذهبية وجواهر
+  const w = side ? 5 : 6.6, hgt = 5.2;
+  ctx.fillStyle = '#FFD54A'; ctx.strokeStyle = '#8A5A00'; ctx.lineWidth = .7; ctx.beginPath(); ctx.moveTo(cx - w, y);
+  for (let i = 0; i <= 4; i++) { const px = cx - w + i * w / 2; ctx.lineTo(px, y - hgt); if (i < 4) ctx.lineTo(px + w / 4, y - hgt * .45); }
+  ctx.lineTo(cx + w, y); ctx.closePath(); ctx.fill(); ctx.stroke();
+  ctx.fillStyle = '#E3A21A'; ctx.fillRect(cx - w, y - 1.4, w * 2, 1.8);
+  [['#E2475C', 0], ['#2F9BD6', -w * .55], ['#2E8B57', w * .55]].forEach(([c, dx]) => { ctx.fillStyle = c; ctx.beginPath(); ctx.arc(cx + dx, y - .5, .8, 0, 7); ctx.fill(); });
 }
 function medal(ctx, shV, side) {   // وسام البطل الأكبر: شريطان على شكل V وقرص ذهبي على الصدر
   const cx = side ? 2 : 0, cy = shV + 13;

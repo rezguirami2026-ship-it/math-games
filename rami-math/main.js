@@ -55,7 +55,7 @@ import { drawWorldMap } from './ui/worldmap.js';
 import { marketColliders, drawMarketGround, marketDrawables } from './world/market.js';
 import * as quests from './missions/quests.js';
 import { LESSONS, UNITS } from './content/lessons.js';
-import { openWardrobe, heroLookWorn } from './ui/wardrobe.js';
+import { openWardrobe, heroLookWorn, syncUnitGear } from './ui/wardrobe.js';
 import { SCENE } from './ui/home.js';
 import { unlock } from './achievements/achievements.js';
 import { hud, gfx } from './ui/hud.js';
@@ -190,7 +190,7 @@ function boot() {
 }
 async function start(state) {
   game.state = upgrade(state);
-  W = buildWorld(state); resetGates();
+  W = buildWorld(state); resetGates(); syncUnitGear(state);   // الحفظ القديم: قطع الوحدات المكتملة تُفتح
   hud.init({ drawMini, questLog, anchor: speakerAnchor, activity: id => openActivity(W, id, MODS[id]), finale: u => openFinale(W, u, MODS), expert: id => openExpert(W, id, MODS[id]), daily: () => openDaily(W, MODS) });
   initGems(state); setTimeout(() => { if (!dailyDone() && Object.keys(state.quests.done || {}).length) hud.toast('📅 مهمة اليوم بانتظارك في الخريطة 🗺️'); }, 6000);
   hud.show(true); hud.good(); hud.gems(); hud.level(); hud.objective(objective());
@@ -207,7 +207,7 @@ async function start(state) {
   }
 }
 /* ── العرض ثلاثي الأبعاد (renderer3d): يُحمَّل فقط عند طلبه، ويرجع إلى الرسم الحالي إن لم يدعم الجهاز WebGL أو فشل التحميل ── */
-const V3D = 'نسخة 3D · ٧٧'; window.__BUILD = V3D.replace('نسخة 3D · ', '');   // تُعرض في شاشة التحميل وفي الزاوية: للتأكد أن المتصفح حمّل آخر نسخة
+const V3D = 'نسخة 3D · ٧٨'; window.__BUILD = V3D.replace('نسخة 3D · ', '');   // تُعرض في شاشة التحميل وفي الزاوية: للتأكد أن المتصفح حمّل آخر نسخة
 const want3d = () => gfx.d3();
 function loadingScreen() {
   const el = document.createElement('div'); el.className = 'load3d';
@@ -648,7 +648,8 @@ bus.on('challenge', id => {   // انتهت مهمة العالم: يُفتح ا
 });
 bus.on('lessonDone', id => track('level_completed', id));
 bus.on('lessonDone', () => checkAdventureUnlocks());
-bus.on('openWardrobe', () => openWardrobe());   // من الحقيبة (والباب عند بيت البطل)   // إكمال وحدة يفتح مغامرتها
+bus.on('openWardrobe', () => openWardrobe());
+bus.on('lessonDone', () => setTimeout(() => { const n = syncUnitGear(); if (n.length) { bus.emit('save'); hud.toast(`👕 لباس جديد في خزانة البطل: ${n.map(g => g.name).join('، ')} (من الحقيبة 🎒)`); } }, 2500));   // قطعة لكل وحدة مكتملة   // من الحقيبة (والباب عند بيت البطل)   // إكمال وحدة يفتح مغامرتها
 bus.on('pauseWorld', on => { eng.paused = on; });
 bus.on('openAdventures', () => openAdventures());
 bus.on('lessonDone', id => {

@@ -8,6 +8,7 @@ import { ar } from '../core/util.js';
 import { LESSONS, UNITS } from '../content/lessons.js';
 import { drawHuman } from '../character/human.js';
 import { heroLookWorn } from '../ui/wardrobe.js';
+import { gfx, WEAK } from '../ui/hud.js';
 import { ADVENTURES, advUnlocked, playAdventure } from './index.js';
 
 const rec = id => ((game.state.adventures || {})[id]) || {};
@@ -66,14 +67,16 @@ export function grandCelebration() {
   g.onclick = e => { if (!e.target.closest('button') && skip) skip(); };
   let fast = false; g.querySelector('.gSkip').onclick = e => { e.stopPropagation(); fast = true; if (skip) skip(); };
   // البطل يقفز فرحاً في الوسط
-  const hc = g.querySelector('.gHero'), hx = hc.getContext('2d');
   const look = () => { const L = heroLookWorn(s); L.gear = Object.assign({}, L.gear, { medal: !!(s.gear && s.gear.worn.medal) || heroOn }); return L; };
-  const loopHero = now => { if (!live) return; hx.setTransform(1, 0, 0, 1, 0, 0); hx.clearRect(0, 0, 360, 400);
+  // البطل مجسّم ثلاثي الأبعاد كبقية اللعبة (يقفز فرحاً)، والرسم ثنائي الأبعاد للأجهزة بلا WebGL أو الضعيفة
+  let hero3 = null; const hc0 = g.querySelector('.gHero');
+  const draw2d = () => { const hx = hc0.getContext('2d'); const loopHero = now => { if (!live) return; hx.setTransform(1, 0, 0, 1, 0, 0); hx.clearRect(0, 0, 360, 400);
     hx.fillStyle = 'rgba(255,214,90,.25)'; hx.beginPath(); hx.ellipse(180, 372, 96, 18, 0, 0, 7); hx.fill();
     drawHuman(hx, Object.assign(look(), { x: 180, y: 370, s: 3.6, dir: 'down', anim: 'celebrate', animT: ((now - t0) / 900) % 1 }));
-    requestAnimationFrame(loopHero); };
-  requestAnimationFrame(loopHero);
-  const end = () => { live = false; fx.stop(); g.classList.add('out'); setTimeout(() => g.remove(), 400); game.busy = wasBusy; bus.emit('save'); };
+    requestAnimationFrame(loopHero); }; requestAnimationFrame(loopHero); };
+  if (gfx.d3() && !WEAK) import('../renderer3d/preview.js').then(m => { if (!live) return; hero3 = m.previewHero(hc0, look, { hero: true, anim: 'celebrate' }); }).catch(draw2d);
+  else draw2d();
+  const end = () => { live = false; fx.stop(); if (hero3) hero3.dispose(); g.classList.add('out'); setTimeout(() => g.remove(), 400); game.busy = wasBusy; bus.emit('save'); };
   g.querySelector('[data-home]').onclick = e => { e.stopPropagation(); end(); };
   g.querySelector('[data-cert]').onclick = e => { e.stopPropagation(); sfx('pick'); showCertificate(g); };
   const wear = g.querySelector('[data-wear]');
