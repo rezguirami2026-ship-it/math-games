@@ -10,8 +10,9 @@ import { execFileSync } from 'child_process';
 try { execFileSync(process.execPath, ['--experimental-vm-modules', join(ROOT, 'tests', 'syntax.mjs')], { stdio: ['ignore', 'pipe', 'ignore'] }); }
 catch (e) { console.log(String(e.stdout || '')); console.log('⛔ أُلغي توليد sw.js: أصلح خطأ الصياغة أولاً'); process.exit(1); }
 const SKIP = new Set(['tests', 'server', 'node_modules', '.git', 'sw.js', 'CLAUDE.md', 'README.md']);
+// الفيديو (.mp4) لا يُخزَّن مع التطبيق لكبر حجمه: يُشغَّل من الشبكة مباشرة
 const files = [];
-(function walk(d) { for (const f of readdirSync(d)) { if (SKIP.has(f) || /.mp4$/.test(f)) continue; const p = join(d, f);   // الفيديو لا يُخزَّن مع التطبيق (كبير): يُشغَّل من الشبكة if (statSync(p).isDirectory()) walk(p); else files.push(relative(ROOT, p).replace(/\\/g, '/')); } })(ROOT);
+(function walk(d) { for (const f of readdirSync(d)) { if (SKIP.has(f) || /.mp4$/.test(f)) continue; const p = join(d, f); if (statSync(p).isDirectory()) walk(p); else files.push(relative(ROOT, p).replace(/\\/g, '/')); } })(ROOT);
 files.sort();
 const h = createHash('sha1'); files.forEach(f => { h.update(f); h.update(readFileSync(join(ROOT, f))); });
 const VERSION = h.digest('hex').slice(0, 10);
