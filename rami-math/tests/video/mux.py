@@ -22,7 +22,8 @@ for cf in glob.glob(os.path.join(OUT, 'cuts_*.json')):
     c = json.load(open(cf, encoding='utf-8'))
     if not c.get('first'): cuts.append(c['at'])
     cuts += [c['at'] + d for d in c.get('dips', [])]
-aud = aud + [{'file': WH, 'at': round(max(0, t - .45), 3), 'fx': True} for t in sorted(set(round(x, 2) for x in cuts))]
+WHOOSH = False   # أصوات الانتقال متوقفة (المعلم اختار الإظلام الهادئ)
+if WHOOSH: aud = aud + [{'file': WH, 'at': round(max(0, t - .45), 3), 'fx': True} for t in sorted(set(round(x, 2) for x in cuts))]
 args = [FF, '-y', '-loglevel', 'error', '-framerate', '30', '-i', os.path.join(OUT, 'frames', 'f%05d.jpg'), '-i', os.path.join(OUT, 'music.wav')]
 for a in aud: args += ['-i', a['file']]
 f = []

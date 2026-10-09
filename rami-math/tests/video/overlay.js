@@ -84,13 +84,9 @@
       title.classList.toggle('on', !!S.title); cred.classList.toggle('on', !!S.credits); if (S.title) { title.querySelector('.sub').textContent = S.title.sub || ''; title.querySelector('.ctaW').innerHTML = S.title.cta ? `<span class="cta">${S.title.cta}</span>` : ''; } },
     frame(t) {
       // الإظلام: أول المشهد وآخره، وعند كل قطع داخلي
-      // الانتقال: تقريب خفيف وضبابية تذوب في توهج ذهبي دافئ لحظة القطع، ثم يخرج المكان الجديد من التوهج. الإظلام فقط في أول الفيديو وآخره
-      const WD = .45, sm = k => k * k * (3 - 2 * k); let f = 0, g = 0;
-      if (t < WD) { if (S.first) f = 1 - t / WD; else g = 1 - sm(t / WD); }
-      if (S.dur - t < WD) { const k = Math.min(1, 1 - (S.dur - t) / WD); if (S.last) f = Math.max(f, k); else g = Math.max(g, sm(k)); }
-      S.dips.forEach(d => { const k = Math.abs(t - d); if (k < WD) g = Math.max(g, sm(1 - k / WD)); });
-      fade.style.opacity = Math.max(0, Math.min(1, f)); glow.style.opacity = (g * .92).toFixed(3);
-      const bs = document.body.style; bs.setProperty('--vz', (1 + g * .09).toFixed(4)); bs.setProperty('--vb', (g * 9).toFixed(2) + 'px'); bs.setProperty('--vr', (1 + g * .35).toFixed(3));
+      // الانتقال (اختيار المعلم): إظلام ناعم إلى الأسود بين المشاهد وعند كل قطع داخلي
+      let f = 0; if (t < .35) f = 1 - t / .35; if (S.dur - t < .35) f = Math.max(f, 1 - (S.dur - t) / .35);
+      S.dips.forEach(d => { const k = Math.abs(t - d); if (k < .3) f = Math.max(f, 1 - k / .3); }); fade.style.opacity = Math.max(0, Math.min(1, f));
       lbl.classList.toggle('on', !!S.label && t > .4 && S.dur - t > .3);
       const ch = S.chips.find(c => t >= c.from && t < c.to); chip.textContent = ch ? ch.text : ''; chip.classList.toggle('on', !!ch);
       const ln = S.lines.find(l => t >= l.start - .05 && t < l.start + l.dur + .35);
