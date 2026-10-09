@@ -163,7 +163,7 @@ export function buildPerson(look) {
     const sh = mesh(G.limb, mat(pants, .85)); sh.scale.set(1.8, legLen / 4, 1.8); sh.position.y = -legLen / 4; knee.add(sh);
     const ankle = pivot(0, -legLen / 2 + .2, 0); knee.add(ankle);
     if (female) { const cuff = mesh(new THREE.CylinderGeometry(2.3, 2.5, 2.6, 14), embroidery(pants, '#E3B04B', acc)); cuff.position.y = 1.4; ankle.add(cuff); }   // كفّة السروال المطرزة
-    const foot = mesh(G.shoe, mat(adult ? '#5A3B26' : '#3E2C20', .7)); foot.position.set(0, -1.4, .2); ankle.add(foot);
+    const foot = mesh(G.shoe, mat(look.shoe || (adult ? '#5A3B26' : '#3E2C20'), .7)); foot.position.set(0, -1.4, .2); ankle.add(foot);
     const skinFoot = mesh(G.sphere, skinM); skinFoot.scale.set(1.7, 1, 2.6); skinFoot.position.set(0, -.6, .9); ankle.add(skinFoot);
     return { hip, knee, ankle };
   });
@@ -228,7 +228,7 @@ export function buildPerson(look) {
   const nose = mesh(G.nose, mat(new THREE.Color(skin).offsetHSL(0, .02, -.03).getStyle(), .55)); nose.scale.setScalar(R * (adult ? .15 : .12)); nose.position.set(0, hy - R * .1, R * .95); head.add(nose);   // أنف مجسّم صغير
   [-1, 1].forEach(sd => { const ear = mesh(G.sphere, skinM); ear.scale.set(1.3, 2, 1); ear.position.set(sd * R * .97, hy, 0); head.add(ear); });
   if (female) {   // اللحاف: يغطي الرأس ويحيط الوجه وينسدل على الكتفين
-    const lc = look.elder ? '#1E1A22' : acc, hm = lahafMat(lc), hj = mesh(G.hijab, hm); hj.scale.set(R * 1.1, R * 1.12, R * 1.08); hj.rotation.x = .25; hj.position.set(0, hy + .2, -.3); head.add(hj);
+    const lc = look.elder ? '#1E1A22' : (look.lahaf || acc), hm = lahafMat(lc), hj = mesh(G.hijab, hm); hj.scale.set(R * 1.1, R * 1.12, R * 1.08); hj.rotation.x = .25; hj.position.set(0, hy + .2, -.3); head.add(hj);
     const ring = mesh(new THREE.TorusGeometry(1, .075, 8, 32, Math.PI * 1.15), embroidery(new THREE.Color(lc).offsetHSL(0, 0, -.06).getStyle(), '#E3B04B', '#F2E6C9'));
     ring.rotation.z = Math.PI / 2 - Math.PI * .075 + Math.PI; ring.rotation.z = -Math.PI * .075; ring.scale.set(R * .74, R * .78, R); ring.position.set(0, hy - R * .02, R * .72); ring.rotation.x = -.3; head.add(ring);   // حافة اللحاف المطرزة حول الوجه (قوس علوي)
     const dr = mesh(G.drape, hm); dr.scale.set(R / 8.6, 1.35, R / 9.2); dr.position.y = hy - R * .55; head.add(dr);
@@ -239,7 +239,7 @@ export function buildPerson(look) {
   } else if (look.hat === 'cap') {
     const cp = mesh(G.dome, mat(acc, .8)); cp.scale.set(R * 1.04, R * .78, R * 1.04); cp.position.y = hy + R * .32; head.add(cp);
     const vz = mesh(G.box, mat(new THREE.Color(acc).offsetHSL(0, 0, -.1).getStyle(), .8)); vz.scale.set(R * 1.2, .7, R * .9); vz.position.set(0, hy + R * .45, R * .95); vz.rotation.x = .15; head.add(vz);
-  } else if (adult) {   // المصرّ العُماني للرجال
+  } else if (adult || look.head === 'massar') {   // المصرّ العُماني للرجال (وللبطل إن اختاره من الخزانة)
     const mm = rim(new THREE.MeshStandardMaterial({ map: massarTexture(look.massar || acc), roughness: .9 }));
     [[.5, 1.02, 0], [.72, .96, .12], [.92, .84, -.1]].forEach(([y, r, tilt]) => { const ms = mesh(G.massar, mm); ms.scale.set(R * r, R * .62, R * r); ms.rotation.x = tilt; ms.position.y = hy + R * y; head.add(ms); });   // لفّات المصرّ
     const top = mesh(G.dome, mm); top.scale.set(R * .78, R * .42, R * .78); top.position.y = hy + R * 1.05; head.add(top);

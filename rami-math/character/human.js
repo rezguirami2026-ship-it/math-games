@@ -107,12 +107,12 @@ export function drawHuman(ctx, h) {
   const [nf, nv] = rot(side ? .9 : 0, shV - B.neck), [nx, ny] = P(0, nf, nv), hx = nx + (side ? .5 : 0), hy = ny - B.RH + 1;
   ctx.save(); ctx.translate(hx, hy); ctx.scale(1 / bw, 1); ctx.translate(-hx, -hy);
   ctx.fillStyle = shade(skin, -20); rr(ctx, nx - 2.1, ny - 1.5, 4.2, B.neck + 3, 1.5); ctx.fill();
-  if (female) hijab(ctx, h, hx, hy, side, back, L, acc, skin, detail);
+  if (female) hijab(ctx, h, hx, hy, side, back, L, h.lahaf || acc, skin, detail);   // lahaf: لون اللحاف من خزانة البطل
   else headShape(ctx, hx, hy, side, back, skin, L, detail);
   if (!back) (detail ? faceHi : faceLo)(ctx, h, hx, hy + (female ? .5 : 0), side, skin, now, seed, anim, female);
   if (h.glasses && !back) glasses(ctx, hx, hy + (female ? .5 : 0), side);
   if (h.hat) hat(ctx, h.hat, hx, hy, side, back, acc);
-  else if (!female) (adult ? massar : kumma)(ctx, h, hx, hy, side, back, acc, detail);
+  else if (!female) (adult || h.head === 'massar' ? massar : kumma)(ctx, h, hx, hy, side, back, h.massar || acc, detail);   // head: 'massar' مصرّ للبطل
   if (G.crown) crown(ctx, hx, hy - B.R * (female ? 1.12 : 1.02) - (h.hat ? 3 : 0), side);
   ctx.restore();
   ctx.restore();

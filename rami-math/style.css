@@ -222,10 +222,24 @@ button:focus-visible,input:focus-visible{outline:3px solid var(--sun);outline-of
 /* خزانة البطل: أيقونات مرسومة، ومنصة المعاينة، والقطعة الملبوسة بإطار ذهبي */
 .wardStage{position:relative;width:260px;margin:0 auto 10px}
 .wardStage canvas{width:260px;height:240px;display:block;border-radius:22px;background:radial-gradient(circle at 50% 40%,#FFF8E4,#F3E1B6 70%,#E7CC8E);box-shadow:inset 0 -10px 24px rgba(150,100,20,.18),0 0 0 2px rgba(227,176,75,.5)}
-.wardCount{position:absolute;top:8px;left:10px;font:900 13px Cairo,sans-serif;color:#5A3A00;background:rgba(255,255,255,.8);border-radius:12px;padding:1px 10px}
+.wardCount{direction:ltr;position:absolute;top:8px;left:10px;font:900 13px Cairo,sans-serif;color:#5A3A00;background:rgba(255,255,255,.8);border-radius:12px;padding:1px 10px}
 .gitem .gic{position:relative;flex:none;width:52px;height:52px;font-size:0}
 .gitem .gic svg{width:52px;height:52px;display:block;filter:drop-shadow(0 3px 4px rgba(60,35,0,.25))}
 .gitem.locked .gic svg{filter:grayscale(1) opacity(.45)}
 .gitem .glock{position:absolute;bottom:-4px;left:-4px;font-size:16px;font-style:normal;filter:drop-shadow(0 1px 1px rgba(0,0,0,.3))}
 .gitem.on{background:linear-gradient(90deg,#FFF1C8,#F4EBD6);border-color:#E3B04B!important;box-shadow:0 0 0 2px rgba(227,176,75,.55),0 2px 8px rgba(40,25,10,.08)}
 body:has(.wardrobe) .toast{display:none}
+
+.wardGems{position:absolute;top:8px;right:10px;font:900 13px Cairo,sans-serif;color:#1F4E79;background:rgba(255,255,255,.85);border-radius:12px;padding:1px 10px}
+.gitem .act[disabled]{opacity:.5;filter:grayscale(.6)}
+
+/* صندوق الخير */
+.charity .chTop{display:flex;flex-wrap:wrap;gap:8px;justify-content:center;margin:6px 0 10px}
+.charity .chTop span{background:#EAF6EC;border:1px solid #9BD3A6;border-radius:14px;padding:4px 12px;font-weight:800;color:#1F6E3E}
+.charity .chThanks{background:linear-gradient(90deg,#FFF6D6,#FFFDF4);border:2px solid #E3B04B;border-radius:16px;padding:10px 14px;margin-bottom:10px;line-height:1.8;animation:pop .3s}
+.charity .chCauses{display:flex;flex-direction:column;gap:8px}
+.charity .chCause{display:flex;align-items:center;gap:10px;background:#F4EBD6;border:1px solid rgba(227,176,75,.28);border-radius:14px;padding:8px 10px}
+.charity .chIc{font-size:30px;width:52px;height:52px;display:grid;place-items:center;border-radius:13px;background:linear-gradient(180deg,#DFF3E2,#9FD8AA);flex:none}
+.charity .chCause>div{flex:1}.charity .chCause b{display:block}.charity .chCause small{color:#7A6A4A;font-weight:700}
+.charity .act[disabled]{opacity:.5;filter:grayscale(.6)}
+.charity .chNote{text-align:center;font-style:italic;margin-top:10px}

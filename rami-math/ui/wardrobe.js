@@ -30,6 +30,21 @@ const ICON = {
   crown: svg('<path d="M10 33l2-17 7 8 5-12 5 12 7-8 2 17z" fill="#FFD54A" stroke="#9A6A10" stroke-width="2.2" stroke-linejoin="round"/><rect x="10" y="33" width="28" height="6" rx="2" fill="#E3A21A" stroke="#9A6A10" stroke-width="2"/><circle cx="24" cy="36" r="2" fill="#E2475C"/><circle cx="17" cy="36" r="1.6" fill="#2F9BD6"/><circle cx="31" cy="36" r="1.6" fill="#2E8B57"/>', ['#B48CFF', '#5B3CB8'])
 };
 
+/* أزياء المتجر (تُشترى بالجواهر): أحذية للجميع، ومصرّ للبطل، ولحاف للبطلة */
+const icShoe = c => svg(`<path d="M8 30c0-5 3-8 7-8 2 4 6 6 11 6 6 0 13 2 14 7v3H8z" fill="${c}" stroke="#2A1A0C" stroke-width="2" stroke-linejoin="round"/><path d="M8 35h32" stroke="#2A1A0C" stroke-width="3"/><path d="M17 25l3 3M21 24l3 3" stroke="#fff" stroke-width="1.6" stroke-linecap="round" opacity=".7"/>`, ['#F4E6CC', '#D8BE94']);
+const icMassar = c => svg(`<ellipse cx="24" cy="30" rx="15" ry="7" fill="${c}" stroke="#2A1A0C" stroke-width="2"/><path d="M9 29c0-10 7-15 15-15s15 5 15 15" fill="${c}" stroke="#2A1A0C" stroke-width="2"/><path d="M11 24c8 3 18 3 26 0M10 28c9 3 19 3 28 0" stroke="#FFE7A0" stroke-width="1.6" fill="none"/><path d="M35 31l4 9" stroke="${c}" stroke-width="4" stroke-linecap="round"/>`, ['#F4E6CC', '#D8BE94']);
+const icLahaf = c => svg(`<path d="M24 9c-9 0-14 7-14 15v15h28V24c0-8-5-15-14-15z" fill="${c}" stroke="#2A1A0C" stroke-width="2"/><ellipse cx="24" cy="25" rx="7" ry="8.5" fill="#E3B48A" stroke="#2A1A0C" stroke-width="1.6"/><path d="M15 33c3 2 15 2 18 0" stroke="#FFE7A0" stroke-width="1.8" fill="none"/>`, ['#F4E6CC', '#D8BE94']);
+const FASHION = [
+  { id: 'shoeBrown', name: 'نعال جلدية بنية', slot: 'shoes', price: 10, shoe: '#7A4A2A', icon: icShoe('#7A4A2A') },
+  { id: 'shoeBlue', name: 'حذاء رياضي أزرق', slot: 'shoes', price: 15, shoe: '#2F6FB2', icon: icShoe('#2F6FB2') },
+  { id: 'shoeGold', name: 'نعال ذهبية للمناسبات', slot: 'shoes', price: 25, shoe: '#C9971C', icon: icShoe('#C9971C') },
+  { id: 'massarRed', name: 'مصرّ عُماني أحمر', slot: 'head', kind: 'boy', price: 20, massar: '#B0243C', icon: icMassar('#B0243C') },
+  { id: 'massarBlue', name: 'مصرّ كشميري أزرق', slot: 'head', kind: 'boy', price: 20, massar: '#1F4E79', icon: icMassar('#1F4E79') },
+  { id: 'massarGreen', name: 'مصرّ أخضر مطرّز', slot: 'head', kind: 'boy', price: 25, massar: '#2E7D4F', icon: icMassar('#2E7D4F') },
+  { id: 'lahafPink', name: 'لحاف وردي', slot: 'head', kind: 'girl', price: 15, lahaf: '#D85C7B', icon: icLahaf('#D85C7B') },
+  { id: 'lahafPurple', name: 'لحاف بنفسجي مطرّز', slot: 'head', kind: 'girl', price: 20, lahaf: '#7B3F98', icon: icLahaf('#7B3F98') },
+  { id: 'lahafGold', name: 'لحاف ذهبي للأعياد', slot: 'head', kind: 'girl', price: 25, lahaf: '#C9971C', icon: icLahaf('#C9971C') }
+];
 /* slot: الخانة؛ unit: فهرس الوحدة التي تفتحها (UNITS)، وإلا how يشرح طريقة الفتح */
 export const GEAR = [
   { id: 'bag', name: 'حقيبة المغامر', slot: 'bag', how: 'تُفتح بإطلاق قافلة المزرعة' },
@@ -47,8 +62,8 @@ export const GEAR = [
   { id: 'crown', name: 'تاج قرية الخير', slot: 'crown', unit: 8 },
   { id: 'cape', name: 'وشاح حامي القرية', slot: 'cape', how: 'يُفتح بإكمال مغامرة «إنقاذ القرية»' },
   { id: 'medal', name: 'وسام البطل الأكبر الذهبي', slot: 'medal', how: 'يُفتح بإكمال المغامرات التسع' }
-].map(g => Object.assign(g, { icon: ICON[g.id] }));
-GEAR.forEach(g => { if (g.unit != null) g.how = `تُفتح بإكمال وحدة «${UNITS[g.unit].title}» (الفصل ${UNITS[g.unit].term === 1 ? 'الأول' : 'الثاني'})`; });
+].map(g => Object.assign(g, { icon: ICON[g.id] })).concat(FASHION);
+GEAR.forEach(g => { if (g.price) g.how = `من متجر الأزياء: ${g.price} 💎`; if (g.unit != null) g.how = `تُفتح بإكمال وحدة «${UNITS[g.unit].title}» (الفصل ${UNITS[g.unit].term === 1 ? 'الأول' : 'الثاني'})`; });
 
 export const GOLD = '#C9971C', SILVER = '#B8C4CE';
 /* قطع الوحدات تُملك تلقائياً حين تكتمل وحدتها (يُحفظ وقت الفتح أول مرة)؛ تُرجع القطع الجديدة */
@@ -66,6 +81,7 @@ export function heroLookWorn(s) {
   if (w.cane) L.tool = 'cane';
   if (w.vest) L.vest = '#1F4E79'; else if (w.sandvest) L.vest = '#C9955A';
   if (w.postbag) L.postbag = true;
+  FASHION.forEach(f => { if (w[f.id] && (!f.kind || f.kind === s.hero.kind)) { if (f.shoe) L.shoe = f.shoe; if (f.massar) { L.head = 'massar'; L.massar = f.massar; } if (f.lahaf) L.lahaf = f.lahaf; } });
   return L;
 }
 let anim = 0, prev3 = null;
@@ -75,17 +91,19 @@ export function openWardrobe() {
   game.busy = true; sfx('talk'); syncUnitGear(s);
   const use3d = gfx.d3();
   const draw = () => {
-    const n = GEAR.filter(g => s.gear.owned[g.id]).length;
+    const mine = GEAR.filter(g => !g.kind || g.kind === s.hero.kind), n = mine.filter(g => s.gear.owned[g.id]).length, gm = s.gems || 0;
     el.innerHTML = `<div class="sheet wardrobe"><h3>🚪 خزانة البطل</h3>
-      <div class="wardStage"><canvas id="wardPrev" width="260" height="240"></canvas><span class="wardCount">${n} / ${GEAR.length}</span></div>
-      <div class="gear">${GEAR.map(g => { const own = !!s.gear.owned[g.id], on = !!s.gear.worn[g.id];
+      <div class="wardStage"><canvas id="wardPrev" width="260" height="240"></canvas><span class="wardCount">${n} / ${mine.length}</span><span class="wardGems">💎 ${gm}</span></div>
+      <div class="gear">${mine.map(g => { const own = !!s.gear.owned[g.id], on = !!s.gear.worn[g.id];
         return `<div class="gitem ${own ? '' : 'locked'} ${on ? 'on' : ''}"><span class="gic">${g.icon}${own ? '' : '<i class="glock">🔒</i>'}</span><div><b>${g.name}</b><small>${own ? (on ? '✓ يرتديه البطل الآن' : 'جاهز للارتداء') : g.how}</small></div>
-          ${own ? `<button class="act ${on ? 'ghost' : ''}" data-g="${g.id}">${on ? 'اخلع' : 'ارتدِ'}</button>` : ''}</div>`; }).join('')}</div>
+          ${own ? `<button class="act ${on ? 'ghost' : ''}" data-g="${g.id}">${on ? 'اخلع' : 'ارتدِ'}</button>` : g.price ? `<button class="act go" data-buy="${g.id}" ${gm < g.price ? 'disabled' : ''}>اشترِ ${g.price} 💎</button>` : ''}</div>`; }).join('')}</div>
       <button class="act" id="wardOut">اخرج إلى القرية</button></div>`;
     el.classList.add('on');
     el.querySelectorAll('[data-g]').forEach(b => b.onclick = e => { e.stopPropagation(); const id = b.dataset.g, g = GEAR.find(x => x.id === id);
       const on = !s.gear.worn[id]; if (on) GEAR.forEach(o => { if (o.slot === g.slot) s.gear.worn[o.id] = false; }); s.gear.worn[id] = on;
       sfx('pick'); if (on) unlock('stylish'); bus.emit('save'); draw(); });
+    el.querySelectorAll('[data-buy]').forEach(b => b.onclick = e => { e.stopPropagation(); const g = GEAR.find(x => x.id === b.dataset.buy); if (!g || (s.gems || 0) < g.price) return;
+      s.gems -= g.price; bus.emit('gems'); s.gear.owned[g.id] = Date.now(); GEAR.forEach(o => { if (o.slot === g.slot) s.gear.worn[o.id] = false; }); s.gear.worn[g.id] = true; sfx('win'); bus.emit('save'); draw(); });
     document.getElementById('wardOut').onclick = e => { e.stopPropagation(); cancelAnimationFrame(anim); stop3(); el.classList.remove('on'); el.innerHTML = ''; game.busy = false; };
     const c = document.getElementById('wardPrev');
     cancelAnimationFrame(anim); stop3();
