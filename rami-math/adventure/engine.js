@@ -37,7 +37,7 @@ export function runAdventure(def, onExit) {
   const cv = root.querySelector('.advCv'), ctx = cv.getContext('2d'), $ = s => root.querySelector(s);
   let r3 = null;   // العرض ثلاثي الأبعاد هو الافتراضي، والرسم ثنائي الأبعاد احتياط للأجهزة الضعيفة أو بلا WebGL
   try { if (createAdv3D && want3D()) { r3 = createAdv3D($('.advCv3')); $('.advCv3').hidden = false; cv.hidden = true; } } catch (e) { console.warn('[adv3d]', e); r3 = null; }
-  let W = 0, H = 0, dpr = 1, Z = 1;
+  let W = 0, H = 0, dpr = 1, Z = 1, frameN = 0, camOff = 0;
   function resize() { dpr = Math.min(devicePixelRatio || 1, 2); W = innerWidth; H = innerHeight; cv.width = W * dpr; cv.height = H * dpr; cv.style.width = W + 'px'; cv.style.height = H + 'px';
     Z = Math.max(.62, Math.min(1.5, Math.min(W / ((W < H ? 9 : 15) * T), H / ((W < H ? 13 : 10) * T)))); if (r3) r3.resize(W, H); }
   resize(); addEventListener('resize', resize);
@@ -354,7 +354,11 @@ export function runAdventure(def, onExit) {
     shakeK = Math.max(0, shakeK - dt * 2.5); if (cine < 1) cine += dt / 4.5;
     goalT -= dt; if (goalT <= 0) { goalT = .5; goal(); }   // الهدف يتحدّث وحده (مثلاً عند دخول مكان)
     if (r3) {
-      cam.x += (P.x * T - cam.x) * Math.min(1, dt * 6); cam.y += (P.y * T - cam.y) * Math.min(1, dt * 6);
+      // مثل الرسم العادي: البطل في وسط المساحة الحرة بين الشريط العلوي والأدوات (الإزاحة بوحدات العالم من إسقاط الكاميرا)
+      if ((frameN = (frameN || 0) + 1) % 20 === 1) { const tp = $('.advTop').getBoundingClientRect(), iv = $('.advInv'), ib = iv && iv.children.length ? iv.getBoundingClientRect() : null;
+        const it = Math.min(tp.bottom + 6, H * .4), ibh = ib && ib.height ? Math.min(H - ib.top + 6, H * .3) : 0, px = (it - ibh) / 2, a0 = r3.pick(W / 2, H / 2), a1 = r3.pick(W / 2, H / 2 + px);
+        if (a0 && a1) camOff = a1.y - a0.y; }
+      cam.x += (P.x * T - cam.x) * Math.min(1, dt * 6); cam.y += (P.y * T - camOff - cam.y) * Math.min(1, dt * 6);
       r3.frame({ areaId: S.area, map, theme: area.theme, scenery: area.scenery, dark: (S.flags.weather && S.flags.weather.dark != null) ? S.flags.weather.dark : area.dark != null ? area.dark : THEMES[area.theme].night, tileAt, ents, P, t, A, caught,
         look: e => e.look || def.cast[e.who].look, itemIcon: A.itemIcon, pressed: A.pressed,
         heroLook: heroLookWorn(game.state), heroKey: JSON.stringify(heroLookWorn(game.state)), lantern: A.has('lantern'), goalAt: goalAt(),
@@ -400,9 +404,14 @@ export function runAdventure(def, onExit) {
   }
   function draw() {
     const dk = area.dark != null ? area.dark : THEMES[area.theme].night;
-    cam.x += (P.x * T - cam.x) * .15; cam.y += (P.y * T - T * .4 - cam.y) * .15;
+    // الشريط العلوي (المهمة والأزرار) والأدوات السفلية تغطي أطراف الشاشة: البطل يتوسط المساحة الحرة بينهما،
+    // والكاميرا تتجاوز حافة الخريطة بقدرها، فلا يختفي البطل خلف الكتابة حين يقف قرب أعلى الخريطة أو أسفلها (الهاتف خاصة)
+    if (!draw.inset || (draw.n = (draw.n || 0) + 1) % 20 === 0) { const tp = $('.advTop').getBoundingClientRect(), iv = $('.advInv'), ib = iv && iv.children.length ? iv.getBoundingClientRect() : null;
+      draw.inset = { t: Math.max(0, tp.bottom + 6), b: ib && ib.height ? Math.max(0, H - ib.top + 6) : 0 }; }
+    const IT = Math.min(draw.inset.t, H * .4) / Z, IB = Math.min(draw.inset.b, H * .3) / Z, off = (IT - IB) / 2;
+    cam.x += (P.x * T - cam.x) * .15; cam.y += (P.y * T - T * .4 - off - cam.y) * .15;
     const hw = W / 2 / Z, hh = H / 2 / Z, mw = map[0].length * T, mh = map.length * T;
-    cam.x = Math.max(hw, Math.min(mw - hw, cam.x)); cam.y = Math.max(hh, Math.min(mh - hh, cam.y)); if (mw < hw * 2) cam.x = mw / 2; if (mh < hh * 2) cam.y = mh / 2;
+    cam.x = Math.max(hw, Math.min(mw - hw, cam.x)); cam.y = Math.max(hh - IT, Math.min(mh - hh + IB, cam.y)); if (mw < hw * 2) cam.x = mw / 2; if (mh < hh * 2 - IT - IB) cam.y = mh / 2 - off;
     const q = shakeK ? (Math.random() - .5) * 8 * shakeK : 0;
     ctx.setTransform(dpr, 0, 0, dpr, 0, 0); ctx.fillStyle = '#1A1420'; ctx.fillRect(0, 0, W, H);
     ctx.setTransform(dpr * Z, 0, 0, dpr * Z, dpr * (W / 2 - cam.x * Z + q), dpr * (H / 2 - cam.y * Z));
