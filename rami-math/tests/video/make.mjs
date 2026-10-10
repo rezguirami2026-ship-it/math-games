@@ -164,12 +164,41 @@ await scene(B, 'challenge', async cap => {
 });
 await B.ev(() => { document.getElementById('panel').classList.remove('on'); document.getElementById('panel').innerHTML = ''; window.__game.game.busy = false; });
 
+// ═════ ٥ب. نتعلّم من الخطأ (B): خطآن ثم «كيف نحلّها؟» ثم الحل والجواهر الطائرة، ثم خريطة إتقاني ═════
+await B.ev(() => { const s = window.__game.state, L = ['placeValue', 'compareRound', 'factorsMultiples', 'oddEven', 'primeNumbers', 'powerOf10', 'multiplyStrategies', 'decimalAdd', 'division1', 'sequences', 'lengthMeasure', 'lineDrawing', 'timeTables', 'calendars', 'areaPerimeterT1', 'shapesIdentify', 'shapes3D', 'nets'];
+  L.forEach((id, k) => { s.quests.done[id] = s.quests.done[id] || Date.now() - 864e5 * (30 - k); const d = window.__game.quests.data(id); d.stars = Math.max(d.stars || 0, [3, 2, 3, 1, 3, 2][k % 6]); });
+  s.expert = { placeValue: { plays: 1, gold: true } }; s.mastered = 4; s.levelSeen = 10;   // بلا نافذة ارتقاء أثناء التصوير
+  s.review = { 'compareRound|Nn11': { n: 1, b: 0, due: Date.now() }, 'division1|Nc10': { n: 1, b: 1, due: Date.now() + 864e5 } }; });
+await B.ev(async () => { const { runChallenge } = await import('/missions/challenge.js'); const m = window.__game.MODS.placeValue; let it = null; for (let k = 0; k < 30 && !it; k++) it = m.challenge.make().find(i => i.type === 'choice' && /قيمة/.test(i.q));
+  window.__d = { ch: { items: [it], i: 0, firstTry: 0, tries: 0, gems: 0, streak: 0 } }; runChallenge(window.__game.W, window.__d, { id: 'placeValue', who: 'salem', title: 'تحدي العم سالم', make: () => [it], exit: () => {}, onDone: () => {} }); });
+await B.skip(.5);
+await scene(B, 'learn', async cap => {
+  const wrong = k => B.ev(k => { const it = window.__d.ch.items[0], o = [...document.querySelectorAll('#panel .chOpt')].filter((_, j) => j !== it.ans); o[k % o.length].click(); }, k);
+  await cap.shoot(1); await wrong(0); await cap.shoot(1.3); await wrong(1); await cap.shoot(1.2);
+  await B.ev(() => document.getElementById('chHow').click()); await cap.shoot(3.4);
+  await B.ev(() => document.getElementById('chHowOk').click()); await cap.shoot(.9);
+  await B.ev(() => { const it = window.__d.ch.items[0]; document.querySelectorAll('#panel .chOpt')[it.ans].click(); }); await cap.shoot(1.4);
+  await B.ev(async () => { document.getElementById('panel').classList.remove('on'); window.__game.game.busy = false; (await import('/core/events.js')).bus.emit('openMastery'); }); await cap.shoot(1.6);
+  await cap.fill(() => { const s = document.querySelector('#panel .sheet'); if (s) s.scrollTop += 5; });
+});
+await B.ev(() => { document.getElementById('panel').classList.remove('on'); document.getElementById('panel').innerHTML = ''; window.__game.game.busy = false; });
+
 // ═════ ٦. الخريطة (B) ═════
 await scene(B, 'map', async cap => {
   await B.ev(() => document.getElementById('bMap').click()); await cap.shoot(2.2);
   await cap.fill(({ i }) => { const s = document.querySelector('#panel .sheet'); if (s) s.scrollTop += 7; });
 });
 await B.ev(() => { document.getElementById('panel').classList.remove('on'); window.__game.game.busy = false; });
+
+// ═════ ٦ب. هدف الأسبوع والمواسم (B): بطاقة الهدف ثم القرية بزينة العيد ═════
+await B.ev(async () => { const W = await import('/missions/weekly.js'); window.__game.state.weekly = null; W.weekRec().n = 3; });
+await scene(B, 'week', async cap => {
+  await B.ev(() => { document.getElementById('bMap').click(); }); await cap.shoot(.3);
+  await B.ev(() => { const q = document.querySelector('.qweek'); if (q) q.scrollIntoView({ block: 'center' }); }); await cap.shoot(3.2);
+  await B.ev(() => { document.getElementById('panel').classList.remove('on'); window.__game.game.busy = false; window.__game.setSeason('eid'); const p = window.__game.W.player; p.x = 1110; p.y = 610; p.route = null; p.target = null; });
+  await glide(cap, [980, 560], [1180, 600], cap.left());
+}, { dips: [3.5] });
+await B.ev(() => { window.__game.setSeason(null); window.__game.eng.focus = null; });
 
 // ═════ ٧. الجواهر والزينة والخزانة والجمل والكنوز (B) ═════
 await scene(B, 'extras', async cap => {
@@ -219,10 +248,10 @@ const ADV = [['rescue', '🏘️ إنقاذ القرية'], ['storm', '🌪️ �
 // ═════ ١٠. قاعة الأبطال والاحتفال الكبير (B) ═════
 await B.ev(() => { const s = window.__game.state; s.adventures = {}; ['rescue', 'storm', 'island', 'oldcity', 'lanterns', 'lighthouse', 'desert', 'mountain', 'castle'].forEach((k, i) => s.adventures[k] = { done: true, best: [5, 5, 4, 5, 5, 5, 4, 5, 5][i] }); s.gear.worn.medal = false; });
 await scene(B, 'hall', async cap => {
-  await B.ev(async () => (await import('/adventure/hall.js')).openHall()); await cap.shoot(1.6);
-  await cap.shoot(1.6, () => { const h = document.querySelector('.hall'); if (h) h.scrollTop += 5; });
+  await B.ev(async () => (await import('/adventure/hall.js')).openHall()); await cap.shoot(1.8);
+  await cap.shoot(2.2, () => { const h = document.querySelector('.hall'); if (h) h.scrollTop += 4; });
   await B.ev(async () => { document.querySelector('.hall')?.remove(); (await import('/adventure/hall.js')).grandCelebration(); });
-  await B.skip(4.4);   // سطور «في قرية الخير…» خارج التصوير، والأوسمة تطير أمام الكاميرا
+  await B.skip(6.5);   // الاحتفال يكتمل خارج التصوير فلا تظهر شاشة شبه فارغة   // سطور «في قرية الخير…» خارج التصوير، والأوسمة تطير أمام الكاميرا
   await cap.shoot(cap.left() - 1.2);
   await B.ev(() => { const w = document.querySelector('.grand [data-wear]'); if (w) w.click(); });
 });

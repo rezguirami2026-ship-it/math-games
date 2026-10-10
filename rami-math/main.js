@@ -56,7 +56,7 @@ import { workshopColliders, drawWorkshopGround, workshopDrawables, STAGE } from 
 import { signboard, upright, CAM, SEASON, FLAGS, bigSign } from './world/art.js';
 import { ramadanOn, seasonNow, SEASONS } from './core/season.js';
 import { seasonCard, openSeason, seasonDone } from './missions/seasonal.js';
-const SEAS = SEASONS[seasonNow()] || null;   // العيدان واليوم الوطني: زينة ومهمة خاصة بالتاريخ
+let SEAS = SEASONS[seasonNow()] || null;   // العيدان واليوم الوطني: زينة ومهمة خاصة بالتاريخ
 import { caravanColliders, drawCaravanGround, caravanDrawables } from './world/caravan.js';
 import { coopColliders, drawCoopGround, coopDrawables } from './world/coop.js';
 import { festivalColliders, drawFestivalGround, festivalDrawables, FUNPARK } from './world/festival.js';
@@ -221,7 +221,7 @@ async function start(state) {
   }
 }
 /* ── العرض ثلاثي الأبعاد (renderer3d): يُحمَّل فقط عند طلبه، ويرجع إلى الرسم الحالي إن لم يدعم الجهاز WebGL أو فشل التحميل ── */
-const V3D = 'نسخة 3D · ٩٢'; window.__BUILD = V3D.replace('نسخة 3D · ', '');   // تُعرض في شاشة التحميل وفي الزاوية: للتأكد أن المتصفح حمّل آخر نسخة
+const V3D = 'نسخة 3D · ٩٣'; window.__BUILD = V3D.replace('نسخة 3D · ', '');   // تُعرض في شاشة التحميل وفي الزاوية: للتأكد أن المتصفح حمّل آخر نسخة
 const want3d = () => gfx.d3();
 function loadingScreen() {
   const el = document.createElement('div'); el.className = 'load3d';
@@ -704,7 +704,7 @@ bus.on('lessonDone', id => {
   if (allDone()) { unlock('all69'); setTimeout(() => hud.toast('🎓 أكملتَ الدروس الـ٦٩ كلها! اذهب إلى منصة التخرّج'), 4500); }
   if (id === 'mixedNumbers') setTimeout(() => hud.toast('💧 أم خالد تنتظرك في القرية: خزانات البيوت عطشى!'), 3500);   // الدرس التالي في القرية لا في السوق
 });
-window.__game = { get state() { return game.state; }, get W() { return W; }, eng, game, quests, MODS, blocked, activity: id => openActivity(W, id, MODS[id]), finale: u => openFinale(W, u, MODS), expert: id => openExpert(W, id, MODS[id]), daily: () => openDaily(W, MODS), season: () => openSeason(W, MODS), TREASURES, findPath: (a, b) => findPath(a.x, a.y, b.x, b.y, blocked) };
+window.__game = { get state() { return game.state; }, get W() { return W; }, eng, game, quests, MODS, blocked, activity: id => openActivity(W, id, MODS[id]), finale: u => openFinale(W, u, MODS), expert: id => openExpert(W, id, MODS[id]), daily: () => openDaily(W, MODS), season: () => openSeason(W, MODS), setSeason: k => { SEAS = SEASONS[k] || null; }, TREASURES, findPath: (a, b) => findPath(a.x, a.y, b.x, b.y, blocked) };
 boot();
 try { startOps(); initOpsUI(); } catch (e) { console.warn('[ops]', e); }   // الخدمات الاختيارية: بعد تشغيل اللعبة، ولا توقفها أبداً
 
