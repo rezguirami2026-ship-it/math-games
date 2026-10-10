@@ -242,8 +242,28 @@ export function runAdventure(def, onExit) {
   let mark = null, userZoom = 1, pinch = 0, cine = S.flags._intro ? 1 : 0;   // تقريب/إبعاد الكاميرا: العجلة أو إصبعان
   cv.parentNode.addEventListener('wheel', e => { userZoom = Math.min(1.6, Math.max(.65, userZoom * (e.deltaY > 0 ? 1.08 : 1 / 1.08))); }, { passive: true });
   cv.parentNode.addEventListener('touchmove', e => { if (e.touches.length !== 2) { pinch = 0; return; } const d = Math.hypot(e.touches[0].clientX - e.touches[1].clientX, e.touches[0].clientY - e.touches[1].clientY); if (pinch) userZoom = Math.min(1.6, Math.max(.65, userZoom * pinch / d)); pinch = d; }, { passive: true });
-  [cv, $('.advCv3')].forEach(c => c.addEventListener('pointerdown', e => { e.preventDefault(); if (e.isPrimary !== false) tapTo(e.clientX, e.clientY); }));
   const keys = {};
+  /* اللمس كما في القرية: نقرة = امشِ إلى هناك، وسحب الإصبع = عصا تحكم تحرّك البطل باتجاه السحب، وإصبعان = تقريب.
+     والحوار المفتوح يتقدّم بلمس أي مكان (لا الصندوق وحده) */
+  const stick = { id: null, x: 0, y: 0, drag: false, n: 0, vx: 0, vy: 0 }, sUI = document.createElement('div'); sUI.className = 'stick advStick'; sUI.innerHTML = '<i></i>'; root.appendChild(sUI);
+  const knob = sUI.firstChild, SR = 56;
+  const stickOff = () => { stick.id = null; stick.drag = false; stick.vx = stick.vy = 0; sUI.classList.remove('on'); };
+  const dlgTap = () => { if (dlg.classList.contains('on') && dlg.onclick && !$('.advOpts').children.length) { dlg.onclick(new Event('click')); return true; } return false; };
+  [cv, $('.advCv3')].forEach(c => {
+    c.style.touchAction = 'none';
+    c.addEventListener('pointerdown', e => { e.preventDefault(); if (dlgTap()) return;
+      if (e.pointerType === 'mouse') return tapTo(e.clientX, e.clientY);
+      stick.n++; if (stick.id !== null || stick.n > 1) { stickOff(); return; }
+      stick.id = e.pointerId; stick.x = e.clientX; stick.y = e.clientY; stick.drag = false; try { c.setPointerCapture(e.pointerId); } catch (er) {} });
+    c.addEventListener('pointermove', e => { if (e.pointerId !== stick.id) return;
+      let dx = e.clientX - stick.x, dy = e.clientY - stick.y; const d = Math.hypot(dx, dy);
+      if (!stick.drag && d > 14) { if (locked || caught) return; stick.drag = true; P.path = null; P.onArrive = null; sUI.style.left = stick.x + 'px'; sUI.style.top = stick.y + 'px'; sUI.classList.add('on'); }
+      if (!stick.drag) return; const k = Math.min(1, d / SR); dx /= d || 1; dy /= d || 1;
+      stick.vx = dx * Math.max(.35, k); stick.vy = dy * Math.max(.35, k); knob.style.transform = `translate(${dx * k * SR}px, ${dy * k * SR}px)`; });
+    const up = e => { if (e.pointerType !== 'mouse') stick.n = Math.max(0, stick.n - 1); if (e.pointerId !== stick.id) return; const was = stick.drag; stickOff(); if (!was && e.type === 'pointerup') tapTo(e.clientX, e.clientY); };
+    c.addEventListener('pointerup', up); c.addEventListener('pointercancel', up);
+  });
+  root.addEventListener('pointerdown', e => { if (e.target.closest('.advDlg, button, .advLog, .advEnd')) return; if (e.target === cv || e.target === $('.advCv3')) return; dlgTap(); });
   const kd = e => { if (!root.isConnected) return; keys[e.key] = true; if (e.key === ' ' || e.key === 'Enter' || e.key === 'e') { e.preventDefault(); if (dlg.classList.contains('on')) { if (dlg.onclick) dlg.onclick(e); } else doFront(); } if (e.key.startsWith('Arrow')) e.preventDefault(); };
   const ku = e => { keys[e.key] = false; };
   addEventListener('keydown', kd); addEventListener('keyup', ku);
@@ -350,6 +370,7 @@ export function runAdventure(def, onExit) {
     advMusic(S.flags.party ? def.id + '_win' : def.id);   // لحن المغامرة (ولحن الاحتفال بعد النصر)
     let vx = 0, vy = 0;
     if (keys.ArrowLeft || keys.a) vx--; if (keys.ArrowRight || keys.d) vx++; if (keys.ArrowUp || keys.w) vy--; if (keys.ArrowDown || keys.s) vy++;
+    if (stick.drag && !locked && !caught) { vx = stick.vx; vy = stick.vy; }   // عصا اللمس
     if (vx || vy) P.path = null;
     if (!vx && !vy && P.path && P.path.length) { const [tx, ty] = P.path[0], dx = tx + .5 - P.x, dy = ty + .5 - P.y, d = Math.hypot(dx, dy);
       if (d < .08) { P.path.shift(); if (!P.path.length) { P.path = null; const f = P.onArrive; P.onArrive = null; if (f) f(); } } else { vx = dx / d; vy = dy / d; } }

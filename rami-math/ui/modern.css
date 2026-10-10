@@ -568,3 +568,7 @@ body:has(#panel.on) .region{display:none}
 .chBurst.gold{background:linear-gradient(160deg,#FFF4C4,#FFD54A)}.chBurst.gold span{color:#8A5A00}
 .chSheet.chGold{box-shadow:0 0 0 4px #E3B04B,0 0 40px rgba(255,200,60,.55)!important}
 .chGoldTag{align-self:center;font:900 16px Cairo,sans-serif;color:#3A2400;background:linear-gradient(180deg,#FFF1B8,#FFD54A 55%,#E3A21A);border-radius:18px;padding:3px 16px;box-shadow:0 3px 0 #8A5A00;animation:chPop .5s}
+
+/* عصا التحكم داخل المغامرة: فوق طبقة المغامرة */
+.adv .advStick{z-index:6}
+.adv{touch-action:none}

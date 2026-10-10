@@ -71,7 +71,7 @@ pages.push(`<section class="page cover"><img class="cbg" src="${IMG('home', 450)
   <div class="clogos"><img src="${CRED('moe.jpg')}"><i></i><img src="${CRED('school.jpg')}"></div>
   <div class="ctext"><div class="ctag">دليل تشغيلي وتعريفي</div><h1>قرية الخير</h1><div class="csub">لعبة تعليمية تفاعلية في الرياضيات<br>الصف السادس · سلطنة عُمان</div></div>
   <div class="cphoto"><img src="${CRED('me-s.jpg')}"></div>
-  <div class="cby"><small>إعداد وتنفيذ</small><b>الأستاذ رامي الرزقي</b><span>مدرسة الخوير للتعليم الأساسي (٥–٩)</span><em>الإصدار <bdi dir="ltr">v1.19.1</bdi> · ${AR(new Date().getFullYear())}</em></div></section>`);
+  <div class="cby"><small>إعداد وتنفيذ</small><b>الأستاذ رامي الرزقي</b><span>مدرسة الخوير للتعليم الأساسي (٥–٩)</span><em>الإصدار <bdi dir="ltr">v1.19.3</bdi> · ${AR(new Date().getFullYear())}</em></div></section>`);
 pages.push('__TOC__');
 
 pages.push(page('١. التعريف باللعبة', 'فكرة اللعبة وأهدافها', `
