@@ -8,7 +8,7 @@ import { loadSave, saveSoon, saveNow, wipeSave, PREVIEW } from './save/save.js';
 import { createPlayer, updatePlayer } from './player/player.js';
 import { findPath } from './world/nav.js';
 import { drawHuman, heightOf } from './character/human.js';
-import { WORLD, PILE, SIGNAL, TREE_SPOTS, FARM, HOUSES, WAREHOUSE, ROADS, SOUTH, SCHOOL, WELL, staticColliders, drawGround, drawFarm, drawPalm, staticDrawables, ramadanDecor } from './world/village.js';
+import { WORLD, PILE, SIGNAL, TREE_SPOTS, FARM, HOUSES, WAREHOUSE, ROADS, SOUTH, SCHOOL, WELL, staticColliders, drawGround, drawFarm, drawPalm, staticDrawables, ramadanDecor, seasonDecor } from './world/village.js';
 import { makeTrucks, truckColliders, drawTruck, drawPile, drawSignal, drawSpot, updateFx, drawFx, moveAlong, say, bubble, sparkle, dust } from './world/entities.js';
 import { makeNpcs, npcVisible, updateNpc, drawNpc } from './npc/npc.js';
 import { updateKids, kidsItems, kidsPeople3d } from './world/school.js';
@@ -18,6 +18,7 @@ import { decorItems, initGems, DECOR } from './world/decor.js';
 import { updatePet, petItems, pet3d, petHop, setSniff, petOn } from './world/pet.js';
 import { openMiniGames, openPetDecor } from './ui/minigames.js';
 import { openAlbum, heroTitle, drawTitle } from './ui/album.js';
+import { openMastery } from './ui/mastery.js';
 import { eventPeople, eventMark, openVisitor, openTeller, isNight, checkSecrets, secretItems, VISITOR, TELLER } from './ui/events.js';
 import { treasureItems, nearTreasure, openTreasure, TREASURES } from './world/treasure.js';
 import { CHAPTER, introLines, npcLines } from './story/dialogues.js';
@@ -28,6 +29,9 @@ import * as tanks from './missions/tanks.js';
 import { SHOP, GARDEN, openCounter, drawShop, drawShopBack, drawGarden } from './missions/shop.js';
 import { UNIT1, POND, ORCH } from './missions/unit1.js';
 import { stage2 } from './missions/challenge.js';
+import { dueList } from './missions/review.js';
+import { weeklyCard } from './missions/weekly.js';
+import { setCast } from './core/voices.js';
 import { openActivity, hasActivity, openFinale, finaleOpen, finaleRec, openExpert, expertOpen, expertRec, openDaily, dailyDone, dailyRec } from './missions/activity.js';
 import { levelOf } from './core/levels.js';
 import { BADGES, checkBadges } from './achievements/badges.js';
@@ -50,7 +54,9 @@ import { T2U4 } from './missions/t2u4.js';
 import { T2U5 } from './missions/t2u5.js';
 import { workshopColliders, drawWorkshopGround, workshopDrawables, STAGE } from './world/workshop.js';
 import { signboard, upright, CAM, SEASON, FLAGS, bigSign } from './world/art.js';
-import { ramadanOn } from './core/season.js';
+import { ramadanOn, seasonNow, SEASONS } from './core/season.js';
+import { seasonCard, openSeason, seasonDone } from './missions/seasonal.js';
+const SEAS = SEASONS[seasonNow()] || null;   // العيدان واليوم الوطني: زينة ومهمة خاصة بالتاريخ
 import { caravanColliders, drawCaravanGround, caravanDrawables } from './world/caravan.js';
 import { coopColliders, drawCoopGround, coopDrawables } from './world/coop.js';
 import { festivalColliders, drawFestivalGround, festivalDrawables, FUNPARK } from './world/festival.js';
@@ -200,7 +206,7 @@ async function start(state) {
   game.state = upgrade(state);
   W = buildWorld(state); resetGates(); syncUnitGear(state);   // الحفظ القديم: قطع الوحدات المكتملة تُفتح
   hud.init({ drawMini, questLog, anchor: speakerAnchor, activity: id => openActivity(W, id, MODS[id]), finale: u => openFinale(W, u, MODS), expert: id => openExpert(W, id, MODS[id]), daily: () => openDaily(W, MODS) });
-  initGems(state); setTimeout(() => { if (!dailyDone() && Object.keys(state.quests.done || {}).length) hud.toast('📅 مهمة اليوم بانتظارك في الخريطة 🗺️'); }, 6000);
+  initGems(state); setTimeout(() => { if ((!dailyDone() || (SEAS && !seasonDone(seasonNow()))) && Object.keys(state.quests.done || {}).length) hud.toast(SEAS && !seasonDone(seasonNow()) ? `${SEAS.greet} مهمة ${SEAS.name} بانتظارك في الخريطة 🗺️` : dueList().length ? '📅 مهمة اليوم فيها مراجعة 🔁 لمهارات أخطأت فيها — تجدها في الخريطة 🗺️' : '📅 مهمة اليوم بانتظارك في الخريطة 🗺️'); }, 6000);
   hud.show(true); hud.good(); hud.gems(); hud.level(); hud.objective(objective());
   if (state.levelSeen == null) state.levelSeen = levelOf(state).n;   // الحفظ القديم: يبدأ من مستواه الحالي بلا احتفال
   eng.snap(W.player); eng.follow = W.player; eng.onTap = onTap; eng.state = () => game.state;
@@ -215,7 +221,7 @@ async function start(state) {
   }
 }
 /* ── العرض ثلاثي الأبعاد (renderer3d): يُحمَّل فقط عند طلبه، ويرجع إلى الرسم الحالي إن لم يدعم الجهاز WebGL أو فشل التحميل ── */
-const V3D = 'نسخة 3D · ٩١'; window.__BUILD = V3D.replace('نسخة 3D · ', '');   // تُعرض في شاشة التحميل وفي الزاوية: للتأكد أن المتصفح حمّل آخر نسخة
+const V3D = 'نسخة 3D · ٩٢'; window.__BUILD = V3D.replace('نسخة 3D · ', '');   // تُعرض في شاشة التحميل وفي الزاوية: للتأكد أن المتصفح حمّل آخر نسخة
 const want3d = () => gfx.d3();
 function loadingScreen() {
   const el = document.createElement('div'); el.className = 'load3d';
@@ -246,8 +252,8 @@ async function init3D() {
     load = loadingScreen(); FLAGS.three = true;
     try { await Promise.race([document.fonts.load('900 88px Cairo', 'مستودع الطرود ٠١٢٣'), new Promise(r => setTimeout(r, 2500))]); } catch (e) {}   // لافتات المباني تُقاس بخط Cairo نفسه (وإلا قُصّ النص)
     let q = 'auto'; try { q = localStorage.getItem('ramimath_q') || 'auto'; } catch (e) {}   // تلقائية: تبدأ عالية وتنخفض وحدها إن كان الجهاز بطيئاً
-    eng.l3 = await R.create3D({ quality: q === 'low' ? 'low' : 'high', world: WORLD, paintGround: paintStaticGround, onProgress: k => load.set(k) });
-    eng.l3.ground = paintDynamicGround; eng.l3.people = people3d; eng.l3.pet = pet3d; eng.l3.gates = () => W.gateK; eng.l3.allDone = allDone; eng.l3.ramadan = () => SEASON.ramadan || isNight(); eng.l3.signal = () => W.signalGreen;
+    eng.l3 = await R.create3D({ quality: q === 'low' ? 'low' : 'high', world: WORLD, start: (W && W.player) || (game.state && game.state.player) || null, paintGround: paintStaticGround, onProgress: k => load.set(k) });
+    eng.l3.ground = paintDynamicGround; eng.l3.people = people3d; eng.l3.pet = pet3d; eng.l3.gates = () => W.gateK; eng.l3.allDone = allDone; eng.l3.ramadan = () => SEASON.ramadan || isNight(); eng.l3.season = () => SEASON.ramadan ? null : SEAS; eng.l3.signal = () => W.signalGreen;
     eng.l3.vehicles = () => { const s = game.state, m = s.missions.convoy, out = W.trucks.map(tr => ({ id: 't' + tr.i, x: tr.x, y: tr.y, load: m.loads[tr.i], covered: tr.covered, shake: tr.shake, sag: tr.sag }));
       if (quests.isStarted('division1') || quests.isDone('division1')) out.push({ id: 'van', x: convoy.VAN.x, y: convoy.VAN.y, load: m.van || 0, covered: !!s.world.delivered, s: .72 }); return out; };
     // فقد سياق الرسم (الهاتف يحرّر ذاكرة الرسوم حين تُصغَّر اللعبة أو تُقفل الشاشة) يترك المشهد أسود: نحفظ ونعيد التحميل عند العودة،
@@ -288,7 +294,8 @@ function paintGroundLayer(ctx, t) {
 }
 function paintDynamicGround(ctx) { paintGroundLayer(ctx, eng.t); }
 function buildWorld(st) {
-  const w = { player: createPlayer(st), trucks: makeTrucks(st), npcs: makeNpcs(), signalGreen: !!st.world.delivered, tapMark: null, savedAt: 0, stones: false };
+  const npcs0 = makeNpcs(); setCast(npcs0, st.hero && st.hero.kind);
+  const w = { player: createPlayer(st), trucks: makeTrucks(st), npcs: npcs0, signalGreen: !!st.world.delivered, tapMark: null, savedAt: 0, stones: false };
   w.statics = staticColliders().concat(
     [{ x: SHOP.x - 66, y: SHOP.y - 40, w: 132, h: 40 }],
     tanks.TANKS.map(t => ({ x: t.x - 16, y: t.y - 12, w: 32, h: 14 })),
@@ -509,7 +516,7 @@ function render(ctx, view, t) {
   ordered(ctx, list);
   heroExtras(ctx);
   if (W.tapMark) { const k = W.tapMark.t / .6; ctx.strokeStyle = `rgba(255,255,255,${1 - k})`; ctx.lineWidth = 3; ctx.beginPath(); ctx.ellipse(W.tapMark.x, W.tapMark.y, 8 + k * 16, 4 + k * 7, 0, 0, 7); ctx.stroke(); }
-  ramadanDecor(ctx, view, t);
+  ramadanDecor(ctx, view, t); if (!SEASON.ramadan) seasonDecor(ctx, view, t, SEAS);
   drawFx(ctx);
   drawGuide(ctx, view, t);
 }
@@ -634,7 +641,7 @@ function drawMini(cv) {   // خريطة العالم المرسومة (ui/worldm
 }
 function questLog() {
   const c = cur(), D = dailyRec();
-  return `<button class="act qdaily ${dailyDone() ? 'done' : ''}" data-daily="1">📅 مهمة اليوم ${dailyDone() ? '✓' : ''}<small>${D.streak ? `🔥 ${ar(D.streak)} أيام متتالية` : 'مراجعة قصيرة +٨ 💎'}</small></button>` + UNITS.map((u, ui) => {
+  return seasonCard() + `<button class="act qdaily ${dailyDone() ? 'done' : ''}" data-daily="1">📅 مهمة اليوم ${dailyDone() ? '✓' : ''}<small>${!dailyDone() && dueList().length ? `🔁 ${ar(Math.min(3, dueList().length))} للمراجعة، ` : ''}${D.streak ? `🔥 ${ar(D.streak)} أيام متتالية` : 'مراجعة قصيرة +٨ 💎'}</small></button>${weeklyCard()}<button class="act qmastery" data-mastery="1">📊 خريطة إتقاني<small>أين أنا قوي، وأين أحتاج تدريباً</small></button>` + UNITS.map((u, ui) => {
     const ls = LESSONS.filter(l => l.u === ui), done = ls.filter(l => quests.isDone(l.id)).length;
     return `<div class="qunit"><b>${u.term === 1 ? 'الفصل الأول' : 'الفصل الثاني'} — الوحدة ${ar(u.n)}: ${u.title}</b><small>${u.place} — ${ar(done)} من ${ar(ls.length)}</small>
       ${ls.map(l => { const st = quests.isDone(l.id) ? 'done' : (c && c.id === l.id ? 'now' : 'next'); const stars = quests.data(l.id).stars || 0, act = st === 'done' && hasActivity(l.id, MODS[l.id]);
@@ -678,6 +685,10 @@ bus.on('openHome', () => openHome(openWardrobe));
 bus.on('openMini', () => openMiniGames());
 bus.on('openPetDecor', () => openPetDecor());
 bus.on('openAlbum', () => openAlbum());
+bus.on('openMastery', () => openMastery());
+bus.on('toast', m => hud.toast(m));
+bus.on('openSeason', () => openSeason(W, MODS));
+bus.on('openActivity', id => openActivity(W, id, MODS[id]));
 bus.on('lessonDone', () => setTimeout(() => { const n = syncUnitGear(); if (n.length) { bus.emit('save'); hud.toast(`👕 لباس جديد في خزانة البطل: ${n.map(g => g.name).join('، ')} (من الحقيبة 🎒)`); } }, 2500));   // قطعة لكل وحدة مكتملة   // من الحقيبة (والباب عند بيت البطل)   // إكمال وحدة يفتح مغامرتها
 bus.on('pauseWorld', on => { eng.paused = on; });
 bus.on('openAdventures', () => openAdventures());
@@ -693,7 +704,7 @@ bus.on('lessonDone', id => {
   if (allDone()) { unlock('all69'); setTimeout(() => hud.toast('🎓 أكملتَ الدروس الـ٦٩ كلها! اذهب إلى منصة التخرّج'), 4500); }
   if (id === 'mixedNumbers') setTimeout(() => hud.toast('💧 أم خالد تنتظرك في القرية: خزانات البيوت عطشى!'), 3500);   // الدرس التالي في القرية لا في السوق
 });
-window.__game = { get state() { return game.state; }, get W() { return W; }, eng, game, quests, MODS, blocked, activity: id => openActivity(W, id, MODS[id]), finale: u => openFinale(W, u, MODS), expert: id => openExpert(W, id, MODS[id]), daily: () => openDaily(W, MODS), TREASURES, findPath: (a, b) => findPath(a.x, a.y, b.x, b.y, blocked) };
+window.__game = { get state() { return game.state; }, get W() { return W; }, eng, game, quests, MODS, blocked, activity: id => openActivity(W, id, MODS[id]), finale: u => openFinale(W, u, MODS), expert: id => openExpert(W, id, MODS[id]), daily: () => openDaily(W, MODS), season: () => openSeason(W, MODS), TREASURES, findPath: (a, b) => findPath(a.x, a.y, b.x, b.y, blocked) };
 boot();
 try { startOps(); initOpsUI(); } catch (e) { console.warn('[ops]', e); }   // الخدمات الاختيارية: بعد تشغيل اللعبة، ولا توقفها أبداً
 

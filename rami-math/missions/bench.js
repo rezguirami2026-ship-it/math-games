@@ -4,6 +4,7 @@ import { bus } from '../core/events.js';
 import { ar, wait, neg } from '../core/util.js';
 import { earn } from '../rewards/goodDeeds.js';
 import { sfx } from '../core/sound.js';
+import { thanks } from '../core/voices.js';
 import { complete } from './quests.js';
 export const R = (a, b) => a + Math.floor(Math.random() * (b - a + 1));
 export const shuffle = a => a.map(v => [Math.random(), v]).sort((x, y) => x[0] - y[0]).map(x => x[1]);
@@ -11,7 +12,7 @@ export const near = (W, p, r) => Math.hypot(W.player.x - p.x, W.player.y - p.y) 
 export const changed = () => { bus.emit('mission'); bus.emit('save'); };
 export const dec = v => ar(String(+(+v).toFixed(3))).replace('.', '٫');
 export const sg = n => ar(n);
-export async function finish(W, id, lines, reward) { sfx('win'); await wait(600); earn(reward || 40, W.player.x, W.player.y - 80); complete(id); if (lines) await W.talk(lines[0].who, lines); }
+export async function finish(W, id, lines, reward) { sfx('win'); if (lines && lines[0]) setTimeout(() => thanks(lines[0].who), 700); await wait(600); earn(reward || 40, W.player.x, W.player.y - 80); complete(id); if (lines) await W.talk(lines[0].who, lines); }
 export const panel = () => document.getElementById('panel');
 export function sheetOpen(html) { const el = panel(); el.innerHTML = `<div class="sheet bench">${html}</div>`; el.classList.add('on'); game.busy = true; return el; }
 export function sheetClose() { const el = panel(); el.classList.remove('on'); el.innerHTML = ''; game.busy = false; }

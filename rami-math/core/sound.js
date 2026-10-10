@@ -158,3 +158,18 @@ Object.assign(MUS, {
   castle: ['nahawand', 130.8, 70, true], castle_win: ['rast', 220, 112, true]
 });
 export function advMusic(id) { if (!AC) return; musicTick(id); }
+
+/* جمل الشخصيات المسجّلة: تُجلب وتُفك مرة واحدة ثم تُشغَّل عبر AudioContext نفسه (يعمل بلا إنترنت من ذاكرة التطبيق).
+   لا تتداخل جملتان: ما يأتي أثناء جملة أخرى يُترك */
+const VBUF = {}; let vUntil = 0;
+export async function voice(file, rate = 1) {
+  if (!sound.on || performance.now() < vUntil) return;
+  try {
+    AC = AC || new (window.AudioContext || window.webkitAudioContext)(); if (AC.state === 'suspended') AC.resume();
+    vUntil = performance.now() + 400;
+    const b = await (VBUF[file] = VBUF[file] || fetch('assets/voice/' + file + '.mp3').then(r => { if (!r.ok) throw new Error(r.status); return r.arrayBuffer(); }).then(x => AC.decodeAudioData(x)));
+    vUntil = performance.now() + b.duration * 1000 / rate;
+    const src = AC.createBufferSource(), g = AC.createGain(); src.buffer = b; src.playbackRate.value = rate; g.gain.value = .95;
+    src.connect(g); g.connect(AC.destination); src.start(); window.__lastVoice = file;
+  } catch (e) { delete VBUF[file]; vUntil = 0; }
+}

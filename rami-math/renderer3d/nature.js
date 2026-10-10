@@ -130,7 +130,14 @@ export function mountains(bounds) {
   ridge(x0 - 1300, z0 - 1200, x0 - 1300, z1 + 600, 0, mat, 240, 480);      // الغرب
   ridge(x0 - 1900, z0 - 2300, x1 + 1500, z0 - 2300, 0, far, 460, 800);   // سلسلة أبعد خلفها
   ridge(x0 - 700, z1 + 700, x1 + 300, z1 + 700, 0, mat, 220, 420);      // الجنوب
-  return g;
+  // دمج القمم والتلال: شبكة واحدة لكل مادة بدل ~١٧٠ رسماً في كل إطار (أخف كثيراً على الهواتف الضعيفة)
+  const by = new Map(), out = new THREE.Group(); g.children.forEach(m => { if (!by.has(m.material)) by.set(m.material, []); by.get(m.material).push(m); });
+  by.forEach((list, mt) => {
+    const geos = list.map(m => { const q = m.geometry.index ? m.geometry.toNonIndexed() : m.geometry; Object.keys(q.attributes).forEach(k => { if (k !== 'position' && k !== 'normal') q.deleteAttribute(k); }); return q; });
+    const geo = mergeGeometries(geos, false); if (!geo) { list.forEach(m => out.add(m)); return; }
+    const mm = new THREE.Mesh(geo, mt); mm.receiveShadow = list[0].receiveShadow; out.add(mm);
+  });
+  return out;
 }
 
 /* ── السماء: قبة بتدرج من الأزرق إلى ضباب دافئ عند الأفق ── */

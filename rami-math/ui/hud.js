@@ -31,6 +31,7 @@ import { exportCode } from '../save/save.js';
 import { progress } from '../missions/quests.js';
 import { ramadanPref, setRamadanPref, PREF_LABEL } from '../core/season.js';
 import { openAbout, openSupport } from './opsui.js';
+import { greet, voices, setVoices } from '../core/voices.js';
 import { bus } from '../core/events.js';
 // جهاز ضعيف (ذاكرة ٣ غيغا أو أقل، أو هاتف بأربع أنوية أو أقل): العرض العادي افتراضياً، ويبقى ثلاثي الأبعاد متاحاً من زر «العرض» في الحقيبة
 export const WEAK = (() => { try { const n = navigator, mob = matchMedia('(pointer: coarse)').matches; return (n.deviceMemory && n.deviceMemory <= 3) || (mob && n.hardwareConcurrency && n.hardwareConcurrency <= 4); } catch (e) { return false; } })();
@@ -83,7 +84,7 @@ export const hud = {
       };
       const showLine = () => {
         const L = lines[i], who = people[L.who] || { name: 'الراوي' };
-        $('dName').textContent = L.who === 'narrator' ? '' : who.name; $('dText').textContent = L.text; sfx('talk');
+        $('dName').textContent = L.who === 'narrator' ? '' : who.name; $('dText').textContent = L.text; sfx('talk'); if (L.who !== 'hero' && L.who !== 'narrator') greet(L.who);   // التحية بصوت الشخصية (مرة كل حين)
         box.classList.remove('pop'); void box.offsetWidth; box.classList.add('pop');
       };
       const close = () => { cancelAnimationFrame(raf); box.classList.remove('on', 'caption'); box.onclick = null; removeEventListener('pointerdown', anywhere, true); game.busy = false; res(); };
@@ -130,12 +131,14 @@ export const hud = {
         <button class="act ghost" id="sndBtn">${sound.on ? '🔊 الصوت يعمل' : '🔇 الصوت متوقف'}</button>
         <button class="act go" id="decoBtn">🛍️ متجر زينة القرية (💎 ${ar(s.gems || 0)})</button>
         ${levelOf(s).n >= 2 ? `<button class="act ghost" id="petDecBtn">🐪 زينة سهيل</button><button class="act ghost" id="petBtn">${s.pet && s.pet.hidden ? '🐪 أظهر الرفيق سهيل' : '🐪 الرفيق سهيل يرافقك (اضغط لإخفائه)'}</button>` : '<div class="bagrow muted"><span>🐪 رفيق صغير ينضم إليك في المستوى ٢</span></div>'}
+        <button class="act ghost" id="vocBtn">${voices.on ? '🗣️ أصوات الشخصيات تعمل' : '🔇 أصوات الشخصيات متوقفة'}</button>
         <button class="act ghost" id="musBtn">${music.on ? '🎵 الموسيقى تعمل' : '🔇 الموسيقى متوقفة'}</button>
         <button class="act ghost" id="codeBtn">🔑 رمز حفظ التقدّم</button>
         <button class="act ghost" id="ramBtn">🌙 أجواء رمضان: ${PREF_LABEL[ramadanPref()]}</button>
         ${installable() ? '<button class="act go" id="instBtn">📲 ثبّت اللعبة كتطبيق</button>' : ''}
         <button class="act go" id="advBtn">🗺️ المغامرات</button>
         <button class="act go" id="giveBtn">💚 صندوق الخير (تبرّع بنقاط الخير)</button>
+        <button class="act go" id="msBtn">📊 خريطة إتقاني (مهاراتي في المنهج)</button>
         <button class="act go" id="albumBtn">📸 ألبوم الذكريات والألقاب</button>
         <button class="act go" id="miniBtn">🎮 ألعاب الساحة (حساب ذهني ممتع)</button>
         <button class="act go" id="homeBtn">🏠 بيت البطل (الغرف والأثاث)</button>
@@ -160,12 +163,14 @@ export const hud = {
     if (kind === 'bag') {
       $('sndBtn').onclick = e => { e.stopPropagation(); sound.on = !sound.on; this.panel('bag'); };
       $('codeBtn').onclick = e => { e.stopPropagation(); this.panel('code'); };
+      $('vocBtn').onclick = e => { e.stopPropagation(); setVoices(!voices.on); this.panel('bag'); };
       $('musBtn').onclick = e => { e.stopPropagation(); setMusic(!music.on); this.panel('bag'); };
       if ($('petBtn')) $('petBtn').onclick = e => { e.stopPropagation(); s.pet = s.pet || {}; s.pet.hidden = !s.pet.hidden; this.panel('bag'); };
       $('decoBtn').onclick = e => { e.stopPropagation(); openDecorShop(); };
       if ($('instBtn')) $('instBtn').onclick = e => { e.stopPropagation(); install(); };
       $('advBtn').onclick = e => { e.stopPropagation(); bus.emit('openAdventures'); };
       $('giveBtn').onclick = e => { e.stopPropagation(); this.closePanel(); setTimeout(openCharity, 120); };
+      $('msBtn').onclick = e => { e.stopPropagation(); this.closePanel(); setTimeout(() => bus.emit('openMastery'), 120); };
       $('albumBtn').onclick = e => { e.stopPropagation(); this.closePanel(); setTimeout(() => bus.emit('openAlbum'), 120); };
       $('miniBtn').onclick = e => { e.stopPropagation(); this.closePanel(); setTimeout(() => bus.emit('openMini'), 120); };
       if ($('petDecBtn')) $('petDecBtn').onclick = e => { e.stopPropagation(); this.closePanel(); setTimeout(() => bus.emit('openPetDecor'), 120); };
@@ -188,6 +193,6 @@ export const hud = {
         $('copyBtn').textContent = ok ? '✓ نُسخ الرمز' : 'حدّد الرمز وانسخه يدوياً';
       };
     }
-    if (kind === 'map') { const mp = this.api.drawMini($('mini')); if (mp) requestAnimationFrame(() => { const w = $('wmap'); w.scrollTop = Math.max(0, mp.y * w.scrollHeight - w.clientHeight / 2); }); $('qlog').innerHTML = this.api.questLog(); $('qlog').querySelectorAll('[data-act]').forEach(b => b.onclick = e => { e.stopPropagation(); this.closePanel(); this.api.activity(b.dataset.act); }); $('qlog').querySelectorAll('[data-daily]').forEach(b => b.onclick = e => { e.stopPropagation(); this.closePanel(); this.api.daily(); }); $('qlog').querySelectorAll('[data-exp]').forEach(b => b.onclick = e => { e.stopPropagation(); this.closePanel(); this.api.expert(b.dataset.exp); }); $('qlog').querySelectorAll('[data-fin]').forEach(b => b.onclick = e => { e.stopPropagation(); this.closePanel(); this.api.finale(+b.dataset.fin); });  }
+    if (kind === 'map') { const mp = this.api.drawMini($('mini')); if (mp) requestAnimationFrame(() => { const w = $('wmap'); w.scrollTop = Math.max(0, mp.y * w.scrollHeight - w.clientHeight / 2); }); $('qlog').innerHTML = this.api.questLog(); $('qlog').querySelectorAll('[data-act]').forEach(b => b.onclick = e => { e.stopPropagation(); this.closePanel(); this.api.activity(b.dataset.act); }); $('qlog').querySelectorAll('[data-season]').forEach(b => b.onclick = e => { e.stopPropagation(); this.closePanel(); setTimeout(() => bus.emit('openSeason'), 120); }); $('qlog').querySelectorAll('[data-mastery]').forEach(b => b.onclick = e => { e.stopPropagation(); this.closePanel(); setTimeout(() => bus.emit('openMastery'), 120); }); $('qlog').querySelectorAll('[data-daily]').forEach(b => b.onclick = e => { e.stopPropagation(); this.closePanel(); this.api.daily(); }); $('qlog').querySelectorAll('[data-exp]').forEach(b => b.onclick = e => { e.stopPropagation(); this.closePanel(); this.api.expert(b.dataset.exp); }); $('qlog').querySelectorAll('[data-fin]').forEach(b => b.onclick = e => { e.stopPropagation(); this.closePanel(); this.api.finale(+b.dataset.fin); });  }
   }
 };

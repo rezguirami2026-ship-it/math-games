@@ -572,3 +572,69 @@ body:has(#panel.on) .region{display:none}
 /* عصا التحكم داخل المغامرة: فوق طبقة المغامرة */
 .adv .advStick{z-index:6}
 .adv{touch-action:none}
+
+/* المراجعة الذكية وشرح «كيف نحلّها؟» */
+.chRvTag{align-self:center;font:900 14px Cairo,sans-serif;color:#1E4FBF;background:linear-gradient(180deg,#EAF6FF,#CFE6FF);border:2px solid #9CC8F5;border-radius:18px;padding:3px 14px;animation:chPop .5s}
+.chHowBtn{display:block;margin:8px auto 0;font:900 15px Cairo,sans-serif;color:#fff;background:linear-gradient(180deg,#8E6CF6,#6A4BD8);border:0;border-radius:16px;padding:6px 18px;box-shadow:0 3px 0 #4A2FA8;cursor:pointer;animation:chPop .5s}
+.chHowBg{position:fixed;inset:0;z-index:30;background:rgba(30,20,80,.45);display:grid;place-items:center;padding:16px}
+.chHowBox{width:min(440px,100%);max-height:calc(100vh - 32px);overflow:auto;background:#FFFDF6;border-radius:22px;padding:14px 14px 16px;box-shadow:0 20px 60px rgba(20,10,60,.4);display:flex;flex-direction:column;gap:8px;animation:chStepIn .35s ease-out}
+.chHowHead{display:flex;align-items:center;gap:10px;font:900 17px Cairo,sans-serif;color:#2A1B66}
+.chHowStep{display:flex;gap:10px;align-items:flex-start;background:#fff;border:2px solid #E7E1FB;border-radius:16px;padding:8px 10px;opacity:0;animation:chStepIn .45s ease-out forwards}
+.chHowStep>em{flex:none;width:26px;height:26px;border-radius:50%;background:#6A4BD8;color:#fff;font:900 14px/26px Cairo,sans-serif;text-align:center;font-style:normal}
+.chHowStep>i{flex:none;font-size:22px;font-style:normal}
+.chHowStep h5{margin:0;font:900 15px Cairo,sans-serif;color:#6A4BD8}
+.chHowStep div{font:700 15px/1.7 Cairo,sans-serif;color:#2A1B66}
+.chHowStep.sol{border-color:#BDECD2;background:#F2FFF7}.chHowStep.sol h5{color:#2E9E5B}
+.chHowStep b{background:#FFF1B8;border-radius:8px;padding:0 6px}.chHowStep p{margin:4px 0 0}
+.chHowSep{font-style:normal;color:#8E6CF6;margin:0 4px}.chHowBin{margin:2px 0}.chHowBin u{text-decoration:none;font-weight:900;color:#6A4BD8}
+@keyframes chStepIn{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
+.chLit{box-shadow:0 0 0 3px #FFC23D,0 0 18px #FFC23D!important;animation:chLitP 1.2s ease-in-out infinite}
+@keyframes chLitP{50%{box-shadow:0 0 0 5px #FFD54A,0 0 28px #FFC23D}}
+
+/* خريطة إتقاني */
+.qmastery{display:flex;flex-direction:column;width:100%;margin:6px 0 10px;background:linear-gradient(180deg,#EFE9FF,#DCD0FF);color:#3B2A8C}.qmastery small{font-weight:700;opacity:.8}
+.sheet.mastery{max-width:760px}
+.msTop{display:flex;gap:16px;align-items:center;flex-wrap:wrap;margin:6px 0 8px}
+.msRing{--p:0;width:110px;height:110px;border-radius:50%;flex:none;display:grid;place-content:center;text-align:center;background:radial-gradient(closest-side,#FFFDF6 76%,transparent 77%),conic-gradient(#6A4BD8 calc(var(--p)*1%),#E7E1FB 0)}
+.msRing b{font:900 26px Cairo,sans-serif;color:#2A1B66;line-height:1}.msRing small{font:700 12px Cairo,sans-serif;color:#6A5F8F}
+.msFacts{display:flex;flex-direction:column;gap:4px;font:700 15px Cairo,sans-serif;color:#2A1B66}.msFacts b{color:#6A4BD8}
+.msTips{background:#FFF8E1;border:2px solid #FFE08A;border-radius:14px;padding:4px 12px;margin-bottom:8px}.msTips p{margin:4px 0;font:700 15px Cairo,sans-serif;color:#5A3B00}
+.msGrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:10px}
+.msCard{background:#fff;border:2px solid color-mix(in srgb,var(--c) 35%,#fff);border-radius:16px;padding:10px;display:flex;flex-direction:column;gap:7px}
+.msCard.lock{opacity:.6;filter:grayscale(.6)}
+.msHead{display:flex;align-items:center;gap:8px}.msHead>i{font-size:26px;font-style:normal;width:42px;height:42px;border-radius:12px;display:grid;place-items:center;background:color-mix(in srgb,var(--c) 15%,#fff)}
+.msHead div{flex:1;display:flex;flex-direction:column}.msHead b{font:900 15px Cairo,sans-serif;color:#2A1B66}.msHead small{font:700 13px Cairo,sans-serif;color:#6A5F8F}
+.msCard.rv .msHead small{color:#1E4FBF}.msCard.top .msHead small{color:#B07A00}
+.msHead em{font:900 18px Cairo,sans-serif;font-style:normal;color:var(--c)}
+.msBar{height:12px;border-radius:8px;background:#EEE9F8;overflow:hidden}.msBar span{display:block;height:100%;border-radius:8px;background:linear-gradient(90deg,color-mix(in srgb,var(--c) 70%,#fff),var(--c));transition:width .8s}
+.msLessons{display:flex;flex-wrap:wrap;gap:4px}
+.msL{font:700 12px Cairo,sans-serif;color:#2A1B66;background:#F6F3FF;border-radius:10px;padding:2px 8px}.msL u{text-decoration:none;color:#E3A21A;letter-spacing:-1px}.msL u s{text-decoration:none;color:#D5CDEA}.msL.lock{color:#9A93B5}
+.msGo{align-self:flex-start;font-size:14px;padding:5px 14px;background:color-mix(in srgb,var(--c) 14%,#fff);color:#2A1B66;border:2px solid color-mix(in srgb,var(--c) 40%,#fff)}
+@media (max-width:520px){.msGrid{grid-template-columns:1fr}.msRing{width:92px;height:92px}.msRing b{font-size:22px}}
+
+/* مؤثرات الجواهر والكلمات */
+.fxGem{position:fixed;z-index:200;font-size:26px;font-style:normal;pointer-events:none;filter:drop-shadow(0 3px 4px rgba(30,60,140,.45));will-change:transform}
+.fxPlus{position:fixed;z-index:200;transform:translate(-50%,0);pointer-events:none;font:900 18px Cairo,sans-serif;color:#1E4FBF;background:#fff;border-radius:12px;padding:0 10px;box-shadow:0 4px 12px rgba(30,60,140,.3);animation:fxUp 1.3s ease-out forwards}
+@keyframes fxUp{0%{opacity:0;transform:translate(-50%,6px) scale(.6)}20%{opacity:1;transform:translate(-50%,0) scale(1.15)}70%{opacity:1}100%{opacity:0;transform:translate(-50%,-26px)}}
+#gemPill.fxBump{animation:fxBump .35s cubic-bezier(.3,1.8,.5,1)}
+@keyframes fxBump{0%{transform:scale(1)}50%{transform:scale(1.35)}100%{transform:scale(1)}}
+.chBurst span{display:inline-block;animation:fxWord .7s cubic-bezier(.25,1.7,.45,1) both}
+.chBurst::before{content:'';position:absolute;inset:-6px;border-radius:30px;background:radial-gradient(circle,rgba(255,255,255,.95),rgba(255,230,140,.0) 70%);animation:fxFlash .5s ease-out forwards;pointer-events:none}
+@keyframes fxWord{0%{transform:scale(.2) rotate(-8deg);opacity:0;text-shadow:0 0 0 #fff}45%{transform:scale(1.35) rotate(3deg);opacity:1;text-shadow:0 0 18px #FFE16A,0 2px 0 #fff}70%{transform:scale(.92) rotate(-1deg)}100%{transform:scale(1);text-shadow:0 2px 0 #fff}}
+@keyframes fxFlash{0%{opacity:1;transform:scale(.6)}100%{opacity:0;transform:scale(1.25)}}
+.chGems.fxBump{animation:fxBump .35s cubic-bezier(.3,1.8,.5,1)}
+
+/* هدف الأسبوع */
+.qweek{display:flex;flex-direction:column;align-items:center;gap:4px;margin:0 0 8px;padding:8px 10px;border-radius:16px;background:linear-gradient(180deg,#E9F9EF,#CFF0DC);border:2px solid #9ED9B4;color:#1F5E3A;text-align:center}
+.qweek b{font:900 15px Cairo,sans-serif}.qweek small{font:700 13px Cairo,sans-serif;opacity:.85}
+.qwBar{display:flex;gap:5px;align-items:center}.qwBar i{width:30px;height:30px;border-radius:10px;background:#fff;border:2px dashed #9ED9B4;display:grid;place-items:center;font-style:normal;font-size:17px}
+.qwBar i.on{border-style:solid;background:#FFF6C8;border-color:#F2C744;animation:chPop .4s}.qwBar em{font-style:normal;font-size:22px;filter:grayscale(1);opacity:.5}
+.qweek.done{background:linear-gradient(180deg,#FFF6D6,#FFE39A);border-color:#F2C744;color:#6B4500}.qweek.done .qwBar em{filter:none;opacity:1}
+
+/* مهمة الموسم (العيدان واليوم الوطني) */
+.act.qseason{display:flex;flex-direction:column;align-items:center;width:100%;margin-bottom:10px;padding:10px;border-radius:16px;font:900 17px Cairo,sans-serif;color:#fff;background:linear-gradient(135deg,#E2475C,#8E6CF6 55%,#3FA3F5);box-shadow:0 4px 0 #4A2FA8,0 0 16px rgba(142,108,246,.5)}
+.act.qseason small{font-weight:700;opacity:.92}.act.qseason.done{filter:saturate(.5);opacity:.85}
+.acSeason{position:relative;height:84px;border-radius:16px;background:linear-gradient(180deg,#FFF4D6,#FFE1B0);display:flex;align-items:flex-end;justify-content:center;gap:10px;overflow:hidden;padding-bottom:8px}
+.acSeason i{width:22px;height:28px;border-radius:50% 50% 46% 46%;background:radial-gradient(circle at 35% 30%,#fff,var(--c) 40%);border:1px solid rgba(0,0,0,.12);animation:acBal 2.4s ease-in-out var(--d) infinite}
+.acSeason b{position:absolute;top:8px;font-size:30px}
+@keyframes acBal{50%{transform:translateY(-10px) rotate(4deg)}}

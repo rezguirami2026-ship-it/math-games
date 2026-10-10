@@ -9,6 +9,8 @@ import { runChallenge, pickN } from './challenge.js';
 import { sheetOpen, sheetClose, btn } from './bench.js';
 import * as quests from './quests.js';
 import { track } from '../core/ops.js';
+import { dueList, reviewItem } from './review.js';
+import { addGems } from '../world/decor.js';
 
 const ROUNDS = 6;
 const BLOCK = ['#E2475C', '#FFC23D', '#3FA3F5', '#2E9E5B', '#8E6CF6', '#F08A24'];
@@ -81,14 +83,14 @@ export function openFinale(W, u, MODS) {
     btn('acBack', () => sheetClose()); btn('acGo', start);
   };
   const start = () => {
-    const items = []; for (let k = 0; items.length < 10 && k < 40; k++) { const l = ls[k % ls.length], pool = MODS[l.id].challenge.make(); const it = pool[Math.floor(Math.random() * pool.length)]; if (it) items.push(it); }
+    const items = []; for (let k = 0; items.length < 10 && k < 40; k++) { const l = ls[k % ls.length], pool = MODS[l.id].challenge.make(); const it = pool[Math.floor(Math.random() * pool.length)]; if (it) { it.src = l.id; items.push(it); } }
     const d = { ch: { items: pickN(items, 10), i: 0, firstTry: 0, tries: 0, gems: 0, streak: 0 } };
     R.run = d; track('adventure_started', 'unit' + (u + 1));
     runChallenge(W, d, { id: 'finale' + u, who: F.who, title: `👑 ${F.title}`, make: () => items, scene: sc.draw,
       exit: () => { delete R.run; bus.emit('save'); },
       onDone: (stars, C) => {
         delete R.run; R.plays++; R.best = Math.max(R.best, stars); track('adventure_completed', 'unit' + (u + 1));
-        game.state.good += 50; game.state.gems = (game.state.gems || 0) + 10; bus.emit('good'); bus.emit('gems'); bus.emit('save'); sfx('win');
+        game.state.good += 50; addGems(10); bus.emit('good'); bus.emit('save'); sfx('win');
         sheetOpen(`<div class="chEnd"><div class="chTreasure">👑</div><div class="chStars">${[1, 2, 3].map(k => `<span class="${k <= stars ? 'on' : ''}">★</span>`).join('')}</div>
           <h3>أتممتَ ${F.title}!</h3><p class="chGot">+٥٠ 💚 و+١٠ 💎</p><p class="muted">أجبت ${ar(C.firstTry)} من ${ar(C.items.length)} من المحاولة الأولى.</p>
           <button class="act big go" id="acAgain">العب مرة أخرى 🔁</button><button class="act ghost" id="acEnd">رجوع إلى العالم</button></div>`);
@@ -122,7 +124,7 @@ export function openExpert(W, id, mod) {
       exit: () => { delete R.run; bus.emit('save'); },
       onDone: (stars, C) => {
         delete R.run; R.plays++; const gold = C.firstTry >= 5, first = gold && !R.gold; if (gold) R.gold = true;
-        game.state.gems = (game.state.gems || 0) + (gold ? 6 : 3); bus.emit('gems'); bus.emit('save'); sfx('win');
+        addGems((gold ? 6 : 3)); bus.emit('save'); sfx('win');
         sheetOpen(`<div class="chEnd"><div class="chTreasure">${gold ? '🌟' : '⚡'}</div><h3>${gold ? 'النجمة الذهبية لك!' : 'تحدٍّ قوي، أحسنت!'}</h3>
           <p class="chGot">+${ar(gold ? 6 : 3)} 💎</p><p class="muted">أجبت ${ar(C.firstTry)} من ${ar(C.items.length)} من المحاولة الأولى.${gold ? (first ? ' 🎉 أول نجمة ذهبية في هذا الدرس!' : '') : ' تحتاج ٥ من ٦ للنجمة الذهبية — حاول مرة أخرى متى شئت.'}</p>
           <button class="act big go" id="acAgain">العب مرة أخرى 🔁</button><button class="act ghost" id="acEnd">رجوع إلى العالم</button></div>`);
@@ -142,17 +144,19 @@ export function openDaily(W, MODS) {
   if (!done.length) { sheetOpen(`<div class="chEnd"><div class="chTreasure">📅</div><h3>مهمة اليوم</h3><p class="muted">أنجز أول درس لتبدأ مهام المراجعة اليومية.</p><button class="act" id="acEnd">حسناً</button></div>`); btn('acEnd', () => sheetClose()); return; }
   if (dailyDone()) { sheetOpen(`<div class="chEnd"><div class="chTreasure">✅</div><h3>أنجزتَ مهمة اليوم!</h3><p class="chGot">🔥 ${ar(D.streak)} ${D.streak === 1 ? 'يوم' : 'أيام'} متتالية</p><p class="muted">عُد غداً لمهمة جديدة.</p><button class="act" id="acEnd">رجوع</button></div>`); btn('acEnd', () => sheetClose()); return; }
   const today = new Date(), seed = today.getDate() + today.getMonth() * 31, pick = done.slice().sort((a, b) => ((a.id.length * 7 + seed) % 13) - ((b.id.length * 7 + seed) % 13)).slice(0, 3);
-  const items = [0, 1, 2].map(k => pickN(MODS[pick[k % pick.length].id].challenge.make(), 1)[0]),   // ثلاث جولات دائماً
-    who = MODS[pick[0].id].challenge.who;
+  // المراجعة الذكية أولاً: مهارات أخطأ فيها الطالب وحان موعدها (حتى ٣)، ثم أسئلة من دروس منجزة لإكمال الجولات الثلاث
+  const rv = dueList().filter(r => quests.isDone(r.l) && MODS[r.l] && MODS[r.l].challenge).slice(0, 3).map(r => reviewItem(r, MODS)).filter(Boolean);
+  const items = rv.concat([0, 1, 2].map(k => { const l = pick[k % pick.length].id, it = pickN(MODS[l].challenge.make(), 1)[0]; it.src = l; return it; })).slice(0, 3),   // ثلاث جولات دائماً
+    who = MODS[(rv[0] || {}).src || pick[0].id].challenge.who;
   const d = { ch: { items, i: 0, firstTry: 0, tries: 0, gems: 0, streak: 0 } }; D.run = d;
   runChallenge(W, d, { id: 'daily', who, title: '📅 مهمة اليوم', make: () => items, scene: SCENES.camel.draw,
     exit: () => { delete D.run; bus.emit('save'); },
     onDone: () => {
       delete D.run; const y = new Date(); y.setDate(y.getDate() - 1);
       D.streak = D.last === dayKey(y) ? D.streak + 1 : 1; D.best = Math.max(D.best, D.streak); D.total++; D.last = dayKey();
-      game.state.gems = (game.state.gems || 0) + 8; bus.emit('gems'); bus.emit('save'); sfx('win');
+      addGems(8); bus.emit('save'); sfx('win');
       sheetOpen(`<div class="chEnd"><div class="chTreasure">📅</div><h3>أحسنت! أنجزتَ مهمة اليوم</h3><p class="chGot">+٨ 💎 · 🔥 ${ar(D.streak)} ${D.streak === 1 ? 'يوم' : 'أيام'} متتالية</p>
-        <p class="muted">مراجعة: ${pick.map(l => l.title).join('، ')}. عُد غداً لمهمة جديدة!</p><button class="act big go" id="acEnd">رائع!</button></div>`);
+        ${rv.length ? `<p class="chGot">🔁 راجعتَ ${rv.length === 1 ? 'مهارة واحدة' : rv.length === 2 ? 'مهارتين' : ar(rv.length) + ' مهارات'} أخطأتَ فيها سابقاً</p>` : ''}<p class="muted">مراجعة: ${[...new Set(items.map(it => (LESSONS.find(l => l.id === it.src) || {}).title).filter(Boolean))].join('، ')}. عُد غداً لمهمة جديدة!</p><button class="act big go" id="acEnd">رائع!</button></div>`);
       document.querySelector('#panel .sheet').classList.add('chSheet'); btn('acEnd', () => sheetClose());
     } });
 }

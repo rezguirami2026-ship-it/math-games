@@ -1,7 +1,7 @@
 // قرية الخير: تخطيط العالم ورسمه. المزرعة والبئر والنخيل تتغير حسب حالة العالم.
 // الرسم بأسلوب 2.5D مشترك (world/art.js): مبانٍ بجدران وأسطح، ظلال نحو الأسفل يميناً، أرصفة بحواف، وأنسجة مواد.
 import { rng, shade, mix, rr, clamp } from '../core/util.js';
-import { FLAGS, PAL, SUN, INK, CAM, leanAt, pattern, sprite, boxShadow, blobShadow, building3d, box3d, minaret, sidrCached, palm, palmCached, shrub, streetLamp, bench, signboard, SEASON, elev, lantern, lanternString, banner, solid } from './art.js';
+import { FLAGS, PAL, SUN, INK, CAM, leanAt, pattern, sprite, boxShadow, blobShadow, building3d, box3d, minaret, sidrCached, palm, palmCached, shrub, streetLamp, bench, signboard, SEASON, elev, lantern, lanternString, banner, bunting, balloons, solid } from './art.js';
 
 export const WORLD = { w: 3200, h: 6500 };   // القرية في الشمال، ثم السوق والميناء شرقاً، والقلعة والمهرجان والجمعية والقافلة والورشة جنوباً
 export const ROADS = [{ x: 0, y: 600, w: 2930, h: 80 }, { x: 700, y: 0, w: 70, h: 600 }];
@@ -309,6 +309,17 @@ function wayfinding(ctx, x, y) {   // لافتة إرشاد عند التقاط�
 }
 
 /* ── أجواء رمضان: حبال فوانيس بين أعمدة الإنارة وفوق ساحة البئر، ولافتة «رمضان كريم» (فوق كل شيء، معلّقة في الهواء) ── */
+/* زينة المواسم (الأعياد واليوم الوطني) في النسخة العادية: رايات ملونة فوق الشارع وحول ساحة البئر، ولافتة، وبالونات */
+export function seasonDecor(ctx, view, t, S) {
+  if (!S || view.y > 900) return;
+  const L = (x, y) => elev(x, y, 66);
+  bunting(ctx, L(612, 594), L(870, 594), 20, 10, S.cols, t);
+  bunting(ctx, L(870, 594), L(1220, 594), 26, 13, S.cols, t);
+  banner(ctx, elev(950, 594, 56), elev(1140, 594, 56), 10, S.banner);
+  bunting(ctx, elev(1000, 270, 96), elev(1240, 460, 116), 24, 11, S.cols, t);
+  bunting(ctx, elev(790, 300, 66), elev(830, 270, 96), 8, 3, S.cols, t);
+  balloons(ctx, WELL.x - 70, WELL.y + 34, S.cols, t); balloons(ctx, WELL.x + 76, WELL.y + 30, S.cols.slice().reverse(), t + 1);
+}
 export function ramadanDecor(ctx, view, t) {
   if (!SEASON.ramadan || view.y > 900) return;
   const L = (x, y) => elev(x, y, 66);   // رأس عمود الإنارة

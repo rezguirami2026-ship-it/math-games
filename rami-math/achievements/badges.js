@@ -47,6 +47,8 @@ export const BADGES = [
   { id: 'b_give3', icon: '🤲', name: 'يد الخير', desc: 'تبرّع من «صندوق الخير» ثلاث مرات', prog: s => [((s.charity || {}).n) || 0, 3] },
   { id: 'b_give300', icon: '💚', name: 'القلب الكريم', desc: 'قدّم ٣٠٠ نقطة خير في أعمال الخير', prog: s => [((s.charity || {}).total) || 0, 300] },
   { id: 'b_secrets', icon: '🗝️', name: 'مكتشف الأسرار', desc: 'اكتشف الممرات السرية الثلاثة في الليل', prog: s => [Object.keys((s.events || {}).secrets || {}).length, 3] },
+  { id: 'b_week1', icon: '🎯', name: 'هدف الأسبوع', desc: 'أنجز هدف الأسبوع: ٥ تحديات في أسبوع واحد', prog: s => [Math.min(1, ((s.weekly || {}).wins) || 0), 1] },
+  { id: 'b_week4', icon: '🗓️', name: 'المواظب', desc: 'أنجز هدف الأسبوع في ٤ أسابيع', prog: s => [((s.weekly || {}).wins) || 0, 4] },
   { id: 'b_events', icon: '🎪', name: 'صديق الزوّار', desc: 'شارك في ٥ أحداث يومية في الساحة', prog: s => [Object.keys((s.events || {}).done || {}).length, 5] },
   { id: 'b_adv_all', icon: '👑', name: 'بطل قرية الخير الأكبر', desc: 'أكمل المغامرات التسع كلها', prog: s => [['rescue', 'storm', 'island', 'oldcity', 'lanterns', 'lighthouse', 'desert', 'mountain', 'castle'].filter(k => ((s.adventures || {})[k] || {}).done).length, 9] },
   { id: 'b_lvl10', icon: '👑', name: 'حكيم القرية', desc: 'صل إلى المستوى ١٠', prog: s => [levelOf(s).n, 10] },

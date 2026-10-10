@@ -21,7 +21,7 @@ export function memories(s = game.state) {
   Object.entries((s.world && s.world.visited) || {}).forEach(([id, t]) => { const a = AREAS[id]; if (a) M.push([a[0], `دخل ${a[1]}`, 'منطقة جديدة في العالم', a[2], t]); });
   Object.entries(s.adventures || {}).forEach(([id, r]) => { if (r && r.done && ADV[id]) M.push([ADV[id].split(' ')[0], `أكمل مغامرة «${ADV[id].replace(/^\S+ /, '')}»`, `⭐ ${ar(r.best || 0)} من ٥ نجوم مخفية`, '#D9CCF2', r.at]); });
   if (s.grandSeen) M.push(['👑', 'بطل قرية الخير الأكبر', 'أكمل المغامرات التسع كلها', '#FFD54A', s.grandSeen]);
-  if (done.polyhedra) M.push(['🎓', 'أتمّ الدروس التسعة والستين', 'منهج الصف السادس كاملاً', '#C7E8C9', done.polyhedra]);
+  if (done.regularPolyhedra) M.push(['🎓', 'أتمّ الدروس التسعة والستين', 'منهج الصف السادس كاملاً', '#C7E8C9', done.regularPolyhedra]);
   return M.sort((a, b) => (a[4] || 9e15) - (b[4] || 9e15));   // ما لا تاريخ له في الآخر
 }
 

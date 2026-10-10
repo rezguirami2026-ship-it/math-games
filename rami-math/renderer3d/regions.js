@@ -142,25 +142,45 @@ function chimney(b, H) {
   return g;
 }
 
-export function buildRegions({ quality }) {
+/* حدود المنطقة التقريبية من ثوابتها (قبل بنائها): لنعرف متى يقترب منها اللاعب */
+function regionBox(R) {
+  const xs = [], zs = [], pt = (x, z) => { if (isFinite(x) && isFinite(z)) { xs.push(x); zs.push(z); } };
+  (R.buildings || []).forEach(b => { pt(b.x, b.y); pt(b.x + b.w, b.y + b.h); });
+  (R.palms || []).forEach(p => pt(p.x, p.y)); (R.shrubs || []).forEach(([x, y]) => pt(x, y)); (R.benches || []).forEach(([x, y]) => pt(x, y)); (R.wells || []).forEach(([x, y]) => pt(x, y));
+  (R.kiosks || []).forEach(k => { pt(k.x, k.y); pt(k.x + (k.w || 0), k.y + (k.h || 0)); });
+  [R.castle, R.clockTower, R.lighthouse].forEach(o => { if (o) { pt(o.x, o.y); pt(o.x + (o.w || 0), o.y + (o.h || 0)); } });
+  if (R.gateEW) pt((R.gateEW[1] + R.gateEW[2]) / 2, R.gateEW[0]);
+  if (R.gateNS !== undefined && zs.length) pt(R.gateNS, (Math.min(...zs) + Math.max(...zs)) / 2);
+  return xs.length ? { x0: Math.min(...xs), z0: Math.min(...zs), x1: Math.max(...xs), z1: Math.max(...zs) } : null;
+}
+/* المناطق تُبنى عند الحاجة: near(مستطيل) يبني ما يقع فيه منها (منطقة واحدة في كل استدعاء على الأكثر حتى لا يتقطع اللعب).
+   onBuild(group) يُبلَّغ بكل منطقة جديدة (للاستبعاد بالمسافة ولأجواء رمضان) */
+export function buildRegions({ quality, onBuild }) {
   const group = new THREE.Group(), fades = [], ticks = [], gates = [];
-  const palmList = [], shrubList = [], P = new Parts();
-  ORDER.forEach((R, ri) => {
-    (R.buildings || []).forEach(b => { const o = omaniHouse(b); group.add(o); fades.push(fader(o, b, (b.H || 90) * SCALE_H)); if (b.chimney) { const c = chimney(b, (b.H || 90) * SCALE_H + 9); group.add(c); ticks.push(c.userData.tick); } });
+  const slots = ORDER.map((R, ri) => ({ R, ri, box: regionBox(R), g: null }));
+  function build(slot) {
+    const { R, ri } = slot, rg = new THREE.Group(), palmList = [], shrubList = [], P = new Parts();
+    (R.buildings || []).forEach(b => { const o = omaniHouse(b); rg.add(o); fades.push(fader(o, b, (b.H || 90) * SCALE_H)); if (b.chimney) { const c = chimney(b, (b.H || 90) * SCALE_H + 9); rg.add(c); ticks.push(c.userData.tick); } });
     (R.palms || []).forEach(p => palmList.push(p));
     (R.shrubs || []).forEach(([x, y, f, r]) => shrubList.push({ x, y, f, r: r || 12 }));
     (R.benches || []).forEach(([x, y]) => bench(P, x, y));
-    (R.wells || []).forEach(([x, y, r]) => group.add(well(x, y, r, true)));
-    (R.kiosks || []).forEach(s => group.add(kiosk(s)));
-    if (R.castle) { const c = castle(R.castle, R.castleH); group.add(c); ticks.push(c.userData.tick); fades.push(fader(c, R.castle, R.castleH * SCALE_H + 80)); }
-    if (R.clockTower) { const c = clockTower(R.clockTower); group.add(c); ticks.push(c.userData.tick); }
-    if (R.lighthouse) { const c = lighthouse(R.lighthouse); group.add(c); ticks.push(c.userData.tick); }
+    (R.wells || []).forEach(([x, y, r]) => rg.add(well(x, y, r, true)));
+    (R.kiosks || []).forEach(s => rg.add(kiosk(s)));
+    if (R.castle) { const c = castle(R.castle, R.castleH); rg.add(c); ticks.push(c.userData.tick); fades.push(fader(c, R.castle, R.castleH * SCALE_H + 80)); }
+    if (R.clockTower) { const c = clockTower(R.clockTower); rg.add(c); ticks.push(c.userData.tick); }
+    if (R.lighthouse) { const c = lighthouse(R.lighthouse); rg.add(c); ticks.push(c.userData.tick); }
     const gt = R.gateEW ? gateEW(R.gateEW) : R.gateNS !== undefined ? gateNS(R.gateNS) : null;
-    if (gt) { group.add(gt); gates[ri] = gt; }
-  });
-  group.add(palms(palmList)); group.add(shrubs(shrubList)); group.add(P.build());
+    if (gt) { rg.add(gt); gates[ri] = gt; }
+    if (palmList.length) rg.add(palms(palmList)); if (shrubList.length) rg.add(shrubs(shrubList)); rg.add(P.build());
+    group.add(rg); slot.g = rg; if (onBuild) onBuild(rg);
+  }
+  const hit = (b, r) => !b || (b.x1 > r.x0 && b.x0 < r.x1 && b.z1 > r.z0 && b.z0 < r.z1);
   return {
     group,
+    near(r, max = 1) {   // الأقرب إلى مركز المستطيل أولاً (حين ينتقل البطل بعيداً تُبنى منطقته قبل جاراتها)
+      const cx = (r.x0 + r.x1) / 2, cz = (r.z0 + r.z1) / 2, d = b => !b ? 0 : Math.hypot(Math.max(b.x0 - cx, 0, cx - b.x1), Math.max(b.z0 - cz, 0, cz - b.z1));
+      const todo = slots.filter(s => !s.g && hit(s.box, r)).sort((a, b) => d(a.box) - d(b.box)).slice(0, max); todo.forEach(build); return todo.length; },
+    get built() { return slots.filter(s => s.g).length; },
     update(t, pl, open) {
       ticks.forEach(f => f(t)); if (pl) fades.forEach(f => f(pl));
       if (open) gates.forEach((g, i) => g && g.userData.setOpen(+open[i] || 0));

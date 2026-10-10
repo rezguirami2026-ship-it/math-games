@@ -100,6 +100,27 @@ export function lanternString(ctx, a, b, sag, n, t) {
   const cols = ['#E3B04B', '#2F8F86', '#C2453A', '#7B4FA8'];
   for (let k = 1; k <= n; k++) { const [x, y] = pt(k / (n + 1)); lantern(ctx, x, y + 4, cols[k % 4], t, k + a[0]); }
 }
+/* رايات مثلثة ملونة على حبل متدلٍّ (زينة الأعياد واليوم الوطني)، تتمايل قليلاً مع الريح */
+export function bunting(ctx, a, b, sag, n, cols, t = 0) {
+  const pt = u => [a[0] + (b[0] - a[0]) * u, a[1] + (b[1] - a[1]) * u + Math.sin(Math.PI * u) * sag];
+  ctx.strokeStyle = 'rgba(50,35,25,.75)'; ctx.lineWidth = 1; ctx.beginPath(); for (let k = 0; k <= 20; k++) { const [x, y] = pt(k / 20); k ? ctx.lineTo(x, y) : ctx.moveTo(x, y); } ctx.stroke();
+  for (let k = 0; k < n; k++) {
+    const [x1, y1] = pt((k + .15) / n), [x2, y2] = pt((k + .85) / n), sw = Math.sin(t * 3 + k) * 1.6, c = cols[k % cols.length];
+    ctx.fillStyle = c; ctx.beginPath(); ctx.moveTo(x1, y1); ctx.lineTo(x2, y2); ctx.lineTo((x1 + x2) / 2 + sw, (y1 + y2) / 2 + 12); ctx.closePath(); ctx.fill();
+    ctx.strokeStyle = c === '#FFFFFF' ? 'rgba(0,0,0,.25)' : 'rgba(0,0,0,.18)'; ctx.stroke();
+  }
+}
+/* عنقود بالونات مربوط بنقطة على الأرض، يتمايل */
+export function balloons(ctx, x, y, cols, t = 0, h = 70) {
+  const n = Math.min(5, cols.length);
+  for (let k = 0; k < n; k++) {
+    const a = (k - (n - 1) / 2) * .32 + Math.sin(t * 1.4 + k) * .05, bx = x + Math.sin(a) * h, by = y - Math.cos(a) * h - (k % 2) * 10;
+    ctx.strokeStyle = 'rgba(60,40,30,.6)'; ctx.lineWidth = 1; ctx.beginPath(); ctx.moveTo(x, y); ctx.quadraticCurveTo(x + (bx - x) * .3, y - h * .5, bx, by + 11); ctx.stroke();
+    const g = ctx.createRadialGradient(bx - 3, by - 4, 1, bx, by, 12); g.addColorStop(0, '#fff'); g.addColorStop(.25, cols[k]); g.addColorStop(1, shade(cols[k], -40));
+    ctx.fillStyle = g; ctx.beginPath(); ctx.ellipse(bx, by, 9, 11, 0, 0, 7); ctx.fill();
+    ctx.fillStyle = shade(cols[k], -50); ctx.beginPath(); ctx.moveTo(bx - 2, by + 11); ctx.lineTo(bx + 2, by + 11); ctx.lineTo(bx, by + 14); ctx.fill();
+  }
+}
 export function banner(ctx, a, b, sag, text) {   // لافتة قماشية معلقة على حبل
   const mx = (a[0] + b[0]) / 2, my = (a[1] + b[1]) / 2 + sag;
   ctx.strokeStyle = 'rgba(50,35,25,.75)'; ctx.lineWidth = 1; ctx.beginPath(); ctx.moveTo(a[0], a[1]); ctx.quadraticCurveTo(mx, my + sag, b[0], b[1]); ctx.stroke();

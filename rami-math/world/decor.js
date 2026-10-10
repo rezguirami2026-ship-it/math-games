@@ -4,6 +4,7 @@ import { game } from '../core/state.js';
 import { bus } from '../core/events.js';
 import { sfx } from '../core/sound.js';
 import { ar, shade } from '../core/util.js';
+import { flyGems } from '../ui/fx.js';
 
 export const DECOR = [
   { id: 'flowers', icon: '🌷', name: 'أصيص زهور', price: 5, x: 1022, y: 498 },
@@ -26,10 +27,12 @@ export const DECOR = [
   { id: 'goldDallah', icon: '☕', name: 'الدلّة الذهبية الكبيرة', price: 0, reward: true, x: 1020, y: 610 },
   { id: 'cooler', icon: '🚰', name: 'برّادة ماء القرية', price: 0, reward: true, x: 1290, y: 590 },   // من «صندوق الخير»
   { id: 'qindeel', icon: '🪔', name: 'قنديل الخير', price: 0, reward: true, x: 915, y: 500 },
+  { id: 'eidStar', icon: '🌙', name: 'هلال العيد المضيء', price: 0, reward: true, x: 1404, y: 616 },   // جائزة «مهمة العيد»
+  { id: 'khanjar', icon: '🗡️', name: 'نُصُب الخنجر العُماني', price: 0, reward: true, x: 1378, y: 560 },   // جائزة «مهمة اليوم الوطني»
   { id: 'astrolabe', icon: '🧭', name: 'إسطرلاب الفلكي حمدان', price: 0, reward: true, x: 1240, y: 520 }   // جائزة مغامرة «إنقاذ القرية» (لا تُباع)
 ];
 export const gems = () => (game.state && game.state.gems) || 0;
-export function addGems(n) { const s = game.state; s.gems = (s.gems || 0) + n; bus.emit('gems'); }
+export function addGems(n, x, y) { const s = game.state; s.gems = (s.gems || 0) + n; bus.emit('gems'); if (n > 0) flyGems(n, x, y); }   // الجواهر تطير إلى العدّاد
 export const owned = id => !!(game.state.decor && game.state.decor[id]);
 export function buy(id) {
   const s = game.state, d = DECOR.find(x => x.id === id); if (!d || owned(id) || gems() < d.price) return false;
@@ -43,6 +46,16 @@ export function initGems(s) {
 
 const sh = (c, x, y, rx) => { c.fillStyle = 'rgba(60,35,10,.22)'; c.beginPath(); c.ellipse(x + 6, y, rx, rx * .3, 0, 0, 7); c.fill(); };
 const DRAW = {
+  eidStar(c, x, y, t) { sh(c, x, y, 14); c.fillStyle = '#6B6470'; c.fillRect(x - 9, y - 7, 18, 7); c.fillStyle = '#C9971C'; c.fillRect(x - 2, y - 70, 4, 64);
+    c.fillStyle = `rgba(255,214,110,${.28 + Math.sin(t * 2.4) * .1})`; c.beginPath(); c.arc(x, y - 84, 20, 0, 7); c.fill();
+    c.save(); c.beginPath(); c.arc(x, y - 84, 13, 0, 7); c.clip(); c.fillStyle = '#FFD54A'; c.beginPath(); c.arc(x, y - 84, 13, 0, 7); c.arc(x + 6, y - 87, 11, 0, 7); c.fill('evenodd'); c.restore();   // هلال: دائرة ناقص دائرة (بلا مسح لما تحته)
+    c.fillStyle = '#FFE16A'; c.beginPath(); for (let k = 0; k < 10; k++) { const a = -Math.PI / 2 + k * Math.PI / 5, r = k % 2 ? 2.6 : 6; c.lineTo(x + 9 + Math.cos(a) * r, y - 84 + Math.sin(a) * r); } c.fill();
+    ['#E2475C', '#3FA3F5', '#2E9E5B'].forEach((col, k) => { const sx = x + (k - 1) * 13, sy = y - 54 + Math.sin(t * 2 + k) * 1.5; c.strokeStyle = '#7A5A2A'; c.lineWidth = .8; c.beginPath(); c.moveTo(x, y - 64); c.lineTo(sx, sy - 6); c.stroke(); c.fillStyle = col; c.fillRect(sx - 3, sy - 6, 6, 9); c.fillStyle = 'rgba(255,240,180,.8)'; c.fillRect(sx - 1.5, sy - 4, 3, 5); }); },
+  khanjar(c, x, y) { sh(c, x, y, 18); c.fillStyle = '#B8AE98'; c.fillRect(x - 16, y - 16, 32, 16); c.fillStyle = '#CFC6B0'; c.fillRect(x - 13, y - 22, 26, 6); c.fillStyle = '#9C9488'; c.fillRect(x - 16, y - 3, 32, 3);
+    c.strokeStyle = '#C9971C'; c.lineWidth = 2; [[-1, 1], [1, -1]].forEach(([a, b]) => { c.beginPath(); c.moveTo(x - 16 * a, y - 66); c.lineTo(x + 16 * a, y - 30); c.stroke(); });
+    c.fillStyle = '#E3B04B'; c.fillRect(x - 3, y - 74, 6, 12); c.beginPath(); c.ellipse(x, y - 76, 7, 3.5, 0, 0, 7); c.fill(); c.fillRect(x - 8, y - 63, 16, 3);
+    c.beginPath(); c.moveTo(x - 4, y - 60); c.lineTo(x + 4, y - 60); c.lineTo(x + 5, y - 44); c.quadraticCurveTo(x + 8, y - 28, x + 18, y - 28); c.lineTo(x + 18, y - 24); c.quadraticCurveTo(x + 2, y - 24, x - 4, y - 44); c.closePath(); c.fill();
+    c.strokeStyle = '#8A5A00'; c.lineWidth = 1; c.stroke(); c.fillStyle = '#C8102E'; c.beginPath(); c.arc(x, y - 52, 1.8, 0, 7); c.fill(); },
   flowers(c, x, y) { sh(c, x, y, 12); c.fillStyle = '#B8613E'; c.beginPath(); c.moveTo(x - 11, y - 18); c.lineTo(x + 11, y - 18); c.lineTo(x + 8, y); c.lineTo(x - 8, y); c.fill(); c.fillStyle = '#D9824E'; c.fillRect(x - 12, y - 20, 24, 4);
     [[-6, -26, '#E2475C'], [0, -30, '#FFC23D'], [6, -26, '#F08AB0'], [-2, -24, '#fff']].forEach(([dx, dy, col]) => { c.fillStyle = '#3E8A3A'; c.fillRect(x + dx - .7, y + dy, 1.4, 8); c.fillStyle = col; c.beginPath(); c.arc(x + dx, y + dy, 4, 0, 7); c.fill(); }); },
   lantern(c, x, y, t) { sh(c, x, y, 8); c.fillStyle = '#3D3A3A'; c.fillRect(x - 2, y - 50, 4, 50); c.fillStyle = '#C9971C'; c.fillRect(x - 9, y - 66, 18, 4); c.fillRect(x - 6, y - 48, 12, 3);

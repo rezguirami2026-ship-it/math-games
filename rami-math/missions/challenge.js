@@ -8,7 +8,10 @@ import { sfx, cheer } from '../core/sound.js';
 import { OUT } from '../content/outcomes.js';
 import { game } from '../core/state.js';
 import { addGems } from '../world/decor.js';
-import { changed, finish, sheetOpen, sheetClose, msgBox, setMsg, numPad, btn } from './bench.js';
+import { changed, finish, sheetOpen, sheetClose, msgBox, setMsg, numPad, btn, dec } from './bench.js';
+import { miss, hit } from './review.js';
+import { praise } from '../core/voices.js';
+import { weeklyTick } from './weekly.js';
 
 const PEOPLE_ICON = { salem: '🧔🏽', yousef: '👦🏽', hamad: '👨🏽‍🌾', saeed: '📮', umkhalid: '👩🏽', rashed: '👨🏽‍🔧', naser: '🧔🏽', mubarak: '🪚', khalid: '🧑🏽‍🏫', abdullah: '👨🏽‍✈️', shaikha: '👵🏽', juma: '🐑', saif: '⚓', reem: '👷🏽‍♀️', layla: '🎁', ali: '🧱', badr: '🎣', hind: '🎨', sulaiman: '🌬️', majid: '🗺️', hamdan: '🌉', muna: '🏺', zaid: '💍', aisha: '🍮', fahad: '🎒', harith: '🪣', qais: '🔔', mariam: '🏪', khamis: '🌾', saleh: '🌴', murad: '🧱', zahra: '🍬', azzan: '🛡️', safiya: '🍲', umsaid: '👵🏽', mudhaffar: '🕰️', nawal: '📞', tariq: '🏠', hamid: '🚌', sara: '🌱', khalfan: '🌴', noor: '🎪', yaqoob: '🎡', jamal: '🏦', ruqaya: '📜', saud: '🛒', obaid: '🐟', hessa: '🎲', adil: '⚙️', latifa: '🎂', ghanim: '🏷️', shamsa: '🥣', raya: '🍫', humaid: '🛢️', mansour: '⛽', sultan: '🐪', lubna: '✈️', faisal: '📅', wafa: '🌷', buthaina: '🏜️', hamood: '🔲', amna: '🚩', mohsen: '📐', zainab: '📦', jaber: '💎' };
 export const DRAW = {};   // رسوم canvas داخل السؤال: <canvas data-draw="اسم"> تملؤها DRAW[اسم](canvas) بعد العرض
@@ -45,26 +48,29 @@ function render(W, d, cfg, msg) {
   const el = document.getElementById('panel'), sheet = el.querySelector('.sheet');
   sheet.classList.add('chSheet'); sheet.dataset.i = C.i;
   const gold = n >= 6 && C.i === n - 1;   // سؤال الكنز: الجولة الأخيرة ذهبية وبجوهرتين
+  if (it.rv) { const q = sheet.querySelector('.chQ'); if (q) q.insertAdjacentHTML('beforebegin', '<div class="chRvTag">🔁 مراجعة: مهارة أخطأت فيها سابقاً — أنت أقوى الآن!</div>'); }
+  const src = it.src || cfg.id;   // الدرس الذي جاء منه السؤال (للمراجعة الذكية)
   if (gold) { sheet.classList.add('chGold'); const q = sheet.querySelector('.chQ'); if (q) q.insertAdjacentHTML('beforebegin', '<div class="chGoldTag">🎁 سؤال الكنز · جوهرتان 💎💎</div>'); }
   el.querySelectorAll('canvas[data-draw]').forEach(cv => { try { DRAW[cv.dataset.draw] && DRAW[cv.dataset.draw](cv); } catch (e) { console.warn('رسم التحدي', e); } });
   if (cfg.exit) btn('chExit', () => { sheetClose(); cfg.exit(); });   // النشاط اختياري: يخرج منه متى شاء بلا خسارة
   let locked = false;
   const ok = () => { if (locked) return; locked = true;
     const gold = n >= 6 && C.i === n - 1; if (gold) { C.gems = (C.gems || 0) + 1; addGems(1); }
-    const first = C.tries === 0; C.firstTry += first ? 1 : 0; C.streak = first ? (C.streak || 0) + 1 : 0; C.gems = (C.gems || 0) + 1; C.tries = 0; C.i++; addGems(1);   // جوهرة لكل إجابة صحيحة (تُصرف في متجر الزينة)
+    const first = C.tries === 0, rvr = hit(src, it.out, first); C.firstTry += first ? 1 : 0; C.streak = first ? (C.streak || 0) + 1 : 0; C.gems = (C.gems || 0) + 1; C.tries = 0; C.i++; addGems(1);   // جوهرة لكل إجابة صحيحة (تُصرف في متجر الزينة)
    
     const S = game.state.stats = game.state.stats || {}; if (!first) S.persist = (S.persist || 0) + 1; S.streak = Math.max(S.streak || 0, C.streak);   // للأوسمة: المثابرة وأطول سلسلة
-    sfx('good'); changed();
-    const praise = PRAISE[Math.floor(Math.random() * PRAISE.length)];
+    sfx('good'); changed(); praise(cfg.who);   // الشخصية تمدح بصوتها
+    const praiseT = PRAISE[Math.floor(Math.random() * PRAISE.length)];
     // الإطراء والشرح يظهران بعد الإجابة مباشرة في الاحتفال، والسؤال التالي يبدأ برسالة محايدة
     const fc = sheet.querySelector('.chFace'); if (fc) { fc.classList.remove('cheer'); void fc.offsetWidth; fc.classList.add('cheer'); }   // الشخصية تقفز فرحاً
-    const MS = { 3: ['🔥', 'ثلاثة متتالية!'], 5: ['⚡', 'خمسة متتالية! مذهل!'], 8: ['🌟', 'ثمانية متتالية! أسطورة!'] }, ms = MS[C.streak];   // سلسلة الإجابات
+    const MS = { 3: ['🔥', 'ثلاثة متتالية!'], 5: ['⚡', 'خمسة متتالية! مذهل!'], 8: ['🌟', 'ثمانية متتالية! أسطورة!'] }, ms = rvr === 'mastered' ? ['🧠', 'أتقنتَ هذه المهارة!'] : MS[C.streak];   // سلسلة الإجابات، أو إتقان مهارة من المراجعة
     if (ms) { cheer('medal', C.streak); setTimeout(() => cheer('medal', C.streak + 4), 140); setTimeout(() => cheer('sparkle'), 260); }
     if (gold) setTimeout(() => cheer('sparkle'), 120);
-    sheet.insertAdjacentHTML('beforeend', `<div class="chBurst${it.why ? ' why' : ''}${ms ? ' streak' : ''}${gold ? ' gold' : ''}"><div class="chCheer"><i>${face}</i><em>👏</em></div><b>${gold ? '💎💎' : ms ? ms[0] : '💎'}</b><span>${ms ? ms[1] : gold ? 'كنز!' : praise}</span>${it.why ? `<p>${it.why}</p>` : ''}${'<i></i>'.repeat(10)}</div>`);
+    sheet.insertAdjacentHTML('beforeend', `<div class="chBurst${it.why ? ' why' : ''}${ms ? ' streak' : ''}${gold ? ' gold' : ''}"><div class="chCheer"><i>${face}</i><em>👏</em></div><b>${gold ? '💎💎' : ms ? ms[0] : '💎'}</b><span>${ms ? ms[1] : gold ? 'كنز!' : praiseT}</span>${it.why ? `<p>${it.why}</p>` : ''}${'<i></i>'.repeat(10)}</div>`);
     setTimeout(() => { if (C.i >= n) done(W, d, cfg); else render(W, d, cfg, null); }, it.why ? 2200 : ms || gold ? 1300 : 850); };
   const bad = extra => { const fc = sheet.querySelector('.chFace'); if (fc) { fc.classList.remove('think'); void fc.offsetWidth; fc.classList.add('think'); }   // تفكّر معك، لا تغضب
-    C.tries++; C.streak = 0; sfx('cough'); changed(); setMsg('💡 ' + (extra || it.hint), 'bad'); sheet.classList.add('shake'); setTimeout(() => sheet.classList.remove('shake'), 450); };
+    if (C.tries === 0) miss(src, it.out); C.tries++; C.streak = 0; sfx('cough'); changed(); setMsg('💡 ' + (extra || it.hint) + (C.tries >= 2 ? '<button class="chHowBtn" id="chHow">📖 كيف نحلّها؟</button>' : ''), 'bad');
+    if (C.tries >= 2) btn('chHow', () => howTo(sheet, it, face)); sheet.classList.add('shake'); setTimeout(() => sheet.classList.remove('shake'), 450); };
   const wrongCount = w => w === 1 ? 'بطاقة واحدة ليست في مكانها. ' : `${ar(w)} بطاقات ليست في مكانها. `;
   if (it.type === 'choice' || it.type === 'tf') el.querySelectorAll('.chOpt').forEach(b => b.onclick = e => { e.stopPropagation(); +b.dataset.k === it.ans ? (b.classList.add('on'), ok()) : (b.classList.add('no'), bad()); });
   if (it.type === 'multi') { const sel = new Set(); el.querySelectorAll('.chOpt').forEach(b => b.onclick = e => { e.stopPropagation(); const k = +b.dataset.k; sel.has(k) ? sel.delete(k) : sel.add(k); b.classList.toggle('on'); sfx('click'); });
@@ -100,9 +106,42 @@ function render(W, d, cfg, msg) {
   if (it.type === 'error') el.querySelectorAll('.chStep').forEach(b => b.onclick = e => { e.stopPropagation(); +b.dataset.k === it.ans ? (b.classList.add('on'), ok()) : (b.classList.add('no'), bad()); });
   if (it.type === 'num') { const pad = numPad(el.querySelector('#chPad'), 'تحقّق', v => { Math.round(v * 1000) === Math.round(it.ans * 1000) ? ok() : (bad(), pad.clear()); }, { neg: it.neg, dot: it.dot !== false }); }
 }
+/* «كيف نحلّها؟»: بعد خطأين في السؤال نفسه — شرح من أربع خطوات يظهر تباعاً: المطلوب، الفكرة، الحل، ثم دورك.
+   لا يُنهي الجولة عنه: الطالب يُدخل الحل بنفسه (والإجابة المضيئة تساعده في أسئلة الاختيار) */
+const SEP = '<em class="chHowSep">←</em>';
+function solution(it) {
+  const o = it.opts || [];
+  if (it.type === 'choice' || it.type === 'error') return it.type === 'error' ? `الخطأ في الخطوة ${ar(it.ans + 1)}: <bdi>${it.steps[it.ans]}</bdi>` : `<b>${o[it.ans]}</b>`;
+  if (it.type === 'tf') return it.ans === 0 ? 'العبارة <b>صحيحة</b> ✔' : 'العبارة <b>خاطئة</b> ✘';
+  if (it.type === 'multi') return it.ans.map(k => `<b>${o[k]}</b>`).join('، ');
+  if (it.type === 'order') return it.ans.map(k => `<b>${o[k]}</b>`).join(SEP);
+  if (it.type === 'build') return `<b dir="ltr">${it.ans.map(k => o[k]).join('')}</b>`;
+  if (it.type === 'sort') return it.bins.map((b, i) => `<div class="chHowBin"><u>${b}</u> ${o.filter((_, k) => it.ans[k] === i).map(x => `<b>${x}</b>`).join(' ')}</div>`).join('');
+  if (it.type === 'match') return it.left.map((l, k) => `<div class="chHowBin"><b>${l}</b> ⟷ <b>${it.right[it.ans[k]]}</b></div>`).join('');
+  if (it.type === 'num') return `<b>${dec(it.ans)}</b>`;
+  if (it.type === 'line') { const t = (it.ticks || []).find(t => t.l && Math.abs(t.v - it.ans) < 1e-9); return `السهم عند <b>${t ? t.l : dec(it.ans)}</b>`; }
+  return '';
+}
+const YOUR_TURN = { choice: 'اضغط الإجابة المضيئة ✨', tf: 'اضغط الإجابة المضيئة ✨', error: 'اضغط الخطوة المضيئة ✨', multi: 'اختر الإجابات المضيئة ✨ ثم «تحقّق»', order: 'اضغط البطاقات بهذا الترتيب', build: 'كوّن العدد من البطاقات', sort: 'ضع كل بطاقة في صندوقها', match: 'صِل كل بطاقة بما يقابلها', num: 'اكتب العدد في اللوحة', line: 'حرّك السهم إلى مكانه' };
+function howTo(sheet, it, face) {
+  const old = sheet.querySelector('.chHowBg'); if (old) old.remove();
+  const steps = [
+    ['🔍', 'ماذا يطلب السؤال؟', it.out && OUT[it.out] ? `المهارة: ${OUT[it.out]}` : 'اقرأ السؤال مرة أخرى بهدوء، وحدّد الأعداد والمطلوب.'],
+    ['💡', 'الفكرة', it.hint || 'فكّر في القاعدة التي تعلمتها في هذا الدرس.'],
+    ['✅', 'الحل', solution(it) + (it.why ? `<p>${it.why}</p>` : '')],
+    ['👆', 'دورك الآن', YOUR_TURN[it.type] || 'جرّب مرة أخرى']];
+  sheet.insertAdjacentHTML('beforeend', `<div class="chHowBg"><div class="chHowBox"><div class="chHowHead"><span class="chFace">${face}</span><b>📖 كيف نحلّها؟ خطوة بخطوة</b></div>
+    ${steps.map((st, k) => `<div class="chHowStep${k === 2 ? ' sol' : ''}" style="animation-delay:${k * .55}s"><em>${ar(k + 1)}</em><i>${st[0]}</i><div><h5>${st[1]}</h5><div>${st[2]}</div></div></div>`).join('')}
+    <button class="act go big" id="chHowOk">فهمت، سأجرّب ✋</button></div></div>`);
+  sfx('click');
+  btn('chHowOk', () => { sheet.querySelector('.chHowBg').remove();
+    const lit = it.type === 'multi' ? it.ans : ['choice', 'tf', 'error'].includes(it.type) ? [it.ans] : [];
+    sheet.querySelectorAll(it.type === 'error' ? '.chStep' : '.chOpt').forEach(b => { if (lit.includes(+b.dataset.k)) b.classList.add('chLit'); }); });
+}
 // عند الإنهاء تُحذف الأسئلة من الحفظ ويبقى ملخصها فقط (رمز التقدّم أقصر)
 async function done(W, d, cfg) {
   const C = d.ch, n = C.items.length, stars = C.firstTry >= n ? 3 : C.firstTry >= n - 2 ? 2 : 1;
+  weeklyTick();   // كل تحدٍّ منجز يُحسب لهدف الأسبوع
   if (cfg.onDone) return cfg.onDone(stars, C);   // نشاط اختياري: له شاشة نهاية خاصة
   d.stars = Math.max(d.stars || 0, stars); changed();
   sheetOpen(`<div class="chEnd"><div class="chDance"><i>${PEOPLE_ICON[cfg.who] || '🧑🏽'}</i><span>🎉</span><span>🎊</span></div><div class="chTreasure">🎁</div><div class="chStars">${[1, 2, 3].map(k => `<span class="${k <= stars ? 'on' : ''}">★</span>`).join('')}</div>

@@ -261,7 +261,7 @@ export function buildPerson(look) {
   const carry = new THREE.Group(); carry.position.set(0, shY - 12, 7.5); torso.add(carry);
   const crateM = mat('#C9894A', .85);
   for (let i = 0; i < 6; i++) { const b = mesh(G.box, crateM); b.scale.set(8, 6, 7); b.position.set((i % 2) * .8, i * 6.2, 0); b.visible = false; carry.add(b); }
-  const sh = blob(); sh.scale.set(9 * sx, 1, 7 * sx); sh.position.y = .3; root.add(sh);
+  const sh = blob(); sh.userData.blob = 1; sh.scale.set(9 * sx, 1, 7 * sx); sh.position.y = .3; root.add(sh);
   root.scale.setScalar(S);
   root.traverse(o => { if (o.isMesh && o !== sh) o.castShadow = true; });
   [body, torso, neck, head, ...legs.flatMap(l => [l.hip, l.knee, l.ankle]), ...arms.flatMap(a => [a.sh, a.el])].forEach(p => mergeChildren(p, hd));   // أقل draw calls

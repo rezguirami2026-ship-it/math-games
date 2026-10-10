@@ -36,7 +36,9 @@ export function ramadan(scene, { sky, sun, hemi, renderer, village }) {
   // النوافذ: الزجاج الداكن يتوهج بلون دافئ
   const glass = []; scene.traverse(o => { if (o.isMesh && o.material && !Array.isArray(o.material) && o.material.color && o.material.color.getHexString() === '33505e') glass.push(o.material); });
   let on = null;
+  const lit = m => { m.emissive = m.emissive || new THREE.Color(); m.emissive.set(on ? '#FFB45A' : '#000000'); m.emissiveIntensity = on ? .9 : 0; };
   return {
+    collect(g) { g.traverse(o => { if (o.isMesh && o.material && !Array.isArray(o.material) && o.material.color && o.material.color.getHexString() === '33505e' && !glass.includes(o.material)) { glass.push(o.material); lit(o.material); } }); },   // نوافذ المناطق المبنية لاحقاً
     set(v, L) {
       if (v === on) return; on = v; const P = v ? DUSK : DAY;
       const u = sky.material.uniforms; u.top.value.set(P.top); u.mid.value.set(P.mid); u.hor.value.set(P.hor);

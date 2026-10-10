@@ -7,6 +7,7 @@ import { material, setAniso } from './textures.js';
 import { wind, sky, mountains, sea, palmGrove, clouds } from './nature.js';
 import { makeComposer } from './post.js';
 import { ramadan } from './ramadan.js';
+import { seasonDeco } from './season.js';
 import { residential, funpark, port } from './city.js';
 import { buildRegions } from './regions.js';
 import { lessonProps } from './props2.js';
@@ -58,8 +59,20 @@ export async function create3D(opts) {
   const cl = clouds(bounds); scene.add(cl);
   // الأحياء الحديثة داخل العالم: حيّ العمارات (سوق الجمعية)، مدينة الألعاب (ساحة المهرجان)، ميناء الحاويات (طريق القافلة)
   const resi = residential(), prt = port(); scene.add(resi, prt);
-  const regions = buildRegions({ quality: q }); scene.add(regions.group);
-  const veh = vehicles(), boats = dhows(), stg = stage3d(), bells = bellTowers(); scene.add(veh.group, shop3d(), busStation(), boats, plane3d(), pumps3d(), stg, farmShed3d(), bells);
+  /* ── الأداء على الهواتف الضعيفة: المناطق تُبنى عند الاقتراب منها أول مرة، وكل ما بعُد عن الشاشة يُفصل عن المشهد مؤقتاً
+     (لا يُحسب ولا يُرسم ولا يُلقي ظلاً)، ويعود حين يقترب. المجموعات الممتدة على العالم كله تُقسَّم إلى أبنائها ── */
+  const CULL = [], bx = new THREE.Box3();
+  function addCull(o) {
+    o.updateMatrixWorld(true); bx.setFromObject(o); if (bx.isEmpty()) return;
+    const wide = bx.max.x - bx.min.x > 1800 || bx.max.z - bx.min.z > 1800;
+    if (wide) { if (!o.isMesh && o.children.length > 1) o.children.slice().forEach(addCull); return; }   // الممتد كله (نخيل مجمّع، أسوار) يبقى دائماً
+    CULL.push({ o, p: o.parent, x0: bx.min.x, z0: bx.min.z, x1: bx.max.x, z1: bx.max.z });
+  }
+  let rmd = null;
+  const regions = buildRegions({ quality: q, onBuild: g => { addCull(g); if (rmd) rmd.collect(g); renderer.shadowMap.needsUpdate = true; } }); scene.add(regions.group);
+  const st0 = opts.start || { x: 1380, y: 640 }; regions.near({ x0: st0.x - 1700, z0: st0.y - 1900, x1: st0.x + 1700, z1: st0.y + 1500 }, 9);   // ما حول البطل فقط عند البدء
+  const extra = [shop3d(), busStation(), plane3d(), pumps3d(), farmShed3d()];
+  const veh = vehicles(), boats = dhows(), stg = stage3d(), bells = bellTowers(); scene.add(veh.group, ...extra, boats, stg, bells);
   const lp = lessonProps(); scene.add(lp);
   const park = funpark(); scene.add(park);
   const seaM = sea(2930, -2000, W.h + 2000); scene.add(seaM);
@@ -88,7 +101,8 @@ export async function create3D(opts) {
 
   /* ── المجسّمات: قلب القرية (المرحلة ١) ── */
   const village = buildVillage({ quality: q }); scene.add(village.group);
-  const rmd = ramadan(scene, { sky: skyM, sun, hemi, renderer, village });   // بعد بناء كل المباني (يجمع زجاج النوافذ)
+  rmd = ramadan(scene, { sky: skyM, sun, hemi, renderer, village }); const ssn = seasonDeco(scene);
+  [village.group, resi, prt, park, lp, boats, stg, bells, ...extra].forEach(addCull);   // زينة الأعياد واليوم الوطني   // بعد بناء كل المباني (يجمع زجاج النوافذ)
   await step(.75);
 
   /* ── الكاميرا: تتبع كاميرا المحرك، بزاوية مرتفعة ثابتة، والمسافة تحفظ عرض الرؤية نفسه ── */
@@ -131,11 +145,14 @@ export async function create3D(opts) {
   function syncPeople(list, t) {
     const dt = Math.min(.05, Math.max(0, t - lastT)); lastT = t; let built = 0;
     const seen = new Set();
+    // الجودة المنخفضة: ٩ أشخاص على الأكثر (كل شخص ~٢٥ رسماً): البطل وأهل القرية أصحاب المهام أولاً، ثم الأقرب من المتجولين والطلاب
+    if (L.quality === 'low' && list.length > 9) list = list.map(st => [st.id === 'hero' ? -1e9 : (st.look && st.look.role && !/^kid/.test(st.id) ? 0 : 1e6) + Math.hypot(st.x - target.x, st.y - target.z), st]).sort((a, b) => a[0] - b[0]).slice(0, 9).map(x => x[1]);
     list.forEach(st => {
       let P = people.get(st.id);
       if (!P || P.lookKey !== st.lookKey) { if (built >= 3 && P) { /* نحدّث المظهر لاحقاً */ } else if (built < 3 || frame < 3) { if (P) scene.remove(P.root); P = buildPerson(st.look); P.lookKey = st.lookKey; people.set(st.id, P); scene.add(P.root); built++; } }
       if (!P) return;
       P.root.visible = true; seen.add(st.id); animatePerson(P, st, dt, t);
+      const cs = L.quality !== 'low'; if (P.cs !== cs) { P.cs = cs; P.root.traverse(o => { if (o.isMesh && !o.userData.blob) o.castShadow = cs; }); renderer.shadowMap.needsUpdate = true; }   // المنخفضة: ظل الشخص قرص تحت قدميه فقط
     });
     people.forEach((P, id) => { if (!seen.has(id)) { P.root.visible = false; P.lastX = null; } });
   }
@@ -196,8 +213,14 @@ export async function create3D(opts) {
           if (T) T.used = frame;
         }
       dropFar(q === 'high' ? 30 : 18);
+      if (frame % 8 === 1) {   // البناء عند الاقتراب، والفصل/الإرجاع بحسب ما حول الشاشة (هامش للظلال والمباني العالية)
+        const M = 700, r = { x0: view.x - M, x1: view.x + view.w + M, z0: view.y - M - 300, z1: view.y + view.h + M };
+        regions.near({ x0: r.x0 - 900, x1: r.x1 + 900, z0: r.z0 - 900, z1: r.z1 + 900 }, 1);
+        let ch = 0; for (const c of CULL) { const on = c.x1 > r.x0 && c.x0 < r.x1 && c.z1 > r.z0 && c.z0 < r.z1; if (on !== (c.o.parent === c.p)) { if (on) c.p.add(c.o); else c.p.remove(c.o); ch++; } }
+        if (ch) renderer.shadowMap.needsUpdate = true;
+      }
       wind.value = t; seaM.userData.tick(t);
-      rmd.set(!!(L.ramadan && L.ramadan()), L); rmd.tick(t);
+      rmd.set(!!(L.ramadan && L.ramadan()), L); rmd.tick(t); ssn.set(L.season ? L.season() : null); ssn.tick(t);
       village.update(state, t, E.follow); regions.update(t, E.follow, L.gates && L.gates());
       if (L.vehicles) veh.update(L.vehicles()); boats.userData.tick(t); lp.userData.tick(t, L.signal && L.signal()); bells.userData.tick(t); stg.userData.update(t, L.allDone && L.allDone()); if (E.follow) { resi.userData.fade(E.follow); prt.userData.fade(E.follow); }
       if (L.people) try { syncPeople(L.people(), t); } catch (e) { if (!L._pErr) { L._pErr = 1; console.error('people', e); } }
@@ -208,6 +231,7 @@ export async function create3D(opts) {
       return view;
     },
     get view() { return view; },
+    get culled() { return CULL.filter(c => c.o.parent !== c.p).length + '/' + CULL.length + ' regions ' + regions.built; },
     /* من الشاشة إلى أرض اللعبة (للنقر) */
     pick: (sx, sy) => groundAt(sx, sy) || { x: target.x, y: target.z },
     /* من نقطة في اللعبة على ارتفاع h إلى الشاشة */
