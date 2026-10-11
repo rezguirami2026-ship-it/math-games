@@ -638,3 +638,8 @@ body:has(#panel.on) .region{display:none}
 .acSeason i{width:22px;height:28px;border-radius:50% 50% 46% 46%;background:radial-gradient(circle at 35% 30%,#fff,var(--c) 40%);border:1px solid rgba(0,0,0,.12);animation:acBal 2.4s ease-in-out var(--d) infinite}
 .acSeason b{position:absolute;top:8px;font-size:30px}
 @keyframes acBal{50%{transform:translateY(-10px) rotate(4deg)}}
+
+/* الهاتف: الإشعارات (مثل شكر صاحب المهمة) تلتف على أكثر من سطر داخل الشاشة بدل سطر واحد يُقص من الطرفين */
+@media (max-width: 760px) {
+  .toast{white-space:normal;width:fit-content;max-width:calc(100vw - 24px);left:0;right:0;margin-inline:auto;transform:none;box-sizing:border-box;text-align:center;font-size:15px;line-height:1.55;padding:9px 14px;overflow-wrap:anywhere}
+}

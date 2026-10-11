@@ -41,7 +41,7 @@ const waitRound = (p, i) => p.waitForFunction(i => { const sh = document.querySe
 {
   const p = await open('?preview=1', true), S = '#panel .sheet';
   await ev(p, () => document.getElementById('bBag').click());
-  await full(p, 'bag', S, [['1', '#msBtn'], ['2', '#albumBtn'], ['3', '#miniBtn'], ['4', '#homeBtn'], ['5', '#giveBtn'], ['6', '#wardBtn'], ['7', '#advBtn'], ['8', '#decoBtn'], ['9', '#petDecBtn'], ['10', '#vocBtn'], ['11', '#codeBtn'], ['12', '#tourBtn'], ['13', '#supBtn'], ['14', '#d3Btn']]); await close(p);
+  await full(p, 'bag', S, [['1', '#msBtn'], ['2', '#albumBtn'], ['3', '#miniBtn'], ['4', '#homeBtn'], ['5', '#giveBtn'], ['6', '#wardBtn'], ['7', '#advBtn'], ['8', '#decoBtn'], ['9', '#petDecBtn'], ['10', '#codeBtn'], ['11', '#tourBtn'], ['12', '#supBtn'], ['13', '#d3Btn']]); await close(p);
   await ev(p, () => window.__game.state && import('/core/events.js').then(m => m.bus.emit('openMastery'))); await sleep(600);
   await ev(p, () => { document.querySelectorAll('#panel .msCard').forEach((c, i) => { if (i >= 4) c.style.display = 'none'; }); });   // أعلى الخريطة وأول أربعة مجالات تكفي للدليل
   await full(p, 'mastery', S, [['1', '.msRing'], ['2', '.msFacts'], ['3', '.msTips'], ['4', '.msCard.rv .msBar'], ['5', '.msCard.rv .msLessons'], ['6', '.msCard.rv .msGo']]); await close(p);

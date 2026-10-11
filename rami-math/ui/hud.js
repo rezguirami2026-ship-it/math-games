@@ -31,7 +31,6 @@ import { exportCode } from '../save/save.js';
 import { progress } from '../missions/quests.js';
 import { ramadanPref, setRamadanPref, PREF_LABEL } from '../core/season.js';
 import { openAbout, openSupport } from './opsui.js';
-import { greet, voices, setVoices } from '../core/voices.js';
 import { bus } from '../core/events.js';
 // جهاز ضعيف (ذاكرة ٣ غيغا أو أقل، أو هاتف بأربع أنوية أو أقل): العرض العادي افتراضياً، ويبقى ثلاثي الأبعاد متاحاً من زر «العرض» في الحقيبة
 export const WEAK = (() => { try { const n = navigator, mob = matchMedia('(pointer: coarse)').matches; return (n.deviceMemory && n.deviceMemory <= 3) || (mob && n.hardwareConcurrency && n.hardwareConcurrency <= 4); } catch (e) { return false; } })();
@@ -84,7 +83,7 @@ export const hud = {
       };
       const showLine = () => {
         const L = lines[i], who = people[L.who] || { name: 'الراوي' };
-        $('dName').textContent = L.who === 'narrator' ? '' : who.name; $('dText').textContent = L.text; sfx('talk'); if (L.who !== 'hero' && L.who !== 'narrator') greet(L.who);   // التحية بصوت الشخصية (مرة كل حين)
+        $('dName').textContent = L.who === 'narrator' ? '' : who.name; $('dText').textContent = L.text; sfx('talk');
         box.classList.remove('pop'); void box.offsetWidth; box.classList.add('pop');
       };
       const close = () => { cancelAnimationFrame(raf); box.classList.remove('on', 'caption'); box.onclick = null; removeEventListener('pointerdown', anywhere, true); game.busy = false; res(); };
@@ -131,7 +130,6 @@ export const hud = {
         <button class="act ghost" id="sndBtn">${sound.on ? '🔊 الصوت يعمل' : '🔇 الصوت متوقف'}</button>
         <button class="act go" id="decoBtn">🛍️ متجر زينة القرية (💎 ${ar(s.gems || 0)})</button>
         ${levelOf(s).n >= 2 ? `<button class="act ghost" id="petDecBtn">🐪 زينة سهيل</button><button class="act ghost" id="petBtn">${s.pet && s.pet.hidden ? '🐪 أظهر الرفيق سهيل' : '🐪 الرفيق سهيل يرافقك (اضغط لإخفائه)'}</button>` : '<div class="bagrow muted"><span>🐪 رفيق صغير ينضم إليك في المستوى ٢</span></div>'}
-        <button class="act ghost" id="vocBtn">${voices.on ? '🗣️ أصوات الشخصيات تعمل' : '🔇 أصوات الشخصيات متوقفة'}</button>
         <button class="act ghost" id="musBtn">${music.on ? '🎵 الموسيقى تعمل' : '🔇 الموسيقى متوقفة'}</button>
         <button class="act ghost" id="codeBtn">🔑 رمز حفظ التقدّم</button>
         <button class="act ghost" id="ramBtn">🌙 أجواء رمضان: ${PREF_LABEL[ramadanPref()]}</button>
@@ -163,7 +161,6 @@ export const hud = {
     if (kind === 'bag') {
       $('sndBtn').onclick = e => { e.stopPropagation(); sound.on = !sound.on; this.panel('bag'); };
       $('codeBtn').onclick = e => { e.stopPropagation(); this.panel('code'); };
-      $('vocBtn').onclick = e => { e.stopPropagation(); setVoices(!voices.on); this.panel('bag'); };
       $('musBtn').onclick = e => { e.stopPropagation(); setMusic(!music.on); this.panel('bag'); };
       if ($('petBtn')) $('petBtn').onclick = e => { e.stopPropagation(); s.pet = s.pet || {}; s.pet.hidden = !s.pet.hidden; this.panel('bag'); };
       $('decoBtn').onclick = e => { e.stopPropagation(); openDecorShop(); };

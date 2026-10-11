@@ -31,7 +31,6 @@ import { UNIT1, POND, ORCH } from './missions/unit1.js';
 import { stage2 } from './missions/challenge.js';
 import { dueList } from './missions/review.js';
 import { weeklyCard } from './missions/weekly.js';
-import { setCast } from './core/voices.js';
 import { openActivity, hasActivity, openFinale, finaleOpen, finaleRec, openExpert, expertOpen, expertRec, openDaily, dailyDone, dailyRec } from './missions/activity.js';
 import { levelOf } from './core/levels.js';
 import { BADGES, checkBadges } from './achievements/badges.js';
@@ -221,7 +220,7 @@ async function start(state) {
   }
 }
 /* ── العرض ثلاثي الأبعاد (renderer3d): يُحمَّل فقط عند طلبه، ويرجع إلى الرسم الحالي إن لم يدعم الجهاز WebGL أو فشل التحميل ── */
-const V3D = 'نسخة 3D · ٩٤'; window.__BUILD = V3D.replace('نسخة 3D · ', '');   // تُعرض في شاشة التحميل وفي الزاوية: للتأكد أن المتصفح حمّل آخر نسخة
+const V3D = 'نسخة 3D · ٩٥'; window.__BUILD = V3D.replace('نسخة 3D · ', '');   // تُعرض في شاشة التحميل وفي الزاوية: للتأكد أن المتصفح حمّل آخر نسخة
 const want3d = () => gfx.d3();
 function loadingScreen() {
   const el = document.createElement('div'); el.className = 'load3d';
@@ -294,8 +293,7 @@ function paintGroundLayer(ctx, t) {
 }
 function paintDynamicGround(ctx) { paintGroundLayer(ctx, eng.t); }
 function buildWorld(st) {
-  const npcs0 = makeNpcs(); setCast(npcs0, st.hero && st.hero.kind);
-  const w = { player: createPlayer(st), trucks: makeTrucks(st), npcs: npcs0, signalGreen: !!st.world.delivered, tapMark: null, savedAt: 0, stones: false };
+  const w = { player: createPlayer(st), trucks: makeTrucks(st), npcs: makeNpcs(), signalGreen: !!st.world.delivered, tapMark: null, savedAt: 0, stones: false };
   w.statics = staticColliders().concat(
     [{ x: SHOP.x - 66, y: SHOP.y - 40, w: 132, h: 40 }],
     tanks.TANKS.map(t => ({ x: t.x - 16, y: t.y - 12, w: 32, h: 14 })),
