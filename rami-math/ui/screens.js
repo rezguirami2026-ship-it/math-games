@@ -1,7 +1,7 @@
 // شاشات البداية: العنوان، اختيار البطل، بطاقة الفصل. لا قوائم دروس ولا لوحات.
 import { drawHuman, SKINS, ACCENTS } from '../character/human.js';
 import { showIntroVideo } from './introvideo.js';
-import { importCode } from '../save/save.js';
+import { importCode, cleanName } from '../save/save.js';
 import { LESSONS } from '../content/lessons.js';
 import { ar } from '../core/util.js';
 import { homeHTML, homeSheets, SCENE } from './home.js';
@@ -75,7 +75,7 @@ export const screens = {
     cards.forEach(b => b.onclick = () => { pick.kind = b.dataset.k; cards.forEach(x => x.classList.toggle('on', x === b)); });
     [['skins', 'skin'], ['cols', 'color']].forEach(([id, key]) => $(id).querySelectorAll('button').forEach(b => b.onclick = () => { pick[key] = b.dataset.v; $(id).querySelectorAll('button').forEach(x => x.classList.toggle('on', x === b)); }));
     $('bGo').onclick = () => {
-      const name = $('hname').value.trim();
+      const name = cleanName($('hname').value);   // نص عادي فقط
       if (!name) { $('hname').focus(); $('hname').classList.add('shake'); setTimeout(() => $('hname').classList.remove('shake'), 500); return; }
       stopAll(); done(Object.assign({}, pick, { name }));
     };

@@ -48,9 +48,15 @@ async function batch(req, env) {
   return json({ ok: 1, cfg });
 }
 
+/* مقارنة كلمة السر بزمن ثابت (لا تكشف مدة المقارنة كم حرفاً صحيحاً) */
+function same(a, b) { if (a.length !== b.length) return false; let d = 0; for (let i = 0; i < a.length; i++) d |= a.charCodeAt(i) ^ b.charCodeAt(i); return d === 0; }
+/* رؤوس حماية صفحة لوحة التحكم: لا تُضمَّن داخل مواقع أخرى، ولا سكربتات من خارجها، ولا تُرسل عنوانها لمواقع أخرى */
+const ADMIN_HEADERS = { 'content-type': 'text/html; charset=utf-8', 'cache-control': 'no-store', 'x-robots-tag': 'noindex', 'x-frame-options': 'DENY', 'x-content-type-options': 'nosniff', 'referrer-policy': 'no-referrer',
+  'content-security-policy': "default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; connect-src 'self'; frame-ancestors 'none'; base-uri 'none'; form-action 'none'" };
+
 /* ── لوحة التحكم ── */
 async function admin(req, env, path) {
-  if (!env.ADMIN_TOKEN || req.headers.get('authorization') !== 'Bearer ' + env.ADMIN_TOKEN) return json({ ok: 0, e: 'auth' }, 401);
+  if (!env.ADMIN_TOKEN || !same(req.headers.get('authorization') || '', 'Bearer ' + env.ADMIN_TOKEN)) return json({ ok: 0, e: 'auth' }, 401);
   const DB = env.DB, q = new URL(req.url).searchParams, ago = n => day(Date.now() - n * 86400e3);
   const one = async (sql, ...b) => (await DB.prepare(sql).bind(...b).first()) || {};
   const all = async (sql, ...b) => (await DB.prepare(sql).bind(...b).all()).results || [];
@@ -92,7 +98,7 @@ export default {
       if (req.method === 'OPTIONS') return new Response(null, { headers: cors });
       if (path === '/v1/batch' && req.method === 'POST') return await batch(req, env);
       if (path === '/v1/config') return json(publicCfg(await getCfg(env)), 200, { 'cache-control': 'public, max-age=3600' });
-      if (path === '/admin' || path === '/admin/') return new Response(ADMIN_HTML, { headers: { 'content-type': 'text/html; charset=utf-8', 'cache-control': 'no-store', 'x-robots-tag': 'noindex' } });
+      if (path === '/admin' || path === '/admin/') return new Response(ADMIN_HTML, { headers: ADMIN_HEADERS });
       if (path.startsWith('/v1/admin/')) return await admin(req, env, path.slice(10));
       return json({ ok: 1, name: 'qaryat-alkhair-ops' });
     } catch (e) { return json({ ok: 0, e: 'server' }, 500); }

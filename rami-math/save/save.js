@@ -4,12 +4,38 @@ import { VERSION } from '../core/state.js';
 export const PREVIEW = (() => { try { return new URLSearchParams(location.search).has('preview'); } catch (e) { return false; } })();
 const KEY = PREVIEW ? 'ramimath_village_preview' : 'ramimath_village_v1';
 let timer = 0;
+const BAK = KEY + '_bak';
+/* تنظيف الحفظ عند دخوله اللعبة (من الجهاز أو من رمز التقدّم): الاسم نص عادي قصير بلا رموز HTML،
+   والألوان والنوع من القيم المسموحة، والعدادات أعداد صحيحة غير سالبة، والأقسام الأساسية موجودة.
+   لا يغيّر شيئاً في حفظ سليم صنعته اللعبة نفسها */
+export const cleanName = n => String(n == null ? '' : n).replace(/[<>&"'`\\\u0000-\u001F\u007F\u200B-\u200F\u202A-\u202E\u2066-\u2069]/g, '').replace(/\s+/g, ' ').trim().slice(0, 16);
+const HEX = /^#[0-9a-fA-F]{3,8}$/, obj = o => o && typeof o === 'object' && !Array.isArray(o);
+const count = v => { const n = Math.floor(Number(v)); return Number.isFinite(n) && n > 0 ? Math.min(n, 1e7) : 0; };
+export function sanitizeSave(s) {
+  if (!obj(s) || s.v !== VERSION || !obj(s.hero) || !obj(s.missions) || !obj(s.world)) return null;
+  const h = s.hero;
+  h.name = cleanName(h.name) || 'بطل';
+  if (h.kind !== 'boy' && h.kind !== 'girl') h.kind = 'boy';
+  if (!HEX.test(h.skin || '')) h.skin = '#DDA779';
+  if (!HEX.test(h.color || '')) h.color = '#2F6FB2';
+  ['good', 'gems', 'carry'].forEach(k => { if (k in s) s[k] = count(s[k]); });
+  if (!obj(s.quests)) s.quests = { done: {}, started: {}, data: {} };
+  ['done', 'started', 'data'].forEach(k => { if (!obj(s.quests[k])) s.quests[k] = {}; });
+  if (!obj(s.story)) s.story = { chapter: 1, introDone: true };
+  if (!obj(s.player) || !Number.isFinite(+s.player.x) || !Number.isFinite(+s.player.y)) s.player = { x: 1380, y: 640, dir: 'left' };
+  ['achievements', 'talked'].forEach(k => { if (!obj(s[k])) s[k] = {}; });
+  return s;
+}
+/* القراءة: الحفظ الرئيسي، فإن تلف (مثلاً انقطاع أثناء الكتابة) فالنسخة الاحتياطية — فلا يضيع تقدّم الطالب بصمت */
+const read = k => { try { return sanitizeSave(JSON.parse(localStorage.getItem(k) || 'null')); } catch (e) { return null; } };
 export function loadSave() {
-  try { const s = JSON.parse(localStorage.getItem(KEY) || 'null'); return s && s.v === VERSION ? s : null; } catch (e) { return null; }
+  const s = read(KEY) || read(BAK);
+  if (s) try { localStorage.setItem(BAK, JSON.stringify(s)); } catch (e) {}   // آخر حفظ سليم معروف (يُحدَّث عند كل فتح)
+  return s;
 }
 export function saveNow(state) { try { localStorage.setItem(KEY, JSON.stringify(state)); } catch (e) {} }
 export function saveSoon(state) { clearTimeout(timer); timer = setTimeout(() => saveNow(state), 300); }
-export function wipeSave() { try { localStorage.removeItem(KEY); } catch (e) {} }
+export function wipeSave() { try { localStorage.removeItem(KEY); localStorage.removeItem(BAK); } catch (e) {} }
 
 /* رمز التقدّم: نسخة نصية من الحفظ يحتفظ بها الطالب أو يرسلها لمعلمه، وتُستعاد على أي جهاز.
    الصيغة: RM1. ثم الحفظ مضغوطاً (deflate) بترميز base64url؛ وRM0. للحفظ غير المضغوط إن لم يدعم المتصفح الضغط. */
@@ -29,6 +55,6 @@ export async function importCode(code) {
     let bytes = unb64(m[2]);
     if (m[1] === '1') bytes = await pipe(bytes, new DecompressionStream('deflate-raw'));
     const s = JSON.parse(new TextDecoder().decode(bytes));
-    return s && s.v === VERSION && s.hero && s.hero.name && s.missions && s.world ? s : null;
+    return sanitizeSave(s);   // رمز من خارج الجهاز: يُنظَّف قبل أن يُعرض أو يُحفظ
   } catch (e) { return null; }
 }
