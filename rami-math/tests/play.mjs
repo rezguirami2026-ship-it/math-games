@@ -500,7 +500,8 @@ S.commonMultiples = async () => {
 // ٣١. الحساب السريع: الباقي = المدفوع − الثمن
 S.mentalAddSub = async () => {
   await station(W.fort.ST4.change, '🪙 كشك مريم');
-  await panelClick('.money[data-v="50"]'); await sheetBtn('#benchGo');   // خطأ: ٥٠ بيسة فقط
+  const q0 = (await data('mentalAddSub')).rounds[0], wrong = q0.P - q0.p === 50 ? 100 : 50;   // مبلغ خاطئ فعلاً (إن كان الباقي الصحيح ٥٠ نعطي ١٠٠)
+  await panelClick(`.money[data-v="${wrong}"]`); await sheetBtn('#benchGo');
   expect((await data('mentalAddSub')).r === 0, 'باقٍ خاطئ قُبل');
   for (let r = 0; r < 4; r++) { const q = (await data('mentalAddSub')).rounds[r]; for (const c of coinsFor(q.P - q.p)) await panelClick(`.money[data-v="${c}"]`); await sheetBtn('#benchGo'); }
 };

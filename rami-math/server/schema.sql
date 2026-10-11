@@ -8,3 +8,5 @@ CREATE TABLE IF NOT EXISTS daily_active (day TEXT, uid TEXT, v TEXT, os TEXT, de
 CREATE TABLE IF NOT EXISTS errors (id TEXT PRIMARY KEY, day TEXT, v TEXT, os TEXT, dev TEXT, type TEXT, msg TEXT, c INTEGER DEFAULT 1);
 CREATE TABLE IF NOT EXISTS tickets (id TEXT PRIMARY KEY, created TEXT, type TEXT, descr TEXT, v TEXT, os TEXT, dev TEXT, status TEXT DEFAULT 'new', note TEXT DEFAULT '');
 CREATE TABLE IF NOT EXISTS config (k TEXT PRIMARY KEY, val TEXT);
+-- محاولات الدخول الخاطئة إلى لوحة التحكم (لكل عنوان ولكل دقيقة): حماية من تخمين كلمة السر، وتُنظَّف يومياً
+CREATE TABLE IF NOT EXISTS auth_fail (ip TEXT, minute INTEGER, n INTEGER DEFAULT 0, PRIMARY KEY (ip, minute));

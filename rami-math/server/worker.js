@@ -25,7 +25,12 @@ async function getCfg(env) {
 }
 const publicCfg = c => ({ latest: c.latest, min: c.min, ann: c.ann && c.ann.on ? c.ann : { on: false }, maint: c.maint });
 
+/* حدّ الطلبات لكل عنوان IP (ربط Rate Limiting المجاني في Cloudflare): يمنع الإغراق بإحصاءات وتذاكر وهمية وتخمين كلمة السر */
+const ip = req => req.headers.get('cf-connecting-ip') || 'x';
+const limited = async (lim, key) => { if (!lim) return false; try { return !(await lim.limit({ key })).success; } catch (e) { return false; } };
+
 async function batch(req, env) {
+  if (await limited(env.BATCH_LIMIT, 'b:' + ip(req))) return json({ ok: 0, e: 'rate' }, 429);   // الطالب يرسل دفعة كل ١٠ دقائق تقريباً: الحد بعيد عن الاستعمال العادي حتى في مختبر مدرسة واحد
   const raw = await req.text(); if (raw.length > MAX_BODY) return json({ ok: 0, e: 'too_big' }, 413);
   let p; try { p = JSON.parse(raw); } catch (e) { return json({ ok: 0, e: 'bad_json' }, 400); }
   if (!/^USER-[0-9A-F]{8}$/.test(p.uid) || !/^B[0-9A-F]{10}$/.test(p.b)) return json({ ok: 0, e: 'bad_id' }, 400);
@@ -56,7 +61,14 @@ const ADMIN_HEADERS = { 'content-type': 'text/html; charset=utf-8', 'cache-contr
 
 /* ── لوحة التحكم ── */
 async function admin(req, env, path) {
-  if (!env.ADMIN_TOKEN || !same(req.headers.get('authorization') || '', 'Bearer ' + env.ADMIN_TOKEN)) return json({ ok: 0, e: 'auth' }, 401);
+  // حماية من تخمين كلمة السر: المحاولات الخاطئة تُعدّ في قاعدة البيانات لكل عنوان ولكل دقيقة؛ بعد ٥ يُرفض كل طلب من العنوان (حتى الصحيح) حتى تنتهي الدقيقة
+  const who = ip(req), minute = Math.floor(Date.now() / 60e3);
+  const fails = (await env.DB.prepare('SELECT n FROM auth_fail WHERE ip = ? AND minute = ?').bind(who, minute).first()) || { n: 0 };
+  if (fails.n >= 5) return json({ ok: 0, e: 'rate' }, 429);
+  if (!env.ADMIN_TOKEN || !same(req.headers.get('authorization') || '', 'Bearer ' + env.ADMIN_TOKEN)) {
+    await env.DB.prepare('INSERT INTO auth_fail (ip, minute, n) VALUES (?, ?, 1) ON CONFLICT (ip, minute) DO UPDATE SET n = n + 1').bind(who, minute).run();
+    return json({ ok: 0, e: 'auth' }, 401);
+  }
   const DB = env.DB, q = new URL(req.url).searchParams, ago = n => day(Date.now() - n * 86400e3);
   const one = async (sql, ...b) => (await DB.prepare(sql).bind(...b).first()) || {};
   const all = async (sql, ...b) => (await DB.prepare(sql).bind(...b).all()).results || [];
@@ -106,6 +118,6 @@ export default {
   /* تنظيف يومي: الأخطاء ٩٠ يوماً، والنشاط اليومي سنة */
   async scheduled(ev, env) {
     const ago = n => day(Date.now() - n * 86400e3);
-    await env.DB.batch([env.DB.prepare('DELETE FROM daily_active WHERE day < ?').bind(ago(400)), env.DB.prepare('DELETE FROM errors WHERE day < ?').bind(ago(90))]);   // النشاط اليومي سنة كاملة (صغير)
+    await env.DB.batch([env.DB.prepare('DELETE FROM daily_active WHERE day < ?').bind(ago(400)), env.DB.prepare('DELETE FROM errors WHERE day < ?').bind(ago(90)), env.DB.prepare('DELETE FROM auth_fail WHERE minute < ?').bind(Math.floor(Date.now() / 60e3) - 1440)]);   // النشاط اليومي سنة كاملة (صغير)
   }
 };

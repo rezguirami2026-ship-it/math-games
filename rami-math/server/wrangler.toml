@@ -17,3 +17,14 @@ database_id = "988f7db3-aeb9-483b-984d-6ac4feaad056"
 # تنظيف يومي للبيانات القديمة (مجاني)
 [triggers]
 crons = ["17 3 * * *"]
+
+# حدّ الطلبات لكل عنوان IP (مجاني): الإحصاءات ١٢٠ دفعة في الدقيقة، ومحاولات لوحة التحكم الخاطئة ٥ في الدقيقة
+[[ratelimits]]
+name = "BATCH_LIMIT"
+namespace_id = "1101"
+simple = { limit = 120, period = 60 }
+
+[[ratelimits]]
+name = "ADMIN_LIMIT"
+namespace_id = "1102"
+simple = { limit = 5, period = 60 }
