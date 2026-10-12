@@ -55,9 +55,10 @@ export function openMastery() {
       <div class="msLessons">${k.ids.map((id, j) => { const x = k.st[j]; return `<span class="msL ${x < 0 ? 'lock' : ''}" title="${title(id)}">${title(id)} <u>${x < 0 ? '🔒' : x === 4 ? '🌟' : '★'.repeat(x) + '<s>' + '☆'.repeat(3 - x) + '</s>'}</u>${pendingOf(id) ? ' 🔁' : ''}</span>`; }).join('')}</div>
       ${k.weak && (k.pct < 100 || k.pend) ? `<button class="act msGo" data-l="${k.weak}">🎲 تدرّب: ${title(k.weak)}</button>` : ''}</div>`; }).join('')}</div>
     <p class="muted">★ نجوم التحدي أو النشاط · 🌟 النجمة الذهبية في تحدي الخبير · 🔁 مهارة أخطأت فيها وستعود في مهمة اليوم حتى تتقنها</p>
-    <button class="act" id="msOut">رجوع إلى القرية</button></div>`;
+    <div class="gBtns"><button class="act go" id="msRep">📄 تقرير تقدّمي (صورة)</button><button class="act" id="msOut">رجوع إلى القرية</button></div></div>`;
   el.classList.add('on');
   const close = () => { el.classList.remove('on'); el.innerHTML = ''; game.busy = false; };
   el.querySelectorAll('[data-l]').forEach(b => b.onclick = e => { e.stopPropagation(); close(); setTimeout(() => bus.emit('openActivity', b.dataset.l), 120); });
   document.getElementById('msOut').onclick = e => { e.stopPropagation(); close(); };
+  document.getElementById('msRep').onclick = e => { e.stopPropagation(); import('./report.js').then(m => m.openReport(el)); };
 }

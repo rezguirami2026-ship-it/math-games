@@ -220,7 +220,7 @@ async function start(state) {
   }
 }
 /* ── العرض ثلاثي الأبعاد (renderer3d): يُحمَّل فقط عند طلبه، ويرجع إلى الرسم الحالي إن لم يدعم الجهاز WebGL أو فشل التحميل ── */
-const V3D = 'نسخة 3D · ٩٧'; window.__BUILD = V3D.replace('نسخة 3D · ', '');   // تُعرض في شاشة التحميل وفي الزاوية: للتأكد أن المتصفح حمّل آخر نسخة
+const V3D = 'نسخة 3D · ٩٨'; window.__BUILD = V3D.replace('نسخة 3D · ', '');   // تُعرض في شاشة التحميل وفي الزاوية: للتأكد أن المتصفح حمّل آخر نسخة
 const want3d = () => gfx.d3();
 function loadingScreen() {
   const el = document.createElement('div'); el.className = 'load3d';
@@ -684,6 +684,7 @@ bus.on('openMini', () => openMiniGames());
 bus.on('openPetDecor', () => openPetDecor());
 bus.on('openAlbum', () => openAlbum());
 bus.on('openMastery', () => openMastery());
+bus.on('openReport', () => { game.busy = true; import('./ui/report.js').then(m => m.openReport()).then(v => { const done = () => { game.busy = false; }; v.querySelector('[data-back]').addEventListener('click', done); }).catch(e => { game.busy = false; report('report', 'openReport', e); }); });
 bus.on('toast', m => hud.toast(m));
 bus.on('openSeason', () => openSeason(W, MODS));
 bus.on('openActivity', id => openActivity(W, id, MODS[id]));

@@ -11,6 +11,7 @@ import { addGems } from '../world/decor.js';
 import { changed, finish, sheetOpen, sheetClose, msgBox, setMsg, numPad, btn, dec } from './bench.js';
 import { miss, hit } from './review.js';
 import { weeklyTick } from './weekly.js';
+import { fixItem } from '../content/arabicCount.js';
 
 const PEOPLE_ICON = { salem: '🧔🏽', yousef: '👦🏽', hamad: '👨🏽‍🌾', saeed: '📮', umkhalid: '👩🏽', rashed: '👨🏽‍🔧', naser: '🧔🏽', mubarak: '🪚', khalid: '🧑🏽‍🏫', abdullah: '👨🏽‍✈️', shaikha: '👵🏽', juma: '🐑', saif: '⚓', reem: '👷🏽‍♀️', layla: '🎁', ali: '🧱', badr: '🎣', hind: '🎨', sulaiman: '🌬️', majid: '🗺️', hamdan: '🌉', muna: '🏺', zaid: '💍', aisha: '🍮', fahad: '🎒', harith: '🪣', qais: '🔔', mariam: '🏪', khamis: '🌾', saleh: '🌴', murad: '🧱', zahra: '🍬', azzan: '🛡️', safiya: '🍲', umsaid: '👵🏽', mudhaffar: '🕰️', nawal: '📞', tariq: '🏠', hamid: '🚌', sara: '🌱', khalfan: '🌴', noor: '🎪', yaqoob: '🎡', jamal: '🏦', ruqaya: '📜', saud: '🛒', obaid: '🐟', hessa: '🎲', adil: '⚙️', latifa: '🎂', ghanim: '🏷️', shamsa: '🥣', raya: '🍫', humaid: '🛢️', mansour: '⛽', sultan: '🐪', lubna: '✈️', faisal: '📅', wafa: '🌷', buthaina: '🏜️', hamood: '🔲', amna: '🚩', mohsen: '📐', zainab: '📦', jaber: '💎' };
 export const DRAW = {};   // رسوم canvas داخل السؤال: <canvas data-draw="اسم"> تملؤها DRAW[اسم](canvas) بعد العرض
@@ -24,7 +25,7 @@ export function runChallenge(W, d, cfg) {
 
 const cards = (it, cls = 'chOpt') => it.opts.map((o, k) => `<button class="${cls}" data-k="${k}">${o}</button>`).join('');
 function render(W, d, cfg, msg) {
-  const C = d.ch, it = C.items[C.i], n = C.items.length, face = PEOPLE_ICON[cfg.who] || '🧑🏽';
+  const C = d.ch, it = fixItem(C.items[C.i]), n = C.items.length, face = PEOPLE_ICON[cfg.who] || '🧑🏽';   // تمييز العدد بقواعد العربية قبل العرض
   const trail = C.items.map((_, k) => `<i class="${k < C.i ? 'ok' : k === C.i ? 'now' : ''}">${k === C.i ? `<span>${face}</span>` : k < C.i ? '💎' : ''}</i>`).join('') + '<b class="chChest">🎁</b>';
   const out = it.out && OUT[it.out] ? `<div class="chOut" title="${OUT[it.out]}">🎯 ${OUT[it.out]}</div>` : '';
   let body = '';

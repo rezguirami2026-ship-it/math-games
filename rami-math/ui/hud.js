@@ -137,6 +137,7 @@ export const hud = {
         <button class="act go" id="advBtn">🗺️ المغامرات</button>
         <button class="act go" id="giveBtn">💚 صندوق الخير (تبرّع بنقاط الخير)</button>
         <button class="act go" id="msBtn">📊 خريطة إتقاني (مهاراتي في المنهج)</button>
+        <button class="act go" id="rpBtn">📄 تقرير تقدّمي (صورة أحتفظ بها)</button>
         <button class="act go" id="albumBtn">📸 ألبوم الذكريات والألقاب</button>
         <button class="act go" id="miniBtn">🎮 ألعاب الساحة (حساب ذهني ممتع)</button>
         <button class="act go" id="homeBtn">🏠 بيت البطل (الغرف والأثاث)</button>
@@ -168,6 +169,7 @@ export const hud = {
       $('advBtn').onclick = e => { e.stopPropagation(); bus.emit('openAdventures'); };
       $('giveBtn').onclick = e => { e.stopPropagation(); this.closePanel(); setTimeout(openCharity, 120); };
       $('msBtn').onclick = e => { e.stopPropagation(); this.closePanel(); setTimeout(() => bus.emit('openMastery'), 120); };
+      $('rpBtn').onclick = e => { e.stopPropagation(); this.closePanel(); setTimeout(() => bus.emit('openReport'), 120); };
       $('albumBtn').onclick = e => { e.stopPropagation(); this.closePanel(); setTimeout(() => bus.emit('openAlbum'), 120); };
       $('miniBtn').onclick = e => { e.stopPropagation(); this.closePanel(); setTimeout(() => bus.emit('openMini'), 120); };
       if ($('petDecBtn')) $('petDecBtn').onclick = e => { e.stopPropagation(); this.closePanel(); setTimeout(() => bus.emit('openPetDecor'), 120); };

@@ -43,7 +43,7 @@ export const CH = {
   /* ٢. تاريخ الأعداد (٢): Nn20، Nn14، Nn16، Ps3 */
   numberHistory2: { who: 'ruqaya', title: 'تحدي المعلمة رقية', lines: [{ who: 'ruqaya', text: 'تعرف تاريخ الأعداد وتقرأ أرقام الرومان!' }],
     make() {
-      const f = fresh(), it = [], key = [['C', 100], ['L', 50], ['X', 10], ['V', 5], ['I', 1]].map(([r, v]) => `<span class="ltr" dir="ltr">${r} = ${ar(v)}</span>`).join(' ، ');
+      const f = fresh(), it = [], key = [['C', 100], ['L', 50], ['X', 10], ['V', 5], ['I', 1]].map(([r, v]) => `<span class="ltr" dir="ltr">${r} = ${ar(v)}</span>`).join('، ');
       { const n = f.take([24, 39, 46, 58, 73, 84, 92, 67, 115, 140]);
         it.push(num(`ما قيمة العدد الروماني ${rom(n)}؟`, n, 'اجمع القيم، وإذا جاء رمز أصغر قبل رمز أكبر فاطرحه (IX = ٩، XL = ٤٠).', 'Nn20', { dot: false, tail: key })); }
       { const n = f.take([14, 29, 34, 49, 66, 78, 99, 44]), opts = [ROMAN(n), ROMAN(n + 10), ROMAN(n - 2), ROMAN(n) .replace('IV', 'IIII').replace('IX', 'VIIII')].filter((v, i, A) => A.indexOf(v) === i);
@@ -211,7 +211,7 @@ export const CH = {
       { const per = f(2, 4);
         it.push(match(`جدول الخلطة: لكل كيلوغرام من التمر نحتاج <b>${ar(per)}</b> أكواب ماء. صِل:`, [2, 3, 5, 6].map(n => [`${ar(n)} كغم تمر`, `${ar(n * per)} أكواب`]), 'اضرب في عدد الأكواب لكل كيلوغرام.', 'Ps4')); }
       { const a = f(2, 4), b = f(3, 6, z => z !== a), k = f(3, 6);
-        it.push(choice(`لكل <b>${ar(a)}</b> علب حمراء توجد <b>${ar(b)}</b> علب زرقاء. إذا كان عندنا <b>${ar(a * k)}</b> علبة حمراء، فكم الزرقاء؟`, ar(b * k), [ar(b + a * k - a), ar(a * k + b), ar(b * k + k)].filter(s => s !== ar(b * k)), `كم مرة ${ar(a)} في ${ar(a * k)}؟`, 'Nn30')); }
+        it.push(choice(`لكل <b>${ar(a)}</b> من العلب الحمراء توجد <b>${ar(b)}</b> من العلب الزرقاء. إذا كان عندنا <b>${ar(a * k)}</b> من العلب الحمراء، فكم الزرقاء؟`, ar(b * k), [ar(b + a * k - a), ar(a * k + b), ar(b * k + k)].filter(s => s !== ar(b * k)), `كم مرة ${ar(a)} في ${ar(a * k)}؟`, 'Nn30')); }
       { const n = f(3, 5), c = f(2, 4) * n, m = f(6, 9);
         it.push(num(`<b>${ar(n)}</b> علب حلوى ثمنها <b>${ar(c)}</b> ريالاً. كم ثمن <b>${ar(m)}</b> علب؟`, c / n * m, 'أوجد ثمن العلبة الواحدة أولاً.', 'Pt1', { dot: false })); }
       { const [a, b] = pickN([[2, 3], [3, 4], [1, 5], [2, 5]], 1)[0], k = R(3, 5);
@@ -241,7 +241,7 @@ export const CH = {
       { const [n, d] = pickN([[3, 4], [2, 3], [3, 5], [5, 6], [1, 4]], 1)[0], k = f(2, 4);
         it.push(num(`${fr(n, d)} = ${fr('؟', d * k)}`, n * k, `المقام ضُرب في ${ar(k)}، فاضرب البسط في ${ar(k)} أيضاً.`, 'Nn22', { dot: false })); }
       { const w = R(0, 2), [n, d] = pickN([[1, 4], [3, 4], [1, 2], [1, 3], [2, 3]], 1)[0], v = w + n / d, opts = [[w, n, d], [w + 1, n, d], [w, d - n === n ? n : d - n, d], [Math.max(0, w - 1) === w ? w + 2 : w - 1, n, d]];
-        it.push(choice('إلى أي عدد يشير السهم؟', mx(w, n, d), opts.slice(1).map(o => mx(...o)).filter(s => s !== mx(w, n, d)), `بين كل عددين كاملين ${ar(d === 2 ? 2 : d)} أقسام متساوية.`, 'Nn24', { art: nline(0, 3, v, 1 / d, d) })); }
+        it.push(choice('إلى أي عدد يشير السهم؟', mx(w, n, d), opts.slice(1).map(o => mx(...o)).filter(s => s !== mx(w, n, d)), `يُقسم ما بين كل عددين كاملين إلى أقسام متساوية عددها ${ar(d === 2 ? 2 : d)}.`, 'Nn24', { art: nline(0, 3, v, 1 / d, d) })); }
       { const P = shuffle([[1, 2, 4, 8], [1, 3, 2, 6], [3, 4, 6, 8], [2, 5, 4, 10], [1, 4, 3, 12], [2, 3, 8, 12]]).slice(0, 4);
         it.push(match('صِل كل كسر بكسر يكافئه:', P.map(([a, b, c, d]) => [fr(a, b), fr(c, d)]), 'اضرب أو اقسم البسط والمقام في العدد نفسه.', 'Nn22')); }
       { const L = shuffle([[2, 3], [3, 8], [5, 6], [1, 5], [4, 10], [7, 10], [3, 4], [2, 8]]).slice(0, 6);
