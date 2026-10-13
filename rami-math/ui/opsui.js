@@ -18,7 +18,8 @@ export function openAbout() {
     <div class="bagrow"><span>🔄 أحدث إصدار</span><b dir="ltr">${c && c.latest ? 'v' + esc(c.latest.v) : '—'}</b></div>
     <div class="bagrow"><span>🆔 رقم التثبيت</span><b dir="ltr">${uid()}</b></div>
     <p class="muted opsNote">🔒 اللعبة تعمل بلا إنترنت. نرسل إحصاءات مجهولة قليلة فقط (رقم تثبيت عشوائي، الإصدار، نوع الجهاز) مرة كل فترة لتحسين اللعبة، بلا اسم ولا بريد ولا موقع.</p>
-    <p class="muted">إعداد أ. رامي الرزقي — قرية الخير، مغامرة رامي ماث</p>`);
+    <p class="muted">إعداد أ. رامي الرزقي — قرية الخير، مغامرة رامي ماث</p>
+    <p class="muted">© ٢٠٢٥–٢٠٢٦ أ. رامي الرزقي. جميع الحقوق محفوظة، ولا يجوز نسخ اللعبة أو محتواها أو إعادة نشرها دون إذن.</p>`);
 }
 
 export function openSupport(type) {

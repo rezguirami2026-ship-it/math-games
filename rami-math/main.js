@@ -1,3 +1,4 @@
+// © 2025–2026 Rami Rezgui (أ. رامي الرزقي). All rights reserved — see LICENSE. جميع الحقوق محفوظة.
 // نقطة الدخول: تربط الأنظمة ببعضها، واللعبة كلها تسير على ترتيب دروس المنهج
 import { game, fresh, upgrade, CARRY_MAX, TREE_COST } from './core/state.js';
 import { bus } from './core/events.js';
@@ -220,7 +221,7 @@ async function start(state) {
   }
 }
 /* ── العرض ثلاثي الأبعاد (renderer3d): يُحمَّل فقط عند طلبه، ويرجع إلى الرسم الحالي إن لم يدعم الجهاز WebGL أو فشل التحميل ── */
-const V3D = 'نسخة 3D · ٩٨'; window.__BUILD = V3D.replace('نسخة 3D · ', '');   // تُعرض في شاشة التحميل وفي الزاوية: للتأكد أن المتصفح حمّل آخر نسخة
+const V3D = 'نسخة 3D · ٩٩'; window.__BUILD = V3D.replace('نسخة 3D · ', '');   // تُعرض في شاشة التحميل وفي الزاوية: للتأكد أن المتصفح حمّل آخر نسخة
 const want3d = () => gfx.d3();
 function loadingScreen() {
   const el = document.createElement('div'); el.className = 'load3d';
