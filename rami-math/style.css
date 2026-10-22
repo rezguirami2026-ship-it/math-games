@@ -366,3 +366,13 @@ body:has(.wardrobe) .toast{display:none}
 .g5cal.small{max-width:250px;margin:4px}.g5cal.small .ttl{grid-column:1/-1;text-align:center;font:900 14px 'Cairo';color:#E2475C}.g5cal.small .g5day{min-height:28px;font-size:12px}
 .g5card.shelf{display:flex;flex-direction:column;align-items:center;gap:4px}.g5card.shelf small{font-size:12px}
 .g5card.strip.on{background:#FFE9C2;border-color:#8A5A30;box-shadow:0 3px 0 #8A5A30}
+.g5nl{max-width:340px;margin:14px auto 4px;direction:ltr}
+.g5nl .bar{position:relative;height:30px;border-bottom:3px solid #2A1B66}
+.g5nl .bar i{position:absolute;bottom:-3px;width:2px;height:10px;background:#2A1B66;transform:translateX(-1px)}.g5nl .bar i.big{height:18px}
+.g5nl .bar b{position:absolute;top:-12px;transform:translateX(-50%);color:#E2475C;font-size:20px}
+.g5nl .lab{display:flex;justify-content:space-between;font:900 14px 'Cairo';color:#2A1B66}
+.g5range{display:block;width:100%;max-width:340px;margin:6px auto;direction:ltr}
+.g5g100{display:grid;grid-template-columns:repeat(10,16px);gap:1px;padding:4px;border-radius:10px;background:#8A5A30;direction:ltr}
+.g5g100 i{width:16px;height:16px;background:#F5E6C8}.g5g100 i.on{background:#3FA3F5}
+.g5mix{font:900 34px 'Cairo';color:#2A1B66}
+.cnt.mini{min-width:0;padding:2px 6px;gap:4px}.cnt.mini .act{min-height:30px;padding:0 10px}

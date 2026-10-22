@@ -1245,6 +1245,67 @@ S.perimeter5b = async () => {
   await typePad(2 * (q[1].Lp + q[1].Wp)); await typePad(q[2].n * q[2].s);
 };
 
+/* ═══ الصف الخامس — طريق القافلة (missions/g5/caravan.js) ═══ */
+S.mentalStrategies5 = async () => {
+  await station(W.g5.K.camelCalc, '🐪 حساب الجمّال');
+  for (let r = 0; r < 3; r++) { const d = await data('mentalStrategies5'), q = d.rounds[r], o = (d.order || {})[r] || (await G(() => 0), (await data('mentalStrategies5')).order[r]);
+    if (r === 0) { await panelClick(`[data-o="${o.indexOf(q.wrong[0])}"]`); expect((await data('mentalStrategies5')).picked !== 0, 'حيلة خاطئة قُبلت'); }
+    await panelClick(`[data-o="${o.indexOf(q.right)}"]`); await sleep(120); await typePad(q.ans); }
+};
+S.decimalsFractions5 = async () => {
+  await station(W.g5.K.stations, '🚏 مسافات المحطات');
+  const setR = v => G(v => { const r = document.querySelector('#panel #nlR'); r.value = v; r.dispatchEvent(new Event('input')); }, v);
+  for (let r = 0; r < 2; r++) { const q = (await data('decimalsFractions5')).rounds[r], i = Math.round((q.v - q.lo) / q.st);
+    if (r === 0) { await setR(i === 0 ? 1 : 0); await sheetBtn('#benchGo'); expect((await data('decimalsFractions5')).r === 0, 'موضع خاطئ قُبل'); }
+    await setR(i); await sheetBtn('#benchGo'); }
+  await typePad(Math.round((await data('decimalsFractions5')).rounds[2].v));
+};
+S.percentages5 = async () => {
+  await station(W.g5.K.waterskins, '💧 قِرَب الماء');
+  await panelClick('[data-k="1"]'); await sheetBtn('#benchGo'); expect((await data('percentages5')).r === 0, 'قربة خاطئة رُبطت'); await panelClick('[data-k="-1"]');
+  for (let r = 0; r < 2; r++) { const v = (await data('percentages5')).rounds[r].v; for (let i = 0; i < Math.floor(v / 10); i++) await panelClick('[data-k="10"]'); for (let i = 0; i < v % 10; i++) await panelClick('[data-k="1"]'); await sheetBtn('#benchGo'); }
+  const q = (await data('percentages5')).rounds[2]; await typePad(q.tot * q.p / 100);
+};
+S.equivFractions5 = async () => {
+  await station(W.g5.K.flags, '🚩 رايات القافلة');
+  for (let r = 0; r < 3; r++) { const q = (await data('equivFractions5')).rounds[r];
+    if (r === 0) { const c = (await data('equivFractions5')).cards[0]; await panelClick(`[data-d="${c.decs.find(v => v !== q[2])}"]`); await panelClick(`[data-p="${q[3]}"]`); await sheetBtn('#benchGo'); expect((await data('equivFractions5')).r === 0, 'راية خاطئة رُفعت'); }
+    await panelClick(`[data-d="${q[2]}"]`); await panelClick(`[data-p="${q[3]}"]`); await sheetBtn('#benchGo'); }
+};
+S.mixedNumbers5 = async () => {
+  await station(W.g5.K.loaves, '🫓 أرغفة الرحلة');
+  await sheetBtn('#benchGo'); expect((await data('mixedNumbers5')).r === 0, 'ترتيب خاطئ قُبل');
+  for (let r = 0; r < 3; r++) { const q = (await data('mixedNumbers5')).rounds[r];
+    if (q.t === 'toMixed') { for (let i = 0; i < q.w; i++) await panelClick('[data-k="a"][data-v="1"]'); for (let i = 0; i < q.n; i++) await panelClick('[data-k="b"][data-v="1"]'); }
+    else for (let i = 0; i < q.w * q.dd + q.n; i++) await panelClick('[data-k="a"][data-v="1"]');
+    await sheetBtn('#benchGo'); }
+};
+S.addSub5b = async () => {
+  await station(W.g5.K.loads, '📦 أحمال الجمال');
+  for (let r = 0; r < 2; r++) { const q = (await data('addSub5b')).rounds[r], c = q.bags.map(v => Math.round(v * 100)), cap = Math.round(q.cap * 100), pr = c.flatMap((a, i) => c.map((b, j) => [i, j])).filter(([i, j]) => i < j);
+    if (r === 0) { const [x, y] = pr.find(([i, j]) => c[i] + c[j] !== cap); await panelClick(`[data-i="${x}"]`); await panelClick(`[data-i="${y}"]`); await sheetBtn('#benchGo'); expect((await data('addSub5b')).r === 0, 'حمل خاطئ قُبل'); }
+    const [x, y] = pr.find(([i, j]) => c[i] + c[j] === cap); await panelClick(`[data-i="${x}"]`); await panelClick(`[data-i="${y}"]`); await sheetBtn('#benchGo'); }
+  const q = (await data('addSub5b')).rounds[2]; await typePad(Math.round((q.s - q.u) * 100) / 100);
+};
+S.fractionsDivision5 = async () => {
+  await station(W.g5.K.dates, '🌴 تقاسم التمر');
+  await sheetBtn('#benchGo'); expect((await data('fractionsDivision5')).r === 0, 'قسمة خاطئة قُبلت');
+  const q = (await data('fractionsDivision5')).rounds; for (let i = 0; i < q[0].w; i++) await panelClick('[data-k="w"][data-v="1"]'); for (let i = 0; i < q[0].r; i++) await panelClick('[data-k="p"][data-v="1"]'); await sheetBtn('#benchGo');
+  await typePad(q[1].qq / q[1].dd * q[1].nn); await typePad(q[2].k);
+};
+S.inverseBrackets5 = async () => {
+  await station(W.g5.K.well, '🪣 لغز البئر');
+  await panelClick('[data-op="2"]'); await panelClick('[data-op="0"]'); await sheetBtn('#benchGo'); expect((await data('inverseBrackets5')).r === 0, 'ترتيب عكسي خاطئ قُبل');
+  for (let r = 0; r < 2; r++) { await panelClick('[data-op="0"]'); await panelClick('[data-op="2"]'); await sheetBtn('#benchGo'); }
+  const b = (await data('inverseBrackets5')).br; await G(t => [...document.querySelectorAll('#panel [data-o]')].find(x => x.dataset.o === t).click(), `(${ar(b.a)} + ${ar(b.b)}) × ${ar(b.c)}`); await sleep(150);
+};
+S.ratio5 = async () => {
+  await station(W.g5.K.coffee, '☕ وصفة القهوة');
+  await sheetBtn('#benchGo'); expect((await data('ratio5')).r === 0, 'وصفة خاطئة قُبلت');
+  for (let r = 0; r < 2; r++) { const q = (await data('ratio5')).rounds[r]; for (let i = 0; i < 3; i++) for (let k = 0; k < q.base[i] * q.k; k++) await panelClick(`[data-i="${i}"][data-v="1"]`); await sheetBtn('#benchGo'); }
+  await typePad((await data('ratio5')).rounds[2].sets);
+};
+
 const GATES = [
   { after: 'sequences', name: 'بوابة السوق', a: { x: 1380, y: 640 }, b: { x: 1620, y: 640 } },
   { after: 'areaPerimeterT1', name: 'بوابة الميناء', a: { x: 2200, y: 640 }, b: { x: 2400, y: 640 } },
@@ -1301,7 +1362,7 @@ try {
   const lessons = await G(async () => (await import('./content/lessons.js')).LESSONS.map(l => ({ id: l.id, title: l.title, giver: l.giver, u: l.u })));
   if (GRADE !== 6) {   // صف آخر: كل بوابة تُفتح بعد آخر درس في وحدتها (المناطق نفسها)
     GATES.forEach((g, i) => { g.after = lessons.filter(l => l.u === i).slice(-1)[0].id; });
-    W.g5 = await G(async () => ({ V: (await import('./missions/g5/village.js')).ST5V, M: (await import('./missions/g5/market.js')).ST5M, H: (await import('./missions/g5/harbor.js')).ST5H, F: (await import('./missions/g5/fort.js')).ST5F, E: (await import('./missions/g5/festival.js')).ST5E, D: (await import('./missions/g5/datayard.js')).ST5D, C: (await import('./missions/g5/coop.js')).ST5C }));   // لكل منطقة محطاتها (أسماء مثل scale تتكرر)
+    W.g5 = await G(async () => ({ V: (await import('./missions/g5/village.js')).ST5V, M: (await import('./missions/g5/market.js')).ST5M, H: (await import('./missions/g5/harbor.js')).ST5H, F: (await import('./missions/g5/fort.js')).ST5F, E: (await import('./missions/g5/festival.js')).ST5E, D: (await import('./missions/g5/datayard.js')).ST5D, C: (await import('./missions/g5/coop.js')).ST5C, K: (await import('./missions/g5/caravan.js')).ST5K }));   // لكل منطقة محطاتها (أسماء مثل scale تتكرر)
     console.log(`📚 الصف ${GRADE === 5 ? 'الخامس' : 'السابع'}: ${lessons.length} درساً`);
   }
   if (!FROM) for (const g of GATES) expect(await pathLen(g.a, g.b) === 0, `${g.name} مفتوحة قبل وقتها`);
