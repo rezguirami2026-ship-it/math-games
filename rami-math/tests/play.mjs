@@ -1171,6 +1171,43 @@ S.multDiv5 = async () => {
   await typePad(q[1].a * q[1].c); await typePad(q[2].rem);
 };
 
+/* ═══ الصف الخامس — بستان البيانات (missions/g5/datayard.js) ═══ */
+S.survey5 = async () => {
+  await station(W.g5.D.survey, '📋 استبيان الفاكهة');
+  const q = (await data('survey5')).rounds;
+  await panelClick(`[data-k="${(q[0].ans[0] + 1) % 4}"]`); expect((await data('survey5')).i === 0, 'علامة خاطئة قُبلت');
+  for (const a of q[0].ans) await panelClick(`[data-k="${a}"]`);
+  await typePad(q[1].ans.length);
+  const qo = (await data('survey5')).qo || null; await sleep(100); const o = (await data('survey5')).qo; await panelClick(`[data-q="${o.findIndex(x => x[1])}"]`);
+};
+S.checkData5 = async () => {
+  await station(W.g5.D.bars, '📊 لوحة الأعمدة');
+  await sheetBtn('#benchGo'); expect((await data('checkData5')).r === 0, 'لوحة خاطئة عُلّقت');
+  for (let r = 0; r < 2; r++) { const q = (await data('checkData5')).rounds[r]; for (let i = 0; i < 4; i++) for (let k = 0; k < q.v[i] / q.st; k++) await panelClick(`[data-b="${i}"][data-v="1"]`); await sheetBtn('#benchGo'); }
+  const v = (await data('checkData5')).rounds[2].v; await typePad(Math.max(...v) - Math.min(...v));
+};
+S.chance5 = async () => {
+  await station(W.g5.D.luck, '🎲 صندوق الحظ');
+  const W5 = ['مستحيل', 'غير مرجّح', 'متساوي الفرص', 'مرجّح', 'مؤكد'], want = { 'مستحيل': 0, 'غير مرجّح': 2, 'متساوي الفرص': 5, 'مرجّح': 8, 'مؤكد': 10 };
+  for (let r = 0; r < 3; r++) { const d = await data('chance5'), w = d.rounds[r];
+    if (r === 0) { const bad = w === 'غير مرجّح' ? 5 : 2; for (let i = 0; i < Math.abs(bad - d.red); i++) await panelClick(`[data-k="${bad > d.red ? 1 : -1}"]`); await sheetBtn('#benchGo'); expect((await data('chance5')).r === 0, 'كيس خاطئ قُبل'); }
+    const d2 = await data('chance5'); for (let i = 0; i < Math.abs(want[w] - d2.red); i++) await panelClick(`[data-k="${want[w] > d2.red ? 1 : -1}"]`); await sheetBtn('#benchGo'); }
+};
+S.lineGraph5 = async () => {
+  await station(W.g5.D.weather, '🌤️ محطة الطقس');
+  await sheetBtn('#benchGo'); expect((await data('lineGraph5')).r === 0, 'رسم خاطئ نُشر');
+  const q = (await data('lineGraph5')).rounds; for (let i = 0; i < 6; i++) for (let k = 0; k < q[0].T[i] / 2; k++) await panelClick(`[data-p="${i}"][data-v="1"]`); await sheetBtn('#benchGo');
+  await typePad((q[1].T[q[1].i] + q[1].T[q[1].i + 1]) / 2);
+  await sheetBtn('#mNo');
+};
+S.mode5 = async () => {
+  await station(W.g5.D.basket, '🧺 سلة الأكثر');
+  for (let r = 0; r < 2; r++) { const q = (await data('mode5')).rounds[r];
+    if (r === 0) { await panelClick(`[data-k="${(q.items[0] + 1) % 4}"]`); expect((await data('mode5')).i === 0, 'فرز خاطئ قُبل'); }
+    for (const k of q.items) await panelClick(`[data-k="${k}"]`); await panelClick(`[data-k="${q.m}"]`); await sleep(100); }
+  const L = (await data('mode5')).rounds[2].L, c = {}; L.forEach(v => c[v] = (c[v] || 0) + 1); await typePad(+Object.entries(c).sort((a, b) => b[1] - a[1])[0][0]);
+};
+
 const GATES = [
   { after: 'sequences', name: 'بوابة السوق', a: { x: 1380, y: 640 }, b: { x: 1620, y: 640 } },
   { after: 'areaPerimeterT1', name: 'بوابة الميناء', a: { x: 2200, y: 640 }, b: { x: 2400, y: 640 } },
@@ -1227,7 +1264,7 @@ try {
   const lessons = await G(async () => (await import('./content/lessons.js')).LESSONS.map(l => ({ id: l.id, title: l.title, giver: l.giver, u: l.u })));
   if (GRADE !== 6) {   // صف آخر: كل بوابة تُفتح بعد آخر درس في وحدتها (المناطق نفسها)
     GATES.forEach((g, i) => { g.after = lessons.filter(l => l.u === i).slice(-1)[0].id; });
-    W.g5 = await G(async () => ({ V: (await import('./missions/g5/village.js')).ST5V, M: (await import('./missions/g5/market.js')).ST5M, H: (await import('./missions/g5/harbor.js')).ST5H, F: (await import('./missions/g5/fort.js')).ST5F, E: (await import('./missions/g5/festival.js')).ST5E }));   // لكل منطقة محطاتها (أسماء مثل scale تتكرر)
+    W.g5 = await G(async () => ({ V: (await import('./missions/g5/village.js')).ST5V, M: (await import('./missions/g5/market.js')).ST5M, H: (await import('./missions/g5/harbor.js')).ST5H, F: (await import('./missions/g5/fort.js')).ST5F, E: (await import('./missions/g5/festival.js')).ST5E, D: (await import('./missions/g5/datayard.js')).ST5D }));   // لكل منطقة محطاتها (أسماء مثل scale تتكرر)
     console.log(`📚 الصف ${GRADE === 5 ? 'الخامس' : 'السابع'}: ${lessons.length} درساً`);
   }
   if (!FROM) for (const g of GATES) expect(await pathLen(g.a, g.b) === 0, `${g.name} مفتوحة قبل وقتها`);

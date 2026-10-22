@@ -357,3 +357,8 @@ body:has(.wardrobe) .toast{display:none}
 .g5col td.act{background:#FFE9C2;box-shadow:inset 0 0 0 2px #FFC23D;border-radius:6px}
 .g5digits{display:grid;grid-template-columns:repeat(5,1fr);gap:4px;max-width:320px;margin:6px auto;direction:ltr}
 .g5card.cup{min-width:96px}.g5card.cup.on{background:#FFE9C2;border-color:#F28C28;box-shadow:0 3px 0 #F28C28}
+.g5bctl{display:flex;flex-direction:column;gap:2px;flex:1;max-width:60px}.g5bctl .act{min-height:32px;padding:0}
+.g5bag{display:grid;grid-template-columns:repeat(5,30px);gap:6px;justify-content:center;margin:10px auto;padding:12px;width:max-content;border-radius:18px;background:#E8D7F5;border:3px solid #7B3F98}
+.g5bag i{width:30px;height:30px;border-radius:50%;display:block}.g5bag i.r{background:radial-gradient(circle at 35% 30%,#FF9AA8,#E2475C)}.g5bag i.b{background:radial-gradient(circle at 35% 30%,#9FD3FF,#2F6FB2)}
+.g5basket{display:flex;flex-wrap:wrap;gap:4px;justify-content:center;min-height:36px;margin:6px auto;padding:6px;border-radius:14px;background:#F3E3C2;font-size:24px;max-width:360px}
+.g5crate{display:flex;flex-direction:column;align-items:center;min-width:70px}.g5crate b{font-size:18px}
