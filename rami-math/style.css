@@ -344,3 +344,16 @@ body:has(.wardrobe) .toast{display:none}
 .g5day.today{background:#FFE9C2;border-color:#B5651D}
 .g5net.wide{grid-template-columns:repeat(8,36px)}.g5net.wide .g5sq{width:36px;height:36px}
 .g5sq.carpet.on{border-color:#7A1E26;background:linear-gradient(135deg,#C8434D,#8E2A33)}
+.g5ladder{display:flex;flex-direction:column-reverse;align-items:center;gap:4px;margin:8px auto;padding:6px 18px;border-left:6px solid #8A5A30;border-right:6px solid #8A5A30;width:max-content}
+.g5rung{min-width:110px;min-height:30px;border-radius:6px;background:#E8C99A;font:900 16px 'Cairo';color:#4A2C0E;display:flex;align-items:center;justify-content:center}
+.g5rung.hole{border:2px dashed #8E6CF6;background:#fff;color:#8E6CF6;cursor:pointer}.g5rung.hole.sel{box-shadow:0 0 0 3px #FFC23D}
+.g5thermo{display:flex;flex-direction:column;align-items:center;margin:6px auto;width:max-content}
+.g5thermo .tk{display:flex;align-items:center;gap:6px;height:12px}
+.g5thermo .tk i{display:block;width:18px;height:12px;background:#F5F0E6;border-left:2px solid #2A1B66;border-right:2px solid #2A1B66}
+.g5thermo .tk.fill i{background:#E2475C}.g5thermo .tk.on i{box-shadow:0 0 0 2px #FFC23D}
+.g5thermo .tk span{font:800 10px 'Cairo';color:#2A1B66;min-width:28px}.g5thermo .tk.neg span{color:#2F6FB2}
+.g5col{margin:8px auto;border-collapse:collapse;direction:ltr;font:900 24px 'Cairo';color:#2A1B66}
+.g5col td{min-width:30px;height:36px;text-align:center}.g5col tr.sum td{border-top:3px solid #2A1B66}
+.g5col td.act{background:#FFE9C2;box-shadow:inset 0 0 0 2px #FFC23D;border-radius:6px}
+.g5digits{display:grid;grid-template-columns:repeat(5,1fr);gap:4px;max-width:320px;margin:6px auto;direction:ltr}
+.g5card.cup{min-width:96px}.g5card.cup.on{background:#FFE9C2;border-color:#F28C28;box-shadow:0 3px 0 #F28C28}

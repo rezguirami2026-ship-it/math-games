@@ -3,4 +3,5 @@ import { CH as CH1 } from './challenges1.js';
 import { CH as CH2 } from './challenges2.js';
 import { CH as CH3 } from './challenges3.js';
 import { CH as CH4 } from './challenges4.js';
-export const CH = Object.assign({}, CH1, CH2, CH3, CH4);
+import { CH as CH5 } from './challenges5.js';
+export const CH = Object.assign({}, CH1, CH2, CH3, CH4, CH5);
