@@ -1208,6 +1208,43 @@ S.mode5 = async () => {
   const L = (await data('mode5')).rounds[2].L, c = {}; L.forEach(v => c[v] = (c[v] || 0) + 1); await typePad(+Object.entries(c).sort((a, b) => b[1] - a[1])[0][0]);
 };
 
+/* ═══ الصف الخامس — سوق الجمعية (missions/g5/coop.js) ═══ */
+S.measureLines5 = async () => {
+  await station(W.g5.C.cloth, '✂️ قماش الخيّاطة');
+  const q = (await data('measureLines5')).rounds;
+  await typePad(q[0].mm + 10); expect((await data('measureLines5')).r === 0, 'قياس خاطئ قُبل'); await typePad(q[0].mm);
+  for (const i of q[1].L.map((x, i) => i).sort((a, b) => q[1].L[a][0] - q[1].L[b][0])) await panelClick(`[data-i="${i}"]`); await sleep(150);
+  await typePad(q[2].tot - q[2].cut);
+};
+S.measureTime5 = async () => {
+  await station(W.g5.C.oven, '🍞 فرن الخبز');
+  await panelClick('[data-s="60"]'); await sheetBtn('#benchGo'); expect((await data('measureTime5')).r === 0, 'مؤقت خاطئ قُبل'); await panelClick('#sClr');
+  for (let r = 0; r < 3; r++) { let s = (await data('measureTime5')).rounds[r].ans; for (const v of [3600, 600, 60, 10]) { for (let i = 0; i < Math.floor(s / v); i++) await panelClick(`[data-s="${v}"]`); s %= v; } await sheetBtn('#benchGo'); }
+};
+S.calendars5 = async () => {
+  await station(W.g5.C.calendar, '📅 تقويم الجمعية');
+  const q = (await data('calendars5')).rounds, D = [31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31], want = q[0].day + q[0].gap - D[q[0].m];
+  await panelClick(`[data-d="${q[0].m}-${q[0].day + 1}"]`); expect((await data('calendars5')).r === 0, 'تاريخ خاطئ قُبل');
+  await panelClick(`[data-d="${q[0].m + 1}-${want}"]`); await sleep(120);
+  await panelClick(`[data-m="${q[1].m0 + q[1].k}"]`); await sleep(120);
+  await typePad(2026 - q[2].y);
+};
+S.area5b = async () => {
+  await station(W.g5.C.shelves, '🗄️ رفوف العرض');
+  const q = (await data('area5b')).rounds, o = q[0].opts;
+  await panelClick(`[data-o="${o.findIndex(([a, b]) => a * b !== q[0].A)}"]`); expect((await data('area5b')).r === 0, 'رف خاطئ قُبل');
+  await panelClick(`[data-o="${o.findIndex(([a, b]) => a * b === q[0].A)}"]`); await sleep(120);
+  await typePad(q[1].ans); await typePad(q[2].BW * q[2].BH - q[2].w * q[2].h);
+};
+S.perimeter5b = async () => {
+  await station(W.g5.C.frames, '🖼️ إطارات الصور');
+  const q = (await data('perimeter5b')).rounds, p = q[0].pile, used = [], take = v => { const i = p.findIndex((x, k) => x === v && !used.includes(k)); used.push(i); return i; };
+  for (const i of [0, 1, 2, 3]) await panelClick(`[data-i="${i}"]`); const bad = [0, 1, 2, 3].map(i => p[i]).sort((a, b) => a - b).join() === [q[0].Wp, q[0].Wp, q[0].Lp, q[0].Lp].sort((a, b) => a - b).join();
+  await sheetBtn('#benchGo'); if (!bad) expect((await data('perimeter5b')).r === 0, 'إطار خاطئ رُكّب');
+  if ((await data('perimeter5b')).r === 0) { for (const v of [q[0].Lp, q[0].Lp, q[0].Wp, q[0].Wp]) await panelClick(`[data-i="${take(v)}"]`); await sheetBtn('#benchGo'); }
+  await typePad(2 * (q[1].Lp + q[1].Wp)); await typePad(q[2].n * q[2].s);
+};
+
 const GATES = [
   { after: 'sequences', name: 'بوابة السوق', a: { x: 1380, y: 640 }, b: { x: 1620, y: 640 } },
   { after: 'areaPerimeterT1', name: 'بوابة الميناء', a: { x: 2200, y: 640 }, b: { x: 2400, y: 640 } },
@@ -1264,7 +1301,7 @@ try {
   const lessons = await G(async () => (await import('./content/lessons.js')).LESSONS.map(l => ({ id: l.id, title: l.title, giver: l.giver, u: l.u })));
   if (GRADE !== 6) {   // صف آخر: كل بوابة تُفتح بعد آخر درس في وحدتها (المناطق نفسها)
     GATES.forEach((g, i) => { g.after = lessons.filter(l => l.u === i).slice(-1)[0].id; });
-    W.g5 = await G(async () => ({ V: (await import('./missions/g5/village.js')).ST5V, M: (await import('./missions/g5/market.js')).ST5M, H: (await import('./missions/g5/harbor.js')).ST5H, F: (await import('./missions/g5/fort.js')).ST5F, E: (await import('./missions/g5/festival.js')).ST5E, D: (await import('./missions/g5/datayard.js')).ST5D }));   // لكل منطقة محطاتها (أسماء مثل scale تتكرر)
+    W.g5 = await G(async () => ({ V: (await import('./missions/g5/village.js')).ST5V, M: (await import('./missions/g5/market.js')).ST5M, H: (await import('./missions/g5/harbor.js')).ST5H, F: (await import('./missions/g5/fort.js')).ST5F, E: (await import('./missions/g5/festival.js')).ST5E, D: (await import('./missions/g5/datayard.js')).ST5D, C: (await import('./missions/g5/coop.js')).ST5C }));   // لكل منطقة محطاتها (أسماء مثل scale تتكرر)
     console.log(`📚 الصف ${GRADE === 5 ? 'الخامس' : 'السابع'}: ${lessons.length} درساً`);
   }
   if (!FROM) for (const g of GATES) expect(await pathLen(g.a, g.b) === 0, `${g.name} مفتوحة قبل وقتها`);

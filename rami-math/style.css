@@ -362,3 +362,7 @@ body:has(.wardrobe) .toast{display:none}
 .g5bag i{width:30px;height:30px;border-radius:50%;display:block}.g5bag i.r{background:radial-gradient(circle at 35% 30%,#FF9AA8,#E2475C)}.g5bag i.b{background:radial-gradient(circle at 35% 30%,#9FD3FF,#2F6FB2)}
 .g5basket{display:flex;flex-wrap:wrap;gap:4px;justify-content:center;min-height:36px;margin:6px auto;padding:6px;border-radius:14px;background:#F3E3C2;font-size:24px;max-width:360px}
 .g5crate{display:flex;flex-direction:column;align-items:center;min-width:70px}.g5crate b{font-size:18px}
+.g5two{display:flex;gap:10px;justify-content:center;flex-wrap:wrap}
+.g5cal.small{max-width:250px;margin:4px}.g5cal.small .ttl{grid-column:1/-1;text-align:center;font:900 14px 'Cairo';color:#E2475C}.g5cal.small .g5day{min-height:28px;font-size:12px}
+.g5card.shelf{display:flex;flex-direction:column;align-items:center;gap:4px}.g5card.shelf small{font-size:12px}
+.g5card.strip.on{background:#FFE9C2;border-color:#8A5A30;box-shadow:0 3px 0 #8A5A30}
