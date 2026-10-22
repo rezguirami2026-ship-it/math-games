@@ -35,16 +35,9 @@ import { weeklyCard } from './missions/weekly.js';
 import { openActivity, hasActivity, openFinale, finaleOpen, finaleRec, openExpert, expertOpen, expertRec, openDaily, dailyDone, dailyRec } from './missions/activity.js';
 import { levelOf } from './core/levels.js';
 import { BADGES, checkBadges } from './achievements/badges.js';
-import { CH as CH1 } from './content/challenges1.js';
-import { CH as CH2 } from './content/challenges2.js';
-import { CH as CH3 } from './content/challenges3.js';
-import { CH as CH4 } from './content/challenges4.js';
-import { CH as CH5 } from './content/challenges5.js';
-import { CH as CH6 } from './content/challenges6.js';
-import { CH as CH7 } from './content/challenges7.js';
-import { CH as CH8 } from './content/challenges8.js';
-import { CH as CH9 } from './content/challenges9.js';
 import { UNIT2 } from './missions/unit2.js';
+import { G5U1 } from './missions/g5/village.js';
+import { G5U2 } from './missions/g5/market.js';
 import { UNIT3 } from './missions/unit3.js';
 import { UNIT4 } from './missions/unit4.js';
 import { T2U1 } from './missions/t2u1.js';
@@ -66,7 +59,8 @@ import { harborColliders, drawHarborGround, harborDrawables, PIER_Y } from './wo
 import { drawWorldMap } from './ui/worldmap.js';
 import { marketColliders, drawMarketGround, marketDrawables } from './world/market.js';
 import * as quests from './missions/quests.js';
-import { LESSONS, UNITS } from './content/lessons.js';
+import { LESSONS, UNITS, CHALLENGES } from './content/index.js';
+import { gradeChosen, rememberGrade, GRADE } from './content/grade.js';
 import { openWardrobe, heroLookWorn, syncUnitGear } from './ui/wardrobe.js';
 import { SCENE } from './ui/home.js';
 import { unlock } from './achievements/achievements.js';
@@ -101,7 +95,7 @@ const shopMod = lesson => ({
   onStart: W => openCounter(W, lesson), resume: W => openCounter(W, lesson),
   goal: () => '🏪 ادفع للعم ناصر المبلغ بالضبط', target: () => npcPos('naser')
 });
-const MODS = Object.assign({}, UNIT1, UNIT2, UNIT3, UNIT4, T2U1, T2U2, T2U3, T2U4, T2U5, {
+const MODS = Object.assign({}, UNIT1, UNIT2, UNIT3, UNIT4, T2U1, T2U2, T2U3, T2U4, T2U5, G5U1, G5U2, {   // G5…: مهام الصف الخامس (معرّفاتها مختلفة عن السادس)
   multiplyStrategies: shopMod('multiplyStrategies'),
   decimalAdd: shopMod('decimalAdd'),
   division1: {
@@ -127,7 +121,7 @@ const MODS = Object.assign({}, UNIT1, UNIT2, UNIT3, UNIT4, T2U1, T2U2, T2U3, T2U
   }
 });
 const cur = () => quests.current();
-const ALLMODS = () => Object.values(UNIT1).concat(Object.values(UNIT2), Object.values(UNIT3), Object.values(UNIT4), Object.values(T2U1), Object.values(T2U2), Object.values(T2U3), Object.values(T2U4), Object.values(T2U5));
+const ALLMODS = () => Object.values(UNIT1).concat(Object.values(UNIT2), Object.values(UNIT3), Object.values(UNIT4), Object.values(T2U1), Object.values(T2U2), Object.values(T2U3), Object.values(T2U4), Object.values(T2U5), Object.values(G5U1), Object.values(G5U2));
 const allDone = () => LESSONS.every(l => quests.isDone(l.id));
 const unitDone = u => LESSONS.filter(l => l.u <= u).every(l => quests.isDone(l.id));   // الوحدة وكل ما قبلها
 const curMod = () => { const c = cur(); return c && c.ready && MODS[c.id] ? MODS[c.id] : null; };
@@ -200,6 +194,10 @@ function boot() {
     start(s); setTimeout(() => hud.toast('👁️ وضع المعاينة: كل البوابات مفتوحة، ولا يتأثر تقدّم الطلاب'), 1500); return;
   }
   const saved = loadSave();
+  if (!gradeChosen()) {   // أول تشغيل: اختيار الصف (من يلعب من قبل يبقى في صفه بلا سؤال؛ والاختبار الآلي يتخطاه إلا مع ?gradepick=1)
+    if (saved || (navigator.webdriver && !/[?&]gradepick=1/.test(location.search))) rememberGrade(GRADE);
+    else { screens.grade(boot); return; }
+  }
   screens.title(saved, { onContinue: () => start(saved), onNew: hero => { wipeSave(); start(fresh(hero)); }, onRestore: s => { saveNow(s); start(s); } });
 }
 async function start(state) {
@@ -435,7 +433,7 @@ function currentActions() {
 /* ── الهدف الحالي والسهم ── */
 function objective() {
   const c = cur(), mod = curMod();
-  if (!c) return '🎓 أكملتَ الدروس الـ٦٩ كلها! منصة التخرّج تنتظرك جنوب الورشة';
+  if (!c) return `🎓 أكملتَ الدروس الـ${ar(LESSONS.length)} كلها! منصة التخرّج تنتظرك جنوب الورشة`;
   if (!mod) return `✨ الوحدة ${ar(UNITS[c.u].n)} (${UNITS[c.u].title}) قريباً — ${c.mission}`;
   if (!quests.isStarted(c.id)) { const n = W.npcs.find(x => x.id === c.giver); return `💬 ${n ? n.name : ''} ينتظرك: «${c.mission}»`; }
   if (mod.challenge && quests.data(c.id).chStage === 2) return '🎯 ' + mod.challenge.title + ': اضغط الزر لتكمل أسئلته';
@@ -669,7 +667,7 @@ bus.on('save', () => {   // الارتقاء: يُحتفل به مرة واحد�
 });
 bus.on('mission', () => hud.objective(objective()));
 bus.on('achievement', a => setTimeout(() => hud.toast(`${a.icon} ${a.id && a.id.startsWith('b_') ? 'وسام جديد' : 'إنجاز جديد'}: ${a.name}`), 400));
-Object.entries(Object.assign({}, CH1, CH2, CH3, CH4, CH5, CH6, CH7, CH8, CH9)).forEach(([id, c]) => { if (MODS[id]) MODS[id].challenge = c; });
+Object.entries(CHALLENGES).forEach(([id, c]) => { if (MODS[id]) MODS[id].challenge = c; });
 quests.gate.has = id => !!(MODS[id] && MODS[id].challenge);
 bus.on('challenge', id => {   // انتهت مهمة العالم: يُفتح التحدي وحده بعد آخر حوار
   const go = () => { if (!W || game.busy) return setTimeout(go, 300);
@@ -701,7 +699,7 @@ bus.on('lessonDone', id => {
     u.ach.forEach(a => unlock(a));
     u.opens.forEach(([ms, msg]) => setTimeout(() => hud.toast(msg), ms));
   }
-  if (allDone()) { unlock('all69'); setTimeout(() => hud.toast('🎓 أكملتَ الدروس الـ٦٩ كلها! اذهب إلى منصة التخرّج'), 4500); }
+  if (allDone()) { unlock('all69'); setTimeout(() => hud.toast(`🎓 أكملتَ الدروس الـ${ar(LESSONS.length)} كلها! اذهب إلى منصة التخرّج`), 4500); }
   if (id === 'mixedNumbers') setTimeout(() => hud.toast('💧 أم خالد تنتظرك في القرية: خزانات البيوت عطشى!'), 3500);   // الدرس التالي في القرية لا في السوق
 });
 window.__game = { get state() { return game.state; }, get W() { return W; }, eng, game, quests, MODS, blocked, activity: id => openActivity(W, id, MODS[id]), finale: u => openFinale(W, u, MODS), expert: id => openExpert(W, id, MODS[id]), daily: () => openDaily(W, MODS), season: () => openSeason(W, MODS), setSeason: k => { SEAS = SEASONS[k] || null; }, TREASURES, findPath: (a, b) => findPath(a.x, a.y, b.x, b.y, blocked) };

@@ -1,7 +1,8 @@
 // شاشات البداية: العنوان، اختيار البطل، بطاقة الفصل. لا قوائم دروس ولا لوحات.
 import { drawHuman, SKINS, ACCENTS } from '../character/human.js';
 import { showIntroVideo } from './introvideo.js';
-import { importCode, cleanName } from '../save/save.js';
+import { importCode, cleanName, saveFor } from '../save/save.js';
+import { GRADE, GRADES, gradeInfo, chooseGrade } from '../content/grade.js';
 import { LESSONS } from '../content/lessons.js';
 import { ar } from '../core/util.js';
 import { homeHTML, homeSheets, SCENE } from './home.js';
@@ -31,6 +32,17 @@ function animate(canvases) {
 const P2HEAD = (title, sub) => `${SCENE}<div class="p2logo"><b>قرية الخير</b><small>مغامرة رامي ماث · تعلّم، العب، حقّق المزيد</small></div>
   <div class="p2t"><i class="sp l"></i><h2>${title}</h2><i class="sp r"></i></div>${sub ? `<p class="p2sub">${sub}</p>` : ''}`;
 export const screens = {
+  /* اختيار الصف أول تشغيل على الجهاز (الصف بلا دروس بعدُ يظهر «قريباً») */
+  grade(done) {
+    const el = $('screen'); el.className = 'screen on hero p2on';
+    el.innerHTML = `${P2HEAD('اختر صفّك', 'لكل صف دروسه ونجومه ومغامرته، وتستطيع التغيير لاحقاً من الحقيبة 🎒')}<div class="p2body">
+      <div class="grades2">${GRADES.map(g => `<button class="gcard${g.n === GRADE ? ' on' : ''}" data-g="${g.n}"${g.ready ? '' : ' disabled'}><b>${ar(g.n)}</b><span>الصف ${g.name}</span>${g.ready ? '' : '<small>قريباً</small>'}</button>`).join('')}</div>
+      <button class="pgo" id="bGo"><span>⭐</span>متابعة<em>‹</em></button></div>`;
+    let pick = GRADE;
+    const cards = [...el.querySelectorAll('.gcard')];
+    cards.forEach(b => b.onclick = () => { pick = +b.dataset.g; cards.forEach(x => x.classList.toggle('on', x === b)); });
+    $('bGo').onclick = () => { if (!chooseGrade(pick)) done(); };   // صف آخر: تُعاد الصفحة بدروسه
+  },
   title(saved, { onContinue, onNew, onRestore }) {
     const el = $('screen'); el.className = 'screen on title home-on';
     el.innerHTML = homeHTML(saved); homeSheets(el, saved, gfx);   // الشاشة الرئيسية الجديدة (ui/home.js)
@@ -52,11 +64,14 @@ export const screens = {
     $('bCheck').onclick = async () => {
       const s = await importCode($('codeIn').value);
       if (!s) { $('codeMsg').textContent = 'هذا الرمز غير صالح. تأكد أنك نسخته كاملاً.'; $('codeIn').classList.add('shake'); setTimeout(() => $('codeIn').classList.remove('shake'), 500); return; }
-      const done = LESSONS.filter(l => s.quests && s.quests.done && s.quests.done[l.id]).length;
-      $('codeMsg').innerHTML = `مغامرة <b>${s.hero.name}</b>: أنجز ${ar(done)} من ${ar(LESSONS.length)} درساً.${saved ? '<br>ستحلّ محلّ المغامرة المحفوظة على هذا الجهاز.' : ''}`;
+      const g = gradeInfo(s.grade), other = g.n !== GRADE;   // رمز لصف آخر: يُحفظ في مكان ذلك الصف ثم يُفتح
+      if (other && !g.ready) { $('codeMsg').textContent = `هذا الرمز لمغامرة في الصف ${g.name}، ودروسه لم تُضف إلى اللعبة بعد.`; return; }
+      const done = other ? Object.keys(s.quests.done).length : LESSONS.filter(l => s.quests && s.quests.done && s.quests.done[l.id]).length;
+      $('codeMsg').innerHTML = other ? `مغامرة <b>${s.hero.name}</b> في الصف ${g.name}: أنجز ${ar(done)} درساً.<br>ستنتقل إلى الصف ${g.name}، وتحلّ محلّ مغامرته المحفوظة على هذا الجهاز إن وُجدت.`
+        : `مغامرة <b>${s.hero.name}</b>: أنجز ${ar(done)} من ${ar(LESSONS.length)} درساً.${saved ? '<br>ستحلّ محلّ المغامرة المحفوظة على هذا الجهاز.' : ''}`;
       el.querySelector('.btns').innerHTML = `<button class="pgo" id="bYes"><span>✓</span>نعم، استعدها</button><button class="act ghost" id="bBack">رجوع</button>`;
       $('bBack').onclick = () => this.title(saved, cb);
-      $('bYes').onclick = () => { stopAll(); el.className = 'screen'; cb.onRestore(s); };
+      $('bYes').onclick = () => { stopAll(); if (other) { saveFor(g.n, s); chooseGrade(g.n); return; } el.className = 'screen'; cb.onRestore(s); };
     };
   },
   hero(done) {

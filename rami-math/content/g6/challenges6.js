@@ -1,7 +1,7 @@
 // تحديات الفصل الثاني — الوحدة ٢ (الإحصاء والاحتمال): ٨ جولات لكل درس. القواعد نفسها: أعداد جديدة، لا مؤقت ولا عقاب.
-import { ar } from '../core/util.js';
-import { choice, multi, order, num, tf, sort, match, pickN, fresh, line, memory, error } from '../missions/challenge.js';
-import { lineGraph, barChart, pie, table, spinner, COLOR_NAMES } from './chData.js';
+import { ar } from '../../core/util.js';
+import { choice, multi, order, num, tf, sort, match, pickN, fresh, line, memory, error } from '../../missions/challenge.js';
+import { lineGraph, barChart, pie, table, spinner, COLOR_NAMES } from '../chData.js';
 
 const R = (a, b) => a + Math.floor(Math.random() * (b - a + 1));
 const shuffle = a => pickN(a, a.length);

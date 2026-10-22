@@ -27,7 +27,8 @@ export const gfx = {
   q() { try { return localStorage.getItem('ramimath_q') || 'auto'; } catch (e) { return 'auto'; } },
   setQ(v) { try { localStorage.setItem('ramimath_q', v); } catch (e) {} if (gfx.onQ) gfx.onQ(v); }
 };
-import { exportCode } from '../save/save.js';
+import { exportCode, saveNow } from '../save/save.js';
+import { GRADE, GRADES, gradeInfo, chooseGrade } from '../content/grade.js';
 import { progress } from '../missions/quests.js';
 import { ramadanPref, setRamadanPref, PREF_LABEL } from '../core/season.js';
 import { openAbout, openSupport } from './opsui.js';
@@ -132,6 +133,7 @@ export const hud = {
         ${levelOf(s).n >= 2 ? `<button class="act ghost" id="petDecBtn">🐪 زينة سهيل</button><button class="act ghost" id="petBtn">${s.pet && s.pet.hidden ? '🐪 أظهر الرفيق سهيل' : '🐪 الرفيق سهيل يرافقك (اضغط لإخفائه)'}</button>` : '<div class="bagrow muted"><span>🐪 رفيق صغير ينضم إليك في المستوى ٢</span></div>'}
         <button class="act ghost" id="musBtn">${music.on ? '🎵 الموسيقى تعمل' : '🔇 الموسيقى متوقفة'}</button>
         <button class="act ghost" id="codeBtn">🔑 رمز حفظ التقدّم</button>
+        <button class="act ghost" id="gradeBtn">🏫 الصف ${gradeInfo(GRADE).name} (تغيير الصف)</button>
         <button class="act ghost" id="ramBtn">🌙 أجواء رمضان: ${PREF_LABEL[ramadanPref()]}</button>
         ${installable() ? '<button class="act go" id="instBtn">📲 ثبّت اللعبة كتطبيق</button>' : ''}
         <button class="act go" id="advBtn">🗺️ المغامرات</button>
@@ -147,6 +149,8 @@ export const hud = {
         <button class="act ghost" id="d3Btn">🎮 العرض: ${gfx.d3() ? 'ثلاثي الأبعاد' : 'عادي'}</button>
         ${gfx.d3() ? `<button class="act ghost" id="qBtn">✨ الجودة: ${{ auto: 'تلقائية', high: 'عالية', low: 'منخفضة' }[gfx.q()]}</button>` : ''}`;
     }
+    if (kind === 'grade') body = `<h3>🏫 صفّي الدراسي</h3><p class="muted">لكل صف دروسه ونجومه ومغامرته المحفوظة على هذا الجهاز، وتعود إلى أي صف متى شئت.</p>
+        ${GRADES.map(g => `<button class="act ${g.n === GRADE ? 'go' : 'ghost'}" data-grade="${g.n}"${g.ready ? '' : ' disabled'}>الصف ${g.name}${g.n === GRADE ? ' ✓ (صفّك الآن)' : g.ready ? '' : ' — قريباً'}</button>`).join('')}`;
     if (kind === 'code') {
       const p = progress();
       body = `<h3>🔑 رمز تقدّمك</h3>
@@ -159,9 +163,15 @@ export const hud = {
         <h3>📜 رحلة الدروس</h3><div id="qlog"></div>`;
     el.innerHTML = `<div class="sheet">${body}<button class="act" data-close>رجوع إلى العالم</button></div>`;
     el.classList.add('on');
+    if (kind === 'grade') el.querySelectorAll('[data-grade]').forEach(b => b.onclick = e => {
+      e.stopPropagation(); const n = +b.dataset.grade;
+      if (n === GRADE) { this.panel('bag'); return; }
+      saveNow(s); chooseGrade(n);   // مغامرة هذا الصف تبقى محفوظة في مكانها، والصفحة تُحمَّل بدروس الصف الجديد
+    });
     if (kind === 'bag') {
       $('sndBtn').onclick = e => { e.stopPropagation(); sound.on = !sound.on; this.panel('bag'); };
       $('codeBtn').onclick = e => { e.stopPropagation(); this.panel('code'); };
+      $('gradeBtn').onclick = e => { e.stopPropagation(); this.panel('grade'); };
       $('musBtn').onclick = e => { e.stopPropagation(); setMusic(!music.on); this.panel('bag'); };
       if ($('petBtn')) $('petBtn').onclick = e => { e.stopPropagation(); s.pet = s.pet || {}; s.pet.hidden = !s.pet.hidden; this.panel('bag'); };
       $('decoBtn').onclick = e => { e.stopPropagation(); openDecorShop(); };

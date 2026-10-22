@@ -1,7 +1,7 @@
-// تحديات الوحدة ٣ (الهندسة — الميناء): ٨ جولات لكل درس تغطي مخرجاته (content/outcomes.js). القواعد نفسها: أعداد جديدة، لا مؤقت ولا عقاب.
-import { ar } from '../core/util.js';
-import { choice, multi, order, num, tf, sort, match, pickN, fresh, line, memory, error } from '../missions/challenge.js';
-import { shape, solid, net, cubeNet, BAD_NETS, solidNet, triangle, protractor, fan, grid, pt, sg } from './chGeo.js';
+// تحديات الوحدة ٣ (الهندسة — الميناء): ٨ جولات لكل درس تغطي مخرجاته (content/g6/outcomes.js). القواعد نفسها: أعداد جديدة، لا مؤقت ولا عقاب.
+import { ar } from '../../core/util.js';
+import { choice, multi, order, num, tf, sort, match, pickN, fresh, line, memory, error } from '../../missions/challenge.js';
+import { shape, solid, net, cubeNet, BAD_NETS, solidNet, triangle, protractor, fan, grid, pt, sg } from '../chGeo.js';
 
 const R = (a, b) => a + Math.floor(Math.random() * (b - a + 1));
 const shuffle = a => pickN(a, a.length);

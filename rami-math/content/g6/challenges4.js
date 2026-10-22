@@ -1,9 +1,9 @@
-// تحديات الوحدة ٤ (الأعداد والحساب — القلعة): ٨ جولات لكل درس تغطي مخرجاته (content/outcomes.js).
+// تحديات الوحدة ٤ (الأعداد والحساب — القلعة): ٨ جولات لكل درس تغطي مخرجاته (content/g6/outcomes.js).
 // القواعد نفسها: لا فاصلة آلاف، والسؤال عن قيمة رقم في عدد أرقامه مختلفة، وأعداد جديدة لكل جولة، ولا مؤقت ولا عقاب.
-import { ar, neg } from '../core/util.js';
-import { choice, multi, order, num, tf, build, sort, match, pickN, fresh, line, memory, error } from '../missions/challenge.js';
-import { nline, dec } from './chArt.js';
-import { glyphs, GLY } from '../missions/unit4.js';
+import { ar, neg } from '../../core/util.js';
+import { choice, multi, order, num, tf, build, sort, match, pickN, fresh, line, memory, error } from '../../missions/challenge.js';
+import { nline, dec } from '../chArt.js';
+import { glyphs, GLY } from '../../missions/unit4.js';
 
 const R = (a, b) => a + Math.floor(Math.random() * (b - a + 1));
 const shuffle = a => pickN(a, a.length);

@@ -1,16 +1,17 @@
 // فحص مولّدات «تحدي الشخصية»: يولّد كل تحدٍّ مئات المرات ويبحث عن أخطاء المحتوى.
-// الاستعمال (يشغّل خادماً مؤقتاً بنفسه): node fuzz-ch.mjs 4 [عدد المرات]   ← يفحص content/challenges4.js
+// الاستعمال (يشغّل خادماً مؤقتاً بنفسه): node fuzz-ch.mjs 4 [عدد المرات] [--grade=6]   ← يفحص content/g6/challenges4.js
 import { chromium } from 'playwright-core';
 import { createServer } from 'node:http'; import { readFile } from 'node:fs/promises'; import { join, extname, dirname } from 'node:path'; import { fileURLToPath } from 'node:url';
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..'), TY = { '.js': 'text/javascript', '.css': 'text/css', '.html': 'text/html', '.json': 'application/json', '.svg': 'image/svg+xml', '.png': 'image/png', '.webmanifest': 'application/json', '.woff2': 'font/woff2' };
 const srv = createServer(async (q, r) => { const p = decodeURIComponent(new URL(q.url, 'http://x').pathname).slice(1) || 'index.html'; try { const b = await readFile(join(ROOT, p)); r.writeHead(200, { 'content-type': TY[extname(p)] || 'application/octet-stream' }); r.end(b); } catch { r.writeHead(404); r.end(); } });
 await new Promise(r => srv.listen(0, r));
-const unit = process.argv[2] || '1', times = +(process.argv[3] || 400);
+const GR = +((process.argv.find(a => a.startsWith('--grade=')) || '--grade=6').split('=')[1]), ARGS = process.argv.filter(a => !a.startsWith('--grade='));
+const unit = ARGS[2] || '1', times = +(ARGS[3] || 400);
 const b = await chromium.launch({ channel: 'chrome' }); const p = await b.newPage();
 const errs = []; p.on('pageerror', e => errs.push(e.message));
 await p.goto(`http://localhost:${srv.address().port}/?2d=1&preview=1`); await p.waitForTimeout(2500);
-const r = await p.evaluate(async ([unit, times]) => {
-  const { CH } = await import(`./content/challenges${unit}.js?` + Date.now()), { OUT } = await import('./content/outcomes.js'); const ex = {}, cnt = {};
+const r = await p.evaluate(async ([unit, times, GR]) => {
+  const { CH } = await import(`./content/g${GR}/challenges${unit}.js?` + Date.now()), { OUT } = await import(`./content/g${GR}/outcomes.js`); const ex = {}, cnt = {};
   const nums = s => (s.replace(/<[^>]+>/g, ' ').match(/[٠-٩]+(?:٫[٠-٩]+)?/g) || []);
   for (const [id, c] of Object.entries(CH)) for (let t = 0; t < times; t++) {
     let items; try { items = c.make(); } catch (e) { const k = id + ' THROW'; ex[k] = e.message + ' ' + (e.stack || '').split('\n')[1]; cnt[k] = (cnt[k] || 0) + 1; continue; }
@@ -38,7 +39,7 @@ const r = await p.evaluate(async ([unit, times]) => {
     });
   }
   return { cnt, ex };
-}, [unit, times]);
+}, [unit, times, GR]);
 const keys = Object.keys(r.cnt);
 console.log(keys.length ? keys.map(k => `${k} ×${r.cnt[k]}: ${r.ex[k]}`).join('\n') : `✅ لا مشكلات في ${times} توليد لكل تحدٍّ`);
 if (errs.length) console.log('أخطاء الصفحة:', errs);

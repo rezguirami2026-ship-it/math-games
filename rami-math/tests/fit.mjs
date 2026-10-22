@@ -8,7 +8,7 @@ const b = await chromium.launch({ channel: 'chrome' }); const p = await b.newPag
 await p.goto(`http://localhost:${srv.address().port}/?2d=1&preview=1`); await p.waitForTimeout(3000);
 const res = await p.evaluate(async () => {
   const { runChallenge } = await import('./missions/challenge.js'); const out = [];
-  for (let u = 1; u <= 9; u++) { const { CH } = await import(`./content/challenges${u}.js`);
+  for (let u = 1; u <= 9; u++) { const { CH } = await import(`./content/g6/challenges${u}.js`);
     for (const [id, c] of Object.entries(CH)) { const items = c.make();
       for (let k = 0; k < items.length; k++) { const d = { ch: { items, i: k, firstTry: 0, tries: 0, gems: 0, streak: 0 } }; runChallenge(window.__game.W, d, Object.assign({ id: 'x' }, c));
         await new Promise(r => setTimeout(r, 30)); const s = document.querySelector('#panel .sheet'); const over = s.scrollHeight - s.clientHeight;

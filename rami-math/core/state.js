@@ -1,9 +1,11 @@
 // حالة اللعبة: كل ما يُحفظ عن البطل والعالم والمهام. لا رسم هنا ولا واجهة.
+import { GRADE } from '../content/grade.js';
 export const VERSION = 1;
 export const TRUCKS = 6, BOXES = 27, CARRY_MAX = 6, TREE_COST = 20;   // ٢٧ ÷ ٦ = ٤ والباقي ٣
 export function newState(hero) {
   return {
     v: VERSION, created: Date.now(),
+    grade: GRADE,                                // الصف الدراسي (٥ أو ٦ أو ٧)، ولكل صف حفظه
     hero,                                        // { name, kind: 'boy'|'girl', skin, color }
     player: { x: 1380, y: 640, dir: 'left' },
     carry: 0,                                    // صناديق بين يدي البطل
@@ -19,6 +21,7 @@ export const fresh = hero => upgrade(newState(hero));
 export const game = { state: null, busy: false };
 /* ترقية الحفظ القديم بلا فقدان: تُضاف الأنظمة الجديدة لمن لعب الفصل الأول */
 export function upgrade(s) {
+  if (s.grade == null) s.grade = 6;   // الحفظ قبل دعم الصفوف كان للسادس
   s.missions.tanks = s.missions.tanks || { status: 'locked', levels: [0, 0, 0], targets: null, done: [false, false, false], tries: 0 };
   s.missions.shop = s.missions.shop || { status: 'locked', round: 0, tries: 0 };
   s.gear = s.gear || { owned: {}, worn: {} };

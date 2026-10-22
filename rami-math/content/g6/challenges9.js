@@ -1,7 +1,7 @@
 // تحديات الفصل الثاني — الوحدة ٥ (الهندسة ٢ — الورشة): ٨ جولات لكل درس. القواعد نفسها.
-import { ar } from '../core/util.js';
-import { choice, multi, num, tf, sort, match, pickN, fresh } from '../missions/challenge.js';
-import { shape, solid, solidNet, triangle, protractor, fan, grid, pt } from './chGeo.js';
+import { ar } from '../../core/util.js';
+import { choice, multi, num, tf, sort, match, pickN, fresh } from '../../missions/challenge.js';
+import { shape, solid, solidNet, triangle, protractor, fan, grid, pt } from '../chGeo.js';
 
 const R = (a, b) => a + Math.floor(Math.random() * (b - a + 1));
 const shuffle = a => pickN(a, a.length);

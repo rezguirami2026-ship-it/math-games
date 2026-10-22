@@ -1,8 +1,8 @@
-// تحديات الوحدة ١ (الأعداد — قرية الخير): المرحلة الثانية لكل درس، ٨ جولات تغطي مخرجاته الرسمية (content/outcomes.js).
+// تحديات الوحدة ١ (الأعداد — قرية الخير): المرحلة الثانية لكل درس، ٨ جولات تغطي مخرجاته الرسمية (content/g6/outcomes.js).
 // قواعد المعلم: لا فاصلة آلاف في الأعداد الكاملة (الفاصلة للأعداد العشرية فقط)، والسؤال عن قيمة رقم يكون في عدد أرقامه مختلفة،
 // وكل جولة بأعداد جديدة (fresh) لا تتكرر في جولة أخرى من التحدي نفسه. كل make() يولّد تحدياً جديداً في كل مرة.
-import { ar } from '../core/util.js';
-import { choice, multi, order, num, tf, build, sort, match, pickN, fresh, line, memory, error } from '../missions/challenge.js';
+import { ar } from '../../core/util.js';
+import { choice, multi, order, num, tf, build, sort, match, pickN, fresh, line, memory, error } from '../../missions/challenge.js';
 
 const R = (a, b) => a + Math.floor(Math.random() * (b - a + 1));
 const N = n => ar(n);                        // عدد كامل بلا فاصلة آلاف

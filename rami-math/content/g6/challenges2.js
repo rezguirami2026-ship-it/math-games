@@ -1,8 +1,8 @@
-// تحديات الوحدة ٢ (القياس — السوق الأسبوعي): المرحلة الثانية لكل درس، ٨ جولات تغطي مخرجاته الرسمية (content/outcomes.js).
+// تحديات الوحدة ٢ (القياس — السوق الأسبوعي): المرحلة الثانية لكل درس، ٨ جولات تغطي مخرجاته الرسمية (content/g6/outcomes.js).
 // القواعد نفسها: لا فاصلة آلاف، وأعداد جديدة في كل جولة (fresh)، ولا مؤقت ولا عقاب.
-import { ar } from '../core/util.js';
-import { choice, multi, order, num, tf, build, sort, match, pickN, fresh, line, memory, error } from '../missions/challenge.js';
-import { ruler, jug, analog, timetable, clock24, pad2, WEEK, calendar, rect, lshape, gridShape, dec } from './chArt.js';
+import { ar } from '../../core/util.js';
+import { choice, multi, order, num, tf, build, sort, match, pickN, fresh, line, memory, error } from '../../missions/challenge.js';
+import { ruler, jug, analog, timetable, clock24, pad2, WEEK, calendar, rect, lshape, gridShape, dec } from '../chArt.js';
 
 const R = (a, b) => a + Math.floor(Math.random() * (b - a + 1));
 const shuffle = a => pickN(a, a.length);

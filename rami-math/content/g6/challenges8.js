@@ -1,7 +1,7 @@
 // تحديات الفصل الثاني — الوحدة ٤ (القياس ٣ — القافلة): ٨ جولات لكل درس. القواعد نفسها.
-import { ar } from '../core/util.js';
-import { choice, multi, order, num, tf, sort, match, pickN, fresh } from '../missions/challenge.js';
-import { jug, dial, clock24, timetable, rect, lshape, gridShape, dec } from './chArt.js';
+import { ar } from '../../core/util.js';
+import { choice, multi, order, num, tf, sort, match, pickN, fresh } from '../../missions/challenge.js';
+import { jug, dial, clock24, timetable, rect, lshape, gridShape, dec } from '../chArt.js';
 
 const R = (a, b) => a + Math.floor(Math.random() * (b - a + 1));
 const shuffle = a => pickN(a, a.length);

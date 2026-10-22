@@ -1,7 +1,7 @@
 // تحديات الفصل الثاني — الوحدة ٣ (الأعداد والكسور — الجمعية): ٨ جولات لكل درس من الدروس الاثني عشر. القواعد نفسها.
-import { ar } from '../core/util.js';
-import { choice, multi, order, num, tf, sort, match, pickN, fresh, line, memory, error } from '../missions/challenge.js';
-import { nline, dec } from './chArt.js';
+import { ar } from '../../core/util.js';
+import { choice, multi, order, num, tf, sort, match, pickN, fresh, line, memory, error } from '../../missions/challenge.js';
+import { nline, dec } from '../chArt.js';
 
 const R = (a, b) => a + Math.floor(Math.random() * (b - a + 1));
 const shuffle = a => pickN(a, a.length);

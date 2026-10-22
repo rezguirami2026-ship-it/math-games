@@ -1,8 +1,11 @@
 // الحفظ: عالم الطالب يبقى كما تركه
 import { VERSION } from '../core/state.js';
+import { GRADE, gradeInfo } from '../content/grade.js';
 /* وضع المعاينة (?preview): حفظ منفصل تماماً، فلا يمس تقدّم الطالب الحقيقي على الجهاز */
 export const PREVIEW = (() => { try { return new URLSearchParams(location.search).has('preview'); } catch (e) { return false; } })();
-const KEY = PREVIEW ? 'ramimath_village_preview' : 'ramimath_village_v1';
+/* لكل صف حفظه حتى لا تختلط النجوم: السادس يبقى على مفتاحه القديم (حفظ الطلاب الحاليين)، و_g5 و_g7 للصفين الآخرين */
+const keyOf = g => (PREVIEW ? 'ramimath_village_preview' : 'ramimath_village_v1') + (g === 6 ? '' : '_g' + g);
+const KEY = keyOf(GRADE);
 let timer = 0;
 const BAK = KEY + '_bak';
 /* تنظيف الحفظ عند دخوله اللعبة (من الجهاز أو من رمز التقدّم): الاسم نص عادي قصير بلا رموز HTML،
@@ -16,6 +19,7 @@ export function sanitizeSave(s) {
   const h = s.hero;
   h.name = cleanName(h.name) || 'بطل';
   if (h.kind !== 'boy' && h.kind !== 'girl') h.kind = 'boy';
+  if (!gradeInfo(s.grade)) s.grade = 6;   // الحفظ قبل دعم الصفوف كان للسادس
   if (!HEX.test(h.skin || '')) h.skin = '#DDA779';
   if (!HEX.test(h.color || '')) h.color = '#2F6FB2';
   ['good', 'gems', 'carry'].forEach(k => { if (k in s) s[k] = count(s[k]); });
@@ -34,6 +38,8 @@ export function loadSave() {
   return s;
 }
 export function saveNow(state) { try { localStorage.setItem(KEY, JSON.stringify(state)); } catch (e) {} }
+/* حفظ مغامرة صف آخر في مكانها (رمز تقدّم لصف غير المفتوح الآن) */
+export function saveFor(grade, state) { try { localStorage.setItem(keyOf(grade), JSON.stringify(state)); } catch (e) {} }
 export function saveSoon(state) { clearTimeout(timer); timer = setTimeout(() => saveNow(state), 300); }
 export function wipeSave() { try { localStorage.removeItem(KEY); localStorage.removeItem(BAK); } catch (e) {} }
 
