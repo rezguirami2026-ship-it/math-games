@@ -38,6 +38,8 @@ import { BADGES, checkBadges } from './achievements/badges.js';
 import { UNIT2 } from './missions/unit2.js';
 import { G5U1 } from './missions/g5/village.js';
 import { G5U2 } from './missions/g5/market.js';
+import { G5U3 } from './missions/g5/harbor.js';
+import { G5U4 } from './missions/g5/fort.js';
 import { UNIT3 } from './missions/unit3.js';
 import { UNIT4 } from './missions/unit4.js';
 import { T2U1 } from './missions/t2u1.js';
@@ -95,7 +97,7 @@ const shopMod = lesson => ({
   onStart: W => openCounter(W, lesson), resume: W => openCounter(W, lesson),
   goal: () => '🏪 ادفع للعم ناصر المبلغ بالضبط', target: () => npcPos('naser')
 });
-const MODS = Object.assign({}, UNIT1, UNIT2, UNIT3, UNIT4, T2U1, T2U2, T2U3, T2U4, T2U5, G5U1, G5U2, {   // G5…: مهام الصف الخامس (معرّفاتها مختلفة عن السادس)
+const MODS = Object.assign({}, UNIT1, UNIT2, UNIT3, UNIT4, T2U1, T2U2, T2U3, T2U4, T2U5, G5U1, G5U2, G5U3, G5U4, {   // G5…: مهام الصف الخامس (معرّفاتها مختلفة عن السادس)
   multiplyStrategies: shopMod('multiplyStrategies'),
   decimalAdd: shopMod('decimalAdd'),
   division1: {
@@ -121,7 +123,7 @@ const MODS = Object.assign({}, UNIT1, UNIT2, UNIT3, UNIT4, T2U1, T2U2, T2U3, T2U
   }
 });
 const cur = () => quests.current();
-const ALLMODS = () => Object.values(UNIT1).concat(Object.values(UNIT2), Object.values(UNIT3), Object.values(UNIT4), Object.values(T2U1), Object.values(T2U2), Object.values(T2U3), Object.values(T2U4), Object.values(T2U5), Object.values(G5U1), Object.values(G5U2));
+const ALLMODS = () => Object.values(UNIT1).concat(Object.values(UNIT2), Object.values(UNIT3), Object.values(UNIT4), Object.values(T2U1), Object.values(T2U2), Object.values(T2U3), Object.values(T2U4), Object.values(T2U5), Object.values(G5U1), Object.values(G5U2), Object.values(G5U3), Object.values(G5U4));
 const allDone = () => LESSONS.every(l => quests.isDone(l.id));
 const unitDone = u => LESSONS.filter(l => l.u <= u).every(l => quests.isDone(l.id));   // الوحدة وكل ما قبلها
 const curMod = () => { const c = cur(); return c && c.ready && MODS[c.id] ? MODS[c.id] : null; };

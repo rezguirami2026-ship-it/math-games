@@ -81,7 +81,7 @@ async function press(label, { prefix = false, wait = 120 } = {}) {
     }, [label, prefix]);
     if (!ok) await sleep(50);
   }
-  if (!ok) throw new Error(`الزر غير موجود: «${label}» — الأزرار: ${await G(() => [...document.querySelectorAll('#actions button')].map(b => b.textContent).join(' | '))}`);
+  if (!ok) throw new Error(`الزر غير موجود: «${label}» — الأزرار: ${await G(() => [...document.querySelectorAll('#actions button')].map(b => b.textContent).join(' | '))} — الحالة: ${await G(async () => JSON.stringify({ busy: window.__game.game.busy, pl: [Math.round(window.__game.W.player.x), Math.round(window.__game.W.player.y)], dialog: document.getElementById('dialog').className, panel: document.getElementById('panel').className, screen: document.getElementById('screen').className, extra: [...document.querySelectorAll('.advUnlock, .hall, .grand, .tour, .lvUp')].map(e => e.className).join(','), cur: window.__game.quests.current()?.id, started: window.__game.quests.current() && window.__game.quests.isStarted(window.__game.quests.current().id), t1: window.__game.W.savedAt, t2: (await new Promise(r => setTimeout(r, 400)), window.__game.W.savedAt) }))}`);
   await sleep(wait);
 }
 // يذهب إلى صاحب الدرس ويتحدث معه (يبدأ الدرس أو يستأنفه)
@@ -89,7 +89,7 @@ async function talk(giver) {
   const n = await G(id => { const n = window.__game.W.npcs.find(n => n.id === id); return { x: n.x, y: n.y, name: n.name }; }, giver);
   await goTo(n.x, n.y + 26);
   await press('💬 ' + n.name);
-  await settle();
+  await settle(20000, 600);   // بعد بطاقة الوحدة يظهر حوار المقدمة بعد لحظة (أبطأ في 3D): ننتظر هدوءاً قصيراً حتى لا نغادر قبله
 }
 const panelClick = sel => G(sel => { const b = document.querySelector('#panel ' + sel); if (!b) throw new Error('غير موجود: ' + sel); b.click(); }, sel);
 
@@ -125,12 +125,14 @@ async function solveRounds(getCh) {
     else if (it.type === 'line') { await G(v => { const r = document.querySelector('#panel #chNLr'); r.value = v; r.dispatchEvent(new Event('input')); }, Math.round((it.ans - it.lo) / (it.hi - it.lo) * 1000)); await panelClick('#chGo'); }
     else if (it.type === 'memory') { const ps = [...new Set(it.cards.map(c => c.p))]; for (const p of ps) { const [a, b] = it.cards.map((c, k) => c.p === p ? k : -1).filter(k => k >= 0); await chClick('.chMc', a); await chClick('.chMc', b); await sleep(350); } }
     try {
-      await until(async () => (await getCh()).i === i + 1 && await G(n => { const s = document.querySelector('#panel .chSheet'); return !s || !s.querySelector('.chBurst') && (+s.dataset.i === n || !!s.querySelector('#chFin, #acEnd')); }, i + 1), `حل الجولة ${i + 1} (${it.type}: ${it.q.replace(/<[^>]+>/g, '').slice(0, 50)})`, 5000);
+      await until(async () => { if (await G(() => document.getElementById('dialog').classList.contains('on'))) await G(() => document.getElementById('dialog').click());   // حوار متأخر فوق التحدي (أبطأ في 3D): نتقدم فيه كما يفعل الطالب
+        return (await getCh()).i === i + 1 && await G(n => { const s = document.querySelector('#panel .chSheet'); return !s || !s.querySelector('.chBurst') && (+s.dataset.i === n || !!s.querySelector('#chFin, #acEnd')); }, i + 1); }, `حل الجولة ${i + 1} (${it.type}: ${it.q.replace(/<[^>]+>/g, '').slice(0, 50)})`, 5000);
     } catch (e) { throw new Error(e.message + ' — الحالة: ' + JSON.stringify(await G(() => ({ busy: window.__game.game.busy, dialog: document.getElementById('dialog').className + ':' + document.getElementById('dialog').textContent.slice(0, 80), screen: document.getElementById('screen').className, panel: document.getElementById('panel').className, msg: document.getElementById('benchMsg')?.textContent, pad: document.getElementById('npd')?.textContent, head: document.getElementById('panel').textContent.replace(/s+/g, ' ').slice(0, 160), di: (window.__game.state.daily && window.__game.state.daily.run) ? window.__game.state.daily.run.ch.i : null })))); }
   }
 }
 async function solveChallenge(id) {
-  await until(async () => (await isDone(id)) || (await data(id)).chStage === 2, 'إنهاء مهمة العالم', 60000);
+  await until(async () => { if (await G(() => document.getElementById('dialog').classList.contains('on'))) await G(() => document.getElementById('dialog').click());   // جملة الختام قد تسبق التحدي (الصف الخامس)
+    return (await isDone(id)) || (await data(id)).chStage === 2; }, 'إنهاء مهمة العالم', 60000);
   if (await isDone(id)) return false;
   await until(async () => { const st = await G(() => ({ ch: !!document.querySelector('#panel .chSheet'), dialog: document.getElementById('dialog').classList.contains('on') }));
     if (st.dialog) await G(() => document.getElementById('dialog').click()); return st.ch; }, 'فتح التحدي', 30000);
@@ -1019,6 +1021,83 @@ S.factors5 = async () => {
   }
 };
 
+/* ═══ الصف الخامس — الميناء (missions/g5/harbor.js) ═══ */
+const svgPt = (x, y) => G(p => { const c = document.querySelector(`#panel [data-p="${p}"]`); if (!c) throw new Error('نقطة غير موجودة: ' + p); c.dispatchEvent(new MouseEvent('click', { bubbles: true })); }, `${x},${y}`).then(() => sleep(60));
+S.parallelPerp5 = async () => {
+  await station(W.g5.ropes, '⚓ حبال المرسى');
+  await sheetBtn('#benchGo'); expect((await data('parallelPerp5')).r === 0, 'حبل خاطئ رُبط');   // البداية ليست موازية ولا متعامدة
+  for (let r = 0; r < 3; r++) { const d = await data('parallelPerp5'), q = d.rounds[r], diff = ((d.a2 - q.a1) % 180 + 180) % 180, want = q.k === 'par' ? 0 : 90;
+    for (let i = 0; i < ((want - diff) % 180 + 180) % 180 / 15; i++) await panelClick('#rotL'); await sheetBtn('#benchGo'); }
+};
+S.triangles5a = async () => {
+  await station(W.g5.sails, '⛵ أشرعة السفن');
+  const T = { iso: [[0, 0], [4, 0], [2, 3]], sca: [[0, 0], [4, 0], [1, 3]], rightIso: [[0, 0], [3, 0], [0, 3]] };
+  for (const p of [[0, 0], [1, 0], [2, 0]]) await svgPt(...p); await sheetBtn('#benchGo'); expect((await data('triangles5a')).r === 0, 'دبابيس على خط قُبلت');
+  for (let r = 0; r < 3; r++) { const k = (await data('triangles5a')).rounds[r]; for (const p of T[k]) await svgPt(...p); await sheetBtn('#benchGo'); }
+};
+S.cuboids5 = async () => {
+  await station(W.g5.boxes, '📦 صناديق الشحن');
+  const put = async cs => { for (const [x, y] of cs) await panelClick(`[data-c="${x},${y}"]`); };
+  const bad = [[0, 0], [1, 0], [2, 0], [0, 1], [1, 1], [2, 1]];
+  await put(bad); await sheetBtn('#benchGo'); expect((await data('cuboids5')).r === 0, 'شبكة خاطئة طُويت'); await put(bad);
+  for (const cs of [[[1, 0], [0, 1], [1, 1], [2, 1], [3, 1], [1, 2]], [[1, 0], [0, 1], [1, 1], [2, 1], [1, 2]], [[0, 1], [1, 1], [2, 1], [3, 1], [0, 0], [3, 2]]]) { await put(cs); await sheetBtn('#benchGo'); }
+};
+S.coords5a = async () => {
+  await station(W.g5.buoys, '🛟 عوامات الميناء');
+  const q = (await data('coords5a')).rounds, [x0, y0] = q[0].p;
+  await svgPt(x0 === y0 ? (x0 + 1) % 8 : y0, x0); expect((await data('coords5a')).r === 0, 'عوامة في مكان خاطئ قُبلت');
+  for (const r of q) await svgPt(...r.p);
+};
+S.transReflect5 = async () => {
+  await station(W.g5.mirror, '🪞 رصيف المرايا');
+  await sheetBtn('#benchGo'); expect((await data('transReflect5')).r === 0, 'قارب في مكان خاطئ ثُبّت');
+  const q = (await data('transReflect5')).rounds;
+  for (const r of q.slice(0, 2)) { const dx = r.to[0] - r.at[0], dy = r.to[1] - r.at[1];
+    for (let i = 0; i < Math.abs(dx); i++) await panelClick(`[data-m="${Math.sign(dx)},0"]`); for (let i = 0; i < Math.abs(dy); i++) await panelClick(`[data-m="0,${Math.sign(dy)}"]`); await sheetBtn('#benchGo'); }
+  for (const [x, y] of q[2].A) await svgPt(2 * q[2].k - x, y); await sheetBtn('#benchGo');
+};
+
+/* ═══ الصف الخامس — القلعة (missions/g5/fort.js) ═══ */
+S.mass5 = async () => {
+  await station(W.g5.scale, '🌾 مخزن الحبوب');
+  await panelClick('[data-w="1"]'); await sheetBtn('#benchGo'); expect((await data('mass5')).r === 0, 'كيس خاطئ رُبط');   // خطأ: ١٠٠ غم فقط
+  await panelClick('[data-w="-1"]');
+  for (let r = 0; r < 2; r++) { const w = (await data('mass5')).rounds[r].w; for (let i = 0; i < Math.floor(w / 10); i++) await panelClick('[data-w="10"]'); for (let i = 0; i < w % 10; i++) await panelClick('[data-w="1"]'); await sheetBtn('#benchGo'); }
+  await typePad((await data('mass5')).rounds[2].w * 100);
+};
+S.readTime5 = async () => {
+  await station(W.g5.clock, '🕰️ ساعة البرج');
+  await sheetBtn('#benchGo'); expect((await data('readTime5')).r === 0, 'وقت خاطئ قُبل');   // الساعة على ١٢:٠٠
+  for (let r = 0; r < 3; r++) { const d = await data('readTime5'), want = d.rounds[r].ans % 1440; let diff = ((want - d.t) % 1440 + 1440) % 1440;
+    for (let i = 0; i < Math.floor(diff / 60); i++) await panelClick('[data-t="60"]'); diff %= 60; for (let i = 0; i < Math.floor(diff / 5); i++) await panelClick('[data-t="5"]'); for (let i = 0; i < diff % 5; i++) await panelClick('[data-t="1"]');
+    await sheetBtn('#benchGo'); }
+};
+S.timetables5 = async () => {
+  await station(W.g5.roster, '📋 نوبات الحراسة');
+  const q = (await data('timetables5')).rounds, b = q[0].B[q[0].k];
+  await typePad(Math.floor(b / 60) * 100 + b % 60 + 1); expect((await data('timetables5')).r === 0, 'وقت خاطئ قُبل');
+  await typePad(Math.floor(b / 60) * 100 + b % 60);
+  await typePad(q[1].w);
+  await panelClick(`[data-day="${q[2].day + q[2].gap}"]`);
+};
+S.area5a = async () => {
+  await station(W.g5.carpet, '🟩 سجاد القاعة');
+  const q = (await data('area5a')).rounds, put = async cs => { for (const [x, y] of cs) await panelClick(`[data-c="${x},${y}"]`); };
+  await put([[0, 0], [1, 0]]); await sheetBtn('#benchGo'); expect((await data('area5a')).r === 0, 'سجادة خاطئة قُبلت'); await panelClick('#cClr');
+  const A = q[0].A, w = [8, 6, 5, 4, 3].find(k => A % k === 0 && A / k <= 6), cells = []; for (let i = 0; i < A; i++) cells.push([i % w, Math.floor(i / w)]); await put(cells); await sheetBtn('#benchGo');
+  const B = q[1].A, free = []; for (let i = 0; i < B - 1; i++) free.push([i % 8, Math.floor(i / 8)]); free.push([0, Math.floor((B - 2) / 8) + 1]);   // صفوف كاملة ثم مربع ناتئ: ليست مستطيلاً
+  await put(free); await sheetBtn('#benchGo');
+  await typePad(q[2].mm);
+};
+S.perimeter5a = async () => {
+  await station(W.g5.fence, '🌿 سور البستان');
+  await sheetBtn('#benchGo'); expect((await data('perimeter5a')).r === 0, 'سور خاطئ رُكّب');   // ١ × ١
+  const q = (await data('perimeter5a')).rounds, set = async (L, Wd) => { for (let i = 1; i < L; i++) await panelClick('[data-k="L"][data-v="1"]'); for (let i = 1; i < Wd; i++) await panelClick('[data-k="Wd"][data-v="1"]'); await sheetBtn('#benchGo'); };
+  await set(q[0].P / 2 - 2, 2);
+  const h = q[1].P / 2; let L = 1; for (let a = 1; a < h; a++) if (a * (h - a) === q[1].A) { L = a; break; } await set(Math.max(L, h - L), Math.min(L, h - L));
+  await typePad(q[2].sides.reduce((a, b) => a + b, 0));
+};
+
 const GATES = [
   { after: 'sequences', name: 'بوابة السوق', a: { x: 1380, y: 640 }, b: { x: 1620, y: 640 } },
   { after: 'areaPerimeterT1', name: 'بوابة الميناء', a: { x: 2200, y: 640 }, b: { x: 2400, y: 640 } },
@@ -1075,7 +1154,7 @@ try {
   const lessons = await G(async () => (await import('./content/lessons.js')).LESSONS.map(l => ({ id: l.id, title: l.title, giver: l.giver, u: l.u })));
   if (GRADE !== 6) {   // صف آخر: كل بوابة تُفتح بعد آخر درس في وحدتها (المناطق نفسها)
     GATES.forEach((g, i) => { g.after = lessons.filter(l => l.u === i).slice(-1)[0].id; });
-    W.g5 = await G(async () => Object.assign({}, (await import('./missions/g5/village.js')).ST5V, (await import('./missions/g5/market.js')).ST5M));
+    W.g5 = await G(async () => Object.assign({}, (await import('./missions/g5/village.js')).ST5V, (await import('./missions/g5/market.js')).ST5M, (await import('./missions/g5/harbor.js')).ST5H, (await import('./missions/g5/fort.js')).ST5F));
     console.log(`📚 الصف ${GRADE === 5 ? 'الخامس' : 'السابع'}: ${lessons.length} درساً`);
   }
   if (!FROM) for (const g of GATES) expect(await pathLen(g.a, g.b) === 0, `${g.name} مفتوحة قبل وقتها`);
@@ -1096,7 +1175,7 @@ try {
       await S[l.id]();
       const ch = await solveChallenge(l.id);
       await until(() => isDone(l.id), 'إنهاء الدرس', 60000);
-      await settle(60000, 2000);
+      await settle(60000, D3 ? 3500 : 2000);   // 3D أبطأ: جملة ختام التحدي قد تأتي بعد ثانيتين
       if (errors.length > e0) throw new Error('أخطاء في الكونسول: ' + errors.slice(e0).join(' / '));
       console.log(`✅ ${l.title}${ch ? ' + التحدي' : ''} (${((Date.now() - t0) / 1000).toFixed(1)} ث)`);
       if (l.id === GATES[0].after) {   // مغامرة ختام الوحدة الأولى

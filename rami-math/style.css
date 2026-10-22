@@ -332,3 +332,15 @@ body:has(.wardrobe) .toast{display:none}
 .g5bridges{display:flex;flex-wrap:wrap;gap:6px;justify-content:center;margin:6px 0;font:900 15px 'Cairo';color:#1F7A4D}
 .g5bridges span{padding:4px 10px;border-radius:10px;background:#DFF6E8;border:2px solid #1FA05A}
 .g5cnt{min-width:250px;white-space:nowrap}
+.g5center{display:flex;justify-content:center;margin:6px 0}
+.g5q{width:100%;height:auto;touch-action:manipulation}.g5q .hit{cursor:pointer}
+.g5net{display:grid;grid-template-columns:repeat(5,44px);gap:3px;justify-content:center;margin:8px auto;direction:ltr}
+.g5sq{width:44px;height:44px;border-radius:6px;border:2px dashed #C9B48A;background:#FFF8E8;cursor:pointer;padding:0}
+.g5sq.on{border-style:solid;border-color:#8A5A30;background:linear-gradient(135deg,#F5D9A8,#D9A866)}
+.g5digital{margin:8px auto;padding:6px 18px;width:max-content;border-radius:12px;background:#1E1A30;color:#6EF5DE;font:900 40px 'Cairo';letter-spacing:2px}
+.g5cal{display:grid;grid-template-columns:repeat(7,1fr);gap:3px;max-width:380px;margin:8px auto}
+.g5cal b{font:800 10px 'Cairo';color:#8A7A5A;text-align:center;white-space:nowrap;overflow:hidden}
+.g5day{min-height:34px;border-radius:8px;border:1px solid #E8D3A0;background:#fff;font:900 14px 'Cairo';color:#2A1B66;cursor:pointer;padding:0}
+.g5day.today{background:#FFE9C2;border-color:#B5651D}
+.g5net.wide{grid-template-columns:repeat(8,36px)}.g5net.wide .g5sq{width:36px;height:36px}
+.g5sq.carpet.on{border-color:#7A1E26;background:linear-gradient(135deg,#C8434D,#8E2A33)}
