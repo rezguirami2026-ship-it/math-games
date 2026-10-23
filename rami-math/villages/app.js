@@ -55,7 +55,7 @@ async function enterVillage(u) {
       const ls = unitLessons(u), cur = ls.find(l => !isDone(l.id));   // معرّف المحطة = معرّف درسها
       const goal = cur && (def.stations || []).some(s => s.id === cur.id) ? cur.id : null;
       return { lessons: ls.map(l => ({ id: l.id, title: l.title, done: isDone(l.id) })), goal,
-        adv: def.adventure && unitDone(u) ? ((vs.adv || {})[U.village] ? '🎢 ' + '★'.repeat(vs.adv[U.village].stars) : '🎢 المغامرة') : '',
+        adv: def.adventure && unitDone(u) ? ((vs.adv || {})[U.village] ? '🗺️ ' + '★'.repeat(vs.adv[U.village].stars) : '🗺️ المغامرة') : '',
         gems: st.gems || 0, text: cur ? `🎯 ${cur.mission || cur.title}` : `🏅 أنهيتَ دروس ${U.name} كلها!` };
     },
     canOpen: s => isDone(s.id),   // المحطات المنجزة تُعاد للتدرّب
@@ -65,12 +65,12 @@ async function enterVillage(u) {
       const m = await play();
       const wasDone = unitDone(u);
       await m.default(api, { lesson: L, state: st, done: stars => { st.quests.done[L.id] = st.quests.done[L.id] || Date.now(); const d = (st.quests.data[L.id] = st.quests.data[L.id] || {}); d.stars = Math.max(d.stars || 0, stars || 1); save(); } });
-      if (!wasDone && unitDone(u) && def.adventure) toast(`🎉 أنهيتَ ${U.name}! انتظرتك مغامرة: اضغط 🎢 في الأعلى`);
+      if (!wasDone && unitDone(u) && def.adventure) toast(`🎉 أنهيتَ ${U.name}! انتظرتك مغامرة: اضغط 🗺️ المغامرة في الأعلى`);
     },
     talk: (who, lines, proj) => { const p = (def.people || []).find(p => p.id === who.id); return talk(who, lines, p ? () => proj(p.x, p.y, 92) : null); },
     adventure: async () => {   // مغامرة الوحدة: تُحفظ أفضل نجومها، وجواهرها تُضاف
       const m = await def.adventure();
-      await new Promise(res => m.playAdventure({ onDone: r => { if (r) { const a = (vs.adv = vs.adv || {}), old = a[U.village] || { stars: 0 }; a[U.village] = { stars: Math.max(old.stars, r.stars), gems: r.gems }; addGems(Math.round(r.gems / 2)); save(); } res(); } }));
+      await new Promise(res => m.playAdventure({ onDone: r => { if (r) { const a = (vs.adv = vs.adv || {}), old = a[U.village] || { stars: 0 }; a[U.village] = { stars: Math.max(old.stars, r.stars), gems: r.gems }; save(); } res(); } }));
     },
     onExit: () => { vs.at = null; save(); openMap(); }
   });
@@ -81,6 +81,7 @@ function openMap() {
   openHub(root, { units: UNITS, grade: GRADE, state: game.state, unitOpen, unitDone, unitLessons, isDone, starsOf, enter: u => { sfx('pick'); enterVillage(u); } });
 }
 
+import('../core/events.js').then(m => m.bus.on('save', () => game.state && save()));   // المغامرات تحفظ تقدّمها عبر bus
 function start(state) {
   game.state = upgrade(state);
   const s = game.state; s.grade = GRADE; s.vil = s.vil || {};

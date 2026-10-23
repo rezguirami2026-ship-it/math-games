@@ -70,7 +70,7 @@ export async function runVillage(root, def, hooks) {
     if (b.dataset.z) view.zoom(view.zoomV * (b.dataset.z === '1' ? 1.15 : .87));
     if (b.dataset.a === 'view') { setWant3D(!is3D); setView(!is3D); }
     if (b.dataset.a === 'map' && !st.busy) exit();
-    if (b.dataset.a === 'adv' && !st.busy) { st.busy = st.paused = true; Promise.resolve(hooks.adventure()).finally(() => { st.busy = st.paused = false; refresh(); }); }   // المغامرة تغطي الشاشة: القرية لا تُرسم تحتها
+    if (b.dataset.a === 'adv' && !st.busy) { st.busy = st.paused = true; Promise.resolve(hooks.adventure()).catch(e => console.error('[قرية الخير] مغامرة القرية', e)).finally(() => { st.busy = st.paused = false; refresh(); }); }   // المغامرة تغطي الشاشة: القرية لا تُرسم تحتها
     if (b.dataset.go && !st.busy) { const s = (def.stations || []).find(s => s.id === b.dataset.go); if (s) openStation(s); }
   });
   const onResize = () => view && view.resize(); addEventListener('resize', onResize);
