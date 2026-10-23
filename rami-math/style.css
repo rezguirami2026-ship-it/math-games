@@ -402,3 +402,7 @@ body:has(.wardrobe) .toast{display:none}
 .g7alg{font-size:26px}.g7res2{text-align:center;font:900 20px 'Cairo';color:#1F8A5A;margin:4px 0}
 .g7bal{display:flex;align-items:center;justify-content:center;gap:8px;margin:8px 0}.g7bal .pan{min-width:120px;padding:8px 10px;border-radius:0 0 40px 40px;background:#F4E2B8;border:2px solid #A9743F;text-align:center;font:800 15px 'Cairo';color:#4A2C0E;font-size:20px}
 .g7ctr .g5card.sm{min-width:40px;font-size:13px;padding:4px 6px}
+.g7seq{display:flex;flex-wrap:wrap;gap:6px;justify-content:center;min-height:30px;margin:6px 0;font:800 14px 'Cairo';color:#1F8A5A}.g7seq span{padding:3px 8px;border-radius:8px;background:#DFF6E8}.g7seq small{color:#8A7A5A}
+.g7dial{min-width:110px;text-align:center;font:900 24px 'Cairo';color:#2A1B66;background:#FFF8E6;border:2px solid #E8D3A0;border-radius:10px;padding:2px 8px}
+.g7svg{display:flex;justify-content:center;margin:4px 0}.g7svg svg{max-height:200px;width:100%}
+.g7g100{display:grid;grid-template-columns:repeat(10,16px);gap:2px;justify-content:center;margin:6px auto;direction:ltr}.g7g100 i{width:16px;height:16px;border-radius:50%;background:#EEE6D6}.g7g100 i.on{background:radial-gradient(circle at 35% 30%,#FF9AA8,#E2475C)}

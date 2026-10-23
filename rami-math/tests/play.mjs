@@ -88,8 +88,11 @@ async function press(label, { prefix = false, wait = 120 } = {}) {
 async function talk(giver) {
   const n = await G(id => { const n = window.__game.W.npcs.find(n => n.id === id); return { x: n.x, y: n.y, name: n.name }; }, giver);
   await goTo(n.x, n.y + 26);
-  await press('💬 ' + n.name);
-  await settle(20000, 600);   // بعد بطاقة الوحدة يظهر حوار المقدمة بعد لحظة (أبطأ في 3D): ننتظر هدوءاً قصيراً حتى لا نغادر قبله
+  for (let k = 0; k < 3; k++) {   // في 3D بعد إعادة التحميل قد تضيع النقرة الأولى أثناء بناء المنطقة: نعيدها ما دام الدرس لم يبدأ
+    await press('💬 ' + n.name);
+    await settle(20000, D3 ? 1500 : 600);   // بعد بطاقة الوحدة يظهر حوار المقدمة بعد لحظة (أبطأ في 3D): ننتظر هدوءاً قصيراً حتى لا نغادر قبله
+    if (await G(() => { const q = window.__game.quests, c = q.current(); return !c || q.isStarted(c.id) || !document.querySelector('#actions button'); })) break;
+  }
 }
 const panelClick = sel => G(sel => { const b = document.querySelector('#panel ' + sel); if (!b) throw new Error('غير موجود: ' + sel); b.click(); }, sel);
 
@@ -898,6 +901,41 @@ S.regularPolyhedra = async () => {
   const [, F, V] = PLAT[(await data('regularPolyhedra')).rounds[2].s]; await typePad(F + V - 2);
 };
 
+/* ═══ الصف السابع — من المرسى فما بعد: محطات missions/g7/kit.js تُحل من بيانات الجولة نفسها ═══ */
+async function kitRound(id, r, wrong) {
+  const q = (await data(id)).rounds[r];
+  if (q.t === 'kp') return typePad(wrong ? q.ans + 1 : q.ans);
+  if (q.t === 'pick') return sheetBtn(`[data-o="${q.opts.findIndex(s => (s === q.ans) !== wrong)}"]`);
+  if (q.t === 'multi') { if (!wrong) for (const s of q.ok) await panelClick(`[data-q="${q.opts.indexOf(s)}"]`); return sheetBtn('#benchGo'); }
+  if (q.t === 'order') { for (const s of wrong ? q.want.slice().reverse() : q.want) await panelClick(`[data-q="${q.items.indexOf(s)}"]`); return sheetBtn('#benchGo'); }
+  if (!wrong) {   // dial: المؤشر يبدأ من s (غير الجواب)، فالخطأ تثبيته كما هو
+    let diff = Math.round(q.ans * 1000) - (await data(id)).k;
+    for (const s of q.st.map(s => Math.round(s * 1000)).sort((a, b) => b - a)) { while (diff >= s) { await panelClick(`[data-dv="${s / 1000}"]`); diff -= s; } while (diff <= -s) { await panelClick(`[data-dv="${-s / 1000}"]`); diff += s; } }
+  }
+  return sheetBtn('#benchGo');
+}
+const kitLesson = (id, reg, key, label, n = 3) => async () => {
+  await station(W.g7[reg][key], label);
+  await kitRound(id, 0, true);
+  expect((await data(id)).r === 0, 'جواب خاطئ قُبل');
+  for (let r = 0; r < n; r++) await kitRound(id, r, false);
+};
+const KIT7 = [
+  ['orderDec7', 'H', 'depths', '⚓ أعماق المرسى'], ['roundDec7', 'H', 'fuel', '⛽ عدّاد الوقود'], ['addSubDec7', 'H', 'load', '🚤 حمولة القارب'],
+  ['mulDec7', 'H', 'nets', '🕸️ حبال الشباك'], ['divDec7a', 'H', 'catch', '🐟 تقسيم الصيد'], ['divDec7b', 'H', 'oil', '🫒 قوارير الزيت'],
+  ['tenths7', 'H', 'map', '🗺️ خريطة المقياس'], ['estimate7', 'H', 'quick', '⚡ الحساب السريع'], ['units7', 'H', 'store', '🏗️ مستودع الشحن'],
+  ['chooseUnits7', 'H', 'cards', '🏷️ بطاقات الشحن'],
+  ['nameAngles7', 'F', 'towers', '🏹 أبراج الرماية'], ['measureAngles7', 'F', 'catapult', '🎯 منجنيق القلعة'], ['angleProblems7', 'F', 'gate', '🚪 بوابة الزوايا'],
+  ['parallelLines7', 'F', 'bridge', '🌉 جسر الحبال'], ['simplify7', 'F', 'maps', '🗺️ خرائط الأقسام'], ['compareFrac7', 'F', 'rations', '🍯 حصص المؤونة'],
+  ['improperMixed7', 'F', 'loaves', '🍞 أرغفة الحرس'], ['addSubFrac7', 'F', 'clay', '🧱 خليط الطين'], ['fracQuantity7', 'F', 'store', '🏺 مخزن القلعة'],
+  ['fracToDec7', 'F', 'sand', '⏳ ساعة الرمل'], ['orderFrac7', 'F', 'ladder', '🪜 سلّم الأسوار'], ['remainders7', 'F', 'tents', '⛺ خيام الحرس'],
+  ['areaUnits7', 'E', 'carpet', '🟥 سجادة المسرح'], ['rectArea7', 'E', 'stage', '🎭 منصة العرض'], ['triArea7', 'E', 'flags', '🚩 رايات المثلثات'],
+  ['paraTrap7', 'E', 'tent', '⛺ خيمة المهرجان'], ['circle7', 'E', 'ring', '⭕ حلبة الدائرة'], ['compound7', 'E', 'play', '🛝 ساحة الألعاب'],
+  ['simplePct7', 'E', 'balloons', '🎈 بالونات النسبة'], ['equivPct7', 'E', 'board', '🔁 لوحة التكافؤ'], ['pctQuantity7', 'E', 'tickets', '🎟️ تذاكر المهرجان'],
+  ['pctApply7', 'E', 'prizes', '🏆 جوائز السحب']
+];
+for (const [id, reg, key, label] of KIT7) S[id] = kitLesson(id, reg, key, label);
+
 /* ── البوابات: لا طريق عبرها قبل وقتها ── */
 /* ═══ الصف السابع — قرية الخير (missions/g7/village.js) ═══ */
 const clickN = async (sel, n) => { for (let i = 0; i < n; i++) await panelClick(sel); };
@@ -1555,7 +1593,7 @@ try {
   if (GRADE !== 6) {   // صف آخر: كل بوابة تُفتح بعد آخر درس في وحدتها (المناطق نفسها)
     GATES.forEach((g, i) => { g.after = lessons.filter(l => l.u === i).slice(-1)[0].id; });
     W.g5 = await G(async () => ({ V: (await import('./missions/g5/village.js')).ST5V, M: (await import('./missions/g5/market.js')).ST5M, H: (await import('./missions/g5/harbor.js')).ST5H, F: (await import('./missions/g5/fort.js')).ST5F, E: (await import('./missions/g5/festival.js')).ST5E, D: (await import('./missions/g5/datayard.js')).ST5D, C: (await import('./missions/g5/coop.js')).ST5C, K: (await import('./missions/g5/caravan.js')).ST5K, W: (await import('./missions/g5/workshop.js')).ST5W }));
-    W.g7 = await G(async () => ({ V: (await import('./missions/g7/village.js')).ST7V, M: (await import('./missions/g7/market.js')).ST7M }));   // لكل منطقة محطاتها (أسماء مثل scale تتكرر)
+    W.g7 = await G(async () => ({ V: (await import('./missions/g7/village.js')).ST7V, M: (await import('./missions/g7/market.js')).ST7M, H: (await import('./missions/g7/harbor.js')).ST7H, F: (await import('./missions/g7/fort.js')).ST7F, E: (await import('./missions/g7/festival.js')).ST7E }));   // لكل منطقة محطاتها (أسماء مثل scale تتكرر)
     console.log(`📚 الصف ${GRADE === 5 ? 'الخامس' : 'السابع'}: ${lessons.length} درساً`);
   }
   if (!FROM) for (const g of GATES) expect(await pathLen(g.a, g.b) === 0, `${g.name} مفتوحة قبل وقتها`);

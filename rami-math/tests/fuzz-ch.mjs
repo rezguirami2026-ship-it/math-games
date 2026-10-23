@@ -35,7 +35,7 @@ const r = await p.evaluate(async ([unit, times, GR]) => {
       if (it.type === 'num' && !isFinite(it.ans)) bad('إجابة ليست عدداً');
       if (it.type === 'num' && it.ans < 0 && !it.neg) bad('إجابة سالبة بلا زر −');
       if (it.type === 'num' && Math.round(it.ans * 1000) !== it.ans * 1000 && Math.abs(Math.round(it.ans * 1000) - it.ans * 1000) > 1e-6) bad('أكثر من ٣ منازل');
-      nums(it.q).filter(x => x.length >= 3 && !['١٠٠', '١٠٠٠'].includes(x)).forEach(x => { if (seen.has(x) && seen.get(x) !== k) bad('عدد مكرر ' + x); seen.set(x, k); });
+      nums(it.q).filter(x => x.length >= 3 && !['١٠٠', '١٠٠٠', '٠٫١', '٠٫٠١', '٣٫١٤'].includes(x)).forEach(x => { if (seen.has(x) && seen.get(x) !== k) bad('عدد مكرر ' + x); seen.set(x, k); });
     });
   }
   return { cnt, ex };
