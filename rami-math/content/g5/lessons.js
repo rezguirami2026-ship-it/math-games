@@ -12,7 +12,7 @@ export const UNITS = [
   { term: 2, n: 3, book: [22, 26], title: 'العدد والكسور', place: 'طريق القافلة', ach: ['t2u3'], opens: [[3500, '🛠️ فُتحت بوابة ورشة البنّاء: آخر وحدة!']] },
   { term: 2, n: 4, book: [27, 32], title: 'الهندسة والقياس', place: 'ورشة البنّاء', ach: ['t2u4'], opens: [] }
 ];
-export const PUBLISHED = false;   // true حين تكتمل دروس الصف: عندها يظهر في شاشة اختيار الصف للطلاب
+export const PUBLISHED = true;    // true حين تكتمل دروس الصف: عندها يظهر في شاشة اختيار الصف للطلاب
 const L = (u, id, title, mission, mech, giver, ready) => ({ u, id, title, mission, mech, giver, ready: !!ready });
 export const LESSONS = [
   // ── الفصل الأول — قرية الخير: الوحدة ١ (الأعداد الكاملة) والوحدة ٢ (الجمع والطرح)
