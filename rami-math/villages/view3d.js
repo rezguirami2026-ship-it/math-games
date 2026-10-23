@@ -70,7 +70,7 @@ export function createView3D(canvas, grid, def, opts = {}) {
     const h = st.hero;
     animatePerson(hero, { x: h.x, y: h.y, moving: h.moving, phase: h.phase, run: h.run, dir: h.dir2d, anim: h.anim, animT: h.animT, faceCam: true }, dt, t);
     folk.forEach(({ q, P }) => { const near = Math.hypot(q.x - h.x, q.y - h.y) < 160; animatePerson(P, { x: q.x, y: q.y, moving: false, phase: 0, dir: q.dir || 'down', face: near ? { x: h.x, y: h.y } : null, anim: st.talking === q.id ? 'talk' : null, animT: 0 }, dt, t); });
-    (st.walkers || []).forEach(w => { let P = walkers.get(w); if (!P) { P = teen(buildPerson(w.look)); sc.add(P.root); walkers.set(w, P); } animatePerson(P, { x: w.x, y: w.y, moving: w.moving, phase: w.phase, dir: w.dir }, dt, t); });
+    (st.walkers || []).concat(st.walkersExtra || []).forEach(w => { let P = walkers.get(w); if (!P) { P = teen(buildPerson(w.look)); sc.add(P.root); walkers.set(w, P); } animatePerson(P, { x: w.x, y: w.y, moving: w.moving, phase: w.phase, dir: w.dir, anim: w.anim, animT: (t * .8) % 1 }, dt, t); });
     // الكاميرا: من الجنوب بزاوية العالم المفتوح، وعرض الرؤية يتسع عند الدخول ثم يقترب
     intro = Math.max(0, intro - dt * .45);
     const viewW = (vw < vh ? 700 : 1300) / zoom * (1 + intro * intro * 1.4), dist = (viewW / 2) / (Math.tan(FOV * Math.PI / 360) * cam.aspect);

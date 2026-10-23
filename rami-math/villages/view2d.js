@@ -3,6 +3,7 @@
 // يقرأ الحالة فقط: ما في القرية يأتي من kit2d في ملفها (ground, items, station, over).
 import { CAM, FLAGS, upright } from '../world/art.js';
 import { drawHuman } from '../character/human.js';
+import { bike2D } from './street.js';
 
 const CH = 512, TEEN = 1.18;   // شخصيات الصف الثامن أكبر من شخصيات العالم المفتوح
 
@@ -40,7 +41,7 @@ export function createView2D(canvas, grid, def) {
     (def.people || []).forEach(q => { const dx = h.x - q.x, dy = h.y - q.y, near = Math.hypot(dx, dy) < 160;
       const dir = !near ? (q.dir || 'down') : Math.abs(dx) > Math.abs(dy) ? (dx > 0 ? 'right' : 'left') : (dy > 0 ? 'down' : 'up');
       list.push({ y: q.y, draw: c => person(c, q.look, q.x, q.y, { dir, anim: st.talking === q.id ? 'talk' : null, animT: (t * .8) % 1 }) }); });
-    (st.walkers || []).forEach(w => list.push({ y: w.y, draw: c => person(c, w.look, w.x, w.y, { dir: w.dir, moving: w.moving, phase: w.phase }) }));
+    (st.walkers || []).concat(st.walkersExtra || []).forEach(w => list.push({ y: w.y, draw: c => { if (w.bike) upright(c, w.x, w.y, cc => bike2D(cc, w)); person(c, w.look, w.x, w.bike ? w.y - 12 : w.y, { dir: w.dir, moving: w.bike ? false : w.moving, phase: w.phase, anim: w.anim, animT: (t * .8) % 1 }); } }));
     list.push({ y: h.y + .1, draw: c => person(c, st.look, h.x, h.y, { dir: h.dir2d || 'down', phase: h.phase, moving: h.moving, anim: h.anim || (h.run && h.moving ? 'run' : null), animT: h.animT }) });
     list.sort((a, b) => a.y - b.y).forEach(i => { try { i.draw(ctx); } catch (e) { if (!frame.err) { frame.err = 1; console.error('[قرية الخير] رسم عنصر في القرية', e); } } });
     if (kit.over) kit.over(ctx, t, st);

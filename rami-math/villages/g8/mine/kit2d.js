@@ -2,6 +2,7 @@
 // أكشاك سوق، بئر، نخيل يتمايل، أعمدة إنارة، رايات فوق الشارع، وجبل بطبقات صخرية وأفواه كهوف وبوابة منحوتة، وساحة منجم بسكك وعربات.
 // ground() يُرسم مرة في قطع (ويُستعمل نفسه أرضاً للعرض ثلاثي الأبعاد)، وitems() عناصر قائمة مرتبة بالعمق.
 import { houseItems2D, houseSmoke2D } from '../../houses.js';
+import { paintStreets, falajLive, streetItems2D, birds2D } from '../../street.js';
 import { stoneBox, sidrCached, bench, pattern, sprite, building3d, minaret, leanAt, stall, stoneWell, palmCached, streetLamp, signboard, bunting, elev, upright, boxShadow, shade, INK } from '../../../world/art.js';
 
 const rnd = (x, y, k = 0) => { const s = Math.sin(x * 127.1 + y * 311.7 + k * 74.7) * 43758.5453; return s - Math.floor(s); };
@@ -14,12 +15,7 @@ export function kit2d(D) {
     g.fillStyle = '#B99A72'; g.fillRect(0, CLIFF - 20, W, YARD - CLIFF + 20); g.fillStyle = pattern(g, 'soil'); g.globalAlpha = .7; g.fillRect(0, CLIFF - 20, W, YARD - CLIFF + 20); g.globalAlpha = 1;
     const fade = g.createLinearGradient(0, YARD - 40, 0, YARD + 40); fade.addColorStop(0, 'rgba(185,154,114,1)'); fade.addColorStop(1, 'rgba(185,154,114,0)'); g.fillStyle = fade; g.fillRect(0, YARD - 40, W, 80);
     for (let i = 0; i < 900; i++) { const x = rnd(i, 1) * W, y = CLIFF + rnd(i, 2) * (YARD - CLIFF); if (x < x0 - 10 || x > x0 + w + 10 || y < y0 - 10 || y > y0 + h + 10) continue; g.fillStyle = i % 3 ? 'rgba(90,70,50,.35)' : 'rgba(255,240,215,.4)'; g.beginPath(); g.ellipse(x, y, 2 + rnd(i, 3) * 3, 1.5 + rnd(i, 4) * 2, 0, 0, 7); g.fill(); }
-    // الشارع الرئيسي من بوابة القرية إلى المنجم، والشارع العرضي في السوق، وساحة البئر المستديرة
-    const paved = (x, y, w2, h2) => { g.fillStyle = '#CDB48C'; g.fillRect(x, y, w2, h2); g.fillStyle = pattern(g, 'pavers'); g.fillRect(x, y, w2, h2); g.strokeStyle = 'rgba(120,90,55,.35)'; g.lineWidth = 3; g.strokeRect(x, y, w2, h2); };
-    paved(1040, YARD - 10, 220, H - YARD + 10); paved(980, 1180, 1000, 140);
-    g.fillStyle = '#CDB48C'; g.beginPath(); g.arc(D.WELL.x, D.WELL.y - 10, 170, 0, 7); g.fill(); g.fillStyle = pattern(g, 'pavers'); g.fill(); g.strokeStyle = 'rgba(120,90,55,.4)'; g.lineWidth = 4; g.stroke();
-    // حشائش تحت النخيل
-    D.PALMS.forEach(([x, y]) => { g.fillStyle = 'rgba(92,140,60,.35)'; g.beginPath(); g.ellipse(x, y + 4, 40, 16, 0, 0, 7); g.fill(); });
+    paintStreets(g, D.STREET, W, H);   // عشب وطرق وأرصفة ودوّار وملعب وفلج (villages/street.js)
     // السكك: عوارض خشبية وقضيبان
     D.RAILS.forEach(pts => { for (let k = 1; k < pts.length; k++) { const [ax, ay] = pts[k - 1], [bx, by] = pts[k], L = Math.hypot(bx - ax, by - ay), ux = (bx - ax) / L, uy = (by - ay) / L;
       g.strokeStyle = '#6A4428'; g.lineWidth = 6; for (let s = 0; s < L; s += 16) { const cx = ax + ux * s, cy = ay + uy * s; g.beginPath(); g.moveTo(cx - uy * 13, cy + ux * 13); g.lineTo(cx + uy * 13, cy - ux * 13); g.stroke(); }
@@ -64,6 +60,7 @@ export function kit2d(D) {
     const out = [{ y: CLIFF, draw: c => sprite(c, 'g8mineCliff', 0, -180, W, CLIFF + 200, paintCliff) }];
     const A = { building3d, stoneBox, sidrCached, palmCached, bench, upright, leanAt };
     D.HOMES.forEach((Hm, i) => out.push(...houseItems2D(Hm, A, 'g8h' + i, t)));
+    out.push(...streetItems2D(D.life, D.STREET, { upright, bench, signboard }, t));
     const M = D.MOSQUE, N = D.MINARET;   // المسجد بقبته (من نمطه)، والمئذنة على ركن سطحه منزاحة بارتفاعه كما في القرية الأصلية
     out.push({ x: M.x + M.w / 2, y: M.y + M.h, draw: c => { building3d(c, 'g8mosque', M); const { lx, ly } = leanAt(M.x + M.w / 2, M.y + M.h); c.save(); c.translate(lx * M.H, -M.H * (1 - ly)); minaret(c, 'g8minaret', N.x, N.y, N.s, N.H); c.restore(); } });
     D.STALLS.forEach(([x, y, col]) => out.push({ x, y, draw: c => stall(c, x, y, col) }));
@@ -79,8 +76,9 @@ export function kit2d(D) {
   // رايات ملوّنة فوق الشارع الرئيسي (تُرسم فوق كل شيء)
   const over = (c, t) => {
     D.HOMES.forEach(Hm => houseSmoke2D(Hm, c, t));
-    bunting(c, elev(1065, 1010, 92), elev(1235, 1010, 92), 22, 9, ['#C2410C', '#FFC94A', '#0E7490', '#15803D'], t);
-    bunting(c, elev(1065, 1470, 92), elev(1235, 1470, 92), 22, 9, ['#7C3AED', '#FFC94A', '#BE185D', '#0E7490'], t);
+    birds2D(c, D.life, D.STREET, t);
+    bunting(c, elev(1024, 980, 110), elev(1276, 980, 110), 26, 11, ['#C2410C', '#FFC94A', '#0E7490', '#15803D'], t);
+    bunting(c, elev(1024, 1520, 110), elev(1276, 1520, 110), 26, 11, ['#7C3AED', '#FFC94A', '#BE185D', '#0E7490'], t);
   };
   // ── المحطات ──
   function station(c, s, t, st) {
@@ -108,5 +106,5 @@ export function kit2d(D) {
     else if (s.kind === 'gate') upright(c, s.x, s.y, cc => signboard(cc, s.x, s.y - 236, '🚪 بوابة القوانين'));
     if (done) { c.fillStyle = '#16A34A'; c.beginPath(); c.arc(s.x + 70, s.y - 40, 15, 0, 7); c.fill(); c.fillStyle = '#fff'; c.font = '900 18px Cairo'; c.textAlign = 'center'; c.fillText('✓', s.x + 70, s.y - 34); }
   }
-  return { ground, items, over, station };
+  return { ground, items, over, station, groundLive: (c, t) => falajLive(c, D.STREET, W, t) };
 }

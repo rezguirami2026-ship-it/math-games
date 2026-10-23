@@ -5,6 +5,7 @@ import { Parts, box } from '../../../renderer3d/geom.js';
 import { material } from '../../../renderer3d/textures.js';
 import { omaniHouse, omaniMosque, signMesh, SCALE_H } from '../../../renderer3d/omani.js';
 import { houseGroup3D } from '../../houses.js';
+import { streetBuild3D } from '../../street.js';
 import { palms, mountains, clouds, sidrTree } from '../../../renderer3d/nature.js';
 import { streetLamps, well, bench } from '../../../renderer3d/props.js';
 import { buildCamel, animateCamel } from '../../../renderer3d/animals.js';
@@ -94,9 +95,10 @@ export function kit3d(THREE, { high, def: D }) {
     const sg = signMesh('⛏️ منجم الأعماق', 22); sg.position.set(1150, 118, y + 8); root.add(sg);
     D.stations.forEach(s => { if (s.kind === 'elevator') return; const t2 = { crystals: '💎 كهف البلّور', doubler: '✨ كهف التضاعف', gate: '🚪 بوابة القوانين' }[s.kind]; const m = signMesh(t2, 18); m.position.set(s.x, s.kind === 'gate' ? 268 : 205, CLIFF - 20); root.add(m); });
   }
-  // ٨. رايات ملوّنة فوق الشارع الرئيسي
-  [[1010, ['#C2410C', '#FFC94A', '#0E7490', '#15803D']], [1470, ['#7C3AED', '#FFC94A', '#BE185D', '#0E7490']]].forEach(([y, cols]) => {
-    const a = new THREE.Vector3(1065, 92, y), b = new THREE.Vector3(1235, 92, y), n = 9;
+  // ٨. الشوارع وحياتها، ورايات ملوّنة فوق الشارع الرئيسي
+  const street = streetBuild3D(THREE, D.life, D.STREET, { Parts, box, material, signMesh, bench }); root.add(street.group);
+  [[980, ['#C2410C', '#FFC94A', '#0E7490', '#15803D']], [1520, ['#7C3AED', '#FFC94A', '#BE185D', '#0E7490']]].forEach(([y, cols]) => {
+    const a = new THREE.Vector3(1024, 115, y), b = new THREE.Vector3(1276, 115, y), n = 9;
     for (let k = 0; k < n; k++) { const u = (k + .5) / n, p = a.clone().lerp(b, u); p.y -= Math.sin(u * Math.PI) * 22;
       const f = new THREE.Mesh(new THREE.ConeGeometry(6, 16, 3), material('flat', cols[k % cols.length])); f.rotation.x = Math.PI; f.position.copy(p).add(new THREE.Vector3(0, -8, 0)); root.add(f); ticks.push(t => { f.rotation.z = Math.sin(t * 3 + k) * .15; }); }
   });
@@ -104,5 +106,5 @@ export function kit3d(THREE, { high, def: D }) {
   const camel = buildCamel(); root.add(camel.root); const cst = { x: 1800, y: 1250, dir: -1, moving: false, phase: 0, saddle: true, bells: true };
   try { root.add(mountains({ x0: 0, z0: 0, x1: W, z1: D.size.h })); } catch (e) { console.error('[قرية الخير] الجبال البعيدة', e); }
   let sky = null; try { sky = clouds({ x0: 0, z0: 0, x1: W, z1: D.size.h }); root.add(sky); } catch (e) { sky = null; }
-  return { group: root, update(t, st, cam) { ticks.forEach(f => f(t)); animateCamel(camel, cst, 1 / 60, t); if (sky && sky.userData.tick) sky.userData.tick(t, cam); } };
+  return { group: root, update(t, st, cam) { ticks.forEach(f => f(t)); street.update(t); animateCamel(camel, cst, 1 / 60, t); if (sky && sky.userData.tick) sky.userData.tick(t, cam); } };
 }
