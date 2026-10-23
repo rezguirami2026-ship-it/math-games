@@ -382,3 +382,17 @@ body:has(.wardrobe) .toast{display:none}
 .g5tile.mx{border-right:3px dashed #E2475C}.g5mosaic.two .g5tile.my{border-bottom:3px dashed #E2475C}
 .g5card.month{min-width:62px;display:flex;flex-direction:column;align-items:center;font-size:13px;padding:4px 6px}.g5card.month small{font-size:10px;color:#8A7A5A}
 .g5cards.nets .chLine{max-width:130px!important}
+/* الصف السابع — قرية الخير (missions/g7/village.js) */
+.g7row{display:flex;gap:10px;align-items:center;justify-content:center}
+.g7well{direction:ltr;display:flex;flex-direction:column;width:110px;border-radius:10px;background:linear-gradient(#CFEAF7 0 28%,#8A6A45 28% 100%);padding:4px 0;box-shadow:inset 0 0 0 2px #5A4128}
+.g7wr{position:relative;height:8px;display:flex;align-items:center}.g7wr i{flex:1;height:1px;background:rgba(255,255,255,.35);margin-left:30px}
+.g7wr small{position:absolute;left:4px;font:800 10px 'Cairo';color:#fff;text-shadow:0 1px 1px #000}.g7wr.zero i{height:3px;background:#2E9E5B}
+.g7wr b{position:absolute;right:16px;font-size:18px;top:-8px}.g7wr.mark i{height:3px;background:#FFC23D}
+.g7op{font:900 22px 'Cairo';color:#2A1B66;align-self:center}.g7res{font:900 22px 'Cairo';color:#1F8A5A;align-self:center;min-width:40px;text-align:center}
+.g7expr{align-items:center}.g7br{font:900 28px 'Cairo';color:#C2304A;align-self:center}
+.g7days{grid-template-columns:repeat(10,1fr)}.g7days .g5card,.g7sieve .g5card{min-height:32px;padding:2px;font-size:13px}
+.g7sieve .g5card.off{background:#EEE6D6;color:#B3A68E;text-decoration:line-through;box-shadow:none}.g7sieve .g5card.pre{opacity:.55}
+.g7ctr{display:flex;gap:10px;align-items:center;justify-content:center;margin:8px 0;font:900 16px 'Cairo';color:#2A1B66}.g7ctr .g5card{min-width:48px;font-size:20px}
+.g7beds{display:flex;flex-direction:column;gap:3px;align-items:center;max-height:180px;overflow:auto;font-size:13px;line-height:1.1}.g7beds .left{padding:3px 8px;border-radius:8px;background:#FFE1E1;font:800 13px 'Cairo';color:#C2304A}
+.g7tree{margin:10px auto;text-align:center;font:900 20px 'Cairo';color:#2A1B66}.g7tree b{color:#C2304A}
+.g7pow{display:flex;flex-direction:column;align-items:center}.g7big{font:900 34px 'Cairo';color:#2A1B66;text-align:center;margin:6px 0}
