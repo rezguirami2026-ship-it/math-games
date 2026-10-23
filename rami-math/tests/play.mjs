@@ -973,6 +973,52 @@ S.orderOps7 = async () => {
   for (let r = 0; r < 3; r++) { const [i, j] = (await data('orderOps7')).rounds[r].br; await panelClick(`[data-k="${i}"]`); await panelClick(`[data-k="${j}"]`); await sheetBtn('#benchGo'); }
 };
 
+/* ═══ الصف السابع — سوق الجبر (missions/g7/market.js) ═══ */
+const setCf = async (k, v) => { const s = v > 0 ? 1 : -1; let n = Math.abs(v); while (n >= 10) { await panelClick(`[data-c="${k}"][data-v="${s * 10}"]`); n -= 10; } for (; n > 0; n--) await panelClick(`[data-c="${k}"][data-v="${s}"]`); };   // تغيير العدّاد بمقدار v (بخطوات ١٠ ثم ١)
+S.algExpr7 = async () => {
+  await station(W.g7.M.bags, '🍬 أكياس السوق');
+  await sheetBtn('#benchGo');   // خطأ: العبارة صفر
+  expect((await data('algExpr7')).r === 0, 'عبارة خاطئة قُبلت');
+  for (let r = 0; r < 3; r++) { const q = (await data('algExpr7')).rounds[r]; await setCf('a', q.a); await setCf('b', q.b); await sheetBtn('#benchGo'); }
+};
+S.likeTerms7 = async () => {
+  await station(W.g7.M.sort, '🧺 فرز البضائع');
+  await sheetBtn('#benchGo');   // خطأ: السلال فارغة
+  expect((await data('likeTerms7')).r === 0, 'فرز خاطئ قُبل');
+  for (let r = 0; r < 3; r++) { const w = (await data('likeTerms7')).rounds[r].want; await setCf('x', w.x); await setCf('y', w.y); await setCf('k', w.k); await sheetBtn('#benchGo'); }
+};
+S.expandBrackets7 = async () => {
+  await station(W.g7.M.orders, '📦 طلبيات الجملة');
+  { const q = (await data('expandBrackets7')).rounds[0]; await setCf('x', q.k * q.a); await setCf('k', q.b); await sheetBtn('#benchGo'); await setCf('k', -q.b); }   // خطأ: العدد دون ضرب
+  expect((await data('expandBrackets7')).r === 0, 'فك خاطئ قُبل');
+  for (let r = 0; r < 3; r++) { const q = (await data('expandBrackets7')).rounds[r], d = await data('expandBrackets7'); await setCf('x', q.k * q.a - d.cf.x); await setCf('k', q.k * q.b - d.cf.k); await sheetBtn('#benchGo'); }
+};
+S.formulas7 = async () => {
+  await station(W.g7.M.prices, '🌶️ آلة الأسعار');
+  { const q = (await data('formulas7')).rounds[0]; await setCf('a', q.b); await setCf('b', q.a); await sheetBtn('#benchGo'); await setCf('a', q.a - q.b); await setCf('b', q.b - q.a); }   // خطأ: الدوران مبدّلان
+  expect((await data('formulas7')).r === 0, 'صيغة خاطئة قُبلت');
+  await sheetBtn('#benchGo');
+  { const q = (await data('formulas7')).rounds[1]; await typePad(q.a * q.n + q.b); }
+  { const q = (await data('formulas7')).rounds[2]; await typePad(q.m); }
+};
+S.equations7 = async () => {
+  await station(W.g7.M.scale, '⚖️ الكفّتان');
+  const pick = async ok => {   // المعادلة الصحيحة: «أس + ب = ج» كما تكتبها اللعبة
+    const i = await G(ok => { const q = window.__game.quests.data('equations7').rounds[0], ar = n => String(n).replace(/\d/g, x => '٠١٢٣٤٥٦٧٨٩'[x]), want = `${ar(q.a)}س + ${ar(q.b)} = ${ar(q.c)}`;
+      return [...document.querySelectorAll('#panel [data-o]')].findIndex(b => (b.textContent === want) === ok); }, ok);
+    await sheetBtn(`[data-o="${i}"]`); };
+  await pick(false);   // خطأ: معادلة لا تصف الميزان
+  expect((await data('equations7')).r === 0, 'معادلة خاطئة قُبلت');
+  await pick(true);
+  for (let r = 1; r < 3; r++) {
+    const q = (await data('equations7')).rounds[r];
+    if (q.a > 1) await sheetBtn('[data-m="d"]');   // خطأ: القسمة قبل إزالة الأوزان (تُرفض)
+    let b = q.b; while (b >= 5) { await sheetBtn('[data-m="5"]'); b -= 5; } while (b > 0) { await sheetBtn('[data-m="1"]'); b--; }
+    if (q.a > 1) await sheetBtn('[data-m="d"]');
+    await sheetBtn('#benchGo');
+  }
+};
+
 /* ═══ الصف الخامس — قرية الخير (missions/g5/village.js) ═══ */
 S.placeValue5 = async () => {
   await station(W.g5.V.meter, '💧 عدّاد الخزان');
@@ -1509,7 +1555,7 @@ try {
   if (GRADE !== 6) {   // صف آخر: كل بوابة تُفتح بعد آخر درس في وحدتها (المناطق نفسها)
     GATES.forEach((g, i) => { g.after = lessons.filter(l => l.u === i).slice(-1)[0].id; });
     W.g5 = await G(async () => ({ V: (await import('./missions/g5/village.js')).ST5V, M: (await import('./missions/g5/market.js')).ST5M, H: (await import('./missions/g5/harbor.js')).ST5H, F: (await import('./missions/g5/fort.js')).ST5F, E: (await import('./missions/g5/festival.js')).ST5E, D: (await import('./missions/g5/datayard.js')).ST5D, C: (await import('./missions/g5/coop.js')).ST5C, K: (await import('./missions/g5/caravan.js')).ST5K, W: (await import('./missions/g5/workshop.js')).ST5W }));
-    W.g7 = await G(async () => ({ V: (await import('./missions/g7/village.js')).ST7V }));   // لكل منطقة محطاتها (أسماء مثل scale تتكرر)
+    W.g7 = await G(async () => ({ V: (await import('./missions/g7/village.js')).ST7V, M: (await import('./missions/g7/market.js')).ST7M }));   // لكل منطقة محطاتها (أسماء مثل scale تتكرر)
     console.log(`📚 الصف ${GRADE === 5 ? 'الخامس' : 'السابع'}: ${lessons.length} درساً`);
   }
   if (!FROM) for (const g of GATES) expect(await pathLen(g.a, g.b) === 0, `${g.name} مفتوحة قبل وقتها`);

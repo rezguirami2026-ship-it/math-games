@@ -396,3 +396,9 @@ body:has(.wardrobe) .toast{display:none}
 .g7beds{display:flex;flex-direction:column;gap:3px;align-items:center;max-height:180px;overflow:auto;font-size:13px;line-height:1.1}.g7beds .left{padding:3px 8px;border-radius:8px;background:#FFE1E1;font:800 13px 'Cairo';color:#C2304A}
 .g7tree{margin:10px auto;text-align:center;font:900 20px 'Cairo';color:#2A1B66}.g7tree b{color:#C2304A}
 .g7pow{display:flex;flex-direction:column;align-items:center}.g7big{font:900 34px 'Cairo';color:#2A1B66;text-align:center;margin:6px 0}
+/* الصف السابع — سوق الجبر (missions/g7/market.js) */
+.g7pic{text-align:center;font-size:22px;line-height:1.3;margin:6px 0;word-break:break-all}
+.g7box{display:inline-block;margin:2px;padding:2px 6px;border-radius:8px;background:#FFE9C2;border:1px solid #C99A3A;font:900 14px 'Cairo';color:#4A2C0E}
+.g7alg{font-size:26px}.g7res2{text-align:center;font:900 20px 'Cairo';color:#1F8A5A;margin:4px 0}
+.g7bal{display:flex;align-items:center;justify-content:center;gap:8px;margin:8px 0}.g7bal .pan{min-width:120px;padding:8px 10px;border-radius:0 0 40px 40px;background:#F4E2B8;border:2px solid #A9743F;text-align:center;font:800 15px 'Cairo';color:#4A2C0E;font-size:20px}
+.g7ctr .g5card.sm{min-width:40px;font-size:13px;padding:4px 6px}

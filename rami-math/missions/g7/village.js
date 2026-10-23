@@ -25,7 +25,7 @@ const isPrime = n => { if (n < 2) return false; for (let k = 2; k * k <= n; k++)
 const NEG = { neg: true, dot: false }, INT = { dot: false };
 
 /* رسم المحطة في العالم: طاولة عليها رمز الأداة، ولافتة باسمها */
-const prop = (icon, label, bg, side = -1) => (c, x, y) => {
+export const prop = (icon, label, bg, side = -1) => (c, x, y) => {
   workTable(c, x, y);
   c.font = '26px "Segoe UI Emoji", sans-serif'; c.textAlign = 'center'; c.fillText(icon, x, y - 34);
   bigSign(c, x + side * 104, y + 6, label, { fs: 12, h: 30, bg });
