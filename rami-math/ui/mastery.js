@@ -4,11 +4,11 @@ import { game } from '../core/state.js';
 import { bus } from '../core/events.js';
 import { sfx } from '../core/sound.js';
 import { ar } from '../core/util.js';
-import { LESSONS } from '../content/lessons.js';
+import { LESSONS, SKILL_IDS } from '../content/lessons.js';
 import * as quests from '../missions/quests.js';
 import { pendingOf, reviews } from '../missions/review.js';
 
-export const SKILLS = [
+const SK6 = [
   ['place', '🔢', 'القيمة المكانية والأعداد', '#3FA3F5', ['placeValue', 'compareRound', 'sequences', 'numberLineEstimate', 'hieroNumbers', 'decimalSystem', 'numberSystem2', 'numberHistory2']],
   ['special', '🔑', 'العوامل والأعداد الخاصة', '#8E6CF6', ['factorsMultiples', 'oddEven', 'primeNumbers', 'commonMultiples', 'divisibility', 'specialNumbers']],
   ['muldiv', '✖️', 'الضرب والقسمة', '#E2475C', ['powerOf10', 'multiplyStrategies', 'division1', 'multiplyStrategies2', 'multiplyT2', 'division2', 'mulDiv', 'operationLaws']],
@@ -21,6 +21,7 @@ export const SKILLS = [
   ['moves', '🔄', 'التحويلات والإحداثيات', '#B5179E', ['translation', 'reflection', 'rotation', 'coordinates', 'transformPolygons']],
   ['data', '📊', 'البيانات والاحتمال', '#0F8B6E', ['lineGraphs', 'pieCharts', 'statsAverage', 'usingStats', 'probabilityLang']]
 ];
+export const SKILLS = SKILL_IDS ? SK6.map(([k, ic, t, c]) => [k, ic, t, c, SKILL_IDS[k]]) : SK6;   // صف له خريطته في content/gN/lessons.js
 const title = id => (LESSONS.find(l => l.id === id) || {}).title || id;
 /* نجوم الدرس: أفضل ما ناله في التحدي أو النشاط (٠–٣)، و٤ = النجمة الذهبية في تحدي الخبير */
 export function lessonStars(id, s = game.state) {

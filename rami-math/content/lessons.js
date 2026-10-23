@@ -6,3 +6,4 @@ import * as g6 from './g6/lessons.js';
 import * as g7 from './g7/lessons.js';
 const G = { 5: g5, 6: g6, 7: g7 }[GRADE];
 export const UNITS = G.UNITS, LESSONS = G.LESSONS, lessonIndex = G.lessonIndex;
+export const SKILL_IDS = G.SKILL_IDS || null;   // مجالات خريطة الإتقان لصف غير السادس (السادس في ui/mastery.js)

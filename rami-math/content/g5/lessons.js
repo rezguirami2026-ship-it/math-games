@@ -87,3 +87,18 @@ export const LESSONS = [
   L(8, 'areaPerimeter5', 'المساحة والمحيط', 'تبليط الغرفة', 'مساحة المستطيل ومحيطه معاً', 'jaber', 1)                                       // ٣٢-١
 ];
 export const lessonIndex = id => LESSONS.findIndex(l => l.id === id);
+
+/* مجالات «خريطة إتقاني» الـ١١ (ui/mastery.js) وأوسمة المجالات: كل درس من الـ٦١ في مجال واحد */
+export const SKILL_IDS = {
+  place: ['placeValue5', 'orderRound5', 'sequences5a', 'sequences5b', 'generalStatements5', 'negatives5'],
+  special: ['multSquares5', 'divisibility5', 'factors5'],
+  muldiv: ['multFacts5', 'writtenMult5', 'moreMult5', 'writtenDiv5', 'multStrategies5', 'doubleHalve5', 'multDiv5', 'inverseBrackets5'],
+  addsub: ['addSub5a', 'addMore5', 'decimals5', 'decimalFacts5', 'subtract5', 'add5', 'money5', 'mentalStrategies5', 'addSub5b'],
+  fraction: ['decimalsFractions5', 'percentages5', 'equivFractions5', 'mixedNumbers5', 'fractionsDivision5', 'ratio5'],
+  measure: ['mass5', 'measureLines5', 'volCapMass5'],
+  time: ['readTime5', 'timetables5', 'measureTime5', 'calendars5', 'moreTime5'],
+  area: ['area5a', 'perimeter5a', 'area5b', 'perimeter5b', 'areaPerimeter5'],
+  shapes: ['parallelPerp5', 'triangles5a', 'cuboids5', 'angles5', 'triangles5b', 'polySymmetry5', 'netsShapes5'],
+  moves: ['coords5a', 'transReflect5', 'patternSymmetry5', 'coordTransform5'],
+  data: ['survey5', 'checkData5', 'chance5', 'lineGraph5', 'mode5']
+};

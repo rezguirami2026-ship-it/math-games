@@ -2,7 +2,7 @@
 // تُحسب من الحفظ نفسه (نجوم الدروس، سجل الأنشطة، المستوى) ومن عدادين في state.stats: persist (جولات أُكملت بعد خطأ) وstreak (أطول سلسلة).
 import { game } from '../core/state.js';
 import { ar } from '../core/util.js';
-import { LESSONS, UNITS } from '../content/lessons.js';
+import { LESSONS, UNITS, SKILL_IDS } from '../content/lessons.js';
 import { levelOf } from '../core/levels.js';
 
 const stars = (s, id) => ((s.quests && s.quests.data && s.quests.data[id]) || {}).stars || 0;
@@ -11,7 +11,7 @@ const full = (s, ids) => ids.filter(id => stars(s, id) >= 3).length;
 const plays = s => Object.values(s.activities || {}).reduce((a, r) => a + (r.plays || 0), 0);
 const st = s => s.stats || {};
 const UNIT_ICON = ['🔢', '📏', '⚓', '🏰', '🍲', '📊', '🧮', '🐪', '💎'];
-const DOMAIN = [
+const DOMAIN6 = [
   ['frac', '🍕', 'خبير الكسور', ['fractions', 'mixedNumbers', 'decimalFractions', 'fractionDiv', 'percentages', 'ratioProportion']],
   ['time', '⏰', 'سيد الوقت', ['timeTables', 'calendars', 'timeConvert', 'timeZones1', 'timeZones2', 'leapYears']],
   ['geo', '📐', 'مهندس الأشكال', ['shapesIdentify', 'shapes3D', 'nets', 'triangleAngles', 'classifyShapes', 'measureAngles', 'prisms', 'regularPolyhedra']],
@@ -19,6 +19,8 @@ const DOMAIN = [
   ['data', '📊', 'محلل البيانات الماهر', ['lineGraphs', 'pieCharts', 'statsAverage', 'usingStats', 'probabilityLang']],
   ['measure', '⚖️', 'خبير القياس', ['lengthMeasure', 'massCapacity1', 'massCapacity2', 'capacityMass', 'distance', 'areaPerimeterT1', 'areaPerimeter', 'rectangles', 'irregularShapes']]
 ];
+const DK = { frac: ['fraction'], time: ['time'], geo: ['shapes'], move: ['moves'], data: ['data'], measure: ['measure', 'area'] };   // مجالات الوسام من خريطة الصف
+const DOMAIN = SKILL_IDS ? DOMAIN6.map(([k, ic, n]) => [k, ic, n, DK[k].flatMap(x => SKILL_IDS[x])]) : DOMAIN6;
 export const BADGES = [
   { id: 'b_first3', icon: '🌟', name: 'الإتقان الأول', desc: 'ثلاث نجوم في درس لأول مرة', prog: s => [Math.min(1, full(s, LESSONS.map(l => l.id))), 1] },
   { id: 'b_stars30', icon: '✨', name: 'جامع النجوم', desc: 'اجمع ٣٠ نجمة في الدروس', prog: s => [allStars(s), 30] },
@@ -52,7 +54,7 @@ export const BADGES = [
   { id: 'b_events', icon: '🎪', name: 'صديق الزوّار', desc: 'شارك في ٥ أحداث يومية في الساحة', prog: s => [Object.keys((s.events || {}).done || {}).length, 5] },
   { id: 'b_adv_all', icon: '👑', name: 'بطل قرية الخير الأكبر', desc: 'أكمل المغامرات التسع كلها', prog: s => [['rescue', 'storm', 'island', 'oldcity', 'lanterns', 'lighthouse', 'desert', 'mountain', 'castle'].filter(k => ((s.adventures || {})[k] || {}).done).length, 9] },
   { id: 'b_lvl10', icon: '👑', name: 'حكيم القرية', desc: 'صل إلى المستوى ١٠', prog: s => [levelOf(s).n, 10] },
-  ...DOMAIN.map(([k, icon, name, ids]) => ({ id: 'b_' + k, icon, name, desc: `ثلاث نجوم في ${ids.length === 6 ? 'ستة' : ids.length === 5 ? 'خمسة' : ids.length === 8 ? 'ثمانية' : 'تسعة'} دروس من هذا المجال`, prog: s => [full(s, ids), ids.length] })),
+  ...DOMAIN.map(([k, icon, name, ids]) => ({ id: 'b_' + k, icon, name, desc: `ثلاث نجوم في ${{ 3: 'ثلاثة', 4: 'أربعة', 5: 'خمسة', 6: 'ستة', 7: 'سبعة', 8: 'ثمانية', 9: 'تسعة', 10: 'عشرة' }[ids.length] || ar(ids.length)} دروس من هذا المجال`, prog: s => [full(s, ids), ids.length] })),
   ...UNITS.map((u, i) => { const ids = LESSONS.filter(l => l.u === i).map(l => l.id); return { id: 'b_u' + i, icon: UNIT_ICON[i] || '⭐', name: `نجوم ${u.title}`, desc: `ثلاث نجوم في كل دروس وحدة ${u.title} (${u.term === 1 ? 'الفصل الأول' : 'الفصل الثاني'})`, prog: s => [full(s, ids), ids.length] }; })
 ];
 // ألوان حيّة لكل وسام (تدرّج الميدالية)

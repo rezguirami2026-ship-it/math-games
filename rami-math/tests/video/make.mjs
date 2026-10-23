@@ -27,7 +27,7 @@ console.log('المدة الكلية', clock.toFixed(1), 'ث');
 
 const b = await chromium.launch({ channel: 'chrome', args: ['--enable-gpu', '--ignore-gpu-blocklist', '--use-angle=d3d11', '--autoplay-policy=no-user-gesture-required'] });
 async function session(url) {
-  const ctx = await b.newContext({ viewport: { width: W, height: H } }); const page = await ctx.newPage();
+  const ctx = await b.newContext({ viewport: { width: W, height: H }, bypassCSP: true });   /* طبقة التصوير تُحقن نصاً، وسياسة CSP في الصفحة تمنعه */ const page = await ctx.newPage();
   page.on('pageerror', e => console.log('  [خطأ الصفحة]', e.message));
   await page.addInitScript({ path: path.join(HERE, 'vtime.js') });
   await page.addInitScript(() => { window.__vt.start(); });   // الوقت افتراضي من أول لحظة
@@ -183,7 +183,7 @@ await B.ev(async G5 => { const s = window.__game.state, L = G5 ? (await import('
   s.expert = { [L[0]]: { plays: 1, gold: true } }; s.mastered = 4; s.levelSeen = 10;   // بلا نافذة ارتقاء أثناء التصوير
   const { BY_LESSON } = await import('/content/outcomes.js'), rk = (id, o) => G5 ? id + '|' + BY_LESSON[id][0] : o;
   s.review = { [rk(L[1], 'compareRound|Nn11')]: { n: 1, b: 0, due: Date.now() }, [rk(L[8], 'division1|Nc10')]: { n: 1, b: 1, due: Date.now() + 864e5 } }; }, G5);
-await B.ev(async GV => { const { runChallenge } = await import('/missions/challenge.js'); const m = window.__game.MODS[GV.first]; let it = null; for (let k = 0; k < 30 && !it; k++) it = m.challenge.make().find(i => i.type === 'choice' && /قيمة/.test(i.q));
+await B.ev(async GV => { const { runChallenge } = await import('/missions/challenge.js'); const m = window.__game.MODS[GV.first]; let it = null; for (let k = 0; k < 30 && !it; k++) it = m.challenge.make().find(i => i.type === 'choice' && /قيمة/.test(i.q)); for (let k = 0; k < 30 && !it; k++) it = m.challenge.make().find(i => i.type === 'choice' && i.opts.length >= 3);
   window.__d = { ch: { items: [it], i: 0, firstTry: 0, tries: 0, gems: 0, streak: 0 } }; runChallenge(window.__game.W, window.__d, { id: GV.first, who: GV.giver, title: GV.chTitle, make: () => [it], exit: () => {}, onDone: () => {} }); }, GV);
 await B.skip(.5);
 await scene(B, 'learn', async cap => {

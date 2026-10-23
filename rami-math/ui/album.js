@@ -4,7 +4,7 @@ import { game } from '../core/state.js';
 import { bus } from '../core/events.js';
 import { sfx } from '../core/sound.js';
 import { ar } from '../core/util.js';
-import { LESSONS, UNITS } from '../content/lessons.js';
+import { LESSONS, UNITS, SKILL_IDS } from '../content/lessons.js';
 import { GRADE } from '../content/grade.js';
 const GRADE_NAME = { 5: 'الخامس', 6: 'السادس', 7: 'السابع' };
 import { levelOf } from '../core/levels.js';
@@ -32,8 +32,8 @@ export function memories(s = game.state) {
 const cnt = (s, ids) => ids.filter(id => s.quests && s.quests.done[id]).length;
 export const TITLES = [
   ['explorer', 'المستكشف الصغير', 'متاح من البداية', () => true],
-  ['numbers', 'سيد الأعداد', 'أكمل وحدتي الأعداد في الفصل الأول', s => unitDone(s, 0) && unitDone(s, 3)],
-  ['fractions', 'سيد الكسور', 'أكمل دروس الكسور والنسب', s => cnt(s, ['fractions', 'mixedNumbers', 'decimalFractions', 'percentages']) === 4],
+  ['numbers', 'سيد الأعداد', 'أكمل وحدتي الأعداد في الفصل الأول', s => unitDone(s, 0) && unitDone(s, SKILL_IDS ? 1 : 3)],   // الخامس: القرية والسوق
+  ['fractions', 'سيد الكسور', 'أكمل دروس الكسور والنسب', s => { const ids = SKILL_IDS ? SKILL_IDS.fraction : ['fractions', 'mixedNumbers', 'decimalFractions', 'percentages']; return cnt(s, ids) === ids.length; }],
   ['engineer', 'مهندس القرية', 'أكمل وحدتي الهندسة', s => unitDone(s, 2) && unitDone(s, 8)],
   ['treasure', 'صيّاد الكنوز', 'افتح ٨ كنوز مخفية', s => Object.keys(s.treasure || {}).length >= 8],
   ['adventurer', 'بطل المغامرات', 'أكمل ٥ مغامرات', s => Object.values(s.adventures || {}).filter(r => r && r.done).length >= 5],
