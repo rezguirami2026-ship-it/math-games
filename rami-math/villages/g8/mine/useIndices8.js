@@ -5,7 +5,7 @@ import { mission } from '../../mission.js';
 import { N, R, pw, fr } from '../../math.js';
 import { choice, num, tf } from '../../../missions/challenge.js';
 
-const who = { name: 'حارس البوابة حمدان', face: '💂🏽‍♂️' };
+const who = { name: 'حارس البوابة حمدان', face: '💂🏽‍♂️', id: 'hamdan' };
 
 function draw(g, w, h, t, S) {
   const open = S.i + (S.done ? 1 : 0), cx = w / 2, top = 16, bot = h - 8, gw = Math.min(w * .62, 330);

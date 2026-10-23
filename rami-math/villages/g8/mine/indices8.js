@@ -5,7 +5,7 @@ import { mission } from '../../mission.js';
 import { N, R, pw, fr, mx } from '../../math.js';
 import { choice, num, tf, match } from '../../../missions/challenge.js';
 
-const who = { name: 'الحكيمة نورة', face: '🧙🏽‍♀️' };
+const who = { name: 'الحكيمة نورة', face: '🧙🏽‍♀️', id: 'noura' };
 
 function draw(g, w, h, t, S) {
   const r = S.r ? S.r.data : { b: 3 }, b = r.b || 3, e = S.r && S.r.input.type === 'dial' ? S.v : (r.e ?? 0);

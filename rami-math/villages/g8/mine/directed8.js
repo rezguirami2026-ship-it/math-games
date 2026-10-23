@@ -5,7 +5,7 @@ import { mission } from '../../mission.js';
 import { N, P, R, R1, eq } from '../../math.js';
 import { choice, num, tf, order } from '../../../missions/challenge.js';
 
-const who = { name: 'المنقّب صالح', face: '👷🏽‍♂️' };
+const who = { name: 'المنقّب صالح', face: '👷🏽‍♂️', id: 'saleh' };
 const TOP = 4, BOT = -10;   // البرج حتى ٤ والبئر حتى ١٠−
 
 /* المشهد: البئر والطوابق وخط الأعداد الرأسي، والقفص عند S.v (أو عند موضع الجولة) */

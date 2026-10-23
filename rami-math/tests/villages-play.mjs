@@ -70,6 +70,29 @@ for (const id of ids) {
   } catch (e) { console.log(`❌ ${id}: ${e.message}`); await shot('fail_' + id); break; }
 }
 await sleep(800); await shot('z_after');
+// مغامرة القرية بعد إنهاء دروسها: لاعب آلي يقرأ السكة أمامه (يتفادى الصخور ويقفز فوق الكسور)
+if (passed === ids.length && await E(() => { const b = document.querySelector('[data-a=adv]'); return !!b && !b.hidden; })) {
+  try {
+    await E(() => document.querySelector('[data-a=adv]').click()); await until(() => E(() => !!window.__vadv), 'بدء المغامرة');
+    const t0 = Date.now(); let shotDone = false;
+    while (Date.now() - t0 < 240000 && !(await E(() => !!document.querySelector('.vm-end')))) {
+      await E(() => { const S = window.__vadv; if (!S || S.done) return; const key = k => dispatchEvent(new KeyboardEvent('keydown', { key: k }));
+        const ahead = [...(window.__vadvThings || [])]; });
+      await p.keyboard.press(await E(() => { const S = window.__vadv; if (!S || S.done) return 'x'; const T = S.things || []; const near = T.filter(t => !t.hit && t.z > S.z && t.z < S.z + 9);
+        if (near.some(t => t.kind === 'gap' && t.z < S.z + 2.2)) return 'ArrowUp';
+        if (near.some(t => t.kind === 'rock' && t.lane === S.lane)) { const free = [0, 1, 2].filter(l => !near.some(t => t.kind === 'rock' && t.lane === l)); const to = free.sort((a, b) => Math.abs(a - S.lane) - Math.abs(b - S.lane))[0]; return to === undefined ? 'x' : to < S.lane ? 'ArrowLeft' : to > S.lane ? 'ArrowRight' : 'x'; }
+        const gem = near.find(t => t.kind === 'gem'); if (gem && gem.lane !== S.lane && !near.some(t => t.kind === 'rock' && t.lane === gem.lane)) return gem.lane < S.lane ? 'ArrowLeft' : 'ArrowRight';
+        return 'x'; }));
+      if (!shotDone && Date.now() - t0 > 9000) { await shot('adv_ride'); shotDone = true; }
+      await sleep(60);
+    }
+    await until(() => E(() => !!document.querySelector('.vm-end')), 'نهاية المغامرة', 5000); await shot('adv_end');
+    const r = await E(() => ({ gems: window.__vadv.gems, hits: window.__vadv.hits }));
+    await E(() => document.querySelector('.vm-end .vm-go').click()); await sleep(500);
+    const saved = await E(() => JSON.stringify((window.__villages.state.vil.adv || {})));
+    console.log(`🎢 المغامرة انتهت: ${r.gems} بلّورة، ${r.hits} اصطدام — المحفوظ: ${saved}`);
+  } catch (e) { console.log('❌ المغامرة: ' + e.message); await shot('fail_adv'); }
+}
 // بعد إنهاء القرية: القرية التالية مفتوحة في الخريطة
 await E(() => document.querySelector('[data-a=map]').click()); await sleep(1200);
 const next = await E(u => { const n = document.querySelector(`.hnode[data-u="${+u + 1}"]`); return !!n && !n.classList.contains('lock'); }, U);

@@ -114,3 +114,32 @@
 @media (max-width: 520px) { .vm-q { font-size: 17px; } .vm-keys { grid-template-columns: repeat(3, 56px); } }
 .mq-mx { white-space: nowrap; display: inline-flex; align-items: center; gap: .15em; }
 @media (max-height: 700px) { .vm-scene { height: clamp(130px, 26vh, 220px); } .vm-q { font-size: 16px; line-height: 1.6; } .vm-card { gap: 6px; padding: 10px 12px; } }
+
+/* ── لوحة «تحدي الدرس» بمظهر القرى (الصفان ٨ و٩ فقط: body.v89) ── */
+body.v89 .panel { background: radial-gradient(ellipse at 50% 40%, rgba(10, 12, 24, .6), rgba(4, 5, 10, .86)); align-items: center; }
+body.v89 #panel .sheet { color: #F5F1E6; background: linear-gradient(160deg, rgba(34, 38, 58, .98), rgba(18, 20, 32, .99)); border: 1px solid rgba(255, 201, 74, .35); border-radius: 24px; box-shadow: 0 24px 60px rgba(0, 0, 0, .55), inset 0 1px 0 rgba(255, 255, 255, .08); max-width: 680px; margin: auto; }
+body.v89 #panel .sheet h3, body.v89 #panel .chHead b { color: #FFD27A; }
+body.v89 #panel .chHead small, body.v89 #panel .muted { color: rgba(245, 241, 230, .75); }
+body.v89 #panel .chQ, body.v89 #panel .chOut, body.v89 #panel .speech, body.v89 #panel .chTail { background: rgba(255, 255, 255, .06); color: #F5F1E6; border-color: rgba(255, 255, 255, .1); }
+body.v89 #panel .chOut { color: #C9B8FF; }
+body.v89 #panel .speech.bad { background: rgba(255, 159, 67, .14); color: #FFD1A3; }
+body.v89 #panel .speech.ok, body.v89 #panel .speech.good { background: rgba(74, 222, 128, .14); color: #A7F3C0; }
+body.v89 #panel .chOpt, body.v89 #panel .chL, body.v89 #panel .chR, body.v89 #panel .chCard, body.v89 #panel .chStep, body.v89 #panel .act.ghost { background: rgba(255, 255, 255, .08); color: #fff; border: 1px solid rgba(255, 255, 255, .14); box-shadow: 0 3px 0 rgba(0, 0, 0, .35); }
+body.v89 #panel .chOpt.on, body.v89 #panel .chOpt.sel, body.v89 #panel .chL.on, body.v89 #panel .chR.on { background: rgba(255, 201, 74, .22); border-color: #FFC94A; }
+body.v89 #panel .chLit { outline: 3px solid #FFC94A; }
+body.v89 #panel .lockscr2 { background: rgba(0, 0, 0, .35); color: #FFD27A; }
+body.v89 #panel .act.go, body.v89 #panel .act.big { color: #2A1A00; background: linear-gradient(180deg, #FFD978, #F5A524); box-shadow: 0 5px 0 #B36B00; border: 0; }
+body.v89 #panel .chTrail i { background: rgba(255, 255, 255, .1); }
+body.v89 #panel .chGems { background: rgba(255, 255, 255, .1); color: #fff; }
+body.v89 #panel .chBin, body.v89 #panel .chPool, body.v89 #panel .chOrder { background: rgba(255, 255, 255, .05); border-color: rgba(255, 255, 255, .15); color: #fff; }
+
+/* ── مغامرة القرية (رحلة العربة وأمثالها) ── */
+.vadv { position: fixed; inset: 0; z-index: 85; background: #000; font-family: Cairo, sans-serif; direction: rtl; touch-action: none; }
+.vadv canvas { display: block; }
+.vadv-top { position: absolute; top: 10px; inset-inline: 10px; display: flex; align-items: center; gap: 10px; color: #fff; }
+.vadv-top b { font-size: 18px; color: #FFD27A; } .vadv-gem { background: rgba(255, 255, 255, .12); border-radius: 12px; padding: 4px 12px; font-weight: 800; }
+.vadv-bar { flex: 1; height: 8px; border-radius: 4px; background: rgba(255, 255, 255, .15); overflow: hidden; } .vadv-bar i { display: block; height: 100%; width: 0; background: linear-gradient(90deg, #FFC94A, #FF8A3D); }
+.vadv-x { width: 40px; height: 40px; border-radius: 12px; border: 0; background: rgba(255, 255, 255, .12); color: #fff; font-size: 18px; }
+.vadv-tip { position: absolute; bottom: 24px; left: 50%; transform: translateX(-50%); background: rgba(0, 0, 0, .6); color: #fff; padding: 8px 16px; border-radius: 14px; font-weight: 700; transition: opacity .6s; text-align: center; }
+.vadv-tip.off { opacity: 0; }
+.vadvBtn { background: linear-gradient(180deg, #FFD978, #F5A524) !important; color: #2A1A00 !important; }

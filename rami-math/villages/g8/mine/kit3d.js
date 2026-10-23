@@ -4,10 +4,30 @@ import { box, cyl, sphere } from '../../../renderer3d/geom.js';
 import { material } from '../../../renderer3d/textures.js';
 
 export function kit3d(THREE, { S, Parts, high }) {
-  const rock = material('stone', '#5A5048'), rockTop = material('flat', '#1A1714', { rough: 1 }), stone = material('stone', '#7A7064'), plank = material('wood', '#7B5232');
+  const rock = material('flat', '#5A5048', { rough: .95 }), plank = material('wood', '#7B5232');
   const iron = material('metal', '#8C8F96', { rough: .5, metal: .8 }), timber = material('wood', '#6A4428'), glow = c => new THREE.MeshStandardMaterial({ color: c, emissive: c, emissiveIntensity: 1.6, roughness: .25, metalness: .1 });
   const rnd = (x, y, k = 0) => { const s = Math.sin(x * 127.1 + y * 311.7 + k * 74.7) * 43758.5453; return s - Math.floor(s); };
   const H = c => (c.h || 1) * S;
+  // صخر بلون من رؤوس الشكل نفسه (بلا خامات): مادة واحدة مسطّحة التظليل لكل الصخر والأرض
+  const rockM = new THREE.MeshStandardMaterial({ vertexColors: true, flatShading: true, roughness: .95, metalness: 0 });
+  const col = new THREE.Color(), tmp = new THREE.Color();
+  function paint(g, hex, jit = .12, hTop = 0) {   // لون لكل رأس: تفاوت بسيط، وتعتيم قرب الأرض (بديل الإطباق المحيطي)
+    g = g.index ? g.toNonIndexed() : g; const p = g.attributes.position, c = new Float32Array(p.count * 3); col.set(hex);
+    for (let k = 0; k < p.count; k++) { const y = p.getY(k), n = (Math.sin(p.getX(k) * .11 + p.getZ(k) * .07) * .5 + .5) * jit, ao = hTop ? .55 + .45 * Math.min(1, Math.max(0, y / hTop)) : 1;
+      tmp.copy(col).multiplyScalar((1 - jit / 2 + n) * ao); c[k * 3] = tmp.r; c[k * 3 + 1] = tmp.g; c[k * 3 + 2] = tmp.b; }
+    g.setAttribute('color', new THREE.BufferAttribute(c, 3)); g.deleteAttribute('uv'); return g;
+  }
+  function jag(g, sx, sy) {   // حواف مكسّرة: إزاحة كل رأس حسب موضعه (الرؤوس المشتركة تبقى ملتصقة)
+    const p = g.attributes.position;
+    for (let k = 0; k < p.count; k++) { const x = p.getX(k), y = p.getY(k), z = p.getZ(k), d = 1 + (rnd(Math.round(x * 3) + sx, Math.round(z * 3) + Math.round(y * 5) + sy) - .5) * .32; p.setXYZ(k, x * d, y * d, z * d); }
+    g.computeVertexNormals(); return g;
+  }
+  const hAt = (vx, vz) => (rnd(Math.round(vx), Math.round(vz), 9) - .5) * 3;   // ارتفاع رؤوس الأرض: نفس القيمة للرأس المشترك بين بلاطتين
+  function ground(cx, cy) {
+    const g = new THREE.PlaneGeometry(S, S, 2, 2).rotateX(-Math.PI / 2).translate((cx + .5) * S, 0, (cy + .5) * S), p = g.attributes.position;
+    for (let k = 0; k < p.count; k++) p.setY(k, hAt(p.getX(k), p.getZ(k)));
+    g.computeVertexNormals(); return paint(g, ['#4A4139', '#52483E', '#463D35'][(cx * 3 + cy) % 3], .3);
+  }
   const edge = (c, grid) => [[1, 0], [-1, 0], [0, 1], [0, -1]].some(([dx, dy]) => { const n = grid && grid.at(c.x + dx, c.y + dy); return n && !n.wall; });
   let gridRef = null;
   return {
@@ -16,21 +36,29 @@ export function kit3d(THREE, { S, Parts, high }) {
       if (c.floor === 'chasm') {   // هوّة: جدران داخلية مظلمة وقاع يتوهج بلوناً بلّورياً بعيداً
         P.add(material('flat', '#0B0A10', { rough: 1 }), box(S, 2, S, x, -150, z)); return;
       }
-      if (c.floor === 'planks') { for (let i = 0; i < 4; i++) P.add(plank, box(S, 4, S / 4 - 1.2, x, 1, c.y * S + S / 8 + i * S / 4 + .6)); return; }
-      P.add(stone, box(S, 4, S, x, -1 - rnd(c.x, c.y) * 1.5, z));
+      if (c.floor === 'planks') {   // ألواح خشب بدرجات بنية متفاوتة وفواصل داكنة بينها
+        P.add(rockM, paint(box(S, 2, S, x, -1, z), '#2A1D14', .1), { uv: false });
+        for (let i = 0; i < 4; i++) P.add(rockM, paint(box(S - 1.5, 4, S / 4 - 2, x, 1.5 + rnd(c.x, c.y, i) * .8, c.y * S + S / 8 + i * S / 4 + 1), ['#8A5A34', '#7A4E2C', '#946540', '#6F4728'][(c.x + i * 3 + c.y * 2) % 4], .2), { uv: false });
+        return; }
+      P.add(rockM, ground(c.x, c.y), { uv: false });   // أرض صخرية متصلة الارتفاع بين البلاطات
+      if (rnd(c.x, c.y, 7) < .28) for (let i = 0; i < 3; i++) { const r = 2 + rnd(c.x, c.y, i + 20) * 3.5; P.add(rockM, paint(new THREE.DodecahedronGeometry(r, 0).translate(x + (rnd(c.x, c.y, i + 30) - .5) * S * .8, r * .4, z + (rnd(c.x, c.y, i + 40) - .5) * S * .8), '#6E6256', .15), { uv: false }); }
       if (c.floor === 'rail') {   // عوارض خشبية وقضيبان حديديان على امتداد النفق
         const along = gridRef && (gridRef.at(c.x + 1, c.y)?.floor === 'rail' || gridRef.at(c.x - 1, c.y)?.floor === 'rail') ? 'x' : 'z';
-        for (let i = 0; i < 3; i++) { const o = -S / 2 + S / 6 + i * S / 3; P.add(timber, along === 'x' ? box(7, 4, S * .8, c.x * S + S / 2 + o, 3, z) : box(S * .8, 4, 7, x, 3, c.y * S + S / 2 + o)); }
-        for (const o of [-11, 11]) P.add(iron, along === 'x' ? box(S, 3, 3, x, 6, z + o) : box(3, 3, S, x + o, 6, z));
+        for (let i = 0; i < 3; i++) { const o = -S / 2 + S / 6 + i * S / 3; P.add(timber, along === 'x' ? box(7, 4, S * .8, c.x * S + S / 2 + o, 4, z) : box(S * .8, 4, 7, x, 4, c.y * S + S / 2 + o)); }
+        for (const o of [-11, 11]) P.add(iron, along === 'x' ? box(S, 3, 3, x, 7.5, z + o) : box(3, 3, S, x + o, 7.5, z));
       }
     },
     wall(P, c) {
       const x = (c.x + .5) * S, z = (c.y + .5) * S, h = H(c);
-      if (!edge(c, gridRef)) { P.add(rockTop, box(S, 4, S, x, h, z), { uv: false }); return; }   // صخر داخلي: سطح مظلم فقط (رسم أخف)
-      const j = (rnd(c.x, c.y) - .5) * 14;
-      P.add(rock, box(S, h + j, S, x, (h + j) / 2, z));
-      // كتل مكسّرة على الحافة تكسر الخط المستقيم
-      for (let i = 0; i < 2; i++) { const r = 10 + rnd(c.x, c.y, i) * 12; const g = new THREE.DodecahedronGeometry(r, 0); g.translate(x + (rnd(c.x, c.y, i + 3) - .5) * S * .8, h + j - 4 + r * .3, z + (rnd(c.x, c.y, i + 5) - .5) * S * .8); P.add(rock, g); }
+      if (!edge(c, gridRef)) { P.add(rockM, paint(box(S, 6, S, x, h + (rnd(c.x, c.y) - .5) * 10, z), '#1C1814', .25), { uv: false }); return; }   // صخر داخلي: سطح مظلم فقط
+      // صخرة حافة: كتلتان أو ثلاث بحواف مكسّرة، أغمق عند القاعدة وأفتح عند القمة
+      const n = 2 + (rnd(c.x, c.y, 1) > .5 ? 1 : 0);
+      for (let i = 0; i < n; i++) {
+        const r = S * (.42 + rnd(c.x, c.y, i + 2) * .22), g = jag(new THREE.IcosahedronGeometry(r, 1), c.x * 7 + i, c.y * 5 + i);
+        g.scale(1, (h + 10) / (r * 1.7) * (.8 + rnd(c.x, c.y, i + 4) * .4), 1);
+        g.translate(x + (rnd(c.x, c.y, i + 5) - .5) * S * .45, (h + 10) * .42, z + (rnd(c.x, c.y, i + 6) - .5) * S * .45);
+        P.add(rockM, paint(g, ['#6B5F54', '#5E5349', '#7A6B5C'][(c.x + c.y + i) % 3], .18, h), { uv: false });
+      }
     },
     init(grid) { gridRef = grid; },   // قبل البناء: الجدران تعرف حوافها والسكة اتجاهها
     decor(grid) {   // قاع الهوّة المتوهج
@@ -46,7 +74,7 @@ export function kit3d(THREE, { S, Parts, high }) {
       if (p.kind === 'lamp') {
         Pp.add(timber, box(6, 70, 6, 0, 35, 0)); Pp.add(timber, box(22, 5, 5, 8, 68, 0)); Pp.add(iron, cyl(5, 6, 3, 16, 64, 0, 8));
         g.add(Pp.build()); const bulb = new THREE.Mesh(new THREE.SphereGeometry(5, 12, 8), glow('#FFC46B')); bulb.position.set(16, 58, 0); g.add(bulb);
-        if (high) { const L = new THREE.PointLight('#FFB65C', 26000, 330, 2); L.position.set(16, 56, 0); g.add(L); }
+        if (high) { const L = new THREE.PointLight('#FFB870', 15000, 300, 2); L.position.set(16, 56, 0); g.add(L); }
         g.userData.update = t => { bulb.material.emissiveIntensity = 1.5 + .2 * Math.sin(t * 9 + p.x); };
       } else if (p.kind === 'beam') {   // إطار دعامة خشبي يعبر النفق
         const ax = p.axis === 'x';
@@ -87,7 +115,7 @@ export function kit3d(THREE, { S, Parts, high }) {
         Pp.add(rock, box(70, 18, 30, 0, 9, -6)); g.add(Pp.build());
         [[-24, 10, '#5FD3FF'], [0, 16, '#B28CFF'], [24, 22, '#7CF5C8']].forEach(([dx, s, c]) => { const m = new THREE.Mesh(new THREE.BoxGeometry(s, s, s), glow(c)); m.position.set(dx, 18 + s / 2, -4); m.rotation.y = .5; g.add(m); });
       } else if (st.kind === 'doubler') {   // منصة دائرية ببلورة طافية تنقسم
-        Pp.add(stone, cyl(30, 34, 10, 0, 5, 0, 24)); Pp.add(material('metal', '#B88A2E', { rough: .35, metal: .9 }), cyl(31, 31, 3, 0, 11, 0, 24));
+        Pp.add(rock, cyl(30, 34, 10, 0, 5, 0, 24)); Pp.add(material('metal', '#B88A2E', { rough: .35, metal: .9 }), cyl(31, 31, 3, 0, 11, 0, 24));
         g.add(Pp.build());
         const cr = new THREE.Mesh(new THREE.OctahedronGeometry(12, 0), glow('#FFB347')); cr.position.y = 50; g.add(cr);
         g.userData.update = t => { cr.rotation.y = t * 1.2; cr.position.y = 50 + Math.sin(t * 2) * 5; };

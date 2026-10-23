@@ -55,6 +55,11 @@ export function createView2D(canvas, grid, def) {
     for (const c of walls) { const p = iso(c.x + .5, c.y + .5); if (p.x < L || p.x > R || p.y < T || p.y > B) continue; list.push({ d: c.x + c.y + 1, draw: () => { const s = wallSprite(c); ctx.drawImage(s.cv, p.x + s.dx, p.y + s.dy); } }); }
     for (const it of items) { const p = iso(it.p.x, it.p.y); if (p.x < L || p.x > R || p.y < T || p.y > B) continue; list.push({ d: it.p.x + it.p.y + (it.p.depth || 0), draw: () => kit.prop(ctx, it.p, p.x, p.y, t, st) }); }
     for (const s of def.stations || []) { const p = iso(s.x, s.y); list.push({ d: s.x + s.y, draw: () => kit.station(ctx, s, p.x, p.y, t, st) }); }
+    for (const q of def.people || []) { const p = iso(q.x, q.y); if (p.x < L || p.x > R || p.y < T || p.y > B) continue;
+      const dx = st.hero.x - q.x, dy = st.hero.y - q.y, near = Math.hypot(dx, dy) < 3.2, sx = dx - dy, sy = dx + dy;
+      const dir = !near ? 'down' : Math.abs(sx) > Math.abs(sy) * .8 ? (sx > 0 ? 'right' : 'left') : (sy > 0 ? 'down' : 'up');
+      list.push({ d: q.x + q.y, draw: () => { ctx.save(); ctx.globalAlpha = .28; ctx.fillStyle = '#000'; ctx.beginPath(); ctx.ellipse(p.x, p.y, 15, 7, 0, 0, Math.PI * 2); ctx.fill(); ctx.restore();
+        drawHuman(ctx, { ...q.look, x: p.x, y: p.y, dir, anim: st.talking === q.id ? 'talk' : null, animT: (t * .8) % 1, s: .82 }); } }); }
     list.push({ d: st.hero.x + st.hero.y + .01, draw: () => {
       ctx.save(); ctx.globalAlpha = .28; ctx.fillStyle = '#000'; ctx.beginPath(); ctx.ellipse(hp.x, hp.y, 15, 7, 0, 0, Math.PI * 2); ctx.fill(); ctx.restore();
       drawHuman(ctx, { ...st.look, x: hp.x, y: hp.y, dir: st.hero.dir2d || 'down', phase: st.hero.phase, moving: st.hero.moving, anim: st.hero.anim, animT: st.hero.animT, s: .82 });

@@ -5,7 +5,7 @@ import { mission } from '../../mission.js';
 import { N, R, rt } from '../../math.js';
 import { choice, num, tf, multi } from '../../../missions/challenge.js';
 
-const who = { name: 'المنقّبة مريم', face: '👷🏽‍♀️' };
+const who = { name: 'المنقّبة مريم', face: '👷🏽‍♀️', id: 'maryam' };
 const COL = ['#5FD3FF', '#B28CFF', '#7CF5C8', '#FFB347'];
 
 function draw(g, w, h, t, S) {

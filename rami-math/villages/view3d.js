@@ -51,6 +51,8 @@ export function createView3D(canvas, grid, def, opts = {}) {
   const dest = new THREE.Mesh(new THREE.RingGeometry(10, 14, 32), new THREE.MeshBasicMaterial({ color: '#FFFFFF', transparent: true, opacity: 0, depthWrite: false }));
   dest.rotation.x = -Math.PI / 2; dest.position.y = 1.5; sc.add(dest);
 
+  // أهل القرية: يقفون في أماكنهم ويلتفتون إلى البطل حين يقترب
+  const folk = (def.people || []).map(q => { const P2 = buildPerson(q.look); P2.lastX = null; sc.add(P2.root); return { q, P: P2 }; });
   // البطل
   let hero = null, heroKey = '';
   const ensureHero = look => { const k = JSON.stringify(look); if (k === heroKey) return; if (hero) sc.remove(hero.root); hero = buildPerson(look); hero.lastX = null; sc.add(hero.root); heroKey = k; };
@@ -58,20 +60,20 @@ export function createView3D(canvas, grid, def, opts = {}) {
   // غبار متطاير في الضوء (الجودة العالية)
   let motes = null;
   if (high && M.motes) {
-    const n = 220, g = new THREE.BufferGeometry(), pos = new Float32Array(n * 3);
-    for (let i = 0; i < n; i++) { pos[i * 3] = (Math.random() - .5) * 900; pos[i * 3 + 1] = 10 + Math.random() * 160; pos[i * 3 + 2] = (Math.random() - .5) * 900; }
+    const n = 90, g = new THREE.BufferGeometry(), pos = new Float32Array(n * 3);
+    for (let i = 0; i < n; i++) { pos[i * 3] = (Math.random() - .5) * 520; pos[i * 3 + 1] = 8 + Math.random() * 110; pos[i * 3 + 2] = (Math.random() - .5) * 520; }   // غبار حول البطل فقط
     g.setAttribute('position', new THREE.BufferAttribute(pos, 3));
-    motes = new THREE.Points(g, new THREE.PointsMaterial({ color: M.motes, size: 2.2, transparent: true, opacity: .55, depthWrite: false }));
+    motes = new THREE.Points(g, new THREE.PointsMaterial({ color: M.motes, size: 1.8, transparent: true, opacity: .4, depthWrite: false, fog: true }));
     sc.add(motes);
   }
 
   const cam = new THREE.PerspectiveCamera(38, 1, 10, 4000);
-  const view = { yaw: Math.PI / 4, pitch: .92, dist: 560, zoom: 1 };   // ٤٥° مثل العرض العادي
+  const view = { yaw: Math.PI / 4, pitch: .78, dist: 560, zoom: 1 };   // ٤٥° مثل العرض العادي
   const camAt = new THREE.Vector3(), camGoal = new THREE.Vector3();
   let comp = null;
   const resize = () => {
     const w = canvas.clientWidth || innerWidth, h = canvas.clientHeight || innerHeight;
-    r.setSize(w, h, false); cam.aspect = w / h; view.dist = (w < h ? 1050 : 600);   // الشاشة الطولية (الهاتف): كاميرا أبعد ترى ما حول البطل cam.updateProjectionMatrix();
+    r.setSize(w, h, false); cam.aspect = w / h; view.dist = (w < h ? 1150 : 760);   // الشاشة الطولية (الهاتف): كاميرا أبعد ترى ما حول البطل cam.updateProjectionMatrix();
     if (comp) comp.setSize(w, h);
   };
   if (high) try { comp = makeComposer(r, sc, cam); } catch (e) { comp = null; }
@@ -82,7 +84,8 @@ export function createView3D(canvas, grid, def, opts = {}) {
     const now = performance.now(), dt = Math.min(.05, (now - last) / 1000); last = now; t += dt;
     ensureHero(st.look);
     const px = st.hero.x * S, pz = st.hero.y * S;
-    animatePerson(hero, { x: px, y: pz, moving: st.hero.moving, phase: st.hero.phase, run: false, dir: st.hero.dir, anim: st.hero.anim, animT: st.hero.animT }, dt, t);
+    animatePerson(hero, { x: px, y: pz, moving: st.hero.moving, phase: st.hero.phase, run: false, dir: st.hero.dir, anim: st.hero.anim, animT: st.hero.animT, faceCam: true }, dt, t);
+    folk.forEach(({ q, P: F }) => { const near = Math.hypot(q.x - st.hero.x, q.y - st.hero.y) < 3.2; animatePerson(F, { x: q.x * S, y: q.y * S, moving: false, phase: 0, dir: 'down', face: near ? { x: px, y: pz } : null, anim: st.talking === q.id ? 'talk' : null, animT: 0 }, dt, t); });
     // الكاميرا: تتبع البطل بنعومة
     camGoal.set(px, 30, pz);
     if (first) { camAt.copy(camGoal); first = false; } else camAt.lerp(camGoal, 1 - Math.exp(-dt * 5));

@@ -16,12 +16,14 @@ export async function runVillage(root, def, hooks) {
     look: hooks.look(), goal: null, dest: null, path: [], busy: false
   };
   if (hooks.pos && !grid.blocked(hooks.pos.x, hooks.pos.y)) { st.hero.x = hooks.pos.x; st.hero.y = hooks.pos.y; }
+  (def.people || []).forEach(p => grid.extra.push({ x: p.x, y: p.y, r: .32 }));   // أهل القرية لا يُخترقون
   if (def.blockers) def.blockers(grid, hooks);   // أبواب وعوائق تتبع التقدّم
 
   root.innerHTML = `<canvas class="vcv"></canvas>
     <div class="vtop"><button class="vbtn" data-a="map" aria-label="خريطة القرى">🗺️</button>
       <div class="vtitle"><b>${def.icon} ${def.name}</b><small>${def.unitTitle}</small><div class="vdots"></div></div>
       <div class="vpill" data-gems>💎 <b>٠</b></div>
+      <button class="vbtn vadvBtn" data-a="adv" aria-label="مغامرة القرية" hidden></button>
       <button class="vbtn" data-a="view" aria-label="تبديل العرض"></button></div>
     <div class="vobj"></div>
     <div class="vzoom"><button class="vbtn" data-z="1" aria-label="تقريب">＋</button><button class="vbtn" data-z="-1" aria-label="تبعيد">－</button></div>
@@ -65,6 +67,7 @@ export async function runVillage(root, def, hooks) {
     if (b.dataset.z) view.zoom(view.zoomV * (b.dataset.z === '1' ? 1.15 : .87));
     if (b.dataset.a === 'view') { setWant3D(!is3D); setView(!is3D); }
     if (b.dataset.a === 'map' && !st.busy) exit();
+    if (b.dataset.a === 'adv' && !st.busy) { st.busy = st.paused = true; Promise.resolve(hooks.adventure()).finally(() => { st.busy = st.paused = false; refresh(); }); }   // المغامرة تغطي الشاشة: القرية لا تُرسم تحتها
     if (b.dataset.go && !st.busy) { const s = (def.stations || []).find(s => s.id === b.dataset.go); if (s) openStation(s); }
   });
   const onResize = () => view && view.resize(); addEventListener('resize', onResize);
@@ -86,8 +89,9 @@ export async function runVillage(root, def, hooks) {
     $('.vdots').innerHTML = info.lessons.map(l => `<i class="${l.done ? 'on' : l.id === info.goal ? 'cur' : ''}" title="${l.title}"></i>`).join('');
     $('.vobj').innerHTML = info.text || '';
     $('[data-gems] b').textContent = ar(info.gems);
+    const ab = $('[data-a=adv]'); ab.hidden = !info.adv; if (info.adv) ab.textContent = info.adv;
   }
-  const api = { st, grid, refresh, open: id => { const s = (def.stations || []).find(s => s.id === id); if (s && !st.busy) openStation(s); }, talk: (who, lines) => hooks.talk(who, lines, (x, y, h) => view.project(x, y, h)), get view() { return view; }, sfx };
+  const api = { st, grid, refresh, open: id => { const s = (def.stations || []).find(s => s.id === id); if (s && !st.busy) openStation(s); }, talk: async (who, lines) => { st.talking = who.id; try { await hooks.talk(who, lines, (x, y, h) => view.project(x, y, h)); } finally { st.talking = null; } }, get view() { return view; }, sfx };
 
   // ── حلقة اللعب
   let last = performance.now(), saveT = 0;
@@ -122,7 +126,7 @@ export async function runVillage(root, def, hooks) {
     const near = !st.busy && (def.stations || []).find(s => Math.hypot(s.x - h.x, s.y - h.y) < 1.7 && (s.id === st.goal || hooks.canOpen(s)));
     act(near || null);
     if (def.update) def.update(dt, st, api);
-    try { view.frame(st); } catch (e) { console.error('[قرية الخير] رسم القرية', e); }
+    if (!st.paused) try { view.frame(st); } catch (e) { console.error('[قرية الخير] رسم القرية', e); }
     ambience(def.ambience || 'village', dt); musicTick(def.music || 'village');
     if ((saveT += dt) > 3) { saveT = 0; hooks.savePos({ x: h.x, y: h.y }); }
     raf = requestAnimationFrame(loop);

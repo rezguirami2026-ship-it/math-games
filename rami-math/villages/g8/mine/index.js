@@ -45,7 +45,7 @@ export default {
   start: { x: 5.5, y: 5.5 },
   mood: {
     sky: '#0B0D14', fog: '#0B0D14', fogNear: 520, fogFar: 1350, exposure: 1.05,
-    hemi: ['#8FA8D8', '#3A2A1C', .55], sun: { color: '#B9C8F0', i: .55, dir: [-.4, 1, .55] },
+    hemi: ['#B4C4EA', '#5A4634', 1.05], sun: { color: '#C8D4F5', i: .6, dir: [-.4, 1, .55] },
     accent: '#FFC94A', motes: '#FFD9A0', dark: 'rgba(6,7,14,.86)', sky2d: '#07080E'
   },
   ambience: 'castle', music: 'castle',
@@ -55,6 +55,13 @@ export default {
     { id: 'roots8', x: 25.5, y: 2.6, stand: { x: 25.5, y: 4.2 }, label: 'عروق البلّور', icon: '💎', kind: 'crystals' },
     { id: 'indices8', x: 18.5, y: 18.9, stand: { x: 18.6, y: 20.3 }, label: 'كهف التضاعف', icon: '✨', kind: 'doubler' },
     { id: 'useIndices8', x: 4.5, y: 16.2, stand: { x: 4.5, y: 17.8 }, label: 'بوابة القوانين', icon: '🚪', kind: 'gate' }
+  ],
+  // أهل المنجم: كل واحد بجانب محطة درسه (يلتفت إلى البطل حين يقترب، ومنه تخرج فقاعة الكلام)
+  people: [
+    { id: 'saleh', x: 8.4, y: 2.9, look: { kind: 'man', skin: '#B5835A', robe: '#5E5040', accent: '#E3B04B', hat: 'cap', vest: '#C9772E', beard: '#2B2118', tool: 'hoe' } },
+    { id: 'maryam', x: 27.2, y: 3.8, look: { kind: 'woman', skin: '#C99A72', robe: '#3E5C76', accent: '#E3B04B', vest: '#C9772E' } },
+    { id: 'noura', x: 16.6, y: 19.6, look: { kind: 'woman', skin: '#B88660', robe: '#4B2E6B', accent: '#FFC94A', elder: true, glasses: true } },
+    { id: 'hamdan', x: 6.3, y: 17.6, look: { kind: 'man', skin: '#A8764E', robe: '#F2EEE4', accent: '#8C1C2B', beard: '#1C1410', tall: true, build: 'big' } }
   ],
   // المعالم: مصابيح (تضيء الظلام في العرضين)، دعامات خشبية، عربات، بلورات، براميل وأكوام خام
   props: [
@@ -75,5 +82,6 @@ export default {
     directed8: () => import('./directed8.js'), roots8: () => import('./roots8.js'),
     indices8: () => import('./indices8.js'), useIndices8: () => import('./useIndices8.js')
   },
+  adventure: () => import('./adventure.js'),   // مغامرة الوحدة «رحلة العربة» بعد إنهاء الدروس الأربعة
   kit3d, kit2d
 };
