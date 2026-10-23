@@ -2,7 +2,7 @@
 // المتصفحات تمنع التشغيل بالصوت قبل لمسة: نعرض صورة الغلاف وزر تشغيل كبيراً. الفيديو من الشبكة (لا يُخزَّن مع التطبيق).
 import { GRADE } from '../content/grade.js';
 // لكل صف فيديوه (الخامس intro-g5.mp4 والسابع intro-g7.mp4 بدروسهما ومهامهما)، والسادس على ملفه الأصلي
-const G = GRADE === 5 ? '-g5' : GRADE === 7 ? '-g7' : '', SRC = `assets/video/intro${G}.mp4?v=${G ? 1 : 8}`, POSTER = `assets/video/intro${G}-poster.jpg`, KEY = 'ramimath_introvid';
+const G = GRADE === 5 ? '-g5' : GRADE === 7 ? '-g7' : '', SRC = `assets/video/intro${G}.mp4?v=${G ? 2 : 8}`, POSTER = `assets/video/intro${G}-poster.jpg`, KEY = 'ramimath_introvid';
 export const introSeen = () => { try { return localStorage.getItem(KEY) === '1'; } catch (e) { return true; } };
 const markSeen = () => { try { localStorage.setItem(KEY, '1'); } catch (e) {} };
 

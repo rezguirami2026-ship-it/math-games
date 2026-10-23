@@ -129,7 +129,7 @@ async function solveRounds(getCh) {
     else if (it.type === 'memory') { const ps = [...new Set(it.cards.map(c => c.p))]; for (const p of ps) { const [a, b] = it.cards.map((c, k) => c.p === p ? k : -1).filter(k => k >= 0); await chClick('.chMc', a); await chClick('.chMc', b); await sleep(350); } }
     try {
       await until(async () => { if (await G(() => document.getElementById('dialog').classList.contains('on'))) await G(() => document.getElementById('dialog').click());   // حوار متأخر فوق التحدي (أبطأ في 3D): نتقدم فيه كما يفعل الطالب
-        return (await getCh()).i === i + 1 && await G(n => { const s = document.querySelector('#panel .chSheet'); return !s || !s.querySelector('.chBurst') && (+s.dataset.i === n || !!s.querySelector('#chFin, #acEnd')); }, i + 1); }, `حل الجولة ${i + 1} (${it.type}: ${it.q.replace(/<[^>]+>/g, '').slice(0, 50)})`, 5000);
+        return (await getCh()).i === i + 1 && await G(n => { const s = document.querySelector('#panel .chSheet'); return !s || !s.querySelector('.chBurst') && (+s.dataset.i === n || !!s.querySelector('#chFin, #acEnd')); }, i + 1); }, `حل الجولة ${i + 1} (${it.type}: ${it.q.replace(/<[^>]+>/g, '').slice(0, 50)})`, 10000);   // أبطأ في 3D على جهاز مشغول
     } catch (e) { throw new Error(e.message + ' — الحالة: ' + JSON.stringify(await G(() => ({ busy: window.__game.game.busy, dialog: document.getElementById('dialog').className + ':' + document.getElementById('dialog').textContent.slice(0, 80), screen: document.getElementById('screen').className, panel: document.getElementById('panel').className, msg: document.getElementById('benchMsg')?.textContent, pad: document.getElementById('npd')?.textContent, head: document.getElementById('panel').textContent.replace(/s+/g, ' ').slice(0, 160), di: (window.__game.state.daily && window.__game.state.daily.run) ? window.__game.state.daily.run.ch.i : null })))); }
   }
 }
@@ -139,8 +139,8 @@ async function solveChallenge(id) {
   if (await isDone(id)) return false;
   await until(async () => { const st = await G(() => ({ ch: !!document.querySelector('#panel .chSheet'), dialog: document.getElementById('dialog').classList.contains('on') }));
     if (st.dialog) await G(() => document.getElementById('dialog').click());
-    else if (!st.ch) await G(() => { const p = document.getElementById('panel'); if (p.classList.contains('on') && p.querySelector('[data-close]') && !p.querySelector('.chSheet')) p.querySelector('[data-close]').click();   // نافذة أخرى (احتفال الارتقاء) غطّت التحدي
-      else { const b = [...document.querySelectorAll('#actions button')].find(b => b.textContent.startsWith('🎯')); if (b && !p.classList.contains('on')) b.click(); } });   // كما يفعل الطالب: زر «🎯» يستأنف التحدي
+    else if (!st.ch) await G(id => { const p = document.getElementById('panel'); if (p.classList.contains('on') && p.querySelector('[data-close]') && !p.querySelector('.chSheet')) p.querySelector('[data-close]').click();   // نافذة أخرى (احتفال الارتقاء) غطّت التحدي
+      else { const t = '🎯 ' + window.__game.MODS[id].challenge.title, b = [...document.querySelectorAll('#actions button')].find(b => b.textContent === t); if (b && !p.classList.contains('on')) b.click(); } }, id);   // كما يفعل الطالب: زر «🎯» يستأنف التحدي (بنصه كاملاً: بعض المحطات تبدأ أسماؤها بـ 🎯 أيضاً)
     return st.ch; }, 'فتح التحدي', 30000).catch(async e => { throw new Error(e.message + ' — ' + await G(() => JSON.stringify({ busy: window.__game.game.busy, panel: document.getElementById('panel').className, panelHTML: document.getElementById('panel').innerHTML.slice(0, 120), dialog: document.getElementById('dialog').className, btns: [...document.querySelectorAll('#actions button')].map(b => b.textContent) }))); });
   await solveRounds(async () => (await data(id)).ch);
   await until(() => G(() => !!document.querySelector('#panel #chFin')), 'شاشة النجوم', 5000);
