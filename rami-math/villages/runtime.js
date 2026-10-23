@@ -73,6 +73,7 @@ export async function runVillage(root, def, hooks) {
   const onResize = () => view && view.resize(); addEventListener('resize', onResize);
 
   async function openStation(s) {
+    if (st.busy) return;   // وصول تلقائي ونقرة على الزر في اللحظة نفسها: تُفتح مرة واحدة
     st.busy = true; st.path = []; act(null);
     try { await hooks.onStation(s, api); } catch (e) { console.error('[قرية الخير] محطة', s.id, e); }
     st.busy = false; refresh();

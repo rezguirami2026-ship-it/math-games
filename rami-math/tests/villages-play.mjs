@@ -16,7 +16,8 @@ const E = (f, a) => p.evaluate(f, a);
 async function until(f, what, ms = 15000) { const t0 = Date.now(); while (Date.now() - t0 < ms) { if (await f()) return; await sleep(80); } throw new Error('انتهت المهلة: ' + what); }
 const shot = async n => { if (OUT) await p.screenshot({ path: `${OUT}/${n}.png` }); };
 // يتقدم في الحوار ما دام ظاهراً
-async function talkThrough() { for (let k = 0; k < 12; k++) { if (!(await E(() => !!document.querySelector('.vtalk')))) { await sleep(300); if (!(await E(() => !!document.querySelector('.vtalk')))) return; } await p.mouse.click(640, 700); await sleep(320); } }
+let talkShot = false;
+async function talkThrough() { for (let k = 0; k < 12; k++) { if (!talkShot && await E(() => !!document.querySelector('.vtalk'))) { talkShot = true; await sleep(300); await shot('t_talk'); } if (!(await E(() => !!document.querySelector('.vtalk')))) { await sleep(300); if (!(await E(() => !!document.querySelector('.vtalk')))) return; } await p.mouse.click(640, 700); await sleep(320); } }
 
 await E(u => window.__villages.enter(+u), U); await until(() => E(() => !!window.__villages.api), 'دخول القرية', 20000); await sleep(1500);
 await shot('v_village');

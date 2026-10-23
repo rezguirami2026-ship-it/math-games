@@ -29,10 +29,11 @@ function toast(msg) { const t = $('toast'); t.textContent = msg; t.classList.rem
 /* حوار: فقاعة فوق المتكلم تتبعه، والضغط في أي مكان يتقدم سطراً. where(): موضعه على الشاشة */
 function talk(who, lines, where) {
   return new Promise(res => {
+    document.querySelectorAll('.vtalk').forEach(x => x.remove());   // لا فقاعتان معاً أبداً
     const el = document.createElement('div'); el.className = 'vtalk'; document.body.append(el);
     let i = 0, raf = 0;
     const show = () => { const l = lines[i]; el.innerHTML = `<b>${l.who || who.name}</b><p>${l.t}</p><span class="vnext">◀</span>`; sfx('pick'); };
-    const place = () => { const p = where ? where() : null; if (p) { el.style.left = Math.max(12, Math.min(innerWidth - el.offsetWidth - 12, p.x - el.offsetWidth / 2)) + 'px'; el.style.top = Math.max(70, p.y - el.offsetHeight - 18) + 'px'; el.classList.add('anch'); } raf = requestAnimationFrame(place); };
+    const place = () => { const p = where ? where() : null; if (p) { el.style.left = Math.max(12, Math.min(innerWidth - el.offsetWidth - 12, p.x - el.offsetWidth / 2)) + 'px'; el.style.top = Math.max(70, p.y - el.offsetHeight - 18) + 'px'; el.style.bottom = 'auto'; el.classList.add('anch'); } raf = requestAnimationFrame(place); };
     const next = e => { e.preventDefault(); if (++i >= lines.length) { cancelAnimationFrame(raf); el.remove(); removeEventListener('pointerdown', next, true); res(); } else show(); };
     show(); place(); setTimeout(() => addEventListener('pointerdown', next, true), 250);
   });
