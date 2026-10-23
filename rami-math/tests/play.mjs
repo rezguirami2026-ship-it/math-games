@@ -932,7 +932,14 @@ const KIT7 = [
   ['areaUnits7', 'E', 'carpet', '🟥 سجادة المسرح'], ['rectArea7', 'E', 'stage', '🎭 منصة العرض'], ['triArea7', 'E', 'flags', '🚩 رايات المثلثات'],
   ['paraTrap7', 'E', 'tent', '⛺ خيمة المهرجان'], ['circle7', 'E', 'ring', '⭕ حلبة الدائرة'], ['compound7', 'E', 'play', '🛝 ساحة الألعاب'],
   ['simplePct7', 'E', 'balloons', '🎈 بالونات النسبة'], ['equivPct7', 'E', 'board', '🔁 لوحة التكافؤ'], ['pctQuantity7', 'E', 'tickets', '🎟️ تذاكر المهرجان'],
-  ['pctApply7', 'E', 'prizes', '🏆 جوائز السحب']
+  ['pctApply7', 'E', 'prizes', '🏆 جوائز السحب'],
+  ['congruent7', 'D', 'seedlings', '🌱 شتلات متطابقة'], ['lineSym7', 'D', 'mirror', '🪞 أحواض المرآة'], ['rotSym7', 'D', 'wheel', '🎡 دولاب الماء'],
+  ['symProps7', 'D', 'windows', '🪟 نوافذ البيت الزجاجي'], ['classifyQuad7', 'D', 'tree', '🌳 شجرة الرباعيات'], ['dataTypes7', 'D', 'ledger', '📒 سجل البستان'],
+  ['findData7', 'D', 'sources', '🔎 مصادر المعلومات'], ['surveys7', 'D', 'survey', '📝 استبانة الزوار'], ['collectData7', 'D', 'tally', '✏️ ورقة العدّ'],
+  ['freqTables7', 'D', 'freq', '📊 جدول التكرار'],
+  ['addSubFrac7b', 'C', 'spices', '🌶️ ميزان البهارات'], ['fracQty7b', 'C', 'coupons', '🎟️ كوبونات الجمعية'], ['wholeTimesFrac7', 'C', 'juice', '🧃 صناديق العصير'],
+  ['wholeDivFrac7', 'C', 'cakes', '🎂 تقطيع الكعك'], ['mulDivFrac7', 'C', 'recipes', '📜 وصفات الجمعية'], ['probScale7', 'C', 'luck', '🎯 مقياس الحظ'],
+  ['outcomes7', 'C', 'prizes', '🎡 عجلة الجوائز'], ['exclusive7', 'C', 'balls', '🎱 سحب الكرات'], ['estimateProb7', 'C', 'dice', '🎲 تجربة المكعب']
 ];
 for (const [id, reg, key, label] of KIT7) S[id] = kitLesson(id, reg, key, label);
 
@@ -1593,7 +1600,7 @@ try {
   if (GRADE !== 6) {   // صف آخر: كل بوابة تُفتح بعد آخر درس في وحدتها (المناطق نفسها)
     GATES.forEach((g, i) => { g.after = lessons.filter(l => l.u === i).slice(-1)[0].id; });
     W.g5 = await G(async () => ({ V: (await import('./missions/g5/village.js')).ST5V, M: (await import('./missions/g5/market.js')).ST5M, H: (await import('./missions/g5/harbor.js')).ST5H, F: (await import('./missions/g5/fort.js')).ST5F, E: (await import('./missions/g5/festival.js')).ST5E, D: (await import('./missions/g5/datayard.js')).ST5D, C: (await import('./missions/g5/coop.js')).ST5C, K: (await import('./missions/g5/caravan.js')).ST5K, W: (await import('./missions/g5/workshop.js')).ST5W }));
-    W.g7 = await G(async () => ({ V: (await import('./missions/g7/village.js')).ST7V, M: (await import('./missions/g7/market.js')).ST7M, H: (await import('./missions/g7/harbor.js')).ST7H, F: (await import('./missions/g7/fort.js')).ST7F, E: (await import('./missions/g7/festival.js')).ST7E }));   // لكل منطقة محطاتها (أسماء مثل scale تتكرر)
+    W.g7 = await G(async () => ({ V: (await import('./missions/g7/village.js')).ST7V, M: (await import('./missions/g7/market.js')).ST7M, H: (await import('./missions/g7/harbor.js')).ST7H, F: (await import('./missions/g7/fort.js')).ST7F, E: (await import('./missions/g7/festival.js')).ST7E, D: (await import('./missions/g7/datayard.js')).ST7D, C: (await import('./missions/g7/coop.js')).ST7C }));   // لكل منطقة محطاتها (أسماء مثل scale تتكرر)
     console.log(`📚 الصف ${GRADE === 5 ? 'الخامس' : 'السابع'}: ${lessons.length} درساً`);
   }
   if (!FROM) for (const g of GATES) expect(await pathLen(g.a, g.b) === 0, `${g.name} مفتوحة قبل وقتها`);

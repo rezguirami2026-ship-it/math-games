@@ -406,3 +406,6 @@ body:has(.wardrobe) .toast{display:none}
 .g7dial{min-width:110px;text-align:center;font:900 24px 'Cairo';color:#2A1B66;background:#FFF8E6;border:2px solid #E8D3A0;border-radius:10px;padding:2px 8px}
 .g7svg{display:flex;justify-content:center;margin:4px 0}.g7svg svg{max-height:200px;width:100%}
 .g7g100{display:grid;grid-template-columns:repeat(10,16px);gap:2px;justify-content:center;margin:6px auto;direction:ltr}.g7g100 i{width:16px;height:16px;border-radius:50%;background:#EEE6D6}.g7g100 i.on{background:radial-gradient(circle at 35% 30%,#FF9AA8,#E2475C)}
+.g7shape svg{width:110px;height:110px}.g7row .g7shape svg{width:64px;height:64px}
+.g7scale{margin:8px 18px}.g7scale .bar{position:relative;height:14px;border-radius:7px;background:linear-gradient(90deg,#E2475C,#FFC23D,#2E9E5B);direction:ltr}.g7scale .bar i{position:absolute;top:-4px;width:2px;height:22px;background:#2A1B66;transform:translateX(-1px)}.g7scale .bar b{position:absolute;top:-24px;transform:translateX(-50%);font-size:20px;color:#2A1B66}
+.g7scale .lab{display:flex;justify-content:space-between;direction:ltr;font:800 12px 'Cairo';color:#5A4A2A;margin-top:4px}

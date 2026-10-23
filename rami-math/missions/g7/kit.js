@@ -13,7 +13,7 @@ const sgn = v => (v > 0 ? '+' : '−') + dec(Math.abs(v));
 export function mission(o) {
   const n = o.n || 3;
   return Object.assign({
-    id: o.id, giver: o.giver, intro: o.intro,
+    id: o.id, giver: o.giver, intro: o.intro, cfg: o,   // cfg: للفحص الآلي tests/fuzz-m7.mjs
     begin(d) { d.rounds = o.make(); d.r = 0; d.k = null; d.sel = []; },
     goal: d => `${o.goal} ${step(d, n)}`,
     open(W, d, msg, kind) {

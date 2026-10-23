@@ -189,7 +189,7 @@ export const pctApply7 = mission({
     { who: 'mudhaffar', text: 'النسب المئوية تقارن كميات من أعداد كلية مختلفة، وتحسب الخصم والباقي.' }],
   goal: '🏆 وزّع جوائز مظفّر بإنصاف', end: 'الجوائز وُزّعت بالعدل! النسبة المئوية تكشف من الأفضل حقاً.',
   make() {
-    const pr = R(4, 20) * 10, p = shuf([10, 20, 25, 50])[0];
+    const pr = R(2, 10) * 20, p = shuf([10, 20, 25, 50])[0];
     let a, A, b, B; for (let t = 0; t < 20; t++) { [a, A] = shuf([[R(12, 19), 20], [R(30, 48), 50], [R(16, 24), 25]])[0]; [b, B] = shuf([[R(31, 39), 40], [R(42, 49), 50], [R(7, 9), 10]])[0]; if (a / A !== b / B) break; }
     const T = R(4, 9) * 100, q = shuf([10, 20, 30, 40])[0], win = a / A >= b / B ? 'سالم' : 'سارة';
     return [{ t: 'kp', pr, p, ans: pr - pr * p / 100, dot: false }, { t: 'pick', a, A, b, B, opts: ['سالم', 'سارة'], ans: win }, { t: 'kp', T, q, ans: T - T * q / 100, dot: false }];
