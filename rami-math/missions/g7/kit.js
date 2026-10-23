@@ -51,8 +51,8 @@ export function mission(o) {
           const m = fail(got); d.sel = []; this.open(W, d, m, 'bad');
         });
       }
-      /* dial: القيمة بأجزاء من ألف حتى لا تتراكم أخطاء الكسور العشرية */
-      sheetOpen(`${head}<div class="g7ctr">${r.st.map(s => `<button class="g5card sm" data-dv="${-s}">${sgn(-s)}</button>`).join('')}<b class="g7dial">${(v.show || dec)(d.k / 1000)}${v.unit ? ' ' + v.unit : ''}</b>${r.st.slice().reverse().map(s => `<button class="g5card sm" data-dv="${s}">${sgn(s)}</button>`).join('')}</div>
+      /* dial: القيمة بأجزاء من ألف حتى لا تتراكم أخطاء الكسور العشرية؛ والأزرار من اليسار (−) إلى اليمين (+) كخط الأعداد */
+      sheetOpen(`${head}<div class="g7ctr" style="direction:ltr">${r.st.map(s => `<button class="g5card sm" data-dv="${-s}">${sgn(-s)}</button>`).join('')}<b class="g7dial">${(v.show || dec)(d.k / 1000)}${v.unit ? ' ' + v.unit : ''}</b>${r.st.slice().reverse().map(s => `<button class="g5card sm" data-dv="${s}">${sgn(s)}</button>`).join('')}</div>
         <div class="row2"><button class="act ghost" id="benchOut">رجوع</button><button class="act go" id="benchGo">${v.label || '✓ ثبّت'}</button></div>`);
       panel().querySelectorAll('[data-dv]').forEach(b => b.onclick = e => { e.stopPropagation(); d.k = Math.max(H(r.lo), Math.min(H(r.hi), d.k + H(+b.dataset.dv))); sfx('click'); changed(); this.open(W, d, msg, kind); });
       out();

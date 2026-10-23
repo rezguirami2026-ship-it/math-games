@@ -52,6 +52,8 @@ import { G7U4 } from './missions/g7/fort.js';
 import { G7U5 } from './missions/g7/festival.js';
 import { G7U6 } from './missions/g7/datayard.js';
 import { G7U7 } from './missions/g7/coop.js';
+import { G7U8 } from './missions/g7/caravan.js';
+import { G7U9 } from './missions/g7/workshop.js';
 import { UNIT3 } from './missions/unit3.js';
 import { UNIT4 } from './missions/unit4.js';
 import { T2U1 } from './missions/t2u1.js';
@@ -111,7 +113,7 @@ const shopMod = lesson => ({
   onStart: W => openCounter(W, lesson), resume: W => openCounter(W, lesson),
   goal: () => '🏪 ادفع للعم ناصر المبلغ بالضبط', target: () => npcPos('naser')
 });
-const MODS = Object.assign({}, UNIT1, UNIT2, UNIT3, UNIT4, T2U1, T2U2, T2U3, T2U4, T2U5, G5U1, G5U2, G5U3, G5U4, G5U5, G5U6, G5U7, G5U8, G5U9, G7U1, G7U2, G7U3, G7U4, G7U5, G7U6, G7U7, {   // G5…/G7…: مهام الصفين الخامس والسابع (معرّفاتها مختلفة عن السادس)
+const MODS = Object.assign({}, UNIT1, UNIT2, UNIT3, UNIT4, T2U1, T2U2, T2U3, T2U4, T2U5, G5U1, G5U2, G5U3, G5U4, G5U5, G5U6, G5U7, G5U8, G5U9, G7U1, G7U2, G7U3, G7U4, G7U5, G7U6, G7U7, G7U8, G7U9, {   // G5…/G7…: مهام الصفين الخامس والسابع (معرّفاتها مختلفة عن السادس)
   multiplyStrategies: shopMod('multiplyStrategies'),
   decimalAdd: shopMod('decimalAdd'),
   division1: {
@@ -138,7 +140,7 @@ const MODS = Object.assign({}, UNIT1, UNIT2, UNIT3, UNIT4, T2U1, T2U2, T2U3, T2U
   }
 });
 const cur = () => quests.current();
-const ALLMODS = () => Object.values(UNIT1).concat(Object.values(UNIT2), Object.values(UNIT3), Object.values(UNIT4), Object.values(T2U1), Object.values(T2U2), Object.values(T2U3), Object.values(T2U4), Object.values(T2U5), Object.values(G5U1), Object.values(G5U2), Object.values(G5U3), Object.values(G5U4), Object.values(G5U5), Object.values(G5U6), Object.values(G5U7), Object.values(G5U8), Object.values(G5U9), Object.values(G7U1), Object.values(G7U2), Object.values(G7U3), Object.values(G7U4), Object.values(G7U5), Object.values(G7U6), Object.values(G7U7));
+const ALLMODS = () => Object.values(UNIT1).concat(Object.values(UNIT2), Object.values(UNIT3), Object.values(UNIT4), Object.values(T2U1), Object.values(T2U2), Object.values(T2U3), Object.values(T2U4), Object.values(T2U5), Object.values(G5U1), Object.values(G5U2), Object.values(G5U3), Object.values(G5U4), Object.values(G5U5), Object.values(G5U6), Object.values(G5U7), Object.values(G5U8), Object.values(G5U9), Object.values(G7U1), Object.values(G7U2), Object.values(G7U3), Object.values(G7U4), Object.values(G7U5), Object.values(G7U6), Object.values(G7U7), Object.values(G7U8), Object.values(G7U9));
 const allDone = () => LESSONS.every(l => quests.isDone(l.id));
 const unitDone = u => LESSONS.filter(l => l.u <= u).every(l => quests.isDone(l.id));   // الوحدة وكل ما قبلها
 const curMod = () => { const c = cur(); return c && c.ready && MODS[c.id] ? MODS[c.id] : null; };

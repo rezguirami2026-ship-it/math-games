@@ -79,3 +79,28 @@ export function tally(n) {
 /* خصائص الأشكال (أيقونات content/chGeo.js shape): [الاسم، خطوط التماثل، رتبة التماثل الدوراني] */
 export const SYM = { square: ['مربع', 4, 4], rect: ['مستطيل', 2, 2], rhombus: ['معين', 2, 2], para: ['متوازي أضلاع', 0, 2], trap: ['شبه منحرف متطابق الساقين', 1, 1],
   kite: ['طائرة ورقية', 1, 1], triangle: ['مثلث متطابق الضلعين', 1, 1], n3: ['مثلث متطابق الأضلاع', 3, 3], n5: ['خماسي منتظم', 5, 5], n6: ['سداسي منتظم', 6, 6], n8: ['ثماني منتظم', 8, 8] };
+
+/* ── المستوى الإحداثي بالأرباع الأربعة (ورشة المجسمات): نقاط بحروف، وخطوط رأسية س = ك أو أفقية ص = ك أو مائلة ص = م س + ج ── */
+export function plane({ n = 5, pts = [], lines = [] } = {}) {
+  const s = 22, O = n * s + 16, X = x => O + x * s, Y = y => O - y * s, W = 2 * O, lab = v => ar(v).replace(/[⁦⁩]/g, '');
+  let g = `<svg viewBox="0 0 ${W} ${W}" class="chGrid" style="max-width:270px">`;
+  for (let i = -n; i <= n; i++) g += `<line x1="${X(i)}" y1="${Y(-n)}" x2="${X(i)}" y2="${Y(n)}" stroke="#D5DBE8"/><line x1="${X(-n)}" y1="${Y(i)}" x2="${X(n)}" y2="${Y(i)}" stroke="#D5DBE8"/>`;
+  g += `<line x1="${X(-n) - 6}" y1="${Y(0)}" x2="${X(n) + 6}" y2="${Y(0)}" stroke="${INK}" stroke-width="2"/><line x1="${X(0)}" y1="${Y(-n) + 6}" x2="${X(0)}" y2="${Y(n) - 6}" stroke="${INK}" stroke-width="2"/>`;
+  for (let i = -n; i <= n; i++) if (i) g += T(X(i), Y(0) + 14, lab(i), 9) + T(X(0) - 10, Y(i) + 4, lab(i), 9);
+  g += T(X(n) + 4, Y(0) - 6, 'س', 11, ACC) + T(X(0) + 10, Y(n) + 2, 'ص', 11, ACC);
+  lines.forEach(L => {
+    let p1, p2;
+    if (L.x != null) { p1 = [L.x, -n]; p2 = [L.x, n]; } else if (L.y != null) { p1 = [-n, L.y]; p2 = [n, L.y]; }
+    else { const xs = []; for (let x = -n; x <= n; x += .05) { const y = L.m * x + L.c; if (y >= -n - 1e-9 && y <= n + 1e-9) xs.push(x); } if (!xs.length) return; p1 = [xs[0], L.m * xs[0] + L.c]; p2 = [xs[xs.length - 1], L.m * xs[xs.length - 1] + L.c]; }
+    g += `<line x1="${X(p1[0]).toFixed(1)}" y1="${Y(p1[1]).toFixed(1)}" x2="${X(p2[0]).toFixed(1)}" y2="${Y(p2[1]).toFixed(1)}" stroke="${L.col || ACC}" stroke-width="3"/>`;
+    if (L.l) g += T(X(p2[0]) + (L.x != null ? 14 : -8), Y(p2[1]) + (L.y != null ? -6 : 14), L.l, 12, L.col || ACC);
+  });
+  pts.forEach(p => { g += `<circle cx="${X(p.x)}" cy="${Y(p.y)}" r="4.5" fill="${p.c || ACC}"/>` + (p.l ? T(X(p.x) + 10, Y(p.y) - 7, p.l, 13, p.c || ACC) : ''); });
+  return g + '</svg>';
+}
+/* متوازي مستطيلات بأبعاده (مسقط مائل): ط × ع × ر */
+export function cuboid(l, w, h, unit = 'سم') {
+  const k = Math.min(150 / (l + w * .5), 110 / (h + w * .5)), L = l * k, Wd = w * k * .5, H = h * k, x0 = 50, y0 = 150;
+  const f = [[x0, y0], [x0 + L, y0], [x0 + L, y0 - H], [x0, y0 - H]], top = [[x0, y0 - H], [x0 + L, y0 - H], [x0 + L + Wd, y0 - H - Wd], [x0 + Wd, y0 - H - Wd]], side = [[x0 + L, y0], [x0 + L + Wd, y0 - Wd], [x0 + L + Wd, y0 - H - Wd], [x0 + L, y0 - H]];
+  return svgBox(poly(f, '#FFE3A3') + poly(top, '#FFF1D6') + poly(side, '#F2C76E') + T(x0 + L / 2, y0 + 20, `${ar(l)} ${unit}`, 13) + T(x0 - 6 - 16, y0 - H / 2 + 4, `${ar(h)} ${unit}`, 13) + T(x0 + L + Wd / 2 + 26, y0 - Wd / 2 + 8, `${ar(w)} ${unit}`, 13), 180);
+}

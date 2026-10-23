@@ -939,7 +939,14 @@ const KIT7 = [
   ['freqTables7', 'D', 'freq', '📊 جدول التكرار'],
   ['addSubFrac7b', 'C', 'spices', '🌶️ ميزان البهارات'], ['fracQty7b', 'C', 'coupons', '🎟️ كوبونات الجمعية'], ['wholeTimesFrac7', 'C', 'juice', '🧃 صناديق العصير'],
   ['wholeDivFrac7', 'C', 'cakes', '🎂 تقطيع الكعك'], ['mulDivFrac7', 'C', 'recipes', '📜 وصفات الجمعية'], ['probScale7', 'C', 'luck', '🎯 مقياس الحظ'],
-  ['outcomes7', 'C', 'prizes', '🎡 عجلة الجوائز'], ['exclusive7', 'C', 'balls', '🎱 سحب الكرات'], ['estimateProb7', 'C', 'dice', '🎲 تجربة المكعب']
+  ['outcomes7', 'C', 'prizes', '🎡 عجلة الجوائز'], ['exclusive7', 'C', 'balls', '🎱 سحب الكرات'], ['estimateProb7', 'C', 'dice', '🎲 تجربة المكعب'],
+  ['mulDec7b', 'K', 'weights', '⚖️ أوزان القافلة'], ['divDec7c', 'K', 'water', '💧 حصص الماء'], ['pctCalc7', 'K', 'tolls', '🧾 رسوم الطريق'],
+  ['pctChange7', 'K', 'prices', '🏷️ أسعار المحطات'], ['findPct7', 'K', 'trip', '🧭 نسبة الرحلة'], ['pieCharts7', 'K', 'ring', '🥧 حلقة الحمولة'],
+  ['statMeasures7', 'K', 'log', '📏 سجل المسافات'], ['mean7', 'K', 'speed', '🐪 سرعة الجمال'], ['compareDist7', 'K', 'two', '🐫 قافلتان'],
+  ['conclusions7', 'K', 'report', '📋 تقرير الرحلة'],
+  ['expand7b', 'W', 'floor', '🧱 ألواح الأرضية'], ['formulas7b', 'W', 'mix', '🪣 جداول الخلطة'], ['coords7', 'W', 'site', '🗺️ مخطط الموقع'],
+  ['axisLines7', 'W', 'plumb', '📏 خيوط الشاقول'], ['graphEq7', 'W', 'rail', '🛤️ سكة العربة'], ['ymxc7', 'W', 'ramp', '🏗️ منحدر الرافعة'],
+  ['volume7', 'W', 'molds', '🧊 قوالب الخرسانة'], ['surfaceArea7', 'W', 'wrap', '🎁 تغليف الصناديق'], ['otherSurfaces7', 'W', 'paint', '🖌️ طلاء المجسمات']
 ];
 for (const [id, reg, key, label] of KIT7) S[id] = kitLesson(id, reg, key, label);
 
@@ -1600,7 +1607,7 @@ try {
   if (GRADE !== 6) {   // صف آخر: كل بوابة تُفتح بعد آخر درس في وحدتها (المناطق نفسها)
     GATES.forEach((g, i) => { g.after = lessons.filter(l => l.u === i).slice(-1)[0].id; });
     W.g5 = await G(async () => ({ V: (await import('./missions/g5/village.js')).ST5V, M: (await import('./missions/g5/market.js')).ST5M, H: (await import('./missions/g5/harbor.js')).ST5H, F: (await import('./missions/g5/fort.js')).ST5F, E: (await import('./missions/g5/festival.js')).ST5E, D: (await import('./missions/g5/datayard.js')).ST5D, C: (await import('./missions/g5/coop.js')).ST5C, K: (await import('./missions/g5/caravan.js')).ST5K, W: (await import('./missions/g5/workshop.js')).ST5W }));
-    W.g7 = await G(async () => ({ V: (await import('./missions/g7/village.js')).ST7V, M: (await import('./missions/g7/market.js')).ST7M, H: (await import('./missions/g7/harbor.js')).ST7H, F: (await import('./missions/g7/fort.js')).ST7F, E: (await import('./missions/g7/festival.js')).ST7E, D: (await import('./missions/g7/datayard.js')).ST7D, C: (await import('./missions/g7/coop.js')).ST7C }));   // لكل منطقة محطاتها (أسماء مثل scale تتكرر)
+    W.g7 = await G(async () => ({ V: (await import('./missions/g7/village.js')).ST7V, M: (await import('./missions/g7/market.js')).ST7M, H: (await import('./missions/g7/harbor.js')).ST7H, F: (await import('./missions/g7/fort.js')).ST7F, E: (await import('./missions/g7/festival.js')).ST7E, D: (await import('./missions/g7/datayard.js')).ST7D, C: (await import('./missions/g7/coop.js')).ST7C, K: (await import('./missions/g7/caravan.js')).ST7K, W: (await import('./missions/g7/workshop.js')).ST7W }));   // لكل منطقة محطاتها (أسماء مثل scale تتكرر)
     console.log(`📚 الصف ${GRADE === 5 ? 'الخامس' : 'السابع'}: ${lessons.length} درساً`);
   }
   if (!FROM) for (const g of GATES) expect(await pathLen(g.a, g.b) === 0, `${g.name} مفتوحة قبل وقتها`);
@@ -1685,7 +1692,7 @@ try {
   if (FROM + played === lessons.length) {   // النهاية: الهدف يشير إلى منصة التخرّج
     const obj = await G(() => document.getElementById('objective').textContent);
     if (obj.includes('التخرّج')) console.log('🎓 ظهر هدف منصة التخرّج'); else { failures++; console.log(`❌ الهدف بعد آخر درس: «${obj}»`); }
-    const ach = await G(() => window.__game.state.achievements), want = GRADE === 5 ? ['unit1', 'unit2', 'unit3', 'unit4', 'unit5', 'term1', 't2u1', 't2u2', 't2u3', 't2u4', 'all69'] : ['unit1', 'unit2', 'unit3', 'unit4', 'term1', 't2u1', 't2u2', 't2u3', 't2u4', 't2u5', 'all69'], miss = want.filter(a => !ach[a]).filter(a => !FROM || want.indexOf(a) >= want.length - 4)   // في وضع الدفعات: إنجازات الوحدات التي لُعبت في هذه الدفعة فقط;
+    const ach = await G(() => window.__game.state.achievements), want = GRADE !== 6 ? ['unit1', 'unit2', 'unit3', 'unit4', 'unit5', 'term1', 't2u1', 't2u2', 't2u3', 't2u4', 'all69'] : ['unit1', 'unit2', 'unit3', 'unit4', 'term1', 't2u1', 't2u2', 't2u3', 't2u4', 't2u5', 'all69'], miss = want.filter(a => !ach[a]).filter(a => !FROM || want.indexOf(a) >= want.length - 4)   // في وضع الدفعات: إنجازات الوحدات التي لُعبت في هذه الدفعة فقط;
     if (miss.length) { failures++; console.log('❌ إنجازات الوحدات الناقصة: ' + miss.join('، ')); } else console.log('🏆 إنجازات الوحدات كلها مفتوحة');
   }
   if (!failures) {   // رمز التقدّم: نسخ من الحقيبة، مسح الجهاز، رفض رمز تالف، ثم استعادة كاملة
