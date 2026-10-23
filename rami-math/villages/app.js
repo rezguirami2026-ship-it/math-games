@@ -20,7 +20,8 @@ let root = null;
 export const unitLessons = u => LESSONS.filter(l => l.u === u);
 export const isDone = id => !!(game.state && game.state.quests.done[id]);
 export const unitDone = u => unitLessons(u).every(l => isDone(l.id));
-export const unitOpen = u => u === 0 || unitDone(u - 1) || /[?&]open=1/.test(location.search);
+const PREVIEW = /[?&]open=1/.test(location.search);   // معاينة المعلم: كل القرى ومغامراتها مفتوحة
+export const unitOpen = u => u === 0 || unitDone(u - 1) || PREVIEW;
 export const starsOf = id => ((game.state.quests.data || {})[id] || {}).stars || 0;
 const save = () => saveNow(game.state);
 
@@ -55,7 +56,7 @@ async function enterVillage(u) {
       const ls = unitLessons(u), cur = ls.find(l => !isDone(l.id));   // معرّف المحطة = معرّف درسها
       const goal = cur && (def.stations || []).some(s => s.id === cur.id) ? cur.id : null;
       return { lessons: ls.map(l => ({ id: l.id, title: l.title, done: isDone(l.id) })), goal,
-        adv: def.adventure && unitDone(u) ? ((vs.adv || {})[U.village] ? '🗺️ ' + '★'.repeat(vs.adv[U.village].stars) : '🗺️ المغامرة') : '',
+        adv: def.adventure && (unitDone(u) || PREVIEW) ? ((vs.adv || {})[U.village] ? '🗺️ ' + '★'.repeat(vs.adv[U.village].stars) : '🗺️ المغامرة') : '',
         gems: st.gems || 0, text: cur ? `🎯 ${cur.mission || cur.title}` : `🏅 أنهيتَ دروس ${U.name} كلها!` };
     },
     canOpen: s => isDone(s.id),   // المحطات المنجزة تُعاد للتدرّب
