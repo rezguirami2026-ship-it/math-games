@@ -17,10 +17,14 @@ export const GRADE = [param, +stored()].find(usable) || 6;
 /* هل اختار الطالب صفه على هذا الجهاز؟ (لشاشة الاختيار أول تشغيل) */
 export const gradeChosen = () => !!gradeInfo(stored());
 export function rememberGrade(n) { try { localStorage.setItem(KEY, String(n)); } catch (e) {} }
+/* هل رأى الطالب شاشة «اختر صفّك» بنفسه؟ من لعب قبل نشر الخامس وُضع في السادس تلقائياً، فتظهر له مرة واحدة */
+const ASKED = KEY + '_asked';
+export const gradeAsked = () => { try { return localStorage.getItem(ASKED) === '1'; } catch (e) { return true; } };
+export function markGradeAsked() { try { localStorage.setItem(ASKED, '1'); } catch (e) {} }
 /* تغيير الصف: يُحفظ ثم تُعاد الصفحة بلا ?grade حتى يُحمَّل محتوى الصف الجديد كله */
 export function chooseGrade(n) {
   const g = gradeInfo(n); if (!g || !g.ready) return false;
-  rememberGrade(n);
+  rememberGrade(n); markGradeAsked();
   if (n === GRADE) return false;
   const u = new URL(location.href); u.searchParams.delete('grade'); location.replace(u.href);
   return true;

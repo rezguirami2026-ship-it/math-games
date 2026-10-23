@@ -6,6 +6,7 @@ import { levelOf } from '../core/levels.js';
 import { ACH } from '../achievements/achievements.js';
 import { BADGES, badgeCard } from '../achievements/badges.js';
 import { ar } from '../core/util.js';
+import { GRADE, gradeInfo } from '../content/grade.js';
 import { sound, music, setMusic } from '../core/sound.js';
 import { ramadanPref, setRamadanPref, PREF_LABEL } from '../core/season.js';
 
@@ -129,6 +130,7 @@ export function homeHTML(saved) {
     </nav>
     <div class="h2more">
       ${saved ? '<button class="hpill" id="bNew">✨ مغامرة جديدة</button>' : ''}
+      <button class="hpill" id="bGrade">🏫 الصف ${gradeInfo(GRADE).name}</button>
       <button class="hpill" id="bVid">🎬 فيديو تعريفي</button>
       <button class="hpill" id="bCode">🔑 لديّ رمز تقدّم</button>
       <button class="hpill" data-p="sta">📊 تقدّمي</button>

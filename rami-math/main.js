@@ -67,7 +67,7 @@ import { drawWorldMap } from './ui/worldmap.js';
 import { marketColliders, drawMarketGround, marketDrawables } from './world/market.js';
 import * as quests from './missions/quests.js';
 import { LESSONS, UNITS, CHALLENGES } from './content/index.js';
-import { gradeChosen, rememberGrade, GRADE } from './content/grade.js';
+import { gradeChosen, rememberGrade, gradeAsked, markGradeAsked, GRADE } from './content/grade.js';
 import { openWardrobe, heroLookWorn, syncUnitGear } from './ui/wardrobe.js';
 import { SCENE } from './ui/home.js';
 import { unlock } from './achievements/achievements.js';
@@ -202,9 +202,10 @@ function boot() {
     start(s); setTimeout(() => hud.toast('👁️ وضع المعاينة: كل البوابات مفتوحة، ولا يتأثر تقدّم الطلاب'), 1500); return;
   }
   const saved = loadSave();
-  if (!gradeChosen()) {   // أول تشغيل: اختيار الصف (من يلعب من قبل يبقى في صفه بلا سؤال؛ والاختبار الآلي يتخطاه إلا مع ?gradepick=1)
-    if (saved || (navigator.webdriver && !/[?&]gradepick=1/.test(location.search))) rememberGrade(GRADE);
-    else { screens.grade(boot); return; }
+  // اختيار الصف: أول تشغيل، ومرة واحدة لكل جهاز لعب قبل نشر الصف الخامس (كان يوضع في السادس بلا سؤال). الاختبار الآلي يتخطاه إلا مع ?gradepick=1
+  if (!gradeAsked()) {
+    if (navigator.webdriver && !/[?&]gradepick=1/.test(location.search)) { if (!gradeChosen()) rememberGrade(GRADE); }
+    else { screens.grade(() => { rememberGrade(GRADE); markGradeAsked(); boot(); }); return; }
   }
   screens.title(saved, { onContinue: () => start(saved), onNew: hero => { wipeSave(); start(fresh(hero)); }, onRestore: s => { saveNow(s); start(s); } });
 }
