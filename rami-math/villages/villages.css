@@ -82,7 +82,7 @@
 .vm-x { width: 44px; height: 44px; border-radius: 14px; border: 0; background: #EEF0F5; color: #1E2433; font-size: 20px; cursor: pointer; }
 .vm-dots { display: inline-flex; gap: 5px; } .vm-dots i { width: 20px; height: 7px; border-radius: 4px; background: #E2E8F0; }
 .vm-dots i.on { background: #22C55E; } .vm-dots i.cur { background: #F59E0B; }
-.vm-scene { width: 100%; height: clamp(230px, 46vh, 430px); border-radius: 18px; display: block; box-shadow: inset 0 0 0 2px #EADFC4; }
+.vm-scene { width: 100%; height: clamp(190px, 38vh, 400px); border-radius: 18px; display: block; box-shadow: inset 0 0 0 2px #EADFC4; }
 .vm-q { font-size: 22px; font-weight: 800; line-height: 1.8; text-align: center; padding: 4px 8px; color: #1E2433; }
 .vm-q b { color: #C2410C; font-size: 1.08em; }
 .vm-msg { font-size: 17px; font-weight: 700; text-align: center; border-radius: 14px; padding: 0 10px; line-height: 1.75; }
@@ -112,7 +112,7 @@
 .vm-stars span { color: #E2E8F0; } .vm-stars span.on { color: #F59E0B; text-shadow: 0 2px 0 #B45309; animation: vmPop .5s both; }
 .vm-end h3 { margin: 4px 0; font-size: 26px; color: #B45309; } .vm-end p { margin: 2px 0; font-weight: 700; } .vm-mut { color: #64748B; font-size: 15px; }
 @media (max-width: 520px) { .vm-q { font-size: 18px; } .vm-keys { grid-template-columns: repeat(3, 56px); } }
-@media (max-height: 760px) { .vm-scene { height: clamp(180px, 36vh, 300px); } .vm-q { font-size: 18px; line-height: 1.6; } .vm-card { gap: 6px; padding: 10px 12px; } }
+@media (max-height: 800px) { .vm-scene { height: clamp(150px, 30vh, 260px); } .vm-q { font-size: 18px; line-height: 1.6; } .vm-card { gap: 6px; padding: 10px 12px; } }
 
 /* ── لوحة «تحدي الدرس» في الصفين ٨ و٩: مظهر اللعبة الفاتح نفسه، في وسط الشاشة ── */
 body.v89 .panel { align-items: center; }

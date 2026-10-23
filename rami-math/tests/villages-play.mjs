@@ -35,7 +35,7 @@ for (const id of ids) {
       // خطأ مقصود ثم الصحيح، من بيانات الجولة نفسها
       const res = await E(() => {
         const r = window.__vm.r, I = r.input, cand = [];
-        if (I.type === 'pick') I.opts.forEach((_, k) => cand.push(k)); else if (I.type === 'dial') for (let v = I.min; v <= I.max; v += I.step || 1) cand.push(Math.round(v * 1000) / 1000); else for (let v = -2000; v <= 2000; v++) cand.push(v / 10);
+        if (I.type === 'pick') I.opts.forEach((_, k) => cand.push(k)); else if (I.type === 'dial') for (let v = I.min; v <= I.max; v += I.step || 1) cand.push(Math.round(v * 1000) / 1000); else { for (let v = -2000; v <= 2000; v++) [1, 10, 100, 1000, 10000].forEach(d => cand.push(v / d)); for (let v = 1; v <= 100; v++) [100, 1000, 10000].forEach(m => cand.push(v * m, -v * m)); }
         const right = cand.find(v => r.ok(v)), wrong = cand.find(v => !r.ok(v));
         window.__vm.answer(wrong); const bad = document.querySelector('.vm-msg.bad')?.textContent || '';
         window.__vm.answer(right); return { bad, good: !!document.querySelector('.vm-msg.good'), right };

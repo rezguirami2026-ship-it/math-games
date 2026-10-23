@@ -9,6 +9,7 @@ await p.goto(`http://localhost:8000/?grade=${G}`); await p.waitForTimeout(1500);
 const out = await p.evaluate(async ({ G, V, n }) => {
   const def = (await import(`/villages/g${G}/${V}/index.js`)).default, report = [];
   const plain = h => String(h).replace(/<[^>]+>/g, ' ');
+  const cands = (() => { const c = new Set(); for (let v = -2000; v <= 2000; v++) [1, 10, 100, 1000, 10000].forEach(d => c.add(v / d)); for (let v = 1; v <= 100; v++) [100, 1000, 10000].forEach(m => { c.add(v * m); c.add(-v * m); }); return [...c]; })();   // أجوبة محتملة: صحيحة وعشرية حتى ٤ منازل وكبيرة
   for (const id of Object.keys(def.lessons)) {
     const m = await def.lessons[id](), probs = new Map(), add = k => probs.set(k, (probs.get(k) || 0) + 1);
     for (let k = 0; k < n; k++) {
@@ -19,10 +20,9 @@ const out = await p.evaluate(async ({ G, V, n }) => {
         const I = r.input; let found = false;
         if (I.type === 'pick') { found = I.opts.some((_, j) => r.ok(j)); if (new Set(I.opts).size !== I.opts.length) add(`جولة ${i + 1}: خيارات مكررة`); }
         else if (I.type === 'dial') for (let v = I.min ?? -20; v <= (I.max ?? 20) && !found; v += I.step || 1) found = r.ok(Math.round(v * 1000) / 1000);
-        else for (let v = -2000; v <= 2000 && !found; v++) found = r.ok(v / 10);   // لوحة الأرقام: نبحث بمنزلة عشرية واحدة
+        else found = cands.some(v => r.ok(v));
         if (!found) add(`جولة ${i + 1}: لا جواب صحيح ممكن`);
-        if (I.type === 'num' && !I.neg) { let negOnly = true; for (let v = 0; v <= 20000 && negOnly; v++) if (r.ok(v / 10)) negOnly = false; if (negOnly) add(`جولة ${i + 1}: الجواب سالب واللوحة بلا إشارة سالبة`); }
-        if (I.type === 'num' && !I.dot) { let ok = false; for (let v = -2000; v <= 2000 && !ok; v++) ok = r.ok(v); if (!ok) add(`جولة ${i + 1}: الجواب عشري واللوحة بلا فاصلة`); }
+        if (I.type === 'num' && found) { const a = cands.find(v => r.ok(v)); if (a < 0 && !I.neg) add(`جولة ${i + 1}: الجواب سالب واللوحة بلا إشارة سالبة`); if (a % 1 && !I.dot) add(`جولة ${i + 1}: الجواب عشري واللوحة بلا فاصلة`); }
       }
       let items; try { items = m.challenge(); } catch (e) { add('التحدي: خطأ ' + e.message); continue; }
       if (items.length < 8) add('التحدي: أقل من ٨ أسئلة');

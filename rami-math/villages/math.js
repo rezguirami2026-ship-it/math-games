@@ -23,3 +23,11 @@ export const R = (a, b, noZero = false) => { for (let k = 0; k < 40; k++) { cons
 export const R1 = (a, b) => { for (let k = 0; k < 40; k++) { const v = R(a * 10, b * 10) / 10; if (v % 1) return v; } return a + .5; };
 /* مقارنة الأعداد العشرية دون أخطاء التقريب */
 export const eq = (a, b) => Math.round(a * 1000) === Math.round(b * 1000);
+/* كتابة عبارة رياضية على القماش من اليمين إلى اليسار: أجزاء نصية، و{ b, e } قوة (الأس صغير أعلى يسار الأساس). (x, y) منتصف السطر */
+export function drawMath(g, segs, x, y, size = 24) {
+  const big = `900 ${size}px Cairo`, small = `900 ${Math.round(size * .6)}px Cairo`;
+  const wOf = s => { if (typeof s === 'string') { g.font = big; return g.measureText(s).width; } g.font = big; const wb = g.measureText(s.b).width; g.font = small; return wb + g.measureText(s.e).width + 2; };
+  const tot = segs.reduce((a, s) => a + wOf(s), 0); let cx = x + tot / 2; const ta = g.textAlign; g.textAlign = 'right';
+  segs.forEach(s => { if (typeof s === 'string') { g.font = big; g.fillText(s, cx, y); cx -= wOf(s); } else { g.font = big; const wb = g.measureText(s.b).width; g.fillText(s.b, cx, y); g.font = small; g.fillText(s.e, cx - wb - 1, y - size * .42); cx -= wOf(s); } });
+  g.textAlign = ta;
+}

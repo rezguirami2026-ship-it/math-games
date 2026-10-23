@@ -33,7 +33,7 @@ export function createView3D(canvas, grid, def, opts = {}) {
   for (let cy = 0; cy < Math.ceil(grid.H / CH); cy++) for (let cx = 0; cx < Math.ceil(grid.W / CH); cx++) {
     const c = document.createElement('canvas'); c.width = c.height = CH; const g = c.getContext('2d'); g.translate(-cx * CH, -cy * CH); k2.ground(g, cx * CH, cy * CH, CH, CH);
     const tex = new THREE.CanvasTexture(c); tex.colorSpace = THREE.SRGBColorSpace; tex.anisotropy = 4;
-    const m = new THREE.Mesh(new THREE.PlaneGeometry(CH, CH), new THREE.MeshStandardMaterial({ map: tex, roughness: .95 }));
+    const m = new THREE.Mesh(new THREE.PlaneGeometry(CH, CH), new THREE.MeshStandardMaterial({ map: tex, roughness: .95, alphaTest: .5 })   /* الشفاف من رسم الأرض (كالبحر) يُظهر ما تحته */);
     m.rotation.x = -Math.PI / 2; m.position.set(cx * CH + CH / 2, 0, cy * CH + CH / 2); m.receiveShadow = true; groundG.add(m);
   }
   // أرض ممتدة خلف حدود القرية حتى الأفق (لا فراغ عند الأطراف)
