@@ -186,7 +186,7 @@ export function createAdv3D(canvas) {
       case 'site': { const g = new THREE.Group(); const ring = new THREE.Mesh(new THREE.RingGeometry(20, 26, 4), new THREE.MeshBasicMaterial({ color: '#FFD54A', transparent: true, opacity: .7, side: THREE.DoubleSide })); ring.rotation.x = -Math.PI / 2; ring.rotation.z = Math.PI / 4; ring.position.y = 1.5; g.add(ring); G.add(g); G.userData.site = ring;
         const b = buildModel(e.model || 'raft'); b.visible = !!e.built; G.add(b); G.userData.built = b; if (e.model === 'altar') { const base = new THREE.Mesh(box(50, 30, 40, 0, 15, 0, 3), material('stone', '#C9BFA9')); G.add(base); G.userData.altarBase = base; } break; }
       case 'boat': { G.add(buildModel(e.wreck ? 'wreck' : 'dhow')); break; }
-      case 'npc': case 'guard': { const Pp = buildPerson(V.look(e)); Pp.root.position.set(x, 0, z); people.set(e, Pp); shadowed(Pp.root); scene.add(Pp.root);
+      case 'npc': case 'guard': { const Pp = buildPerson(V.look(e)); Pp.root.scale.multiplyScalar(V.peopleK || 1); Pp.root.position.set(x, 0, z); people.set(e, Pp); shadowed(Pp.root); scene.add(Pp.root);
         if (e.kind === 'guard') { const cone = new THREE.Mesh(new THREE.CircleGeometry((e.range || 4) * T, 24, -(e.fov || .5), (e.fov || .5) * 2), new THREE.MeshBasicMaterial({ color: '#FFD54A', transparent: true, opacity: .28, depthWrite: false, side: THREE.DoubleSide }));
           cone.rotation.x = -Math.PI / 2; cone.position.y = 1.5; G.add(cone); G.userData.cone = cone; const lan = new THREE.Mesh(sphere(4, 14, 40, 6), glow('#FFC86A')); G.add(lan); }
         const mk = sprite(markTexture('!', '#E2475C'), 18); mk.position.y = 96; mk.visible = false; G.add(mk); G.userData.mark = mk; return G; }
@@ -286,7 +286,7 @@ export function createAdv3D(canvas) {
     const t = V.t, dt = Math.min(.05, Math.max(0, t - last)); last = t; wind.value = t;
     weatherFrame(V, dt);
     // البطل
-    let hp = people.get('hero'); if (!hp || hp.lookKey !== V.heroKey) { if (hp) scene.remove(hp.root); hp = buildPerson(V.heroLook); hp.lookKey = V.heroKey; shadowed(hp.root); scene.add(hp.root); people.set('hero', hp); }
+    let hp = people.get('hero'); if (!hp || hp.lookKey !== V.heroKey) { if (hp) scene.remove(hp.root); hp = buildPerson(V.heroLook); hp.root.scale.multiplyScalar(V.peopleK || 1); hp.lookKey = V.heroKey; shadowed(hp.root); scene.add(hp.root); people.set('hero', hp); }
     animatePerson(hp, { x: V.P.x * T, y: V.P.y * T, moving: V.P.moving, phase: V.P.phase, dir: V.P.dir, faceCam: false }, dt, t);
     // العناصر
     const nearL = [];

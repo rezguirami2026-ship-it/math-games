@@ -9,6 +9,7 @@ const rows = g => g.map(r => r.join(''));
 /* ── ساحة المنجم عند الغروب (٢٢×١٤) ── */
 const Y = grid(22, 14, '.'); rect(Y, 0, 0, 21, 2, '#'); rect(Y, 0, 0, 0, 13, '#'); rect(Y, 21, 0, 21, 13, '#'); rect(Y, 0, 13, 21, 13, '#');
 rect(Y, 11, 3, 11, 11, '_'); rect(Y, 4, 9, 18, 9, '_');
+[[6, 4], [16, 4], [3, 8], [19, 10], [7, 12], [15, 12]].forEach(([x, y]) => { Y[y][x] = 'T'; });   // نخيل الساحة
 /* ── الطبقة العميقة (٣٠×١٦): ممر بصخرتين، جيب بصخرة، قاعة، ونهر جوفي، وقاعة شرقية ── */
 const D = grid(30, 16);
 rect(D, 1, 6, 6, 10, '.'); rect(D, 6, 8, 11, 8, '.'); D[8][9] = 'R'; D[8][10] = 'R';
@@ -40,6 +41,7 @@ let ride = null;   // حركة العربة الجارية
 export default {
   id: 'g8mine', title: 'المنقّب المفقود في الأعماق', icon: '⛏️', stars: 5,
   start: { area: 'yard', x: 11, y: 11 },
+  view: { tiles: [7, 10, 11, 7.5], people: 1.3 },   // كاميرا أقرب وشخصيات أكبر (الصف الثامن)
   items: { lamp: { icon: '🏮', name: 'مصباح المنقّب' }, pick: { icon: '⛏️', name: 'معول' }, rock: { icon: '🪨', name: 'حجر' } },
   cast: { miriam: { name: 'المنقّبة مريم', look: MIRIAM }, saleh: { name: 'المنقّب صالح', look: SALEH }, salem: { name: 'العمّ سالم', look: SALEM } },
   goals: [
@@ -68,8 +70,12 @@ export default {
         { id: 'salemY', kind: 'npc', who: 'salem', x: 13, y: 5, face: 'down', hidden: true },
         { id: 'lift', kind: 'exit', x: 11, y: 3, to: 'deep', tx: 2, ty: 8, when: A => A.has('lamp'), locked: 'المصعد ينزل إلى الظلام… كلّم مريم أولاً، فلن تنزل بلا مصباح.' },
         { id: 'tower', kind: 'pillar', x: 10, y: 3 }, { id: 'tower2', kind: 'pillar', x: 12, y: 3 },
-        { id: 'c1', kind: 'crates', x: 3, y: 5 }, { id: 'c2', kind: 'barrel', x: 18, y: 5 }, { id: 'c3', kind: 'barrel', x: 18, y: 6 },
-        { id: 'k1', kind: 'tent', x: 4, y: 11, color: '#C2410C' }, { id: 'k2', kind: 'tent', x: 18, y: 11, color: '#0E7490' },
+        { id: 'h1', kind: 'house', x: 1, y: 6, w: 3, h: 2, roof: '#F6D5C3' }, { id: 'h2', kind: 'house', x: 18, y: 7, w: 3, h: 2, roof: '#D6E6F5' }, { id: 'h3', kind: 'house', x: 1, y: 12, w: 3, h: 2, roof: '#FBE6B0' },
+        { id: 'c1', kind: 'crates', x: 5, y: 5 }, { id: 'c2', kind: 'barrel', x: 17, y: 4 }, { id: 'c3', kind: 'barrel', x: 18, y: 4 },
+        { id: 'k2', kind: 'tent', x: 18, y: 11, color: '#0E7490' }, { id: 'k3', kind: 'tent', x: 5, y: 11, color: '#C2410C' },
+        { id: 'bf1', kind: 'beacon', x: 8, y: 10, lit: true }, { id: 'bf2', kind: 'beacon', x: 14, y: 10, lit: true },
+        { id: 't1', kind: 'torchw', x: 9, y: 3 }, { id: 't2', kind: 'torchw', x: 13, y: 3 },
+        { id: 'flag', kind: 'banner', x: 11, y: 2, colors: ['#15803D', '#FFFFFF', '#DC2626'] },
         { id: 'safeY', kind: 'safe', x: 11, y: 12 }, { id: 's1', kind: 'star', x: 1, y: 3 }
       ],
       on: {
@@ -95,6 +101,9 @@ export default {
         { id: 'safeD', kind: 'safe', x: 3, y: 7 },
         { id: 'oil1', kind: 'oil', x: 5, y: 6 }, { id: 'oil2', kind: 'oil', x: 16, y: 7 }, { id: 'oil3', kind: 'oil', x: 24, y: 6 },
         { id: 'basket', kind: 'basket', x: 18, y: 10, n: 0 },
+        ...[[2, 6], [6, 10], [12, 7], [17, 6], [21, 5], [28, 5], [21, 12]].map(([x, y], i) => ({ id: 'tw' + i, kind: 'torchw', x, y })),
+        ...[[1, 10], [13, 12], [14, 12], [24, 12], [25, 12], [28, 11]].map(([x, y], i) => ({ id: 'cr' + i, kind: 'crystal', x, y, lit: true })),
+        { id: 'pl1', kind: 'pillar', x: 15, y: 11 }, { id: 'bx1', kind: 'crates', x: 22, y: 6 }, { id: 'bx2', kind: 'barrel', x: 4, y: 10 },
         { id: 'sg', kind: 'sign', x: 17, y: 11, text: 'بكرة المنصة: كلما ثقلت السلة ارتفعت المنصة على الجهة الأخرى. تحتاج ثلاثة حجارة.' },
         { id: 'toOld', kind: 'exit', x: 28, y: 8, to: 'old', tx: 2, ty: 4 },
         { id: 's2', kind: 'star', x: 12, y: 3 }, { id: 's3', kind: 'star', x: 27, y: 11 }
@@ -131,6 +140,9 @@ export default {
         { id: 'wall', kind: 'gate', x: 20, y: 14, when: A => A.flag('crash'), openMsg: '💥 تحطم الحاجز الخشبي!' },
         { id: 'salem', kind: 'npc', who: 'salem', x: 24, y: 14, face: 'left', mark: A => A.flag('crash') && !A.flag('saved') ? '!' : null },
         { id: 'beams', kind: 'crates', x: 25, y: 13 },
+        ...[[5, 2], [12, 2], [20, 2], [26, 6], [7, 16], [17, 16], [21, 12]].map(([x, y], i) => ({ id: 'ow' + i, kind: 'torchw', x, y })),
+        ...[[1, 10], [1, 11], [26, 16], [22, 16], [13, 6]].map(([x, y], i) => ({ id: 'oc' + i, kind: 'crystal', x, y, lit: true })),
+        { id: 'ob1', kind: 'crates', x: 13, y: 11 }, { id: 'ob2', kind: 'barrel', x: 7, y: 11 }, { id: 'ob3', kind: 'barrel', x: 23, y: 8 },
         { id: 'oil4', kind: 'oil', x: 6, y: 3 }, { id: 'oil5', kind: 'oil', x: 22, y: 5 },
         { id: 's4', kind: 'star', x: 26, y: 2 }, { id: 's5', kind: 'star', x: 2, y: 16 }
       ],

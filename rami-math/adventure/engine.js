@@ -39,7 +39,8 @@ export function runAdventure(def, onExit) {
   try { if (createAdv3D && want3D()) { r3 = createAdv3D($('.advCv3')); $('.advCv3').hidden = false; cv.hidden = true; } } catch (e) { console.warn('[adv3d]', e); r3 = null; }
   let W = 0, H = 0, dpr = 1, Z = 1, frameN = 0, camOff = 0;
   function resize() { dpr = Math.min(devicePixelRatio || 1, 2); W = innerWidth; H = innerHeight; cv.width = W * dpr; cv.height = H * dpr; cv.style.width = W + 'px'; cv.style.height = H + 'px';
-    Z = Math.max(.62, Math.min(1.5, Math.min(W / ((W < H ? 9 : 15) * T), H / ((W < H ? 13 : 10) * T)))); if (r3) r3.resize(W, H); }
+    const vt = (def.view && def.view.tiles) || [9, 13, 15, 10];   // def.view: مغامرات قرى الصف الثامن (كاميرا أقرب وشخصيات أكبر)
+    Z = Math.max(.62, Math.min(def.view ? 2.4 : 1.5, Math.min(W / ((W < H ? vt[0] : vt[2]) * T), H / ((W < H ? vt[1] : vt[3]) * T)))); if (r3) r3.resize(W, H); }
   resize(); addEventListener('resize', resize);
   game.busy = true; bus.emit('pauseWorld', true);
 
@@ -362,7 +363,7 @@ export function runAdventure(def, onExit) {
       r3.frame({ areaId: S.area, map, theme: area.theme, scenery: area.scenery, dark: (S.flags.weather && S.flags.weather.dark != null) ? S.flags.weather.dark : area.dark != null ? area.dark : THEMES[area.theme].night, tileAt, ents, P, t, A, caught,
         look: e => e.look || def.cast[e.who].look, itemIcon: A.itemIcon, pressed: A.pressed,
         heroLook: heroLookWorn(game.state), heroKey: JSON.stringify(heroLookWorn(game.state)), lantern: A.has('lantern'), goalAt: goalAt(),
-        fx: fx.map(p => ({ x: p.x, y: p.y, h: Math.max(0, -p.vy * .1), col: p.col })), cam, zoom: Z / (W < H ? .9 : 1.1), userZoom, cine, shake: shakeK,
+        fx: fx.map(p => ({ x: p.x, y: p.y, h: Math.max(0, -p.vy * .1), col: p.col })), cam, zoom: Z / (W < H ? .9 : 1.1), peopleK: (def.view && def.view.people) || 1, userZoom, cine, shake: shakeK,
         tilesV, beams, symbols: def.symbols || ['🌙', '☀️', '⭐', '🌴'], wind: area.wind ? { gust, dx: area.wind.dx, dy: area.wind.dy, on: !(area.wind.until && area.wind.until(A)) } : null, weather: Object.assign({ rain: area.rain, sand: area.sand, fog: area.fog && !(area.fogUntil && area.fogUntil(A)) }, S.flags.weather || {}), defItems: items,
         cutList: () => Object.keys(S.cut).filter(k => k.startsWith(S.area + ':')).map(k => k.slice(S.area.length + 1)),
         canCut: k => { const [x, y] = k.split(',').map(Number), ch = map[y][x]; return (ch === '"' && A.has(def.cutTool || 'sickle')) || (ch === 'R' && A.has(def.breakTool || 'hammer')); } });
@@ -449,7 +450,7 @@ export function runAdventure(def, onExit) {
   function arrow(e) { const b = Math.sin(t * 4) * 4; ctx.fillStyle = 'rgba(255,255,255,.85)'; ctx.font = '900 26px Cairo'; ctx.textAlign = 'center'; ctx.fillText(e.arrow, e.x * T + T / 2, e.y * T + T / 2 + b + 8); }
   function person(x, y, look, ang, idle, ph, markTxt) {
     const dir = typeof ang === 'string' ? ang : Math.abs(Math.cos(ang)) > Math.abs(Math.sin(ang)) ? (Math.cos(ang) > 0 ? 'right' : 'left') : (Math.sin(ang) > 0 ? 'down' : 'up');
-    const h = Object.assign({}, look, { x: x * T + T / 2, y: y * T + T * .85, dir: dir || 'down', moving: !idle && ph > 0, phase: ph || 0, s: (look.s || 1) * .95 });
+    const h = Object.assign({}, look, { x: x * T + T / 2, y: y * T + T * .85, dir: dir || 'down', moving: !idle && ph > 0, phase: ph || 0, s: (look.s || 1) * .95 * ((def.view && def.view.people) || 1) });
     ctx.fillStyle = 'rgba(40,25,10,.25)'; ctx.beginPath(); ctx.ellipse(h.x + 3, h.y, 13, 4, 0, 0, 7); ctx.fill(); drawHuman(ctx, h);
     if (markTxt) { const b = Math.sin(t * 5) * 3; ctx.fillStyle = markTxt === '!' ? '#E2475C' : '#FFC23D'; ctx.beginPath(); ctx.arc(h.x, h.y - 78 + b, 11, 0, 7); ctx.fill(); ctx.fillStyle = '#fff'; ctx.font = '900 15px Cairo'; ctx.textAlign = 'center'; ctx.fillText(markTxt, h.x, h.y - 72 + b); }
   }
