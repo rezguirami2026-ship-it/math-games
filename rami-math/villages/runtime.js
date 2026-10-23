@@ -16,7 +16,10 @@ export async function runVillage(root, def, hooks) {
     look: hooks.look(), goal: null, dest: null, path: [], busy: false
   };
   if (hooks.pos && !grid.blocked(hooks.pos.x, hooks.pos.y)) { st.hero.x = hooks.pos.x; st.hero.y = hooks.pos.y; }
-  (def.people || []).forEach(p => grid.extra.push({ x: p.x, y: p.y, r: .32 }));   // أهل القرية لا يُخترقون
+  (def.people || []).forEach(p => grid.extra.push({ x: p.x, y: p.y, r: 14 }));   // أهل القرية لا يُخترقون
+  (def.obstacles || []).forEach(o => grid.extra.push(o));
+  // أهل القرية يمشون ذهاباً وإياباً على مساراتهم (للحياة فقط، لا يعيقون البطل)
+  st.walkers = (def.walkers || []).map(w => ({ look: w.look, path: w.path, i: 1, dirn: 1, x: w.path[0][0], y: w.path[0][1], dir: 'down', moving: true, phase: 0, wait: Math.random() * 2 }));
   if (def.blockers) def.blockers(grid, hooks);   // أبواب وعوائق تتبع التقدّم
 
   root.innerHTML = `<canvas class="vcv"></canvas>
@@ -54,14 +57,14 @@ export async function runVillage(root, def, hooks) {
     c.addEventListener('pointerup', e => {
       if (st.busy || !alive) return;
       const p = view.pick(e.clientX, e.clientY); if (!p) return;
-      const s = (def.stations || []).find(s => Math.hypot(s.x - p.x, s.y - p.y) < .9);   // نقرة على محطة: نمشي إلى جانبها
+      const s = (def.stations || []).find(s => Math.hypot(s.x - p.x, s.y - p.y) < 70);   // نقرة على محطة: نمشي إلى جانبها
       const to = s ? stand(s) : p, path = grid.findPath(st.hero, to);
       if (!path.length) return;
       st.path = path; st.dest = { x: to.x, y: to.y, k: 1 }; st.arrive = s || null; sfx('pick');
     });
     c.addEventListener('wheel', e => { e.preventDefault(); view.zoom(view.zoomV * (e.deltaY < 0 ? 1.1 : .9)); }, { passive: false });
   }
-  const stand = s => { const a = s.stand || { x: s.x, y: s.y + 1 }; return grid.blocked(a.x, a.y) ? { x: s.x + .5, y: s.y + 1.2 } : a; };
+  const stand = s => s.stand || { x: s.x, y: s.y + 60 };
   root.addEventListener('click', e => {
     const b = e.target.closest('button'); if (!b) return;
     if (b.dataset.z) view.zoom(view.zoomV * (b.dataset.z === '1' ? 1.15 : .87));
@@ -101,31 +104,36 @@ export async function runVillage(root, def, hooks) {
     const dt = Math.min(.05, (now - last) / 1000); last = now;
     const h = st.hero; let mx = 0, my = 0;
     if (!st.busy) {
-      // الأسهم بالنسبة للشاشة (الكاميرا مائلة ٤٥°): اليمين على الشاشة = +س −ص في الشبكة
+      // الأسهم بالنسبة للشاشة (الكاميرا من الجنوب كالعالم المفتوح): اليمين +س والأسفل +ص
       const kx = (keys.r ? 1 : 0) - (keys.l ? 1 : 0), ky = (keys.d ? 1 : 0) - (keys.u ? 1 : 0);
-      if (kx || ky) { mx = kx + ky; my = ky - kx; const n = Math.hypot(mx, my); mx /= n; my /= n; }
+      if (kx || ky) { const n = Math.hypot(kx, ky); mx = kx / n; my = ky / n; }
       else if (st.path.length) {
         const p = st.path[0], dx = p.x - h.x, dy = p.y - h.y, d = Math.hypot(dx, dy);
-        if (d < .08) { st.path.shift(); if (!st.path.length && st.arrive) { const s = st.arrive; st.arrive = null; if (s.id === st.goal || hooks.canOpen(s)) openStation(s); } }
+        if (d < 4) { st.path.shift(); if (!st.path.length && st.arrive) { const s = st.arrive; st.arrive = null; if (s.id === st.goal || hooks.canOpen(s)) openStation(s); } }
         else { mx = dx / d; my = dy / d; }
       }
     }
-    const sp = 3.1 * dt; let moved = 0;
+    const left = st.path.reduce((a, p, i, r) => a + Math.hypot(p.x - (i ? r[i - 1].x : h.x), p.y - (i ? r[i - 1].y : h.y)), 0);
+    const sp = (left > 320 ? 230 : 165) * dt; let moved = 0; h.run = left > 320;   // يجري في الطرق الطويلة
     if (mx || my) {
       const nx = h.x + mx * sp, ny = h.y + my * sp;
       if (!grid.blocked(nx, ny)) { h.x = nx; h.y = ny; moved = sp; }
       else if (!grid.blocked(nx, h.y)) { h.x = nx; moved = sp * Math.abs(mx); }
       else if (!grid.blocked(h.x, ny)) { h.y = ny; moved = sp * Math.abs(my); }
       else st.path = [];
-      // اتجاه الرسم العادي من اتجاه الحركة على الشاشة
-      const sx = mx - my, sy = mx + my;
-      h.dir2d = Math.abs(sx) > Math.abs(sy) * .8 ? (sx > 0 ? 'right' : 'left') : (sy > 0 ? 'down' : 'up');
+      h.dir2d = Math.abs(mx) > Math.abs(my) * .8 ? (mx > 0 ? 'right' : 'left') : (my > 0 ? 'down' : 'up');
     }
-    h.moving = moved > .001; h.phase += moved * 48 * .17;
+    h.moving = moved > .05; h.phase += moved * .17;
     if (st.dest) { st.dest.k -= dt * 1.4; if (st.dest.k <= 0) st.dest = null; }
     // زر المحطة القريبة
-    const near = !st.busy && (def.stations || []).find(s => Math.hypot(s.x - h.x, s.y - h.y) < 1.7 && (s.id === st.goal || hooks.canOpen(s)));
+    const near = !st.busy && (def.stations || []).find(s => Math.hypot(s.x - h.x, s.y - h.y) < 95 && (s.id === st.goal || hooks.canOpen(s)));
     act(near || null);
+    for (const w of st.walkers) {
+      if (w.wait > 0) { w.wait -= dt; w.moving = false; continue; }
+      const [tx, ty] = w.path[w.i], dx = tx - w.x, dy = ty - w.y, d = Math.hypot(dx, dy), sp = 55 * dt;
+      if (d < sp) { w.x = tx; w.y = ty; if (w.i + w.dirn < 0 || w.i + w.dirn >= w.path.length) { w.dirn *= -1; w.wait = 1.5 + Math.random() * 2.5; } w.i += w.dirn; }
+      else { w.x += dx / d * sp; w.y += dy / d * sp; w.phase += sp * .17; w.moving = true; w.dir = Math.abs(dx) > Math.abs(dy) ? (dx > 0 ? 'right' : 'left') : (dy > 0 ? 'down' : 'up'); }
+    }
     if (def.update) def.update(dt, st, api);
     if (!st.paused) try { view.frame(st); } catch (e) { console.error('[قرية الخير] رسم القرية', e); }
     ambience(def.ambience || 'village', dt); musicTick(def.music || 'village');

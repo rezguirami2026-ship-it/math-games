@@ -1,13 +1,13 @@
-// العرض ثلاثي الأبعاد للقرية: يقرأ نموذج grid.js والحالة فقط (طبقة عرض)، ولا يغيّر اللعب.
-// كاميرا مائلة ٤٥° (نفس زاوية العرض العادي متساوي القياس فيتطابق العرضان)، شمس بظلال حول البطل، ضباب ولون جو لكل قرية،
-// وتوهج ناعم في الجودة العالية. أدوات القرية (kit3d في ملف القرية) تبني أرضها وجدرانها ومعالمها ومحطاتها.
+// العرض ثلاثي الأبعاد للقرية بوحدات العالم المفتوح (بكسل = وحدة) وزاوية كاميرته (٤٣°)، ويقرأ الحالة فقط.
+// الأرض هي رسم العرض العادي نفسه (kit2d.ground) في قطع ٥١٢ فيتطابق العرضان، والمباني والنخيل والشخصيات من مكتبة renderer3d
+// عبر kit3d في ملف القرية. شمس بظلال حول البطل، سماء وسحب وجبال بعيدة، وتوهج ناعم في الجودة العالية.
 import * as THREE from '../lib/three/three.module.min.js';
 import { buildPerson, animatePerson } from '../renderer3d/people.js';
 import { makeComposer } from '../renderer3d/post.js';
-import { Parts } from '../renderer3d/geom.js';
+import { wind } from '../renderer3d/nature.js';
+import { FLAGS } from '../world/art.js';
 
-export const S = 48;   // بلاطة واحدة = ٤٨ وحدة (البطل نحو ٦٤ وحدة: بلاطة وثلث)
-
+const FOV = 42, PITCH = 43 * Math.PI / 180, CH = 512;
 export function webglOK() {
   try { const c = document.createElement('canvas'); return !!(window.WebGLRenderingContext && (c.getContext('webgl2') || c.getContext('webgl'))); } catch (e) { return false; }
 }
@@ -16,107 +16,78 @@ export function createView3D(canvas, grid, def, opts = {}) {
   const high = opts.quality !== 'low', mob = /Android|iPhone|iPad|Mobile/i.test(navigator.userAgent);
   const r = new THREE.WebGLRenderer({ canvas, antialias: !high || !mob, powerPreference: 'high-performance' });
   r.setPixelRatio(Math.min(devicePixelRatio || 1, high ? (mob ? 1.5 : 1.75) : 1.25));
-  r.outputColorSpace = THREE.SRGBColorSpace; r.toneMapping = THREE.ACESFilmicToneMapping; r.toneMappingExposure = def.mood.exposure ?? 1;
+  r.outputColorSpace = THREE.SRGBColorSpace; r.toneMapping = THREE.ACESFilmicToneMapping; r.toneMappingExposure = def.mood.exposure ?? .95;
   r.shadowMap.enabled = true; r.shadowMap.type = high ? THREE.PCFSoftShadowMap : THREE.BasicShadowMap;
-
   const M = def.mood, sc = new THREE.Scene();
-  sc.background = new THREE.Color(M.sky); sc.fog = new THREE.Fog(M.fog || M.sky, M.fogNear ?? 500, M.fogFar ?? 1500);
-  const hemi = new THREE.HemisphereLight(M.hemi[0], M.hemi[1], M.hemi[2]); sc.add(hemi);
+  sc.background = new THREE.Color(M.sky); sc.fog = new THREE.Fog(M.fog || M.sky, M.fogNear ?? 1600, M.fogFar ?? 5200);
+  sc.add(new THREE.HemisphereLight(M.hemi[0], M.hemi[1], M.hemi[2]));
   const sun = new THREE.DirectionalLight(M.sun.color, M.sun.i); sun.castShadow = true;
-  sun.shadow.mapSize.set(high ? 2048 : 1024, high ? 2048 : 1024); sun.shadow.bias = -.0004; sun.shadow.normalBias = .6;
-  Object.assign(sun.shadow.camera, { left: -420, right: 420, top: 420, bottom: -420, near: 10, far: 1600 });
+  sun.shadow.mapSize.set(high ? 2048 : 1024, high ? 2048 : 1024); sun.shadow.bias = -.0005; sun.shadow.normalBias = .8;
+  Object.assign(sun.shadow.camera, { left: -900, right: 900, top: 900, bottom: -900, near: 10, far: 4000 });
   sc.add(sun, sun.target);
   const sunDir = new THREE.Vector3(...M.sun.dir).normalize();
 
-  // الأرض والجدران: كل مادة شبكة واحدة مدموجة (رسم قليل الاستدعاءات على الأجهزة الضعيفة)
-  const kit = def.kit3d(THREE, { S, Parts, high });
-  const P = new Parts();
-  if (kit.init) kit.init(grid);
-  grid.cells.forEach(c => { if (c.wall) kit.wall(P, c); else kit.floor(P, c); });
-  const terrain = P.build(); sc.add(terrain);
-  if (kit.decor) sc.add(kit.decor(grid));   // ما حول الخريطة وزينتها الثابتة
-
-  const things = new Map();   // المعالم والمحطات: id → Object3D (لها update(t, st) اختيارية)
-  const addThing = (id, o) => { if (!o) return; things.set(id, o); sc.add(o); };
-  (def.props || []).forEach((p, i) => addThing('p' + i, kit.prop(p)));
-  (def.stations || []).forEach(st => addThing('st:' + st.id, kit.station(st)));
-
-  // علامة الهدف: حلقة مضيئة ومعين يطفو فوق المحطة الحالية
-  const marker = new THREE.Group();
-  const ring = new THREE.Mesh(new THREE.TorusGeometry(26, 2.2, 8, 40), new THREE.MeshBasicMaterial({ color: M.accent || '#FFD54A', transparent: true, opacity: .85 }));
-  ring.rotation.x = Math.PI / 2; ring.position.y = 2;
-  const gem = new THREE.Mesh(new THREE.OctahedronGeometry(9, 0), new THREE.MeshStandardMaterial({ color: M.accent || '#FFD54A', emissive: M.accent || '#FFD54A', emissiveIntensity: 1.4, roughness: .3 }));
+  // الأرض: قطع من رسم العرض العادي نفسه
+  FLAGS.three = true;
+  const k2 = def.kit2d(def), groundG = new THREE.Group();
+  for (let cy = 0; cy < Math.ceil(grid.H / CH); cy++) for (let cx = 0; cx < Math.ceil(grid.W / CH); cx++) {
+    const c = document.createElement('canvas'); c.width = c.height = CH; const g = c.getContext('2d'); g.translate(-cx * CH, -cy * CH); k2.ground(g, cx * CH, cy * CH, CH, CH);
+    const tex = new THREE.CanvasTexture(c); tex.colorSpace = THREE.SRGBColorSpace; tex.anisotropy = 4;
+    const m = new THREE.Mesh(new THREE.PlaneGeometry(CH, CH), new THREE.MeshStandardMaterial({ map: tex, roughness: .95 }));
+    m.rotation.x = -Math.PI / 2; m.position.set(cx * CH + CH / 2, 0, cy * CH + CH / 2); m.receiveShadow = true; groundG.add(m);
+  }
+  // أرض ممتدة خلف حدود القرية حتى الأفق (لا فراغ عند الأطراف)
+  const far = new THREE.Mesh(new THREE.PlaneGeometry(grid.W + 9000, grid.H + 9000), new THREE.MeshStandardMaterial({ color: M.far || '#DDBF8C', roughness: 1 }));
+  far.rotation.x = -Math.PI / 2; far.position.set(grid.W / 2, -.6, grid.H / 2); far.receiveShadow = true; groundG.add(far);
+  sc.add(groundG);
+  // القرية: مبانٍ ونخيل ومعالم ومحطات من ملفها
+  const K = def.kit3d(THREE, { high, def, grid });
+  sc.add(K.group);
+  // علامة الهدف ودائرة الوجهة
+  const marker = new THREE.Group(), acc = M.accent || '#FFC94A';
+  const ring = new THREE.Mesh(new THREE.TorusGeometry(44, 3, 8, 48), new THREE.MeshBasicMaterial({ color: acc, transparent: true, opacity: .85 })); ring.rotation.x = Math.PI / 2; ring.position.y = 3;
+  const gem = new THREE.Mesh(new THREE.OctahedronGeometry(14, 0), new THREE.MeshStandardMaterial({ color: acc, emissive: acc, emissiveIntensity: 1.3, roughness: .3 }));
   marker.add(ring, gem); marker.visible = false; sc.add(marker);
-  // دائرة الوجهة حين ينقر الطالب
-  const dest = new THREE.Mesh(new THREE.RingGeometry(10, 14, 32), new THREE.MeshBasicMaterial({ color: '#FFFFFF', transparent: true, opacity: 0, depthWrite: false }));
-  dest.rotation.x = -Math.PI / 2; dest.position.y = 1.5; sc.add(dest);
-
-  // نسب أقرب للواقع لطلاب الثامن والتاسع: رأس أصغر وجسم أطول من شخصيات العالم المفتوح
-  const teen = P2 => { P2.head.scale.multiplyScalar(.78); P2.root.scale.multiplyScalar(1.25); P2.root.scale.y *= 1.16; P2.lastX = null; return P2; };
-  // أهل القرية: يقفون في أماكنهم ويلتفتون إلى البطل حين يقترب
-  const folk = (def.people || []).map(q => { const P2 = teen(buildPerson(q.look)); sc.add(P2.root); return { q, P: P2 }; });
-  // البطل (أكبر قليلاً من العالم المفتوح لتظهر التفاصيل)
+  const dest = new THREE.Mesh(new THREE.RingGeometry(14, 19, 32), new THREE.MeshBasicMaterial({ color: '#fff', transparent: true, opacity: 0, depthWrite: false }));
+  dest.rotation.x = -Math.PI / 2; dest.position.y = 2; sc.add(dest);
+  // الشخصيات: أكبر من العالم المفتوح وبنسب أقرب للواقع (رأس أصغر وجسم أطول) لطلاب الثامن
+  const teen = P => { P.head.scale.multiplyScalar(.82); P.root.scale.multiplyScalar(1.22); P.root.scale.y *= 1.12; P.lastX = null; return P; };
+  const folk = (def.people || []).map(q => { const P = teen(buildPerson(q.look)); sc.add(P.root); return { q, P }; });
+  const walkers = new Map();
   let hero = null, heroKey = '';
   const ensureHero = look => { const k = JSON.stringify(look); if (k === heroKey) return; if (hero) sc.remove(hero.root); hero = teen(buildPerson(look)); sc.add(hero.root); heroKey = k; };
 
-  // غبار متطاير في الضوء (الجودة العالية)
-  let motes = null;
-  if (high && M.motes) {
-    const n = 90, g = new THREE.BufferGeometry(), pos = new Float32Array(n * 3);
-    for (let i = 0; i < n; i++) { pos[i * 3] = (Math.random() - .5) * 520; pos[i * 3 + 1] = 8 + Math.random() * 110; pos[i * 3 + 2] = (Math.random() - .5) * 520; }   // غبار حول البطل فقط
-    g.setAttribute('position', new THREE.BufferAttribute(pos, 3));
-    motes = new THREE.Points(g, new THREE.PointsMaterial({ color: M.motes, size: 1.8, transparent: true, opacity: .4, depthWrite: false, fog: true }));
-    sc.add(motes);
-  }
-
-  const cam = new THREE.PerspectiveCamera(38, 1, 10, 4000);
-  const view = { yaw: Math.PI / 4, pitch: .6, dist: 560, zoom: 1 };   // زاوية منخفضة خلف البطل: الوجوه والأجسام ظاهرة   // ٤٥° مثل العرض العادي
-  const camAt = new THREE.Vector3(), camGoal = new THREE.Vector3();
-  let comp = null;
-  const resize = () => {
-    const w = canvas.clientWidth || innerWidth, h = canvas.clientHeight || innerHeight;
-    r.setSize(w, h, false); cam.aspect = w / h; view.dist = (w < h ? 900 : 560);   // الشاشة الطولية (الهاتف): كاميرا أبعد ترى ما حول البطل cam.updateProjectionMatrix();
-    if (comp) comp.setSize(w, h);
-  };
+  const cam = new THREE.PerspectiveCamera(FOV, 1, 20, 14000);
+  const at = new THREE.Vector3(), goalV = new THREE.Vector3();
+  let zoom = 1, vw = 1, vh = 1, comp = null, intro = 1;   // intro: الكاميرا تبدأ واسعة ترى القرية ثم تقترب
+  const resize = () => { vw = canvas.clientWidth || innerWidth; vh = canvas.clientHeight || innerHeight; r.setSize(vw, vh, false); cam.aspect = vw / vh; cam.updateProjectionMatrix(); if (comp) comp.setSize(vw, vh); };
   if (high) try { comp = makeComposer(r, sc, cam); } catch (e) { comp = null; }
   resize();
-
   let t = 0, last = performance.now(), first = true;
   function frame(st) {
-    const now = performance.now(), dt = Math.min(.05, (now - last) / 1000); last = now; t += dt;
-    ensureHero(st.look);
-    const px = st.hero.x * S, pz = st.hero.y * S;
-    animatePerson(hero, { x: px, y: pz, moving: st.hero.moving, phase: st.hero.phase, run: false, dir: st.hero.dir, anim: st.hero.anim, animT: st.hero.animT, faceCam: true }, dt, t);
-    folk.forEach(({ q, P: F }) => { const near = Math.hypot(q.x - st.hero.x, q.y - st.hero.y) < 3.2; animatePerson(F, { x: q.x * S, y: q.y * S, moving: false, phase: 0, dir: 'down', face: near ? { x: px, y: pz } : null, anim: st.talking === q.id ? 'talk' : null, animT: 0 }, dt, t); });
-    // الكاميرا: تتبع البطل بنعومة
-    camGoal.set(px, 42, pz);
-    if (first) { camAt.copy(camGoal); first = false; } else camAt.lerp(camGoal, 1 - Math.exp(-dt * 5));
-    const d = view.dist / view.zoom;
-    cam.position.set(camAt.x + Math.sin(view.yaw) * Math.cos(view.pitch) * d, camAt.y + Math.sin(view.pitch) * d, camAt.z + Math.cos(view.yaw) * Math.cos(view.pitch) * d);
-    cam.lookAt(camAt);
-    sun.position.set(px + sunDir.x * 700, sunDir.y * 700, pz + sunDir.z * 700); sun.target.position.set(px, 0, pz); sun.target.updateMatrixWorld();
-    // المحطة الحالية
-    const goal = st.goal && things.get('st:' + st.goal);
+    const now = performance.now(), dt = Math.min(.05, (now - last) / 1000); last = now; t += dt; wind.value = t;
+    ensureHero(st.look); FLAGS.three = true;
+    const h = st.hero;
+    animatePerson(hero, { x: h.x, y: h.y, moving: h.moving, phase: h.phase, run: h.run, dir: h.dir2d, anim: h.anim, animT: h.animT, faceCam: true }, dt, t);
+    folk.forEach(({ q, P }) => { const near = Math.hypot(q.x - h.x, q.y - h.y) < 160; animatePerson(P, { x: q.x, y: q.y, moving: false, phase: 0, dir: q.dir || 'down', face: near ? { x: h.x, y: h.y } : null, anim: st.talking === q.id ? 'talk' : null, animT: 0 }, dt, t); });
+    (st.walkers || []).forEach(w => { let P = walkers.get(w); if (!P) { P = teen(buildPerson(w.look)); sc.add(P.root); walkers.set(w, P); } animatePerson(P, { x: w.x, y: w.y, moving: w.moving, phase: w.phase, dir: w.dir }, dt, t); });
+    // الكاميرا: من الجنوب بزاوية العالم المفتوح، وعرض الرؤية يتسع عند الدخول ثم يقترب
+    intro = Math.max(0, intro - dt * .45);
+    const viewW = (vw < vh ? 700 : 1300) / zoom * (1 + intro * intro * 1.4), dist = (viewW / 2) / (Math.tan(FOV * Math.PI / 360) * cam.aspect);
+    goalV.set(h.x, 0, h.y + 40);
+    if (first) { at.copy(goalV); first = false; } else at.lerp(goalV, 1 - Math.exp(-dt * 4));
+    cam.position.set(at.x, Math.sin(PITCH) * dist, at.z + Math.cos(PITCH) * dist); cam.lookAt(at.x, 0, at.z);
+    sun.position.set(h.x + sunDir.x * 1500, sunDir.y * 1500, h.y + sunDir.z * 1500); sun.target.position.set(h.x, 0, h.y); sun.target.updateMatrixWorld();
+    const goal = st.goal && (def.stations || []).find(s => s.id === st.goal);
     marker.visible = !!goal;
-    if (goal) { marker.position.set(goal.position.x, 0, goal.position.z); gem.position.y = 96 + Math.sin(t * 2.4) * 6; gem.rotation.y = t * 1.6; ring.scale.setScalar(1 + .08 * Math.sin(t * 3)); ring.material.opacity = .55 + .3 * Math.sin(t * 3); }
-    if (st.dest) { dest.position.x = st.dest.x * S; dest.position.z = st.dest.y * S; dest.material.opacity = Math.max(0, st.dest.k); dest.scale.setScalar(1.6 - st.dest.k * .6); } else dest.material.opacity = 0;
-    things.forEach((o, id) => o.userData.update && o.userData.update(t, st, id));
-    if (motes) { motes.position.set(px, 0, pz); motes.rotation.y = t * .03; }
+    if (goal) { marker.position.set(goal.x, 0, goal.y); gem.position.y = (goal.mh || 150) + Math.sin(t * 2.4) * 8; gem.rotation.y = t * 1.6; ring.material.opacity = .55 + .3 * Math.sin(t * 3); }
+    if (st.dest) { dest.position.x = st.dest.x; dest.position.z = st.dest.y; dest.material.opacity = Math.max(0, st.dest.k); dest.scale.setScalar(1.6 - st.dest.k * .6); } else dest.material.opacity = 0;
+    if (K.update) K.update(t, st, cam);
     if (comp) comp.render(); else r.render(sc, cam);
   }
-  const ray = new THREE.Raycaster(), ndc = new THREE.Vector2(), ground = new THREE.Plane(new THREE.Vector3(0, 1, 0), 0), hit = new THREE.Vector3();
-  function pick(cx, cy) {   // نقرة الشاشة → موضع على الأرض بوحدة البلاطة
-    const b = canvas.getBoundingClientRect(); ndc.set(((cx - b.left) / b.width) * 2 - 1, -((cy - b.top) / b.height) * 2 + 1);
-    ray.setFromCamera(ndc, cam);
-    return ray.ray.intersectPlane(ground, hit) ? { x: hit.x / S, y: hit.z / S } : null;
-  }
-  function project(x, y, h = 0) {   // موضع بالبلاطة → نقطة على الشاشة (لفقاعات الكلام)
-    const v = new THREE.Vector3(x * S, h, y * S).project(cam), b = canvas.getBoundingClientRect();
-    return { x: b.left + (v.x + 1) / 2 * b.width, y: b.top + (1 - v.y) / 2 * b.height };
-  }
-  function dispose() {
-    sc.traverse(o => { if (o.geometry) o.geometry.dispose(); });
-    r.dispose(); r.forceContextLoss && r.forceContextLoss();
-  }
-  return { kind: '3d', frame, pick, project, resize, dispose, zoom: z => { view.zoom = Math.min(1.8, Math.max(.6, z)); }, get zoomV() { return view.zoom; } };
+  const ray = new THREE.Raycaster(), ndc = new THREE.Vector2(), plane = new THREE.Plane(new THREE.Vector3(0, 1, 0), 0), hit = new THREE.Vector3();
+  function pick(cx, cy) { const b = canvas.getBoundingClientRect(); ndc.set(((cx - b.left) / b.width) * 2 - 1, -((cy - b.top) / b.height) * 2 + 1); ray.setFromCamera(ndc, cam); return ray.ray.intersectPlane(plane, hit) ? { x: hit.x, y: hit.z } : null; }
+  function project(x, y, hh = 0) { const v = new THREE.Vector3(x, hh, y).project(cam), b = canvas.getBoundingClientRect(); return { x: b.left + (v.x + 1) / 2 * b.width, y: b.top + (1 - v.y) / 2 * b.height }; }
+  function dispose() { FLAGS.three = false; sc.traverse(o => { if (o.geometry) o.geometry.dispose(); if (o.material && o.material.map && o.material.map.isCanvasTexture) o.material.map.dispose(); }); r.dispose(); r.forceContextLoss && r.forceContextLoss(); }
+  return { kind: '3d', frame, pick, project, resize, dispose, zoom: z => { zoom = Math.min(1.9, Math.max(.55, z)); }, get zoomV() { return zoom; } };
 }
