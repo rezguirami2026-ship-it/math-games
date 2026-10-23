@@ -78,6 +78,8 @@ import * as quests from './missions/quests.js';
 import { LESSONS, UNITS, CHALLENGES } from './content/index.js';
 import { placeName, placeIcon } from './content/places.js';
 import { gradeDecor } from './world/gradeDecor.js';
+import { DISTRICTS, districtAt } from './content/districts.js';
+import { DGATES, gateCenter, districtColliders, districtGateItems, districtDecor, landmarkColliders } from './world/districts.js';
 import { gradeChosen, rememberGrade, gradeAsked, markGradeAsked, GRADE } from './content/grade.js';
 import { openWardrobe, heroLookWorn, syncUnitGear } from './ui/wardrobe.js';
 import { SCENE } from './ui/home.js';
@@ -155,12 +157,15 @@ const REGIONS = [
   { u: 7, walls: workshopColliders, draw: (open, t) => workshopDrawables(open, t, allDone()) },   // ورشة البنّاء
   { u: 4, walls: datayardColliders, draw: datayardDrawables }                   // بستان البيانات (أُضيف آخراً لتبقى فهارس البوابات السابقة كما هي)
 ];
+/* أحياء الصف السابع (content/g7/districts.js): بوابة كل حي تُفتح بإنهاء وحدة الكتاب السابقة (b في الدروس)، بعد بوابات المناطق الثماني */
+const bookDone = b => LESSONS.filter(l => l.b <= b).every(l => quests.isDone(l.id));
+DGATES.forEach(d => REGIONS.push({ d, open: () => bookDone(d.b - 1), walls: open => districtColliders(d, open), draw: (open, t) => districtGateItems(d, open, t) }));
 /* حالة البوابات والجدران تُحسب عند إنهاء درس فقط، لا في كل إطار ولا في كل خطوة من إيجاد الطريق */
 let gates = null, walls = null;
-const gateState = () => gates || (gates = REGIONS.map(r => unitDone(r.u)));
+const gateState = () => gates || (gates = REGIONS.map(r => r.open ? r.open() : unitDone(r.u)));
 const resetGates = () => { gates = null; walls = null; };
 /* لحظة فتح البوابة: تنتظر حتى تظهر البوابة على الشاشة، ثم ينفتح المصراعان في ١٫٤ ثانية مع شرر وصوت */
-const GATE_PTS = [{ x: 1506, y: 640 }, { x: 2306, y: 640 }, { x: 1240, y: 1712 }, { x: 1240, y: 2600 }, { x: 1240, y: 3500 }, { x: 1240, y: 4500 }, { x: 1240, y: 5500 }, { x: 1240, y: 3040 }];
+const GATE_PTS = [{ x: 1506, y: 640 }, { x: 2306, y: 640 }, { x: 1240, y: 1712 }, { x: 1240, y: 2600 }, { x: 1240, y: 3500 }, { x: 1240, y: 4500 }, { x: 1240, y: 5500 }, { x: 1240, y: 3040 }, ...DGATES.map(gateCenter)];
 const gateAnim = { pending: {}, at: {} };
 function gateOpenness(i, open, view) {
   if (!open) return 0;
@@ -181,9 +186,11 @@ const AREAS = [
   { id: 'caravan', icon: placeIcon('caravan'), name: placeName('caravan'), in: (x, y) => y < 5500 },
   { id: 'workshop', icon: placeIcon('workshop'), name: placeName('workshop'), in: () => true }
 ];
-const areaSub = a => { const us = UNITS.filter(u => u.place === a.name); return us.length ? `الفصل ${us[0].term === 1 ? 'الأول' : 'الثاني'} · ` + us.map(u => `الوحدة ${ar(u.n)}: ${u.title}`).join(' · ') : ''; };
+const DAREAS = DISTRICTS.map(d => ({ id: 'd' + d.b, icon: d.icon, name: d.name, d, sub: `الفصل ${(d.term || (d.b <= 8 ? 1 : 2)) === 1 ? 'الأول' : 'الثاني'} · الوحدة ${ar(d.n || d.b)}: ${d.unit}` }));
+const areaAt = (x, y) => { const d = districtAt(x, y); return d ? DAREAS.find(a => a.d === d) : AREAS.find(r => r.in(x, y)); };   // الحي قبل المنطقة
+const areaSub = a => { if (a.sub) return a.sub; const us = UNITS.filter(u => u.place === a.name); return us.length ? `الفصل ${us[0].term === 1 ? 'الأول' : 'الثاني'} · ` + us.map(u => `الوحدة ${ar(u.n)}: ${u.title}`).join(' · ') : ''; };
 function areaCheck(dt) {   // يتغير الاسم بعد ثبات اللاعب في المنطقة الجديدة نصف ثانية (لا وميض عند الحدود)
-  const pl = W.player, a = AREAS.find(r => r.in(pl.x, pl.y)), s = game.state;
+  const pl = W.player, a = areaAt(pl.x, pl.y), s = game.state;
   if (a === W.area) { W.areaT = 0; return; }
   if (a !== W.areaCand) { W.areaCand = a; W.areaT = 0; return; }
   if ((W.areaT += dt) < .5) return;
@@ -196,7 +203,7 @@ function areaCheck(dt) {   // يتغير الاسم بعد ثبات اللاعب
 function wallRects() {   // كل العوائق الثابتة؛ البركة عائق إلا أثناء القفز على حجارتها
   if (walls && walls.stones === W.stones) return walls.list;
   const g = gateState();
-  const list = W.statics.concat(...REGIONS.map((r, i) => r.walls(g[i])), W.stones ? [] : [{ x: POND.x, y: POND.y, w: POND.w, h: POND.h }]);
+  const list = W.statics.concat(...REGIONS.map((r, i) => r.walls(g[i])), landmarkColliders(), W.stones ? [] : [{ x: POND.x, y: POND.y, w: POND.w, h: POND.h }]);
   walls = { stones: W.stones, list };
   return list;
 }
@@ -222,7 +229,7 @@ function boot() {
 }
 async function start(state) {
   game.state = upgrade(state);
-  W = buildWorld(state); resetGates(); syncUnitGear(state);   // الحفظ القديم: قطع الوحدات المكتملة تُفتح
+  W = buildWorld(state); resetGates(); syncUnitGear(state); if (DISTRICTS.length) placeGivers(true);   // الحفظ القديم: قطع الوحدات المكتملة تُفتح
   hud.init({ drawMini, questLog, anchor: speakerAnchor, activity: id => openActivity(W, id, MODS[id]), finale: u => openFinale(W, u, MODS), expert: id => openExpert(W, id, MODS[id]), daily: () => openDaily(W, MODS) });
   initGems(state); setTimeout(() => { if ((!dailyDone() || (SEAS && !seasonDone(seasonNow()))) && Object.keys(state.quests.done || {}).length) hud.toast(SEAS && !seasonDone(seasonNow()) ? `${SEAS.greet} مهمة ${SEAS.name} بانتظارك في الخريطة 🗺️` : dueList().length ? '📅 مهمة اليوم فيها مراجعة 🔁 لمهارات أخطأت فيها — تجدها في الخريطة 🗺️' : '📅 مهمة اليوم بانتظارك في الخريطة 🗺️'); }, 6000);
   hud.show(true); hud.good(); hud.gems(); hud.level(); hud.objective(objective());
@@ -483,6 +490,21 @@ bus.on('sfx', k => {
 const routeLeft = pl => { if (!pl.target) return 0; let d = Math.hypot(pl.target.x - pl.x, pl.target.y - pl.y); (pl.route || []).forEach((p, i, r) => { if (i) d += Math.hypot(p.x - r[i - 1].x, p.y - r[i - 1].y); }); return d; };
 
 /* ── التحديث ── */
+/* الصف السابع: صاحب كل مهمة في الأحياء يقف بجانب محطة درسه التالي (أو آخر دروسه)، فينتقل إلى حيّ وحدته حين لا يراه البطل */
+const GIVERS = [...new Set(LESSONS.filter(l => l.b >= 3).map(l => l.giver))];
+function giverSpot(id) {
+  const mine = LESSONS.filter(l => l.giver === id), L = mine.find(l => !quests.isDone(l.id)) || mine[mine.length - 1], m = L && MODS[L.id];
+  if (!L || !(L.b >= 3) || !m || !m.cfg) return null;   // درسه التالي في القرية أو السوق: يبقى في بيته
+  const st = m.cfg.st; return [[58, 8], [-58, 8], [0, 58], [70, -34], [-70, -34], [96, 30], [-96, 30]].map(([dx, dy]) => ({ x: st.x + dx, y: st.y + dy })).find(p => !blocked(p.x, p.y) && !blocked(p.x, p.y - 12)) || null;
+}
+function placeGivers(force) {
+  GIVERS.forEach(id => {
+    const n = W.npcs.find(x => x.id === id); if (!n || n.talking) return;
+    const p = giverSpot(id) || n.home0; if (!p || (Math.abs(n.home.x - p.x) < 2 && Math.abs(n.home.y - p.y) < 2)) return;
+    if (!force && Math.hypot(n.x - W.player.x, n.y - W.player.y) < 760) return;   // لا ينتقل أمام عيني البطل
+    n.home0 = n.home0 || { x: n.home.x, y: n.home.y }; n.x = p.x; n.y = p.y; n.home = { x: p.x, y: p.y, r: 8 }; n.target = null;
+  });
+}
 function update(dt) {
   updateKids(dt);   // طلاب المدرسة يلعبون
   updateCrowd(dt);   // أهل القرية المتجولون (يزدادون مع التقدّم)
@@ -497,6 +519,7 @@ function update(dt) {
   if (pl.anim && (pl.anim.t += dt / pl.anim.dur) >= 1) pl.anim = null;
   if (!W.stones && (!game.busy || pl.target)) updatePlayer(pl, dt, game.busy ? {} : eng.keys, blocked);
   W.npcs.forEach(n => { if (npcVisible(n, s)) updateNpc(n, dt, pl, blocked); });
+  if (DISTRICTS.length && (W.giverT = (W.giverT || 0) + dt) > 1) { W.giverT = 0; placeGivers(false); }
   W.trucks.forEach(t => moveAlong(t, dt, 230));
   { const c = cur(), md = curMod(); if (md && md.update && quests.isStarted(c.id)) try { md.update(dt, W, quests.data(c.id)); } catch (e) { report('التحديث', c.id, e); } }
   updateFx(dt);
@@ -568,7 +591,7 @@ function worldItems(view, t, three) {
   const g = gateState();
   const gk = REGIONS.map((r, i) => gateOpenness(i, g[i], view)); W.gateK = gk;   // انفتاح البوابات (يقرؤه العرض ثلاثي الأبعاد أيضاً)
   const list = staticDrawables(s, t, W.player, { three }).concat(...REGIONS.map((r, i) => r.draw(gk[i], t))).filter(d => d.y > view.y - 60 && d.y < view.y + view.h + 200);
-  list.push(...gradeDecor(view, t));   // زينة الصف عند مداخل المناطق (الخامس والسابع)
+  list.push(...gradeDecor(view, t), ...districtDecor(view, t));   // زينة الصف عند مداخل المناطق (الخامس والسابع)
   mods.forEach(md => { const d = quests.data(md.id), done = quests.isDone(md.id); try { if (md.draw) list.push(...md.draw(d, t, !done, done)); } catch (e) { report('الرسم', md.id, e); } });
   TREE_SPOTS.forEach((sp, i) => { const pt = s.world.trees[i]; if (pt) { const k = clamp((now - pt) / 2200, .05, 1); list.push({ y: sp.y, x: sp.x, draw: cc => drawPalm(cc, sp.x, sp.y, .2 + .8 * easeOut(k), false, t) }); } });
   if (!three) W.trucks.forEach(tr => list.push({ y: tr.y + 4, x: tr.x, draw: cc => drawTruck(cc, tr, m.loads[tr.i], convoyActive()) }));
@@ -713,7 +736,7 @@ bus.on('pauseWorld', on => { eng.paused = on; });
 bus.on('openAdventures', () => openAdventures());
 bus.on('lessonDone', id => {
   const before = gateState().slice(); resetGates();   // قد تُفتح بوابة الآن: حركتها تبدأ حين تظهر على الشاشة
-  gateState().forEach((o, i) => { if (o && !before[i]) gateAnim.pending[i] = true; });
+  gateState().forEach((o, i) => { if (o && !before[i]) { gateAnim.pending[i] = true; const d = REGIONS[i].d; if (d) setTimeout(() => hud.toast(`${d.icon} فُتحت بوابة «${d.name}»: الوحدة ${ar(d.n || d.b)} (${d.unit})`), 3600); } });
   const l = LESSONS.find(x => x.id === id); setTimeout(() => hud.toast(`✅ أنجزت درس «${l.title}»`), 1200);
   if (LESSONS.filter(x => x.u === l.u).every(x => quests.isDone(x.id))) {   // اكتملت الوحدة: إنجازاتها ورسائل فتح البوابة
     const u = UNITS[l.u];

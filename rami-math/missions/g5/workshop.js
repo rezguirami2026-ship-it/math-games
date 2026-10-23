@@ -9,7 +9,7 @@ import { protractor, fan, shape, net, cubeNet, BAD_NETS, solidNet, pt } from '..
 import { step, at, advance, kp, out, shadowE } from './common.js';
 
 export const ST5W = { windows: { x: 1306, y: 5898 }, roof: { x: 466, y: 5899 }, star: { x: 888, y: 5899 }, mosaic: { x: 1726, y: 5898 }, molds: { x: 2146, y: 5898 },
-  plan: { x: 526, y: 5719 }, mixer: { x: 948, y: 5719 }, schedule: { x: 1786, y: 5718 }, tiling: { x: 2206, y: 5718 } };
+  plan: { x: 526, y: 5719 }, mixer: { x: 1210, y: 6335 }, schedule: { x: 950, y: 6335 }, tiling: { x: 710, y: 6235 } };   // الثلاث الأخيرة في حي «القياس (٢)» جنوب السور الداخلي
 const N = n => ar(n);
 const deg = v => `${ar(v)}°`;
 const sign = (c, x, y, t, bg, dx = 96) => bigSign(c, x + dx, y + 6, t, { fs: 12, h: 30, bg });

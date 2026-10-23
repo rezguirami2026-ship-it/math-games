@@ -1603,9 +1603,14 @@ try {
   W.coop = await G(async () => { const c = await import('./world/coop.js'); return { ST7: c.ST7 }; });
   W.caravan = await G(async () => { const c = await import('./world/caravan.js'); return { ST8: c.ST8 }; });
   W.workshop = await G(async () => { const w = await import('./world/workshop.js'); return { ST9: w.ST9 }; });
-  const lessons = await G(async () => (await import('./content/lessons.js')).LESSONS.map(l => ({ id: l.id, title: l.title, giver: l.giver, u: l.u })));
+  const lessons = await G(async () => (await import('./content/lessons.js')).LESSONS.map(l => ({ id: l.id, title: l.title, giver: l.giver, u: l.u, b: l.b })));
   if (GRADE !== 6) {   // صف آخر: كل بوابة تُفتح بعد آخر درس في وحدتها (المناطق نفسها)
     GATES.forEach((g, i) => { g.after = lessons.filter(l => l.u === i).slice(-1)[0].id; });
+    {   // أحياء الخامس والسابع: بوابة كل حي تُفتح بعد آخر درس في وحدة الكتاب السابقة
+      const DG = await G(async () => (await import('./world/districts.js')).DGATES.map(d => ({ b: d.b, name: d.name, gate: d.gate })));
+      DG.forEach(d => { const g = d.gate, ew = g.ew !== undefined, m = (g.g0 + g.g1) / 2;
+        GATES.push({ after: lessons.filter(l => l.b === d.b - 1).slice(-1)[0].id, name: `بوابة «${d.name}»`, a: ew ? { x: m, y: g.ew - 70 } : { x: g.ns - 70, y: m }, b: ew ? { x: m, y: g.ew + 70 } : { x: g.ns + 70, y: m } }); });
+    }
     W.g5 = await G(async () => ({ V: (await import('./missions/g5/village.js')).ST5V, M: (await import('./missions/g5/market.js')).ST5M, H: (await import('./missions/g5/harbor.js')).ST5H, F: (await import('./missions/g5/fort.js')).ST5F, E: (await import('./missions/g5/festival.js')).ST5E, D: (await import('./missions/g5/datayard.js')).ST5D, C: (await import('./missions/g5/coop.js')).ST5C, K: (await import('./missions/g5/caravan.js')).ST5K, W: (await import('./missions/g5/workshop.js')).ST5W }));
     W.g7 = await G(async () => ({ V: (await import('./missions/g7/village.js')).ST7V, M: (await import('./missions/g7/market.js')).ST7M, H: (await import('./missions/g7/harbor.js')).ST7H, F: (await import('./missions/g7/fort.js')).ST7F, E: (await import('./missions/g7/festival.js')).ST7E, D: (await import('./missions/g7/datayard.js')).ST7D, C: (await import('./missions/g7/coop.js')).ST7C, K: (await import('./missions/g7/caravan.js')).ST7K, W: (await import('./missions/g7/workshop.js')).ST7W }));   // لكل منطقة محطاتها (أسماء مثل scale تتكرر)
     console.log(`📚 الصف ${GRADE === 5 ? 'الخامس' : 'السابع'}: ${lessons.length} درساً`);

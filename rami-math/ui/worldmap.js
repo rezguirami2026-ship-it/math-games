@@ -2,6 +2,7 @@
 // الطرق الرئيسة، معالم القرية (البيوت، المزرعة، البركة، المدرسة، البئر)، المناطق المقفلة مظللة بقفل،
 // وعلامات: أنت، والمهمة الحالية، ومن ينتظرك. تُرسم بدقة مضاعفة.
 import { placeName, placeIcon } from '../content/places.js';
+import { DISTRICTS } from '../content/districts.js';
 const WW = 3200, WH = 6500, SEA = 2930;
 const ZONES = [   // [المعرّف، الاسم، الرمز، x0، y0، x1، y1، لون الأرض، فهرس البوابة في REGIONS (-1 = مفتوحة دائماً)]
   ['village', placeName('village'), placeIcon('village'), 0, 0, 1500, 1712, '#E9D6A2', -1],
@@ -59,6 +60,14 @@ export function drawWorldMap(cv, d) {
   c.strokeStyle = '#8A6238'; c.lineWidth = 2.2; c.setLineDash([5, 2]);
   [[1500, 0, 1500, 1712], [2300, 0, 2300, 1712], [0, 1712, SEA, 1712], [0, 2600, SEA, 2600], [0, 3500, SEA, 3500], [0, 4500, SEA, 4500], [0, 5500, SEA, 5500]].forEach(([a, b, e, f]) => { c.beginPath(); c.moveTo(X(a), Y(b)); c.lineTo(X(e), Y(f)); c.stroke(); });
   c.setLineDash([]);
+  // الأحياء (الخامس والسابع): سور كل حي خط متقطع بلونه، والحي المقفل مظلل، ورمزه عند مَعْلمه
+  DISTRICTS.filter(q => q.gate).forEach((q, j) => {
+    const G = q.gate; c.strokeStyle = q.cols[0]; c.lineWidth = 1.6; c.setLineDash([3, 2]); c.beginPath();
+    if (G.ew !== undefined) { c.moveTo(X(G.a), Y(G.ew)); c.lineTo(X(G.z), Y(G.ew)); } else { c.moveTo(X(G.ns), Y(G.a)); c.lineTo(X(G.ns), Y(G.z)); }
+    c.stroke(); c.setLineDash([]);
+    if (!d.open[8 + j]) { c.fillStyle = 'rgba(70,50,30,.3)'; q.rects.forEach(([x0, y0, x1, y1]) => c.fillRect(X(x0), Y(y0), (Math.min(x1, SEA) - x0) * k, (y1 - y0) * k)); }
+  });
+  DISTRICTS.forEach(q => { if (!q.at) return; c.font = '10px sans-serif'; c.direction = 'ltr'; c.textAlign = 'center'; c.textBaseline = 'middle'; c.fillText(q.icon, X(q.at[0]), Y(q.at[1])); });
   // المناطق المقفلة، وأشرطة الأسماء
   ZONES.forEach(([id, name, icon, x0, y0, x1, y1, col, gi]) => {
     const locked = gi >= 0 && !d.open[gi], narrow = (Math.min(x1, SEA) - x0) * k < 120, cx = X((x0 + Math.min(x1, SEA)) / 2), cy = Y(y0) + 20 + (id === 'harbor' ? 26 : 0);

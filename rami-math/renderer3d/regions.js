@@ -15,8 +15,10 @@ import { R3D as COOP } from '../world/coop.js';
 import { R3D as CARAVAN } from '../world/caravan.js';
 import { R3D as WORK } from '../world/workshop.js';
 import { R3D as DATA } from '../world/datayard.js';
+import { DGATES } from '../world/districts.js';
+import { districtGate } from './districts.js';
 
-const ORDER = [MARKET, HARBOR, FORT, FEST, COOP, CARAVAN, WORK, DATA];   // بترتيب REGIONS في main.js (لحالة البوابات)
+const ORDER = [MARKET, HARBOR, FORT, FEST, COOP, CARAVAN, WORK, DATA, ...DGATES.map(d => ({ dgate: d }))];   // بترتيب REGIONS في main.js (لحالة البوابات)، ثم بوابات أحياء الصف السابع
 const flat = (c, r = .6, m = 0) => material('flat', c, { rough: r, metal: m });
 const STONE = () => material('stone', '#CDB58C'), WALLTOP = () => material('plaster', '#D8C49C');
 
@@ -32,6 +34,8 @@ function gateEW([Y, x0, x1, label]) {
   P.add(WALLTOP(), box(x1 - x0 + 30, 16, 16, (x0 + x1) / 2, 84, Y + 6));   // العتبة فوق الممر
   g.add(P.build());
   const s = signMesh(label, 19); s.position.set((x0 + x1) / 2, 84, Y + 15); g.add(s);
+  s.geometry.computeBoundingBox(); const sw = s.geometry.boundingBox.max.x * 2, room = x1 - x0 - 6;   // الاسم الطويل لا يختفي خلف البرجين: اللافتة تصغر لتتسع بينهما
+  if (sw > room) s.scale.set(room / sw, room / sw, 1);
   const leafW = (x1 - x0) / 2, leaves = [-1, 1].map(sd => {   // المصراعان على مفصلين عند طرفي الممر
     const pv = new THREE.Group(); pv.position.set(sd < 0 ? x0 : x1, 0, Y + 6);
     const lp = new Parts(); lp.add(material('wood', '#7A4A2A'), box(leafW, 66, 5, -sd * leafW / 2, 33, 0), { scale: 1 / 50 });
@@ -150,6 +154,7 @@ function regionBox(R) {
   (R.kiosks || []).forEach(k => { pt(k.x, k.y); pt(k.x + (k.w || 0), k.y + (k.h || 0)); });
   [R.castle, R.clockTower, R.lighthouse].forEach(o => { if (o) { pt(o.x, o.y); pt(o.x + (o.w || 0), o.y + (o.h || 0)); } });
   if (R.gateEW) pt((R.gateEW[1] + R.gateEW[2]) / 2, R.gateEW[0]);
+  if (R.dgate) { const g = R.dgate.gate; if (g.ew !== undefined) { pt(g.a, g.ew); pt(g.z, g.ew); } else { pt(g.ns, g.a); pt(g.ns, g.z); } }
   if (R.gateNS !== undefined && zs.length) pt(R.gateNS, (Math.min(...zs) + Math.max(...zs)) / 2);
   return xs.length ? { x0: Math.min(...xs), z0: Math.min(...zs), x1: Math.max(...xs), z1: Math.max(...zs) } : null;
 }
@@ -169,7 +174,7 @@ export function buildRegions({ quality, onBuild }) {
     if (R.castle) { const c = castle(R.castle, R.castleH); rg.add(c); ticks.push(c.userData.tick); fades.push(fader(c, R.castle, R.castleH * SCALE_H + 80)); }
     if (R.clockTower) { const c = clockTower(R.clockTower); rg.add(c); ticks.push(c.userData.tick); }
     if (R.lighthouse) { const c = lighthouse(R.lighthouse); rg.add(c); ticks.push(c.userData.tick); }
-    const gt = R.gateEW ? gateEW(R.gateEW) : R.gateNS !== undefined ? gateNS(R.gateNS) : null;
+    const gt = R.dgate ? districtGate(R.dgate) : R.gateEW ? gateEW(R.gateEW) : R.gateNS !== undefined ? gateNS(R.gateNS) : null;
     if (gt) { rg.add(gt); gates[ri] = gt; }
     if (palmList.length) rg.add(palms(palmList)); if (shrubList.length) rg.add(shrubs(shrubList)); rg.add(P.build());
     group.add(rg); slot.g = rg; if (onBuild) onBuild(rg);
