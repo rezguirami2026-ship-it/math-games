@@ -3,13 +3,18 @@
 // ويرجع إلى السادس؛ و?grade=5 يفتح صفاً له خريطة دروس ولو لم يُنشر بعد (للمعلم أثناء البناء، بحفظ ذلك الصف).
 import * as G5 from './g5/lessons.js';
 import * as G7 from './g7/lessons.js';
+import * as G8 from './g8/lessons.js';
+import * as G9 from './g9/lessons.js';
 const KEY = 'ramimath_grade';
 export const GRADES = [
   { n: 5, name: 'الخامس', ready: G5.PUBLISHED === true, has: G5.LESSONS.length > 0 },
   { n: 6, name: 'السادس', ready: true, has: true },
-  { n: 7, name: 'السابع', ready: G7.PUBLISHED === true, has: G7.LESSONS.length > 0 }
+  { n: 7, name: 'السابع', ready: G7.PUBLISHED === true, has: G7.LESSONS.length > 0 },
+  { n: 8, name: 'الثامن', ready: G8.PUBLISHED === true, has: G8.LESSONS.length > 0, villages: true },   // الثامن والتاسع: قرى مستقلة (villages/)
+  { n: 9, name: 'التاسع', ready: G9.PUBLISHED === true, has: G9.LESSONS.length > 0, villages: true }
 ];
 export const gradeInfo = n => GRADES.find(g => g.n === +n) || null;
+export const VILLAGES = n => !!(gradeInfo(n) || {}).villages;   // صف بقرى (الثامن والتاسع) بدل العالم المفتوح
 const stored = () => { try { return localStorage.getItem(KEY); } catch (e) { return null; } };
 const param = (() => { try { return +new URLSearchParams(location.search).get('grade') || 0; } catch (e) { return 0; } })();
 const usable = n => { const g = gradeInfo(n); return !!g && (g.ready || (n === param && g.has)); };
