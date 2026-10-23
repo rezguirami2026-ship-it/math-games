@@ -150,7 +150,7 @@ export const hud = {
         ${gfx.d3() ? `<button class="act ghost" id="qBtn">✨ الجودة: ${{ auto: 'تلقائية', high: 'عالية', low: 'منخفضة' }[gfx.q()]}</button>` : ''}`;
     }
     if (kind === 'grade') body = `<h3>🏫 صفّي الدراسي</h3><p class="muted">لكل صف دروسه ونجومه ومغامرته المحفوظة على هذا الجهاز، وتعود إلى أي صف متى شئت.</p>
-        ${GRADES.map(g => `<button class="act ${g.n === GRADE ? 'go' : 'ghost'}" data-grade="${g.n}"${g.ready ? '' : ' disabled'}>الصف ${g.name}${g.n === GRADE ? ' ✓ (صفّك الآن)' : g.ready ? '' : ' — قريباً'}</button>`).join('')}`;
+        ${GRADES.map(g => `<button class="act ${g.n === GRADE ? 'go' : 'ghost'}" data-grade="${g.n}"${g.ready || g.n === GRADE ? '' : ' disabled'}>الصف ${g.name}${g.n === GRADE ? (g.ready ? ' ✓ (صفّك الآن)' : ' ✓ (معاينة المعلم)') : g.ready ? '' : ' — قريباً'}</button>`).join('')}`;
     if (kind === 'code') {
       const p = progress();
       body = `<h3>🔑 رمز تقدّمك</h3>
