@@ -12,7 +12,9 @@ const T = (c, v = '') => v ? (Math.abs(c) === 1 ? v : N(Math.abs(c)) + v) : N(Ma
 export const E = terms => { const t = terms.filter(([c]) => c !== 0); if (!t.length) return N(0); return t.map(([c, v], i) => (i ? (c < 0 ? ' − ' : ' + ') : (c < 0 ? '−' : '')) + T(c, v)).join(''); };
 const uniq = (right, list) => [...new Set(list.filter(s => s !== right))];
 
-export const CH = {
+import { distinct } from './distinct.js';
+
+export const CH = distinct({
   /* ٢-١ كتابة العبارات الجبرية: Ae1 (الحروف ومعاني الحد والعبارة والمعادلة)، Ae3 (إنشاء عبارات) */
   algExpr7: { who: 'shaikha', title: 'تحدي الجدة شيخة', lines: [{ who: 'shaikha', text: 'كل كيس صار عبارة جبرية واضحة! الحروف تمثّل الأعداد التي لا نعرفها بعد.' }],
     make() {
@@ -129,4 +131,4 @@ export const CH = {
         it.push(order('رتّب خطوات حل المعادلة من الأولى إلى الأخيرة:', [{ k: 0, label: `${E([[a, 'س'], [b]])} = ${N(c)}` }, { k: 1, label: `${T(a, 'س')} = ${N(c - b)}` }, { k: 2, label: `س = ${N(x)}` }], (p, q) => p.k - q.k, 'ابدأ بالمعادلة كما هي، ثم أزل العدد الحر، ثم اقسم.', 'Pt2')); }
       return it;
     } }
-};
+});

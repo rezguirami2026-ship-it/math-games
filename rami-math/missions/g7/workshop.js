@@ -130,7 +130,7 @@ export const ymxc7 = mission({
   },
   view(r) {
     if (r.opts) return { text: `منحدر جديد ميله <b>${N(r.m)}</b> ويقطع محور الصادات عند <b>${N(r.c)}</b>. ما معادلته؟`, visual: big('ص = م س + جـ'), hint: 'ضع الميل مكان م، ونقطة القطع مكان جـ.' };
-    if (r.cut) return { text: `المنحدر <b>${lineEq(r.m, r.c)}</b>. عند أي قيمة لـ ص يقطع محور الصادات؟`, visual: svg(plane({ n: 9, lines: [{ m: r.m, c: r.c }] })), hint: 'محور الصادات حيث س = ٠: يبقى الثابت جـ وحده.', bad: v => v === r.m ? 'هذا الميل م: المطلوب جـ.' : null };
+    if (r.cut) return { text: `المنحدر <b>${lineEq(r.m, r.c)}</b>. عند أي قيمة لـ ص يقطع محور الصادات؟`, visual: svg(plane({ n: Math.max(5, Math.abs(r.c) + 1), lines: [{ m: r.m, c: r.c }] })), hint: 'محور الصادات حيث س = ٠: يبقى الثابت جـ وحده.', bad: v => v === r.m ? 'هذا الميل م: المطلوب جـ.' : null };
     return { text: `المنحدر <b>${lineEq(r.m, r.c)}</b>. ما ميله م؟`, visual: big('🏗️ ⟋'), hint: 'الميل م هو معامل س.', bad: v => v === r.c ? 'هذا الثابت جـ (نقطة القطع): الميل معامل س.' : v === -r.m ? 'انتبه للإشارة.' : null };
   }
 });

@@ -12,7 +12,7 @@ export const UNITS = [
   { term: 2, n: 3, book: [13, 14], title: 'النسب المئوية والإحصاء', place: 'درب الإحصاء', ach: ['t2u3'], opens: [[3500, '🛠️ فُتحت بوابة ورشة المجسمات: آخر وحدة!']] },
   { term: 2, n: 4, book: [15, 16, 17], title: 'الجبر والرسوم البيانية والحجم', place: 'ورشة المجسمات', ach: ['t2u4'], opens: [] }
 ];
-export const PUBLISHED = false;   // true حين تكتمل دروس الصف: عندها يظهر في شاشة اختيار الصف للطلاب
+export const PUBLISHED = true;    // true حين تكتمل دروس الصف: عندها يظهر في شاشة اختيار الصف للطلاب
 const L = (u, id, title, mission, mech, giver, ready) => ({ u, id, title, mission, mech, giver, ready: !!ready });
 export const LESSONS = [
   // ── الفصل الأول — قرية الخير: الوحدة ١ (الأعداد الصحيحة والقوى والجذور)

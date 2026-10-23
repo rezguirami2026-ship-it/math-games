@@ -18,7 +18,9 @@ const primeFac = n => { const o = []; for (let k = 2; n > 1 && k <= 97; k++) whi
 const nz = (a, b, ok = v => v !== 0) => { for (let t = 0; t < 40; t++) { const v = R(a, b); if (ok(v)) return v; } return b; };
 const NEG = { neg: true, dot: false };
 
-export const CH = {
+import { distinct } from './distinct.js';
+
+export const CH = distinct({
   /* ١-١ جمع وطرح الأعداد الصحيحة: Ni1، Pt7 (مسائل كلامية بأكثر من خطوة) */
   addSubInt7: { who: 'hamad', title: 'تحدي العم حمد', lines: [{ who: 'hamad', text: 'الدلو يعرف طريقه فوق الأرض وتحتها! تجمع الأعداد الصحيحة وتطرحها بثقة.' }],
     make() {
@@ -213,4 +215,4 @@ export const CH = {
         it.push(choice(`ما أول خطوة في حساب <b>${N(a)} + ${pw(b, 2)} × ${N(c)}</b>؟`, `حساب ${pw(b, 2)}`, [`جمع ${N(a)} + ${N(b)}`, `ضرب ${N(b)} × ${N(c)}`, `جمع ${N(a)} + ${pw(b, 2)}`], 'لا أقواس هنا، فما الذي يأتي بعد الأقواس مباشرة؟', 'Nc7')); }
       return it;
     } }
-};
+});

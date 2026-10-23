@@ -1,6 +1,7 @@
 // مخرج الفيديو التعريفي: يصوّر مشاهد حقيقية من اللعبة بوقت افتراضي (٣٠ لقطة/ث)، مع ترجمة الكلام وصورة المتكلم، ثم يركّب الصوت.
 // الاستعمال (الخادم المحلي على 8000):  python voice.py <OUT>/voice  ثم  node make.mjs <OUT> [scene,scene…]
 // فيديو الصف الخامس: GRADE=5 (النص script5.json، والمهمة والتحدي من دروس الخامس) ← assets/video/intro-g5.mp4
+// والسابع: GRADE=7 (script7.json، ومهمة مصعد البئر) ← assets/video/intro-g7.mp4
 import { chromium } from 'playwright-core';
 import fs from 'fs';
 import path from 'path';
@@ -8,10 +9,11 @@ import { fileURLToPath } from 'url';
 const HERE = path.dirname(fileURLToPath(import.meta.url));
 const OUT = process.argv[2], ONLY = process.argv[3] ? process.argv[3].split(',') : null;
 const FPS = 30, DT = 1000 / FPS, LEAD = .7, GAP = .45, TAIL = .9, W = 1280, H = 720;
-const G5 = process.env.GRADE === '5';
-const GV = G5 ? { script: 'script5.json', sub: 'لعبة رياضيات الصف الخامس · سلطنة عُمان', game: 'لعبة «قرية الخير» · رياضيات الصف الخامس', first: 'placeValue5', giver: 'rashed', chTitle: 'تحدي العم راشد' }
+const GR = +(process.env.GRADE || 6), G5 = GR === 5, G7 = GR === 7, GX = GR !== 6;   // GX: صف بمحتواه الخاص (الخامس أو السابع)
+const GV = G7 ? { script: 'script7.json', sub: 'لعبة رياضيات الصف السابع · سلطنة عُمان', game: 'لعبة «قرية الخير» · رياضيات الصف السابع', first: 'addSubInt7', giver: 'hamad', chTitle: 'تحدي العم حمد' }
+  : G5 ? { script: 'script5.json', sub: 'لعبة رياضيات الصف الخامس · سلطنة عُمان', game: 'لعبة «قرية الخير» · رياضيات الصف الخامس', first: 'placeValue5', giver: 'rashed', chTitle: 'تحدي العم راشد' }
   : { script: 'script.json', sub: 'لعبة رياضيات الصف السادس · سلطنة عُمان', game: '', first: 'placeValue', giver: 'salem', chTitle: 'تحدي العم سالم' };
-const GU = u => G5 ? (u ? u + '&grade=5' : '?grade=5') : u;   // الصف في رابط الجلسة
+const GU = u => GX ? (u ? u + '&grade=' + GR : '?grade=' + GR) : u;   // الصف في رابط الجلسة
 const SCRIPT = JSON.parse(fs.readFileSync(path.join(HERE, GV.script), 'utf8'));
 const TIMING = JSON.parse(fs.readFileSync(path.join(OUT, 'voice', 'timing.json'), 'utf8'));
 fs.mkdirSync(path.join(OUT, 'frames'), { recursive: true });
@@ -139,7 +141,16 @@ const PILES = [[140, 568, '١٠٠٠'], [205, 568, '١٠٠'], [265, 568, '١٠'],
 const walk = (x, y) => A.ev(([x, y]) => window.__game.eng.onTap({ x, y }), [x, y]);
 const NEAR = ([x, y]) => { const p = window.__game.W.player; return Math.hypot(p.x - x, p.y - y) < 14 && !p.target && !(p.route && p.route.length); };
 const press = (label, prefix) => A.ev(([l, pf]) => { const b = [...document.querySelectorAll('#actions button')].find(b => !b.disabled && (pf ? b.textContent.startsWith(l) : b.textContent === l)); if (b) b.click(); return !!b; }, [label, !!prefix]);
-if (G5) await scene(A, 'mission', async cap => {   // الخامس: عدّاد خزان الماء (عجلات المنازل الست)
+if (G7) await scene(A, 'mission', async cap => {   // السابع: مصعد البئر (الدلو فوق سطح الأرض وتحته)
+  const ST = [1078, 992 + 16];
+  await cap.shoot(.8); await walk(...ST); await cap.shootUntil(NEAR, 5, null, ST);
+  await press('🪣 مصعد البئر'); await cap.shoot(1.4);
+  const q = await A.ev(() => { const d = window.__game.quests.data('addSubInt7'); return d.rounds[0]; });
+  let lv = q.s;
+  for (const op of q.ops) { let k = op; while (k !== 0 && cap.left() > 2.2) { const st = Math.abs(k) >= 5 ? 5 : 1, v = Math.sign(k) * st; await A.ev(v => document.querySelector(`#panel [data-v="${v}"]`).click(), v); k -= v; lv += v; await cap.shoot(.22); } await cap.shoot(.5); }
+  if (cap.left() > 1.2 && lv === q.ans) { await A.ev(() => document.getElementById('benchGo').click()); }
+}, { capTop: true });
+else if (G5) await scene(A, 'mission', async cap => {   // الخامس: عدّاد خزان الماء (عجلات المنازل الست)
   const ST = [1375, 1395 + 16];
   await cap.shoot(.8); await walk(...ST); await cap.shootUntil(NEAR, 5, null, ST);
   await press('💧 عدّاد الخزان'); await cap.shoot(1.4);
@@ -178,11 +189,11 @@ await scene(B, 'challenge', async cap => {
 await B.ev(() => { document.getElementById('panel').classList.remove('on'); document.getElementById('panel').innerHTML = ''; window.__game.game.busy = false; });
 
 // ═════ ٥ب. نتعلّم من الخطأ (B): خطآن ثم «كيف نحلّها؟» ثم الحل والجواهر الطائرة، ثم خريطة إتقاني ═════
-await B.ev(async G5 => { const s = window.__game.state, L = G5 ? (await import('/content/lessons.js')).LESSONS.slice(0, 18).map(l => l.id) : ['placeValue', 'compareRound', 'factorsMultiples', 'oddEven', 'primeNumbers', 'powerOf10', 'multiplyStrategies', 'decimalAdd', 'division1', 'sequences', 'lengthMeasure', 'lineDrawing', 'timeTables', 'calendars', 'areaPerimeterT1', 'shapesIdentify', 'shapes3D', 'nets'];
+await B.ev(async GX => { const s = window.__game.state, L = GX ? (await import('/content/lessons.js')).LESSONS.slice(0, 18).map(l => l.id) : ['placeValue', 'compareRound', 'factorsMultiples', 'oddEven', 'primeNumbers', 'powerOf10', 'multiplyStrategies', 'decimalAdd', 'division1', 'sequences', 'lengthMeasure', 'lineDrawing', 'timeTables', 'calendars', 'areaPerimeterT1', 'shapesIdentify', 'shapes3D', 'nets'];
   L.forEach((id, k) => { s.quests.done[id] = s.quests.done[id] || Date.now() - 864e5 * (30 - k); const d = window.__game.quests.data(id); d.stars = Math.max(d.stars || 0, [3, 2, 3, 1, 3, 2][k % 6]); });
   s.expert = { [L[0]]: { plays: 1, gold: true } }; s.mastered = 4; s.levelSeen = 10;   // بلا نافذة ارتقاء أثناء التصوير
-  const { BY_LESSON } = await import('/content/outcomes.js'), rk = (id, o) => G5 ? id + '|' + BY_LESSON[id][0] : o;
-  s.review = { [rk(L[1], 'compareRound|Nn11')]: { n: 1, b: 0, due: Date.now() }, [rk(L[8], 'division1|Nc10')]: { n: 1, b: 1, due: Date.now() + 864e5 } }; }, G5);
+  const { BY_LESSON } = await import('/content/outcomes.js'), rk = (id, o) => GX ? id + '|' + BY_LESSON[id][0] : o;
+  s.review = { [rk(L[1], 'compareRound|Nn11')]: { n: 1, b: 0, due: Date.now() }, [rk(L[8], 'division1|Nc10')]: { n: 1, b: 1, due: Date.now() + 864e5 } }; }, GX);
 await B.ev(async GV => { const { runChallenge } = await import('/missions/challenge.js'); const m = window.__game.MODS[GV.first]; let it = null; for (let k = 0; k < 30 && !it; k++) it = m.challenge.make().find(i => i.type === 'choice' && /قيمة/.test(i.q)); for (let k = 0; k < 30 && !it; k++) it = m.challenge.make().find(i => i.type === 'choice' && i.opts.length >= 3);
   window.__d = { ch: { items: [it], i: 0, firstTry: 0, tries: 0, gems: 0, streak: 0 } }; runChallenge(window.__game.W, window.__d, { id: GV.first, who: GV.giver, title: GV.chTitle, make: () => [it], exit: () => {}, onDone: () => {} }); }, GV);
 await B.skip(.5);
