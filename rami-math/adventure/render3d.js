@@ -141,12 +141,6 @@ export function createAdv3D(canvas) {
     switch (e.kind) {
       case 'house': { const w = (e.w || 3) * T, d = (e.h || 2) * T, g = omaniHouse({ x: e.x * T, y: (e.y - (e.h || 2) + 1) * T, w, h: d, H: (e.h || 2) >= 3 ? 150 : 96, wall: e.roof }); return shadowed(g); }
       case 'well': return shadowed(well3d(x, z, 22, true));
-      case 'cart': { P.add(std('#6B6F78', { metalness: .6, roughness: .45 }), box(44, 24, 30, 0, 22, 0, 2), { uv: false }); P.add(std('#3A3D44', { metalness: .5, roughness: .5 }), box(46, 4, 32, 0, 35, 0), { uv: false });
-        [-14, 14].forEach(a => [-13, 13].forEach(b => P.add(std('#2B2B2F'), cyl(6, 6, 4, a, 7, b, 12).rotateX(Math.PI / 2), { uv: false }))); G.add(P.build());
-        if (e.load) { const m = new THREE.Mesh(new THREE.DodecahedronGeometry(15, 0), std(e.load)); m.scale.set(1.2, .5, .8); m.position.y = 37; G.add(m); } return shadowed(G); }
-      case 'oil': { P.add(material('wood', '#6A4428'), box(24, 10, 24, 0, 5, 0)); P.add(std('#B88A2E', { metalness: .7, roughness: .35 }), cyl(9, 9, 26, 0, 23, 0, 12), { uv: false }); G.add(P.build());
-        const f = new THREE.Mesh(new THREE.SphereGeometry(5, 10, 8), new THREE.MeshStandardMaterial({ color: '#FFE08A', emissive: '#FFB347', emissiveIntensity: 1.6 })); f.position.y = 40; G.add(f); G.userData.light = true; return shadowed(G); }
-      case 'basket': { [-20, 20].forEach(o => P.add(material('wood', '#6A4428'), box(5, 72, 5, o, 36, 0))); P.add(material('wood', '#6A4428'), box(48, 6, 6, 0, 72, 0)); P.add(std('#A8723E'), cyl(14, 10, 18, 0, 26, 0, 10), { uv: false }); G.add(P.build()); return shadowed(G); }
       case 'chest': { P.add(wood, box(36, 22, 26, 0, 11, 0, 3)); P.add(material('metal', '#C9971C'), box(38, 3, 28, 0, 15, 0)); G.add(P.build()); const lid = new THREE.Group(); lid.position.set(0, 22, -13); const lm = new THREE.Mesh(box(36, 8, 26, 0, 4, 13, 3), wood); lid.add(lm); G.add(lid); G.userData.lid = lid; break; }
       case 'lever': { P.add(std('#6A6A72'), box(26, 8, 14, 0, 4, 0, 2), { uv: false }); G.add(P.build()); const arm = new THREE.Group(); arm.position.y = 8; const st = new THREE.Mesh(cyl(1.8, 1.8, 26, 0, 13, 0, 8), dark); const kn = new THREE.Mesh(sphere(5, 0, 27, 0), std(e.color || '#E2475C', { emissive: e.color || '#E2475C', emissiveIntensity: .35 })); arm.add(st, kn); G.add(arm); G.userData.arm = arm; break; }
       case 'plate': { const m = new THREE.Mesh(box(40, 5, 40, 0, 2.5, 0, 2), new THREE.MeshStandardMaterial({ color: '#B89A3A', emissive: '#6A5010', emissiveIntensity: .6, metalness: .5, roughness: .4 })); m.receiveShadow = true; G.add(m); G.userData.plate = m; break; }
@@ -292,7 +286,7 @@ export function createAdv3D(canvas) {
     const nearL = [];
     objs.forEach((o, e) => {
       o.visible = !e.hidden && !e.got;
-      if (e.kind === 'block' || e.kind === 'cart') { const bx = (e.px != null ? e.px : e.x) * T + T / 2, bz = (e.py != null ? e.py : e.y) * T + T / 2; o.position.set(bx, 0, bz); }
+      if (e.kind === 'block') { const bx = (e.px != null ? e.px : e.x) * T + T / 2, bz = (e.py != null ? e.py : e.y) * T + T / 2; o.position.set(bx, 0, bz); }
       if (o.userData.lid) o.userData.lid.rotation.x += ((e.open ? -1.9 : 0) - o.userData.lid.rotation.x) * Math.min(1, dt * 6);
       if (o.userData.arm) o.userData.arm.rotation.z += ((e.on ? -.6 : .6) - o.userData.arm.rotation.z) * Math.min(1, dt * 10);
       if (o.userData.plate) { const pulse = V.pressed(e) ? 1 : 1 + Math.sin(t * 5) * .08; o.userData.plate.scale.set(pulse, 1, pulse); nearL.push([o.position.x, 30, o.position.z, .45]); }

@@ -71,7 +71,7 @@ async function enterVillage(u) {
     talk: (who, lines, proj) => { const p = (def.people || []).find(p => p.id === who.id); return talk(who, lines, p ? () => proj(p.x, p.y, 92) : null); },
     adventure: async () => {   // مغامرة الوحدة: تُحفظ أفضل نجومها، وجواهرها تُضاف
       const m = await def.adventure();
-      await new Promise(res => m.playAdventure({ onDone: r => { if (r) { const a = (vs.adv = vs.adv || {}), old = a[U.village] || { stars: 0 }; a[U.village] = { stars: Math.max(old.stars, r.stars), gems: r.gems }; save(); } res(); } }));
+      st._save = save; await new Promise(res => m.playAdventure({ state: st, onDone: r => { if (r) { const a = (vs.adv = vs.adv || {}), old = a[U.village] || { stars: 0 }; a[U.village] = { stars: Math.max(old.stars, r.stars), gems: r.gems }; save(); } res(); } }));
     },
     onExit: () => { vs.at = null; save(); openMap(); }
   });

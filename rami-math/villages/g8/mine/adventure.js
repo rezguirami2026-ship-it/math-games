@@ -1,8 +1,21 @@
-// مغامرة منجم الأعماق «المنقّب المفقود في الأعماق»: تُشغَّل بمحرك المغامرات (وعارضه ثلاثي الأبعاد إن كان العرض مجسّماً)،
-// وتنتهي بفصل «رحلة العربة» (ride.js). onDone({ stars, gems }) عند الإكمال، وnull عند الخروج قبل النهاية (التقدّم محفوظ).
-export async function playAdventure({ onDone }) {
-  const E = await import('../../../adventure/engine.js');
-  if (E.want3D()) { try { E.setAdv3D((await import('../../../adventure/render3d.js')).createAdv3D); } catch (e) { console.warn('[adv3d]', e); } }
-  const def = (await import('./story.js')).default;
-  E.runAdventure(def, res => { const R = E.advRec(def.id); onDone(res && res.done ? { stars: Math.max(1, Math.min(3, Math.ceil((R.best || 0) * 3 / (def.stars || 5)))), gems: 40 } : null); });
-}
+// مغامرة منجم الأعماق «المنقّب المفقود في الأعماق» بمحرك مغامرات القرى (villages/quest.js): ستة فصول، لكل فصل نوع لعب ومشهد:
+// النزول بالقفص، ضوء المصباح في النفق المظلم، صخور النهر الجوفي، خريطة المحوّلات، رفع العارضة عن العمّ سالم، والهروب بالعربة.
+import { runQuest } from '../../quest.js';
+
+export const QUEST = {
+  id: 'g8mine', title: 'المنقّب المفقود في الأعماق', icon: '⛏️', radio: { name: 'العمّ سالم', face: '👴🏽' },
+  chapters: [
+    { title: 'النزول', icon: '🛗', goal: 'انزل بقفص المصعد ستين متراً إلى المحطة السفلية.', steps: ['اضغط «انزل» ليبدأ القفص', 'تفادَ العوارض البارزة بالسهمين', 'اجمع خمس بلّورات في الطريق', 'اضغط «توقّف» عند الإطار الأخضر'], load: () => import('./quest/c1_descent.js') },
+    { title: 'ضوء المصباح', icon: '🏮', goal: 'اعبر النفق المظلم واجمع ثلاث شظايا بلّورية تفتح البوابة.', steps: ['اجمع ثلاث شظايا بلّورية', 'املأ المصباح من جرّة زيت', 'اخرج من البوابة البلّورية'], load: () => import('./quest/c2_lamp.js') },
+    { title: 'النهر الجوفي', icon: '🌊', goal: 'اعبر النهر على الصخور التي تطفو ثم تغوص.', steps: ['اقفز إلى الصف الأول', 'تابع القفز على الصخور الطافية', 'اصعد إلى الضفة الأخرى'], load: () => import('./quest/c3_river.js') },
+    { title: 'المحوّلات', icon: '🔀', goal: 'وجّه العربة بالمحوّلات لتحطم الحاجزين.', steps: ['انقر المحوّلات لترسم الطريق', 'أطلق العربة', 'حطّم الحاجزين'], load: () => import('./quest/c4_rails.js') },
+    { title: 'الإنقاذ', icon: '🤝', goal: 'ارفع العارضة عن العمّ سالم بالرافعة.', steps: ['ضع الرافعة تحت العارضة', 'اضغط «ارفع» في المنطقة الخضراء', 'حرّر العمّ سالم'], load: () => import('./quest/c5_rescue.js') },
+    { title: 'الهروب', icon: '🛤️', goal: 'اهرب بالعربة مع العمّ سالم قبل أن ينهار النفق.', steps: ['اركب العربة', 'تفادَ الصخور واقفز فوق الكسور', 'اخرج من فم المنجم'], load: () => import('./quest/c6_escape.js') }
+  ],
+  finale: {
+    lines: [{ who: 'المنقّبة مريم', t: 'العمّ سالم! لقد عدتما!' }, { who: 'العمّ سالم', t: 'لولا هذا البطل لبقيت هناك إلى الأبد.' }, { who: 'المنقّب صالح', t: 'سنسمّي العرق الجديد «عرق البطل»!' }],
+    rewards: ['💎 ٤٠ جوهرة', '🏅 وسام «منقذ الأعماق»']
+  },
+  grant: s => { s.gems = (s.gems || 0) + 40; (s.vil.badges = s.vil.badges || {}).deepRescue = Date.now(); }
+};
+export function playAdventure({ onDone, state }) { return runQuest(QUEST, state, onDone); }
