@@ -99,5 +99,6 @@ export default {
     mentalDec8: () => import('./mentalDec8.js'), powersTen8: () => import('./powersTen8.js'),
     rounding8: () => import('./rounding8.js'), orderOps8: () => import('./orderOps8.js')
   },
+  adventure: () => import('./adventure.js'),   // «لغز الحاوية الخضراء» بعد إنهاء الدروس الأربعة
   kit3d, kit2d
 };

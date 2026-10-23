@@ -119,6 +119,18 @@ export function drawThing(c, e, t, A) {
       c.beginPath(); c.moveTo(x, y - 8); c.lineTo(x + Math.sin(a) * 22, y - 8 - Math.cos(a) * 22); c.stroke(); c.fillStyle = e.color || '#E2475C'; c.beginPath(); c.arc(x + Math.sin(a) * 22, y - 8 - Math.cos(a) * 22, 5.5, 0, 7); c.fill(); break; }
     case 'plate': { const on = A.pressed(e); c.fillStyle = on ? '#C9971C' : '#8C8478'; c.beginPath(); c.roundRect(x - 18, y - 32, 36, 28, 5); c.fill(); c.fillStyle = on ? '#FFD54A' : '#A69E92'; c.beginPath(); c.roundRect(x - 14, y - 28, 28, 20, 4); c.fill();
       c.fillStyle = 'rgba(0,0,0,.25)'; c.font = '900 14px Cairo'; c.textAlign = 'center'; c.fillText('◆', x, y - 13); break; }
+    case 'tidewater': {   // ماء المد يغطي البلاطة (يختفي حين ينحسر)
+      c.fillStyle = '#2F8FC9'; c.fillRect(x - T / 2, y - T, T, T); c.fillStyle = 'rgba(255,255,255,.35)'; c.fillRect(x - 14 + Math.sin(t * 2 + e.x) * 6, y - T * .6, 18, 2); c.fillRect(x - 4 + Math.sin(t * 2 + e.y) * 6, y - T * .3, 12, 2); break; }
+    case 'container': {   // حاوية شحن ملوّنة بأضلاع، تنتقل بنعومة عبر px/py حين ترفعها الرافعة
+      const bx = (e.px != null ? e.px : e.x) * T + T / 2, by = (e.py != null ? e.py : e.y) * T + T, lift = e.lift || 0;
+      c.fillStyle = 'rgba(40,25,10,.25)'; c.fillRect(bx - 24, by - 6, 50, 7);
+      c.fillStyle = e.color || '#2563EB'; c.fillRect(bx - 24, by - 44 - lift, 48, 40); c.strokeStyle = 'rgba(0,0,0,.3)'; c.lineWidth = 2; c.strokeRect(bx - 24, by - 44 - lift, 48, 40);
+      for (let k = -18; k <= 18; k += 6) { c.beginPath(); c.moveTo(bx + k, by - 42 - lift); c.lineTo(bx + k, by - 6 - lift); c.stroke(); }
+      if (e.label) { c.fillStyle = '#FFF'; c.font = '900 14px Cairo'; c.textAlign = 'center'; c.fillText(e.label, bx, by - 20 - lift); }
+      if (lift) { c.strokeStyle = '#374151'; c.lineWidth = 2; c.beginPath(); c.moveTo(bx, by - 44 - lift); c.lineTo(bx, by - 160); c.stroke(); } break; }
+    case 'console': {   // لوحة تحكم الرافعة: منصة بشاشة وأزرار
+      sh(16); c.fillStyle = '#475569'; c.fillRect(x - 16, y - 34, 32, 30); c.fillStyle = '#0F172A'; c.fillRect(x - 13, y - 31, 26, 14);
+      c.fillStyle = e.color || '#22C55E'; c.fillRect(x - 11, y - 29, 22, 10); [-8, 0, 8].forEach((o, k) => { c.fillStyle = ['#EF4444', '#FACC15', '#22C55E'][k]; c.beginPath(); c.arc(x + o, y - 11, 3, 0, 7); c.fill(); }); break; }
     case 'cart': {   // عربة منجم على السكة (تتحرك بنعومة عبر px/py)، وفيها ما تحمله
       const bx = (e.px != null ? e.px : e.x) * T + T / 2, by = (e.py != null ? e.py : e.y) * T + T; c.fillStyle = 'rgba(40,25,10,.25)'; c.beginPath(); c.ellipse(bx + 3, by - 5, 24, 7, 0, 0, 7); c.fill();
       c.fillStyle = '#2B2B2F'; [-14, 14].forEach(o => { c.beginPath(); c.arc(bx + o, by - 8, 6, 0, 7); c.fill(); });

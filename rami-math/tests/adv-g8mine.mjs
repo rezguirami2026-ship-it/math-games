@@ -32,7 +32,7 @@ ok('٣. المعول يكسر الصخور الثلاث فتصير حجارة', 
 await act("A.tapEnt('basket')"); ok('٤. السلة الثقيلة ترفع المنصة فوق الهوّة', !!(await st()).flags.bridge && await page.evaluate(() => window.__adv.tileAt(19, 9) === '_'));
 await shot('gm-3');
 await act('A.goTile(28, 8)'); await sleep(1500); await act('Promise.resolve()'); ok('٥. العبور إلى الأشغال القديمة', (await st()).area === 'old');
-await act("A.tapEnt('cart')"); await sleep(4200); await act('Promise.resolve()');
+await act("A.tapEnt('cart')"); await page.waitForFunction(() => { const c = window.__adv.ent('cart'); return c.x === 4 && c.y === 8 && c.px == null && !window.__adv.busy() && window.__adv.S.flags; }, null, { timeout: 12000, polling: 200 }).catch(() => {}); await sleep(2500); await act('Promise.resolve()');
 ok('عربة بلا ضبط المحوّلين تصل نهاية مسدودة وتعود', !(await st()).flags.crash && await page.evaluate(() => { const c = window.__adv.ent('cart'); return c.x === 4 && c.y === 8; }));
 await act("A.tapEnt('sw1')"); await act("A.tapEnt('sw2')"); await act('A.goTile(6, 6)');
 await act("A.tapEnt('cart')"); await sleep(6000); await act('Promise.resolve()');

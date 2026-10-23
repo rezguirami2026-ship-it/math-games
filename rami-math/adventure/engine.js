@@ -14,8 +14,8 @@ const webglOK = () => { try { const c = document.createElement('canvas'); return
 let createAdv3D = null; export const setAdv3D = f => { createAdv3D = f; };
 export const want3D = () => webglOK() && !WEAK && gfx.d3();
 
-const SOLID_KINDS = new Set(['npc', 'chest', 'block', 'gate', 'door', 'sign', 'fire', 'beacon', 'cage', 'tent', 'crates', 'barrel', 'boat', 'well', 'lever', 'banner', 'house', 'rot', 'tablet', 'crystal', 'beam', 'fence', 'pillar', 'cart', 'oil', 'basket']);
-const ACT_KINDS = new Set(['npc', 'chest', 'lever', 'sign', 'door', 'gate', 'cage', 'beacon', 'boat', 'fire', 'safe', 'block', 'well', 'tent', 'banner', 'house', 'rot', 'tablet', 'crystal', 'animal', 'pillar', 'site', 'beam', 'cart', 'oil', 'basket']);   // cart/oil/basket: مغامرة منجم الصف الثامن
+const SOLID_KINDS = new Set(['npc', 'chest', 'block', 'gate', 'door', 'sign', 'fire', 'beacon', 'cage', 'tent', 'crates', 'barrel', 'boat', 'well', 'lever', 'banner', 'house', 'rot', 'tablet', 'crystal', 'beam', 'fence', 'pillar', 'cart', 'oil', 'basket', 'tidewater', 'container', 'console']);
+const ACT_KINDS = new Set(['npc', 'chest', 'lever', 'sign', 'door', 'gate', 'cage', 'beacon', 'boat', 'fire', 'safe', 'block', 'well', 'tent', 'banner', 'house', 'rot', 'tablet', 'crystal', 'animal', 'pillar', 'site', 'beam', 'cart', 'oil', 'basket', 'container', 'console']);   // مغامرات قرى الصف الثامن: منجم (cart/oil/basket)، ميناء (container/console، والمد tidewater)
 const esc = s => String(s).replace(/[&<>]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;' }[c]));
 const wait = ms => new Promise(r => setTimeout(r, ms));
 
@@ -61,7 +61,7 @@ export function runAdventure(def, onExit) {
   const tileAt = (x, y) => { if (y < 0 || y >= map.length || x < 0 || x >= map[0].length) return '#'; const k = key(S.area, x, y), o = S.tiles[k]; if (o) return o; return S.cut[k] ? '.' : map[y][x]; };
   const entAt = (x, y, skip) => ents.find(e => e !== skip && !e.hidden && !e.got && footprint(e, x, y) && solidEnt(e)) || ents.find(e => e !== skip && !e.hidden && !e.got && footprint(e, x, y));
   const RANK = { npc: 0, house: 3, cage: 2 };   // عند التداخل: الشخص أولاً، ثم الباب/الرافعة، ثم المبنى
-  const actAt = (x, y) => ents.filter(e => !e.hidden && !e.got && ACT_KINDS.has(e.kind) && footprint(e, x, y)).sort((a, b) => (RANK[a.kind] ?? 1) - (RANK[b.kind] ?? 1))[0];
+  const actAt = (x, y) => ents.filter(e => !e.hidden && !e.got && !e.deco && ACT_KINDS.has(e.kind) && footprint(e, x, y)).sort((a, b) => (RANK[a.kind] ?? 1) - (RANK[b.kind] ?? 1))[0];
   function footprint(e, x, y) {
     if (e.kind === 'house') return x >= e.x && x < e.x + (e.w || 3) && y <= e.y && y > e.y - (e.h || 2);
     if (e.kind === 'block') return x === e.x && y === e.y;

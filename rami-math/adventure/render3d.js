@@ -141,6 +141,11 @@ export function createAdv3D(canvas) {
     switch (e.kind) {
       case 'house': { const w = (e.w || 3) * T, d = (e.h || 2) * T, g = omaniHouse({ x: e.x * T, y: (e.y - (e.h || 2) + 1) * T, w, h: d, H: (e.h || 2) >= 3 ? 150 : 96, wall: e.roof }); return shadowed(g); }
       case 'well': return shadowed(well3d(x, z, 22, true));
+      case 'tidewater': { const m = new THREE.Mesh(new THREE.BoxGeometry(T, 6, T), new THREE.MeshStandardMaterial({ color: '#2F8FC9', roughness: .15, metalness: .1, transparent: true, opacity: .92 })); m.position.y = 2; G.add(m); return G; }
+      case 'container': { const c = e.color || '#2563EB'; P.add(std(c, { metalness: .35, roughness: .55 }), box(46, 40, 46, 0, 20, 0, 2), { uv: false }); for (let k = -18; k <= 18; k += 6) P.add(std(c, { metalness: .3, roughness: .6 }), box(2, 38, 47.5, k, 20, 0), { uv: false });
+        G.add(P.build()); return shadowed(G); }
+      case 'console': { P.add(std('#475569', { metalness: .4, roughness: .5 }), box(30, 30, 22, 0, 15, 0, 2), { uv: false }); G.add(P.build());
+        const scr = new THREE.Mesh(new THREE.PlaneGeometry(22, 12), new THREE.MeshStandardMaterial({ color: e.color || '#22C55E', emissive: e.color || '#22C55E', emissiveIntensity: 1.2 })); scr.position.set(0, 24, 11.2); G.add(scr); G.userData.light = true; return shadowed(G); }
       case 'cart': { P.add(std('#6B6F78', { metalness: .6, roughness: .45 }), box(44, 24, 30, 0, 22, 0, 2), { uv: false }); P.add(std('#3A3D44', { metalness: .5, roughness: .5 }), box(46, 4, 32, 0, 35, 0), { uv: false });
         [-14, 14].forEach(a => [-13, 13].forEach(b => P.add(std('#2B2B2F'), cyl(6, 6, 4, a, 7, b, 12).rotateX(Math.PI / 2), { uv: false }))); G.add(P.build());
         if (e.load) { const m = new THREE.Mesh(new THREE.DodecahedronGeometry(15, 0), std(e.load)); m.scale.set(1.2, .5, .8); m.position.y = 37; G.add(m); } return shadowed(G); }
@@ -292,7 +297,7 @@ export function createAdv3D(canvas) {
     const nearL = [];
     objs.forEach((o, e) => {
       o.visible = !e.hidden && !e.got;
-      if (e.kind === 'block' || e.kind === 'cart') { const bx = (e.px != null ? e.px : e.x) * T + T / 2, bz = (e.py != null ? e.py : e.y) * T + T / 2; o.position.set(bx, 0, bz); }
+      if (e.kind === 'block' || e.kind === 'cart' || e.kind === 'container') { const bx = (e.px != null ? e.px : e.x) * T + T / 2, bz = (e.py != null ? e.py : e.y) * T + T / 2; o.position.set(bx, e.kind === 'container' ? (e.lift || 0) : 0, bz); }
       if (o.userData.lid) o.userData.lid.rotation.x += ((e.open ? -1.9 : 0) - o.userData.lid.rotation.x) * Math.min(1, dt * 6);
       if (o.userData.arm) o.userData.arm.rotation.z += ((e.on ? -.6 : .6) - o.userData.arm.rotation.z) * Math.min(1, dt * 10);
       if (o.userData.plate) { const pulse = V.pressed(e) ? 1 : 1 + Math.sin(t * 5) * .08; o.userData.plate.scale.set(pulse, 1, pulse); nearL.push([o.position.x, 30, o.position.z, .45]); }
