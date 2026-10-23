@@ -51,11 +51,13 @@ export function createView3D(canvas, grid, def, opts = {}) {
   const dest = new THREE.Mesh(new THREE.RingGeometry(10, 14, 32), new THREE.MeshBasicMaterial({ color: '#FFFFFF', transparent: true, opacity: 0, depthWrite: false }));
   dest.rotation.x = -Math.PI / 2; dest.position.y = 1.5; sc.add(dest);
 
+  // نسب أقرب للواقع لطلاب الثامن والتاسع: رأس أصغر وجسم أطول من شخصيات العالم المفتوح
+  const teen = P2 => { P2.head.scale.multiplyScalar(.78); P2.root.scale.multiplyScalar(1.25); P2.root.scale.y *= 1.16; P2.lastX = null; return P2; };
   // أهل القرية: يقفون في أماكنهم ويلتفتون إلى البطل حين يقترب
-  const folk = (def.people || []).map(q => { const P2 = buildPerson(q.look); P2.lastX = null; sc.add(P2.root); return { q, P: P2 }; });
-  // البطل
+  const folk = (def.people || []).map(q => { const P2 = teen(buildPerson(q.look)); sc.add(P2.root); return { q, P: P2 }; });
+  // البطل (أكبر قليلاً من العالم المفتوح لتظهر التفاصيل)
   let hero = null, heroKey = '';
-  const ensureHero = look => { const k = JSON.stringify(look); if (k === heroKey) return; if (hero) sc.remove(hero.root); hero = buildPerson(look); hero.lastX = null; sc.add(hero.root); heroKey = k; };
+  const ensureHero = look => { const k = JSON.stringify(look); if (k === heroKey) return; if (hero) sc.remove(hero.root); hero = teen(buildPerson(look)); sc.add(hero.root); heroKey = k; };
 
   // غبار متطاير في الضوء (الجودة العالية)
   let motes = null;
@@ -68,12 +70,12 @@ export function createView3D(canvas, grid, def, opts = {}) {
   }
 
   const cam = new THREE.PerspectiveCamera(38, 1, 10, 4000);
-  const view = { yaw: Math.PI / 4, pitch: .78, dist: 560, zoom: 1 };   // ٤٥° مثل العرض العادي
+  const view = { yaw: Math.PI / 4, pitch: .6, dist: 560, zoom: 1 };   // زاوية منخفضة خلف البطل: الوجوه والأجسام ظاهرة   // ٤٥° مثل العرض العادي
   const camAt = new THREE.Vector3(), camGoal = new THREE.Vector3();
   let comp = null;
   const resize = () => {
     const w = canvas.clientWidth || innerWidth, h = canvas.clientHeight || innerHeight;
-    r.setSize(w, h, false); cam.aspect = w / h; view.dist = (w < h ? 1150 : 760);   // الشاشة الطولية (الهاتف): كاميرا أبعد ترى ما حول البطل cam.updateProjectionMatrix();
+    r.setSize(w, h, false); cam.aspect = w / h; view.dist = (w < h ? 900 : 560);   // الشاشة الطولية (الهاتف): كاميرا أبعد ترى ما حول البطل cam.updateProjectionMatrix();
     if (comp) comp.setSize(w, h);
   };
   if (high) try { comp = makeComposer(r, sc, cam); } catch (e) { comp = null; }
@@ -87,7 +89,7 @@ export function createView3D(canvas, grid, def, opts = {}) {
     animatePerson(hero, { x: px, y: pz, moving: st.hero.moving, phase: st.hero.phase, run: false, dir: st.hero.dir, anim: st.hero.anim, animT: st.hero.animT, faceCam: true }, dt, t);
     folk.forEach(({ q, P: F }) => { const near = Math.hypot(q.x - st.hero.x, q.y - st.hero.y) < 3.2; animatePerson(F, { x: q.x * S, y: q.y * S, moving: false, phase: 0, dir: 'down', face: near ? { x: px, y: pz } : null, anim: st.talking === q.id ? 'talk' : null, animT: 0 }, dt, t); });
     // الكاميرا: تتبع البطل بنعومة
-    camGoal.set(px, 30, pz);
+    camGoal.set(px, 42, pz);
     if (first) { camAt.copy(camGoal); first = false; } else camAt.lerp(camGoal, 1 - Math.exp(-dt * 5));
     const d = view.dist / view.zoom;
     cam.position.set(camAt.x + Math.sin(view.yaw) * Math.cos(view.pitch) * d, camAt.y + Math.sin(view.pitch) * d, camAt.z + Math.cos(view.yaw) * Math.cos(view.pitch) * d);

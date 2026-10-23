@@ -104,13 +104,26 @@ export function kit3d(THREE, { S, Parts, high }) {
     },
     station(st) {
       const g = new THREE.Group(), Pp = new Parts(); g.position.set(st.x * S, 0, st.y * S);
-      if (st.kind === 'elevator') {   // قفص مصعد: أعمدة حديدية، أرضية، بكرة في الأعلى، ولوحة طوابق
-        for (const a of [-20, 20]) for (const b of [-16, 16]) Pp.add(iron, box(4, 120, 4, a, 60, b));
-        Pp.add(iron, box(44, 4, 36, 0, 120, 0)); Pp.add(plank, box(40, 4, 32, 0, 3, 0));
-        Pp.add(material('metal', '#B88A2E', { rough: .35, metal: .9 }), new THREE.CylinderGeometry(10, 10, 6, 16).rotateX(Math.PI / 2).translate(0, 132, 0));
-        Pp.add(material('flat', '#2B2118'), box(26, 30, 3, 30, 50, 20));
+      if (st.kind === 'elevator') {   // برج رفع خشبي (أربع قوائم مائلة ودعامات متقاطعة) ببكرة في قمته، وقفص حديدي شبكي يتدلى بحبل، ولوحة طوابق
+        const legs = [[-30, -24], [30, -24], [-30, 24], [30, 24]], top = 150;
+        legs.forEach(([a, b]) => { const g2 = new THREE.CylinderGeometry(3.2, 4.2, top, 6); g2.rotateZ(-a / 700); g2.rotateX(b / 700); g2.translate(a * .82, top / 2, b * .82); Pp.add(timber, g2); });
+        [50, 100].forEach(y => { const k = 1 - y / top * .18; Pp.add(timber, box(60 * k, 4, 4, 0, y, 24 * k * .82)); Pp.add(timber, box(60 * k, 4, 4, 0, y, -24 * k * .82)); Pp.add(timber, box(4, 4, 48 * k, 30 * k * .82, y, 0)); Pp.add(timber, box(4, 4, 48 * k, -30 * k * .82, y, 0)); });
+        Pp.add(timber, box(64, 6, 52, 0, top, 0));
+        Pp.add(material('metal', '#B88A2E', { rough: .35, metal: .9 }), new THREE.CylinderGeometry(16, 16, 5, 20).rotateX(Math.PI / 2).translate(0, top + 16, 0));
+        Pp.add(iron, box(3, 34, 3, 0, top + 2, 0));
+        // القفص: إطار وقضبان رفيعة (يُرى ما بداخله)
+        const cy0 = 4, cH = 58;
+        [[-17, -14], [17, -14], [-17, 14], [17, 14]].forEach(([a, b]) => Pp.add(iron, box(3, cH, 3, a, cy0 + cH / 2, b)));
+        [cy0, cy0 + cH].forEach(y => { Pp.add(iron, box(37, 3, 3, 0, y, 14)); Pp.add(iron, box(37, 3, 3, 0, y, -14)); Pp.add(iron, box(3, 3, 31, 17, y, 0)); Pp.add(iron, box(3, 3, 31, -17, y, 0)); });
+        for (let k = -11; k <= 11; k += 5.5) { Pp.add(iron, box(1.2, cH, 1.2, k, cy0 + cH / 2, 14)); Pp.add(iron, box(1.2, cH, 1.2, 17, cy0 + cH / 2, k * .8)); }
+        Pp.add(plank, box(34, 3, 28, 0, cy0, 0)); Pp.add(material('metal', '#5C4033', { rough: .7, metal: .3 }), box(37, 4, 31, 0, cy0 + cH + 2, 0));
+        Pp.add(material('flat', '#3A3A3A', { rough: .6 }), box(1.5, top - cy0 - cH - 4, 1.5, 0, (top + cy0 + cH) / 2 + 2, 0));
+        // لوحة الطوابق على قائم خشبي بجانب البئر
+        Pp.add(timber, box(5, 70, 5, 40, 35, 26)); Pp.add(material('wood', '#4A2E18'), box(30, 34, 4, 40, 62, 28));
         g.add(Pp.build());
-        const scr = new THREE.Mesh(new THREE.PlaneGeometry(20, 22), glow('#FF9F43')); scr.position.set(30, 50, 21.8); g.add(scr);
+        const lamp = new THREE.Mesh(new THREE.SphereGeometry(4, 12, 8), glow('#FFC46B')); lamp.position.set(0, cy0 + cH - 8, 0); g.add(lamp);
+        const scr = new THREE.Mesh(new THREE.PlaneGeometry(22, 24), glow('#FF9F43')); scr.position.set(40, 62, 30.2); g.add(scr);
+        if (high) { const L = new THREE.PointLight('#FFC46B', 9000, 200, 2); L.position.set(0, cy0 + cH - 10, 0); g.add(L); }
       } else if (st.kind === 'crystals') {   // عرق بلّوري: بلورات مربعة ومكعبة متدرجة الحجم على قاعدة صخرية
         Pp.add(rock, box(70, 18, 30, 0, 9, -6)); g.add(Pp.build());
         [[-24, 10, '#5FD3FF'], [0, 16, '#B28CFF'], [24, 22, '#7CF5C8']].forEach(([dx, s, c]) => { const m = new THREE.Mesh(new THREE.BoxGeometry(s, s, s), glow(c)); m.position.set(dx, 18 + s / 2, -4); m.rotation.y = .5; g.add(m); });

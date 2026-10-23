@@ -36,7 +36,7 @@ export default {
     '################################'
   ],
   legend: {
-    '#': { wall: 'rock', h: 1.3 },
+    '#': { wall: 'rock', h: 1.05 },
     ',': { floor: 'planks' },
     '.': { floor: 'stone' },
     '=': { floor: 'rail' },
