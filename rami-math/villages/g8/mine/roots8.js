@@ -6,11 +6,11 @@ import { N, R, rt } from '../../math.js';
 import { choice, num, tf, multi } from '../../../missions/challenge.js';
 
 const who = { name: 'المنقّبة مريم', face: '👷🏽‍♀️', id: 'maryam' };
-const COL = ['#5FD3FF', '#B28CFF', '#7CF5C8', '#FFB347'];
+const COL = ['#0EA5E9', '#8B5CF6', '#10B981', '#F59E0B'];
 
 function draw(g, w, h, t, S) {
   const r = S.r ? S.r.data : {}, bg = g.createRadialGradient(w / 2, h / 2, 10, w / 2, h / 2, w * .7);
-  bg.addColorStop(0, '#1C1830'); bg.addColorStop(1, '#09080F'); g.fillStyle = bg; g.fillRect(0, 0, w, h);
+  bg.addColorStop(0, '#FFF8EA'); bg.addColorStop(1, '#EADBC0'); g.fillStyle = bg; g.fillRect(0, 0, w, h);
   const c = COL[(S.i || 0) % COL.length];
   if (r.cube) {   // مكعب متساوي القياس من مكعبات صغيرة (الحرف = القيمة الحالية)
     const n = Math.max(1, Math.min(6, S.r.input.type === 'dial' ? S.v : r.n)), u = Math.min(22, (h - 40) / (n * 1.6 + 1)), ox = w / 2, oy = h / 2 + n * u * .55;
@@ -19,16 +19,16 @@ function draw(g, w, h, t, S) {
       g.fillStyle = '#ffffff33'; g.fill(); g.fillStyle = c; g.globalAlpha = .65; g.beginPath(); g.moveTo(px - u * .87, py - u * .5); g.lineTo(px, py); g.lineTo(px, py + u); g.lineTo(px - u * .87, py + u * .5); g.fill();
       g.globalAlpha = .4; g.beginPath(); g.moveTo(px, py); g.lineTo(px + u * .87, py - u * .5); g.lineTo(px + u * .87, py + u * .5); g.lineTo(px, py + u); g.fill(); g.globalAlpha = 1; };
     for (let z = 0; z < n; z++) for (let y = n - 1; y >= 0; y--) for (let x = n - 1; x >= 0; x--) cubeAt(n - 1 - x, n - 1 - y, z);
-    g.fillStyle = '#FFD27A'; g.font = '800 15px Cairo'; g.textAlign = 'center'; g.fillText(`${N(n)} × ${N(n)} × ${N(n)} = ${N(n ** 3)} مكعباً`, w / 2, 22);
+    g.fillStyle = '#7C2D12'; g.font = '900 18px Cairo'; g.textAlign = 'center'; g.fillText(`${N(n)} × ${N(n)} × ${N(n)} = ${N(n ** 3)} مكعباً`, w / 2, 24);
     return;
   }
   // مربع من بلاطات: الضلع s، والهدف (المساحة) يظهر عرقاً متوهجاً
   const s = Math.max(1, Math.min(20, S.r && S.r.input.type === 'dial' ? S.v : (r.s || 5))), A = r.area, u = Math.min((w - 40) / 21, (h - 50) / 21), x0 = w / 2 - s * u / 2, y0 = h / 2 - s * u / 2 + 10;
-  for (let y = 0; y < s; y++) for (let x = 0; x < s; x++) { const k = y * s + x; g.fillStyle = A && k >= A ? '#ffffff14' : c; g.globalAlpha = A && k >= A ? 1 : .55 + .35 * Math.sin(t * 2 + x * .4 + y * .3) ** 2; g.fillRect(x0 + x * u + 1, y0 + y * u + 1, u - 2, u - 2); }
-  g.globalAlpha = 1; g.strokeStyle = '#FFD27A'; g.lineWidth = 2; g.strokeRect(x0, y0, s * u, s * u);
-  g.fillStyle = '#FFD27A'; g.font = '800 15px Cairo'; g.textAlign = 'center';
+  for (let y = 0; y < s; y++) for (let x = 0; x < s; x++) { const k = y * s + x; g.fillStyle = A && k >= A ? '#00000012' : c; g.globalAlpha = A && k >= A ? 1 : .55 + .35 * Math.sin(t * 2 + x * .4 + y * .3) ** 2; g.fillRect(x0 + x * u + 1, y0 + y * u + 1, u - 2, u - 2); }
+  g.globalAlpha = 1; g.strokeStyle = '#B45309'; g.lineWidth = 3; g.strokeRect(x0, y0, s * u, s * u);
+  g.fillStyle = '#7C2D12'; g.font = '900 18px Cairo'; g.textAlign = 'center';
   g.fillText(`${N(s)} × ${N(s)} = ${N(s * s)} بلاطة` + (A ? `   ·   العرق: ${N(A)}` : ''), w / 2, 20);
-  if (A && S.r.input.type === 'dial') { const d = s * s - A; g.fillStyle = d === 0 ? '#4ADE80' : '#FFB38A'; g.fillText(d === 0 ? 'تطابق تام ✓' : d > 0 ? `زادت ${N(d)} بلاطة` : `نقصت ${N(-d)} بلاطة`, w / 2, h - 8); }
+  if (A && S.r.input.type === 'dial') { const d = s * s - A; g.fillStyle = d === 0 ? '#15803D' : '#C2410C'; g.fillText(d === 0 ? 'تطابق تام ✓' : d > 0 ? `زادت ${N(d)} بلاطة` : `نقصت ${N(-d)} بلاطة`, w / 2, h - 8); }
 }
 
 const SQ = Array.from({ length: 20 }, (_, k) => (k + 1) ** 2);

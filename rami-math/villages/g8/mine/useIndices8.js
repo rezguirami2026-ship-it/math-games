@@ -9,7 +9,7 @@ const who = { name: 'حارس البوابة حمدان', face: '💂🏽‍♂�
 
 function draw(g, w, h, t, S) {
   const open = S.i + (S.done ? 1 : 0), cx = w / 2, top = 16, bot = h - 8, gw = Math.min(w * .62, 330);
-  const bg = g.createLinearGradient(0, 0, 0, h); bg.addColorStop(0, '#15120E'); bg.addColorStop(1, '#0B0907'); g.fillStyle = bg; g.fillRect(0, 0, w, h);
+  const bg = g.createLinearGradient(0, 0, 0, h); bg.addColorStop(0, '#FBF3E2'); bg.addColorStop(1, '#E8D6B5'); g.fillStyle = bg; g.fillRect(0, 0, w, h);
   // العمودان والعتبة
   g.fillStyle = '#5A5048'; g.fillRect(cx - gw / 2 - 30, top, 30, bot - top); g.fillRect(cx + gw / 2, top, 30, bot - top); g.fillStyle = '#463E37'; g.fillRect(cx - gw / 2 - 40, top, gw + 80, 26);
   // المصراعان: ينفتحان حين تُفتح الأقفال الأربعة
@@ -25,7 +25,7 @@ function draw(g, w, h, t, S) {
     g.strokeStyle = cur ? `rgba(255,201,74,${.5 + .5 * Math.sin(t * 5)})` : on ? '#FFE7A8' : '#6E6358'; g.lineWidth = 3; g.stroke();
     g.save(); g.translate(x, y); g.rotate(on ? Math.PI / 2 : (cur ? Math.sin(t * 3) * .2 : 0)); g.fillStyle = on ? '#7A4A00' : '#8C8F96'; g.fillRect(-3, -14, 6, 28); g.restore();
   });
-  if (S.r && S.r.data.expr) { g.fillStyle = 'rgba(0,0,0,.55)'; g.fillRect(cx - 120, h - 40, 240, 30); g.fillStyle = '#FFD27A'; g.font = '800 15px Cairo'; g.textAlign = 'center'; g.fillText(S.r.data.expr, cx, h - 20); }
+  if (S.r && S.r.data.expr) { g.fillStyle = '#FFFFFFE6'; g.fillRect(cx - 120, h - 40, 240, 30); g.fillStyle = '#7C2D12'; g.font = '800 15px Cairo'; g.textAlign = 'center'; g.fillText(S.r.data.expr, cx, h - 20); }
 }
 
 function make(i) {

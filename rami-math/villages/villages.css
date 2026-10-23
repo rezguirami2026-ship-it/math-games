@@ -69,69 +69,54 @@
 .mq-fr { display: inline-flex; flex-direction: column; text-align: center; vertical-align: middle; line-height: 1.15; margin: 0 .12em; }
 .mq-fr > span:first-child { border-bottom: .08em solid currentColor; padding: 0 .15em; }
 
-/* ── لوحة مهمة الدرس (villages/mission.js) ── */
-.vm { position: fixed; inset: 0; z-index: 80; display: grid; place-items: center; background: radial-gradient(ellipse at 50% 40%, rgba(10, 12, 24, .55), rgba(4, 5, 10, .82)); font-family: Cairo, system-ui, sans-serif; direction: rtl; animation: vmIn .25s ease-out; padding: 10px; }
+/* ── لوحة مهمة الدرس (villages/mission.js): مظهر فاتح واضح، والمشهد كبير ── */
+.vm { position: fixed; inset: 0; z-index: 80; display: grid; place-items: center; background: rgba(20, 24, 40, .45); backdrop-filter: blur(3px); font-family: Cairo, system-ui, sans-serif; direction: rtl; animation: vmIn .25s ease-out; padding: 10px; }
 @keyframes vmIn { from { opacity: 0; } }
-.vm-card { width: min(720px, 100%); max-height: 100%; overflow-y: auto; display: flex; flex-direction: column; gap: 8px; padding: 12px 14px 14px; border-radius: 24px; color: #F5F1E6;
-  background: linear-gradient(160deg, rgba(34, 38, 58, .97), rgba(18, 20, 32, .98)); border: 1px solid rgba(255, 201, 74, .35); box-shadow: 0 0 0 1px rgba(0, 0, 0, .4), 0 24px 60px rgba(0, 0, 0, .55), inset 0 1px 0 rgba(255, 255, 255, .08); animation: vmUp .3s cubic-bezier(.2, .9, .3, 1.2); }
+.vm-card { width: min(900px, 100%); max-height: 100%; overflow-y: auto; display: flex; flex-direction: column; gap: 10px; padding: 14px 16px 16px; border-radius: 26px; color: #1E2433;
+  background: #FFFDF6; border: 3px solid #F2C14E; box-shadow: 0 24px 60px rgba(0, 0, 0, .35); animation: vmUp .3s cubic-bezier(.2, .9, .3, 1.2); }
 @keyframes vmUp { from { transform: translateY(24px) scale(.97); } }
 .vm header { display: flex; align-items: center; gap: 10px; }
-.vm header > div { flex: 1; } .vm header b { font-size: 18px; display: block; color: #FFD27A; }
-.vm header small { font-size: 12.5px; opacity: .85; display: flex; align-items: center; gap: 8px; }
-.vm-face { width: 44px; height: 44px; border-radius: 14px; display: grid; place-items: center; font-size: 26px; background: rgba(255, 201, 74, .14); border: 1px solid rgba(255, 201, 74, .3); }
-.vm-x { width: 40px; height: 40px; border-radius: 12px; border: 0; background: rgba(255, 255, 255, .08); color: #fff; font-size: 18px; cursor: pointer; }
-.vm-dots { display: inline-flex; gap: 4px; } .vm-dots i { width: 14px; height: 5px; border-radius: 3px; background: rgba(255, 255, 255, .2); }
-.vm-dots i.on { background: #4ADE80; } .vm-dots i.cur { background: #FFC94A; }
-.vm-scene { width: 100%; height: clamp(150px, 32vh, 320px); border-radius: 16px; background: #0C0E18; display: block; box-shadow: inset 0 0 0 1px rgba(255, 255, 255, .06); }
-.vm-q { font-size: 19px; font-weight: 800; line-height: 1.75; text-align: center; padding: 2px 6px; }
-.vm-q b { color: #FFD27A; }
-.vm-msg { min-height: 0; font-size: 15.5px; font-weight: 700; text-align: center; border-radius: 12px; padding: 0 10px; line-height: 1.7; }
-.vm-msg.good { background: rgba(74, 222, 128, .14); color: #A7F3C0; padding: 6px 10px; }
-.vm-msg.bad { background: rgba(255, 159, 67, .14); color: #FFD1A3; padding: 6px 10px; animation: vmShake .35s; }
+.vm header > div { flex: 1; } .vm header b { font-size: 21px; display: block; color: #B45309; }
+.vm header small { font-size: 14px; color: #475569; display: flex; align-items: center; gap: 8px; font-weight: 700; }
+.vm-face { width: 50px; height: 50px; border-radius: 16px; display: grid; place-items: center; font-size: 30px; background: #FFF1CC; border: 2px solid #F2C14E; }
+.vm-x { width: 44px; height: 44px; border-radius: 14px; border: 0; background: #EEF0F5; color: #1E2433; font-size: 20px; cursor: pointer; }
+.vm-dots { display: inline-flex; gap: 5px; } .vm-dots i { width: 20px; height: 7px; border-radius: 4px; background: #E2E8F0; }
+.vm-dots i.on { background: #22C55E; } .vm-dots i.cur { background: #F59E0B; }
+.vm-scene { width: 100%; height: clamp(230px, 46vh, 430px); border-radius: 18px; display: block; box-shadow: inset 0 0 0 2px #EADFC4; }
+.vm-q { font-size: 22px; font-weight: 800; line-height: 1.8; text-align: center; padding: 4px 8px; color: #1E2433; }
+.vm-q b { color: #C2410C; font-size: 1.08em; }
+.vm-msg { font-size: 17px; font-weight: 700; text-align: center; border-radius: 14px; padding: 0 10px; line-height: 1.75; }
+.vm-msg.good { background: #DCFCE7; color: #166534; padding: 8px 12px; }
+.vm-msg.bad { background: #FFEDD5; color: #9A3412; padding: 8px 12px; animation: vmShake .35s; }
 @keyframes vmShake { 25% { transform: translateX(-5px); } 75% { transform: translateX(5px); } }
-.vm-in { display: flex; flex-direction: column; align-items: center; gap: 8px; }
-.vm-go { font: 900 18px Cairo, sans-serif; border: 0; border-radius: 16px; padding: 10px 28px; color: #2A1A00; cursor: pointer; background: linear-gradient(180deg, #FFD978, #F5A524); box-shadow: 0 5px 0 #B36B00, 0 10px 20px rgba(0, 0, 0, .35); }
-.vm-go:active { transform: translateY(3px); box-shadow: 0 2px 0 #B36B00; }
-.vm-opts { display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; }
-.vm-opts button { font: 800 18px Cairo, sans-serif; min-width: 90px; padding: 10px 16px; border-radius: 14px; border: 1px solid rgba(255, 255, 255, .15); background: rgba(255, 255, 255, .07); color: #fff; cursor: pointer; }
-.vm-opts button:active { transform: scale(.96); }
-.vm-dial { display: flex; align-items: center; gap: 14px; }
-.vm-dial button { width: 58px; height: 58px; border-radius: 18px; border: 0; font: 900 30px Cairo, sans-serif; color: #fff; background: linear-gradient(180deg, #3B4266, #262B45); box-shadow: 0 4px 0 #14172A; cursor: pointer; }
-.vm-dial output { min-width: 120px; text-align: center; font: 900 30px Cairo, sans-serif; color: #FFD27A; }
+.vm-in { display: flex; flex-direction: column; align-items: center; gap: 10px; }
+.vm-go { font: 900 20px Cairo, sans-serif; border: 0; border-radius: 18px; padding: 11px 32px; color: #fff; cursor: pointer; background: linear-gradient(180deg, #22C55E, #15803D); box-shadow: 0 5px 0 #0F5E2E, 0 10px 20px rgba(0, 0, 0, .2); }
+.vm-go:active { transform: translateY(3px); box-shadow: 0 2px 0 #0F5E2E; }
+.vm-opts { display: flex; flex-wrap: wrap; gap: 10px; justify-content: center; }
+.vm-opts button { font: 800 20px Cairo, sans-serif; min-width: 100px; padding: 11px 18px; border-radius: 16px; border: 2px solid #CBD5E1; background: #fff; color: #1E2433; cursor: pointer; box-shadow: 0 4px 0 #CBD5E1; }
+.vm-opts button:active { transform: translateY(3px); box-shadow: 0 1px 0 #CBD5E1; }
+.vm-dial { display: flex; align-items: center; gap: 16px; }
+.vm-dial button { width: 62px; height: 62px; border-radius: 20px; border: 0; font: 900 32px Cairo, sans-serif; color: #fff; background: linear-gradient(180deg, #3B82F6, #1D4ED8); box-shadow: 0 5px 0 #1E3A8A; cursor: pointer; }
+.vm-dial output { min-width: 130px; text-align: center; font: 900 36px Cairo, sans-serif; color: #1D4ED8; background: #EFF6FF; border-radius: 16px; padding: 2px 14px; }
 .vm-pad { display: flex; flex-direction: column; align-items: center; gap: 6px; }
-.vm-pad output { min-width: 160px; padding: 4px 14px; border-radius: 12px; text-align: center; font: 900 26px Cairo, sans-serif; color: #FFD27A; background: rgba(0, 0, 0, .3); }
+.vm-pad output { min-width: 170px; padding: 4px 14px; border-radius: 14px; text-align: center; font: 900 30px Cairo, sans-serif; color: #1D4ED8; background: #EFF6FF; border: 2px solid #BFDBFE; }
 .vm-pad output i { opacity: .4; font-style: normal; }
-.vm-keys { display: grid; grid-template-columns: repeat(3, 62px); gap: 6px; direction: ltr; }
-.vm-keys button, .vm-row button:not(.vm-go) { height: 44px; border-radius: 13px; border: 0; font: 900 22px Cairo, sans-serif; color: #fff; background: rgba(255, 255, 255, .09); cursor: pointer; }
-.vm-keys button:active { background: rgba(255, 255, 255, .2); }
-.vm-row { display: flex; gap: 8px; } .vm-row button:not(.vm-go) { width: 62px; }
-.vm-end .vm-card { align-items: center; text-align: center; padding: 22px; }
-.vm-burst { font-size: 64px; animation: vmPop .6s cubic-bezier(.2, 1.6, .4, 1); }
+.vm-keys { display: grid; grid-template-columns: repeat(3, 64px); gap: 7px; direction: ltr; }
+.vm-keys button, .vm-row button:not(.vm-go) { height: 48px; border-radius: 14px; border: 2px solid #CBD5E1; font: 900 24px Cairo, sans-serif; color: #1E2433; background: #fff; box-shadow: 0 3px 0 #CBD5E1; cursor: pointer; }
+.vm-keys button:active { transform: translateY(2px); box-shadow: none; }
+.vm-row { display: flex; gap: 8px; } .vm-row button:not(.vm-go) { width: 64px; }
+.vm-end .vm-card { align-items: center; text-align: center; padding: 24px; width: min(520px, 100%); }
+.vm-burst { font-size: 68px; animation: vmPop .6s cubic-bezier(.2, 1.6, .4, 1); }
 @keyframes vmPop { from { transform: scale(0) rotate(-20deg); } }
-.vm-stars { display: flex; gap: 8px; font-size: 52px; }
-.vm-stars span { color: rgba(255, 255, 255, .15); } .vm-stars span.on { color: #FFC94A; text-shadow: 0 0 18px rgba(255, 201, 74, .7); animation: vmPop .5s both; }
-.vm-end h3 { margin: 4px 0; font-size: 24px; color: #FFD27A; } .vm-end p { margin: 2px 0; } .vm-mut { opacity: .75; font-size: 14px; }
-@media (max-width: 520px) { .vm-q { font-size: 17px; } .vm-keys { grid-template-columns: repeat(3, 56px); } }
-.mq-mx { white-space: nowrap; display: inline-flex; align-items: center; gap: .15em; }
-@media (max-height: 700px) { .vm-scene { height: clamp(130px, 26vh, 220px); } .vm-q { font-size: 16px; line-height: 1.6; } .vm-card { gap: 6px; padding: 10px 12px; } }
+.vm-stars { display: flex; gap: 8px; font-size: 56px; }
+.vm-stars span { color: #E2E8F0; } .vm-stars span.on { color: #F59E0B; text-shadow: 0 2px 0 #B45309; animation: vmPop .5s both; }
+.vm-end h3 { margin: 4px 0; font-size: 26px; color: #B45309; } .vm-end p { margin: 2px 0; font-weight: 700; } .vm-mut { color: #64748B; font-size: 15px; }
+@media (max-width: 520px) { .vm-q { font-size: 18px; } .vm-keys { grid-template-columns: repeat(3, 56px); } }
+@media (max-height: 760px) { .vm-scene { height: clamp(180px, 36vh, 300px); } .vm-q { font-size: 18px; line-height: 1.6; } .vm-card { gap: 6px; padding: 10px 12px; } }
 
-/* ── لوحة «تحدي الدرس» بمظهر القرى (الصفان ٨ و٩ فقط: body.v89) ── */
-body.v89 .panel { background: radial-gradient(ellipse at 50% 40%, rgba(10, 12, 24, .6), rgba(4, 5, 10, .86)); align-items: center; }
-body.v89 #panel .sheet { color: #F5F1E6; background: linear-gradient(160deg, rgba(34, 38, 58, .98), rgba(18, 20, 32, .99)); border: 1px solid rgba(255, 201, 74, .35); border-radius: 24px; box-shadow: 0 24px 60px rgba(0, 0, 0, .55), inset 0 1px 0 rgba(255, 255, 255, .08); max-width: 680px; margin: auto; }
-body.v89 #panel .sheet h3, body.v89 #panel .chHead b { color: #FFD27A; }
-body.v89 #panel .chHead small, body.v89 #panel .muted { color: rgba(245, 241, 230, .75); }
-body.v89 #panel .chQ, body.v89 #panel .chOut, body.v89 #panel .speech, body.v89 #panel .chTail { background: rgba(255, 255, 255, .06); color: #F5F1E6; border-color: rgba(255, 255, 255, .1); }
-body.v89 #panel .chOut { color: #C9B8FF; }
-body.v89 #panel .speech.bad { background: rgba(255, 159, 67, .14); color: #FFD1A3; }
-body.v89 #panel .speech.ok, body.v89 #panel .speech.good { background: rgba(74, 222, 128, .14); color: #A7F3C0; }
-body.v89 #panel .chOpt, body.v89 #panel .chL, body.v89 #panel .chR, body.v89 #panel .chCard, body.v89 #panel .chStep, body.v89 #panel .act.ghost { background: rgba(255, 255, 255, .08); color: #fff; border: 1px solid rgba(255, 255, 255, .14); box-shadow: 0 3px 0 rgba(0, 0, 0, .35); }
-body.v89 #panel .chOpt.on, body.v89 #panel .chOpt.sel, body.v89 #panel .chL.on, body.v89 #panel .chR.on { background: rgba(255, 201, 74, .22); border-color: #FFC94A; }
-body.v89 #panel .chLit { outline: 3px solid #FFC94A; }
-body.v89 #panel .lockscr2 { background: rgba(0, 0, 0, .35); color: #FFD27A; }
-body.v89 #panel .act.go, body.v89 #panel .act.big { color: #2A1A00; background: linear-gradient(180deg, #FFD978, #F5A524); box-shadow: 0 5px 0 #B36B00; border: 0; }
-body.v89 #panel .chTrail i { background: rgba(255, 255, 255, .1); }
-body.v89 #panel .chGems { background: rgba(255, 255, 255, .1); color: #fff; }
-body.v89 #panel .chBin, body.v89 #panel .chPool, body.v89 #panel .chOrder { background: rgba(255, 255, 255, .05); border-color: rgba(255, 255, 255, .15); color: #fff; }
+/* ── لوحة «تحدي الدرس» في الصفين ٨ و٩: مظهر اللعبة الفاتح نفسه، في وسط الشاشة ── */
+body.v89 .panel { align-items: center; }
+body.v89 #panel .sheet { border-radius: 26px; margin: auto; max-width: 680px; border: 3px solid #F2C14E; }
 
 /* ── مغامرة القرية (رحلة العربة وأمثالها) ── */
 .vadv { position: fixed; inset: 0; z-index: 85; background: #000; font-family: Cairo, sans-serif; direction: rtl; touch-action: none; }

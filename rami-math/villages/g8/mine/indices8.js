@@ -9,12 +9,12 @@ const who = { name: 'الحكيمة نورة', face: '🧙🏽‍♀️', id: 'n
 
 function draw(g, w, h, t, S) {
   const r = S.r ? S.r.data : { b: 3 }, b = r.b || 3, e = S.r && S.r.input.type === 'dial' ? S.v : (r.e ?? 0);
-  const bg = g.createLinearGradient(0, 0, 0, h); bg.addColorStop(0, '#1A1026'); bg.addColorStop(1, '#0A0710'); g.fillStyle = bg; g.fillRect(0, 0, w, h);
+  const bg = g.createLinearGradient(0, 0, 0, h); bg.addColorStop(0, '#F5EEFF'); bg.addColorStop(1, '#E4D7F5'); g.fillStyle = bg; g.fillRect(0, 0, w, h);
   // شريط الأسس من ٤− إلى ٥ (اليسار − واليمين + كالمحور)
   const lo = -4, hi = 5, xOf = k => 30 + (k - lo) / (hi - lo) * (w - 60), y = h - 30;
-  g.strokeStyle = 'rgba(255,255,255,.35)'; g.lineWidth = 2; g.beginPath(); g.moveTo(xOf(lo), y); g.lineTo(xOf(hi), y); g.stroke();
+  g.strokeStyle = '#4C1D95'; g.lineWidth = 3; g.beginPath(); g.moveTo(xOf(lo), y); g.lineTo(xOf(hi), y); g.stroke();
   g.font = '700 12px Cairo'; g.textAlign = 'center';
-  for (let k = lo; k <= hi; k++) { g.fillStyle = k === e ? '#FFC94A' : 'rgba(255,255,255,.6)'; g.beginPath(); g.arc(xOf(k), y, k === e ? 6 : 3, 0, 7); g.fill(); g.fillText(N(k), xOf(k), y + 18); }
+  for (let k = lo; k <= hi; k++) { g.fillStyle = k === e ? '#D97706' : '#4C1D95'; g.font = k === e ? '900 16px Cairo' : '700 14px Cairo'; g.beginPath(); g.arc(xOf(k), y, k === e ? 6 : 3, 0, 7); g.fill(); g.fillText(N(k), xOf(k), y + 18); }
   S.ex = S.ex == null ? e : S.ex + (e - S.ex) * .15;
   // البلّورة: عدد كامل من النسخ للأس الموجب، وشريحة من بلّورة للأس السالب
   const cx = w / 2, cy = h / 2 - 10, val = b ** e, glow = 0.6 + 0.4 * Math.sin(t * 2.2);
@@ -27,7 +27,7 @@ function draw(g, w, h, t, S) {
     const s = 46; gem(cx, cy, s, .18);
     g.save(); g.beginPath(); g.rect(cx - s, cy + s - 2 * s * Math.max(val, .02), 2 * s, 2 * s); g.clip(); gem(cx, cy, s); g.restore();
   }
-  g.fillStyle = '#FFD27A'; g.font = '800 16px Cairo'; g.textAlign = 'center';
+  g.fillStyle = '#4C1D95'; g.font = '900 19px Cairo'; g.textAlign = 'center';
   g.fillText(val >= 1 ? `${N(b)} أس ${N(e)} = ${N(val)}` : `${N(b)} أس ${N(e)} = ١ ÷ ${N(b ** -e)}`, w / 2, 22);
 }
 
