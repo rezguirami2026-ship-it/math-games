@@ -1,7 +1,8 @@
 // منجم الأعماق في العرض العادي، بأدوات العالم المفتوح نفسها (world/art.js): بيوت عُمانية بجدار حقيقي، مسجد بقبة ومئذنة،
 // أكشاك سوق، بئر، نخيل يتمايل، أعمدة إنارة، رايات فوق الشارع، وجبل بطبقات صخرية وأفواه كهوف وبوابة منحوتة، وساحة منجم بسكك وعربات.
 // ground() يُرسم مرة في قطع (ويُستعمل نفسه أرضاً للعرض ثلاثي الأبعاد)، وitems() عناصر قائمة مرتبة بالعمق.
-import { pattern, sprite, building3d, minaret, leanAt, stall, stoneWell, palmCached, streetLamp, signboard, bunting, elev, upright, boxShadow, shade, INK } from '../../../world/art.js';
+import { houseItems2D, houseSmoke2D } from '../../houses.js';
+import { stoneBox, sidrCached, bench, pattern, sprite, building3d, minaret, leanAt, stall, stoneWell, palmCached, streetLamp, signboard, bunting, elev, upright, boxShadow, shade, INK } from '../../../world/art.js';
 
 const rnd = (x, y, k = 0) => { const s = Math.sin(x * 127.1 + y * 311.7 + k * 74.7) * 43758.5453; return s - Math.floor(s); };
 export function kit2d(D) {
@@ -24,7 +25,7 @@ export function kit2d(D) {
       g.strokeStyle = '#6A4428'; g.lineWidth = 6; for (let s = 0; s < L; s += 16) { const cx = ax + ux * s, cy = ay + uy * s; g.beginPath(); g.moveTo(cx - uy * 13, cy + ux * 13); g.lineTo(cx + uy * 13, cy - ux * 13); g.stroke(); }
       g.strokeStyle = '#8C9096'; g.lineWidth = 2.6; for (const o of [-8, 8]) { g.beginPath(); g.moveTo(ax - uy * o, ay + ux * o); g.lineTo(bx - uy * o, by + ux * o); g.stroke(); } } });
     // ظلال المباني على الأرض (العرض العادي؛ في المجسّم تأتي من الشمس)
-    D.HOUSES.forEach(b => boxShadow(g, b.x, b.y, b.w, b.h, b.H || 96)); boxShadow(g, D.MOSQUE.x, D.MOSQUE.y, D.MOSQUE.w, D.MOSQUE.h, D.MOSQUE.H);
+    D.HOMES.forEach(Hm => { Hm.parts.forEach(b => boxShadow(g, b.x, b.y, b.w, b.h, b.H || 96)); Hm.walls.forEach(q => boxShadow(g, q.x, q.y, q.w, q.h, 26)); }); boxShadow(g, D.MOSQUE.x, D.MOSQUE.y, D.MOSQUE.w, D.MOSQUE.h, D.MOSQUE.H);
   }
   // ── الجبل: صورة واحدة محفوظة (طبقات صخرية، قمم مسننة، أفواه الكهوف، والبوابة الكبرى)
   function paintCliff(c) {
@@ -61,7 +62,8 @@ export function kit2d(D) {
   // ── العناصر القائمة ──
   const items = (t) => {
     const out = [{ y: CLIFF, draw: c => sprite(c, 'g8mineCliff', 0, -180, W, CLIFF + 200, paintCliff) }];
-    D.HOUSES.forEach((b, i) => out.push({ x: b.x + b.w / 2, y: b.y + b.h, draw: c => building3d(c, 'g8mh' + i, { ...b, H: b.H || 96 }) }));
+    const A = { building3d, stoneBox, sidrCached, palmCached, bench, upright, leanAt };
+    D.HOMES.forEach((Hm, i) => out.push(...houseItems2D(Hm, A, 'g8h' + i, t)));
     const M = D.MOSQUE, N = D.MINARET;   // المسجد بقبته (من نمطه)، والمئذنة على ركن سطحه منزاحة بارتفاعه كما في القرية الأصلية
     out.push({ x: M.x + M.w / 2, y: M.y + M.h, draw: c => { building3d(c, 'g8mosque', M); const { lx, ly } = leanAt(M.x + M.w / 2, M.y + M.h); c.save(); c.translate(lx * M.H, -M.H * (1 - ly)); minaret(c, 'g8minaret', N.x, N.y, N.s, N.H); c.restore(); } });
     D.STALLS.forEach(([x, y, col]) => out.push({ x, y, draw: c => stall(c, x, y, col) }));
@@ -76,6 +78,7 @@ export function kit2d(D) {
   };
   // رايات ملوّنة فوق الشارع الرئيسي (تُرسم فوق كل شيء)
   const over = (c, t) => {
+    D.HOMES.forEach(Hm => houseSmoke2D(Hm, c, t));
     bunting(c, elev(1065, 1010, 92), elev(1235, 1010, 92), 22, 9, ['#C2410C', '#FFC94A', '#0E7490', '#15803D'], t);
     bunting(c, elev(1065, 1470, 92), elev(1235, 1470, 92), 22, 9, ['#7C3AED', '#FFC94A', '#BE185D', '#0E7490'], t);
   };

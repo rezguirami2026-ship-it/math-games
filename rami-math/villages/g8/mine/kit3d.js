@@ -3,9 +3,10 @@
 // يتوهج البلّور فيها، والبوابة الكبرى المنحوتة، وبرج الرفع ببكرة تدور، وأكشاك بمظلات مخططة، وعربات وأكوام خام، ورايات.
 import { Parts, box } from '../../../renderer3d/geom.js';
 import { material } from '../../../renderer3d/textures.js';
-import { omaniHouse, omaniMosque, signMesh } from '../../../renderer3d/omani.js';
-import { palms, mountains, clouds } from '../../../renderer3d/nature.js';
-import { streetLamps, well } from '../../../renderer3d/props.js';
+import { omaniHouse, omaniMosque, signMesh, SCALE_H } from '../../../renderer3d/omani.js';
+import { houseGroup3D } from '../../houses.js';
+import { palms, mountains, clouds, sidrTree } from '../../../renderer3d/nature.js';
+import { streetLamps, well, bench } from '../../../renderer3d/props.js';
 import { buildCamel, animateCamel } from '../../../renderer3d/animals.js';
 
 export function kit3d(THREE, { high, def: D }) {
@@ -20,7 +21,8 @@ export function kit3d(THREE, { high, def: D }) {
   const wood = material('wood', '#7A4A2A'), iron = material('metal', '#8C8F96', { rough: .5, metal: .8 });
 
   // ١. البيوت والمسجد والمئذنة
-  D.HOUSES.forEach((b, i) => root.add(omaniHouse(b, i === 0 ? { tower: 'left' } : i === 8 ? { tower: 'right' } : {})));
+  const LIB = { omaniHouse, Parts, box, material, sidrTree, palms, bench, SCALE_H };
+  D.HOMES.forEach(Hm => { const hg = houseGroup3D(THREE, Hm, LIB); root.add(hg.group); ticks.push(hg.tick); });
   root.add(omaniMosque(D.MOSQUE, D.MINARET));
   // ٢. النخيل والإنارة والبئر
   root.add(palms(D.PALMS.map(([x, y, s]) => ({ x, y, s }))));
