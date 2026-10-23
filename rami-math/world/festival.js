@@ -2,6 +2,7 @@
 // الرسم بأسلوب القرية (world/art.js): بوابة مشتركة، مبانٍ مجسّمة، برج ساعة، ألواح، كشك الدوّار، وحبال زينة معلّقة
 import { rr, shade, ar } from '../core/util.js';
 import { FLAGS, INK, PAL, SUN, pattern, sprite, boxShadow, blobShadow, building3d, box3d, palmCached, gateEW, gateEWShadows, workTable, signboard, leanAt, elev, stall, bench, shrub, solid } from './art.js';
+import { placeName } from '../content/places.js';
 export const WALL4_Y = 2600, GATE4 = { x0: 1190, x1: 1290 };
 export const KITCHEN = { x: 360, y: 2680, w: 440, h: 150 };
 export const ST5 = { scale: { x: 480, y: 2876 }, recipe: { x: 680, y: 2876 }, clock: { x: 1100, y: 2904 }, calls: { x: 1550, y: 2856 }, guest: { x: 2200, y: 2944 } };
@@ -102,7 +103,7 @@ function clockFace(c, x, y, r, a1, a2) {
   c.strokeStyle = '#C0392B'; c.lineWidth = 1.4; c.beginPath(); c.moveTo(x, y); c.lineTo(x + Math.cos(a2) * r * .78, y + Math.sin(a2) * r * .78); c.stroke();
 }
 export function festivalDrawables(open, t) {
-  const out = FLAGS.three ? [] : [{ y: WALL4_Y + 12, draw: c => gateEW(c, 'festgate', WALL4_Y, GATE4.x0, GATE4.x1, open, 'ساحة المهرجان') }];   // في 3D: البوابة مجسّمة
+  const out = FLAGS.three ? [] : [{ y: WALL4_Y + 12, draw: c => gateEW(c, 'festgate', WALL4_Y, GATE4.x0, GATE4.x1, open, placeName('festival')) }];   // في 3D: البوابة مجسّمة
   if (!FLAGS.three) out.push({ y: KITCHEN.y + KITCHEN.h, draw: c => {
     building3d(c, 'fest-kitchen', Object.assign({}, KITCHEN, { H: H_K, wall: '#F1DCC8', door: '#B8613E', sign: 'مطبخ المهرجان', ac: 1, tank: 1 }));
     const { lx, ly } = leanAt(KITCHEN.x + KITCHEN.w / 2, KITCHEN.y + KITCHEN.h), cx = KITCHEN.x + KITCHEN.w - 50 + lx * (H_K + 30), cy = KITCHEN.y + 30 - (H_K + 30) * (1 - ly);
@@ -183,4 +184,4 @@ function bunting(c, a, b, t) {   // حبل رايات مثلثة ملوّنة ي
 }
 
 export const R3D = { buildings: [Object.assign({}, KITCHEN, { H: H_K, wall: '#F1DCC8', door: '#B8613E', sign: 'مطبخ المهرجان', ac: 1, tank: 1, chimney: 1 }), Object.assign({}, CALLS, { H: H_C, wall: '#DCE4EA', door: '#2F6B73', sign: 'مركز الاتصالات', style: 'shop', dish: 1, clocks: 1 })],
-  palms: PALMS_X.concat(PALMS6.map(p => ({ x: p.x, y: p.y, s: .85 }))), benches: BENCHES, shrubs: SHRUBS.map(([x, y]) => [x, y, '#D9478C', 14]), clockTower: { x: TOWER.x, y: TOWER.y, s: TW.s, H: TW.H }, gateEW: [WALL4_Y, GATE4.x0, GATE4.x1, 'ساحة المهرجان'] };
+  palms: PALMS_X.concat(PALMS6.map(p => ({ x: p.x, y: p.y, s: .85 }))), benches: BENCHES, shrubs: SHRUBS.map(([x, y]) => [x, y, '#D9478C', 14]), clockTower: { x: TOWER.x, y: TOWER.y, s: TW.s, H: TW.H }, gateEW: [WALL4_Y, GATE4.x0, GATE4.x1, placeName('festival')] };

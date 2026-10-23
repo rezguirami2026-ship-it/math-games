@@ -2,6 +2,7 @@
 // الرسم بأسلوب القرية نفسه (world/art.js): مبنى مجسّم، ملعب بعشب، محطة حافلات بمظلة، ساحة مرصوفة، وأرض حظيرة
 import { rr, shade } from '../core/util.js';
 import { FLAGS, INK, PAL, SUN, boxShadow, blobShadow, signboard, pattern, sprite, building3d, leanAt, palmCached, shrub, gateNS, wallNSItems, gateNSShadows, stall, solid, bigSign } from './art.js';
+import { placeName } from '../content/places.js';
 export const GATE_X = 1500;
 export const CARP = { x: 1580, y: 140, w: 200, h: 120 }, BENCH = { x: 1700, y: 332 };
 export const FIELD = { x: 1880, y: 140, w: 380, h: 300 }, BOARD = { x: 1990, y: 478 };
@@ -150,7 +151,7 @@ function calendarBoard(c, x, y) {   // لوحة إعلانات خشبية بسق
   c.strokeStyle = INK; c.lineWidth = 1; rr(c, x - 50, y - 94, 100, 68, 4); c.stroke();
 }
 /* سور السوق وبوابته: المكوّن المشترك في art.js */
-function drawWall(c, open) { gateNS(c, 'tower', GATE_X, open, 'السوق الأسبوعي'); }
+function drawWall(c, open) { gateNS(c, 'tower', GATE_X, open, placeName('market')); }
 export function marketShadows(ctx) { gateNSShadows(ctx, GATE_X); }
 
 /* ما يُبنى مجسّماً في العرض ثلاثي الأبعاد (renderer3d/regions.js) */

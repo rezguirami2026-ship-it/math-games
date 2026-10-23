@@ -68,6 +68,8 @@ import { drawWorldMap } from './ui/worldmap.js';
 import { marketColliders, drawMarketGround, marketDrawables } from './world/market.js';
 import * as quests from './missions/quests.js';
 import { LESSONS, UNITS, CHALLENGES } from './content/index.js';
+import { placeName, placeIcon } from './content/places.js';
+import { gradeDecor } from './world/gradeDecor.js';
 import { gradeChosen, rememberGrade, gradeAsked, markGradeAsked, GRADE } from './content/grade.js';
 import { openWardrobe, heroLookWorn, syncUnitGear } from './ui/wardrobe.js';
 import { SCENE } from './ui/home.js';
@@ -159,17 +161,17 @@ function gateOpenness(i, open, view) {
   if (gateAnim.at[i]) { const k = (performance.now() - gateAnim.at[i]) / 1400; if (k < 1) return Math.max(.001, 1 - Math.pow(1 - k, 3)); delete gateAnim.at[i]; dust(p.x - 30, p.y + 14); dust(p.x + 30, p.y + 14); }
   return 1;
 }
-/* المناطق للافتة الاسم: الحدود بالأسوار، والاسم يطابق place في UNITS */
+/* المناطق للافتة الاسم: الحدود بالأسوار، والاسم حسب الصف (content/places.js) ويطابق place في UNITS */
 const AREAS = [
-  { id: 'village', icon: '🏡', name: 'قرية الخير', in: (x, y) => y < 1712 && x < 1500 },
-  { id: 'market', icon: '🛒', name: 'السوق الأسبوعي', in: (x, y) => y < 1712 && x < 2300 },
-  { id: 'harbor', icon: '⚓', name: 'الميناء', in: (x, y) => y < 1712 },
-  { id: 'fort', icon: '🏰', name: 'القلعة', in: (x, y) => y < 2600 },
-  { id: 'datayard', icon: '📊', name: 'بستان البيانات', in: (x, y) => y >= 3052 && y < 3500 && x < 2500 },
-  { id: 'festival', icon: '🎪', name: 'ساحة المهرجان', in: (x, y) => y < 3500 },
-  { id: 'coop', icon: '🏪', name: 'سوق الجمعية', in: (x, y) => y < 4500 },
-  { id: 'caravan', icon: '🐪', name: 'طريق القافلة', in: (x, y) => y < 5500 },
-  { id: 'workshop', icon: '🛠️', name: 'ورشة البنّاء', in: () => true }
+  { id: 'village', icon: placeIcon('village'), name: placeName('village'), in: (x, y) => y < 1712 && x < 1500 },
+  { id: 'market', icon: placeIcon('market'), name: placeName('market'), in: (x, y) => y < 1712 && x < 2300 },
+  { id: 'harbor', icon: placeIcon('harbor'), name: placeName('harbor'), in: (x, y) => y < 1712 },
+  { id: 'fort', icon: placeIcon('fort'), name: placeName('fort'), in: (x, y) => y < 2600 },
+  { id: 'datayard', icon: placeIcon('datayard'), name: placeName('datayard'), in: (x, y) => y >= 3052 && y < 3500 && x < 2500 },
+  { id: 'festival', icon: placeIcon('festival'), name: placeName('festival'), in: (x, y) => y < 3500 },
+  { id: 'coop', icon: placeIcon('coop'), name: placeName('coop'), in: (x, y) => y < 4500 },
+  { id: 'caravan', icon: placeIcon('caravan'), name: placeName('caravan'), in: (x, y) => y < 5500 },
+  { id: 'workshop', icon: placeIcon('workshop'), name: placeName('workshop'), in: () => true }
 ];
 const areaSub = a => { const us = UNITS.filter(u => u.place === a.name); return us.length ? `الفصل ${us[0].term === 1 ? 'الأول' : 'الثاني'} · ` + us.map(u => `الوحدة ${ar(u.n)}: ${u.title}`).join(' · ') : ''; };
 function areaCheck(dt) {   // يتغير الاسم بعد ثبات اللاعب في المنطقة الجديدة نصف ثانية (لا وميض عند الحدود)
@@ -558,6 +560,7 @@ function worldItems(view, t, three) {
   const g = gateState();
   const gk = REGIONS.map((r, i) => gateOpenness(i, g[i], view)); W.gateK = gk;   // انفتاح البوابات (يقرؤه العرض ثلاثي الأبعاد أيضاً)
   const list = staticDrawables(s, t, W.player, { three }).concat(...REGIONS.map((r, i) => r.draw(gk[i], t))).filter(d => d.y > view.y - 60 && d.y < view.y + view.h + 200);
+  list.push(...gradeDecor(view, t));   // زينة الصف عند مداخل المناطق (الخامس والسابع)
   mods.forEach(md => { const d = quests.data(md.id), done = quests.isDone(md.id); try { if (md.draw) list.push(...md.draw(d, t, !done, done)); } catch (e) { report('الرسم', md.id, e); } });
   TREE_SPOTS.forEach((sp, i) => { const pt = s.world.trees[i]; if (pt) { const k = clamp((now - pt) / 2200, .05, 1); list.push({ y: sp.y, x: sp.x, draw: cc => drawPalm(cc, sp.x, sp.y, .2 + .8 * easeOut(k), false, t) }); } });
   if (!three) W.trucks.forEach(tr => list.push({ y: tr.y + 4, x: tr.x, draw: cc => drawTruck(cc, tr, m.loads[tr.i], convoyActive()) }));

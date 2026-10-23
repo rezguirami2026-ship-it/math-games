@@ -1,17 +1,18 @@
 // خريطة العالم المرسومة (لوحة 🗺️): رقّ بحواف وبوصلة، البحر شرقاً، كل منطقة بأرضها وأسوارها وشعارها واسمها على شريط،
 // الطرق الرئيسة، معالم القرية (البيوت، المزرعة، البركة، المدرسة، البئر)، المناطق المقفلة مظللة بقفل،
 // وعلامات: أنت، والمهمة الحالية، ومن ينتظرك. تُرسم بدقة مضاعفة.
+import { placeName, placeIcon } from '../content/places.js';
 const WW = 3200, WH = 6500, SEA = 2930;
 const ZONES = [   // [المعرّف، الاسم، الرمز، x0، y0، x1، y1، لون الأرض، فهرس البوابة في REGIONS (-1 = مفتوحة دائماً)]
-  ['village', 'قرية الخير', '🏡', 0, 0, 1500, 1712, '#E9D6A2', -1],
-  ['market', 'السوق الأسبوعي', '🛒', 1500, 0, 2300, 1712, '#EFCB97', 0],
-  ['harbor', 'الميناء', '⚓', 2300, 0, SEA, 1712, '#F1DDB0', 1],
-  ['fort', 'القلعة', '🏰', 0, 1712, SEA, 2600, '#DCC39A', 2],
-  ['festival', 'ساحة المهرجان', '🎪', 0, 2600, SEA, 3040, '#EBCFC0', 3],
-  ['datayard', 'بستان البيانات', '📊', 0, 3040, 2500, 3500, '#CFE3B0', 7],
-  ['coop', 'سوق الجمعية', '🏪', 0, 3500, SEA, 4500, '#D9DDB4', 4],
-  ['caravan', 'طريق القافلة', '🐪', 0, 4500, SEA, 5500, '#EBCB93', 5],
-  ['workshop', 'ورشة البنّاء', '🛠️', 0, 5500, SEA, WH, '#D8C7AE', 6]
+  ['village', placeName('village'), placeIcon('village'), 0, 0, 1500, 1712, '#E9D6A2', -1],
+  ['market', placeName('market'), placeIcon('market'), 1500, 0, 2300, 1712, '#EFCB97', 0],
+  ['harbor', placeName('harbor'), placeIcon('harbor'), 2300, 0, SEA, 1712, '#F1DDB0', 1],
+  ['fort', placeName('fort'), placeIcon('fort'), 0, 1712, SEA, 2600, '#DCC39A', 2],
+  ['festival', placeName('festival'), placeIcon('festival'), 0, 2600, SEA, 3040, '#EBCFC0', 3],
+  ['datayard', placeName('datayard'), placeIcon('datayard'), 0, 3040, 2500, 3500, '#CFE3B0', 7],
+  ['coop', placeName('coop'), placeIcon('coop'), 0, 3500, SEA, 4500, '#D9DDB4', 4],
+  ['caravan', placeName('caravan'), placeIcon('caravan'), 0, 4500, SEA, 5500, '#EBCB93', 5],
+  ['workshop', placeName('workshop'), placeIcon('workshop'), 0, 5500, SEA, WH, '#D8C7AE', 6]
 ];
 const rr = (c, x, y, w, h, r) => { c.beginPath(); c.moveTo(x + r, y); c.arcTo(x + w, y, x + w, y + h, r); c.arcTo(x + w, y + h, x, y + h, r); c.arcTo(x, y + h, x, y, r); c.arcTo(x, y, x + w, y, r); c.closePath(); };
 const rnd = (a => () => (a = (a * 9301 + 49297) % 233280) / 233280)(7);

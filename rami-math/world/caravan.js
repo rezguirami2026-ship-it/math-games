@@ -2,6 +2,7 @@
 // الرسم بأسلوب القرية: كثبان، طريق إسفلتي، مدرج وطائرة، واحة بنخيل، ومحطة وقود
 import { rr, shade } from '../core/util.js';
 import { FLAGS, box3d, INK, PAL, pattern, sprite, kiosk3d, kioskShadow, gateEW, gateEWShadows, palmCached, blobShadow, upright, shrub, solid } from './art.js';
+import { placeName } from '../content/places.js';
 export const WALL6_Y = 4500, GATE6 = { x0: 1190, x1: 1290 };
 export const ST8 = {
   fuel: { x: 380, y: 4790, sign: 'محطة الوقود', col: '#C0392B' }, signs: { x: 800, y: 4790, sign: 'دليل القافلة', col: '#8B5A2B' },
@@ -67,7 +68,7 @@ export function drawCaravanGround(ctx, t) {
   const px = 1180 + Math.sin(t / 3) * 4; ctx.fillStyle = 'rgba(40,30,20,.18)'; ctx.beginPath(); ctx.ellipse(px + 6, 4632, 46, 9, 0, 0, 7); ctx.fill();   // ظل الطائرة
 }
 export function caravanDrawables(open, t) {
-  const out = FLAGS.three ? [] : [{ y: WALL6_Y + 12, draw: c => gateEW(c, 'caravangate', WALL6_Y, GATE6.x0, GATE6.x1, open, 'طريق القافلة') }];   // في 3D: البوابة مجسّمة
+  const out = FLAGS.three ? [] : [{ y: WALL6_Y + 12, draw: c => gateEW(c, 'caravangate', WALL6_Y, GATE6.x0, GATE6.x1, open, placeName('caravan')) }];   // في 3D: البوابة مجسّمة
   if (!FLAGS.three) Object.entries(ST8).forEach(([k, s]) => out.push({ y: s.y - 32, draw: c => kiosk3d(c, k, s, GOODS[k]) }));
   if (!FLAGS.three) out.push({ y: 4626, x: 1180, draw: c => plane(c, 1180 + Math.sin(t / 3) * 4, 4612) });
   if (!FLAGS.three) STACKS.forEach(([x, y, n, col], i) => out.push({ y: y + 74, draw: c => box3d(c, 'stack' + i, { x, y, w: 150, h: 74, H: 26 * n }, col, r => { r.fillStyle = col; r.fillRect(x, y - 26 * n, 150, 74); }, f => { f.fillStyle = col; f.fillRect(x, y + 74 - 26 * n, 150, 26 * n); f.fillStyle = 'rgba(0,0,0,.2)'; for (let k = x + 6; k < x + 150; k += 8) f.fillRect(k, y + 74 - 26 * n, 2, 26 * n); }) }));   // البديل ثنائي الأبعاد للحاويات
@@ -91,4 +92,4 @@ function pump(c, x, y) {   // مضخة وقود: قاعدة، جسم بشاشة�
   c.strokeStyle = '#2B2B2B'; c.lineWidth = 2; c.beginPath(); c.moveTo(x + 11, y - 30); c.quadraticCurveTo(x + 20, y - 18, x + 14, y - 8); c.stroke(); c.fillStyle = '#3D3A3A'; c.fillRect(x + 10, y - 34, 5, 8);
 }
 
-export const R3D = { kiosks: Object.entries(ST8).map(([k, s]) => Object.assign({ goods: GOODS[k] }, s)), palms: PALMS, shrubs: OSHRUBS.map(([x, y]) => [x, y, null, 12]), gateEW: [WALL6_Y, GATE6.x0, GATE6.x1, 'طريق القافلة'] };
+export const R3D = { kiosks: Object.entries(ST8).map(([k, s]) => Object.assign({ goods: GOODS[k] }, s)), palms: PALMS, shrubs: OSHRUBS.map(([x, y]) => [x, y, null, 12]), gateEW: [WALL6_Y, GATE6.x0, GATE6.x1, placeName('caravan')] };

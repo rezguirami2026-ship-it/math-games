@@ -2,6 +2,7 @@
 // الرسم بأسلوب القرية (world/art.js): سور ببوابة خشبية، خندق، جسر خشبي هو خط الأعداد، قلعة عُمانية بأبراج مستديرة، ومحطات الدروس
 import { rr, shade } from '../core/util.js';
 import { FLAGS, INK, PAL, SUN, pattern, sprite, boxShadow, blobShadow, building3d, box3d, stoneBox3d, palmCached, gateEW, gateEWShadows, stall, roundTower, stoneWell, leanAt, upright, solid } from './art.js';
+import { placeName } from '../content/places.js';
 export const WALL_Y = 1712, GATE3 = { x0: 1190, x1: 1290 };
 export const BW = { x0: 420, x1: 1580, y: 1830 };                       // ممشى الجسر = خط الأعداد
 export const MOAT = { x: 380, y: 1852, w: 1240, h: 58 };
@@ -64,7 +65,7 @@ export function drawFortGround(ctx, t) {
   PALMS_F.forEach(p => blobShadow(ctx, p.x, p.y, 26, 80));
 }
 export function fortDrawables(open, t) {
-  const out = FLAGS.three ? [] : [{ y: WALL_Y + 12, draw: c => gateEW(c, 'fortgate', WALL_Y, GATE3.x0, GATE3.x1, open, 'القلعة') }];   // في 3D: البوابة مجسّمة
+  const out = FLAGS.three ? [] : [{ y: WALL_Y + 12, draw: c => gateEW(c, 'fortgate', WALL_Y, GATE3.x0, GATE3.x1, open, placeName('fort')) }];   // في 3D: البوابة مجسّمة
   if (!FLAGS.three) out.push({ y: CASTLE.y + CASTLE.h, draw: c => castle(c, t) });
   if (!FLAGS.three) Object.entries(B4).forEach(([k, b]) => out.push({ y: b.y + b.h, draw: c => building3d(c, 'fort-' + k, Object.assign({}, b, { H: H_B, door: k === 'gold' ? '#7A4A2A' : k === 'kitchen' ? '#B8613E' : '#6E4524', tank: k === 'kitchen' || k === 'roof', ac: k === 'museum' })) }));
   if (!FLAGS.three) out.push({ y: ST4.well.y - 16, x: ST4.well.x, draw: c => stoneWell(c, ST4.well.x, ST4.well.y - 20, 26, t) });
@@ -142,4 +143,4 @@ function packer(c, s, t) {   // آلة التعبئة: صندوق معدني ب�
 }
 
 export const R3D = { buildings: Object.entries(B4).map(([k, b]) => Object.assign({}, b, { H: H_B, door: k === 'gold' ? '#7A4A2A' : k === 'kitchen' ? '#B8613E' : '#6E4524', tank: k === 'kitchen' || k === 'roof', ac: k === 'museum' })),
-  palms: PALMS_F, wells: [[ST4.well.x, ST4.well.y - 20, 26]], castle: CASTLE, castleH: K_H, gateEW: [WALL_Y, GATE3.x0, GATE3.x1, 'القلعة'] };
+  palms: PALMS_F, wells: [[ST4.well.x, ST4.well.y - 20, 26]], castle: CASTLE, castleH: K_H, gateEW: [WALL_Y, GATE3.x0, GATE3.x1, placeName('fort')] };

@@ -89,7 +89,7 @@ export const calendars5 = Object.assign({
     const r = d.rounds[d.r], L = [{ who: 'hessa', text: 'المواعيد كلها في مكانها! تحسب الأيام والشهور والسنوات بدقة.' }];
     if (r.t === 'age') return kp(this, W, d, { title: '🎂 أعمار الأعضاء', text: `انضمّ عضو إلى الجمعية عام <b>${N(r.y)}</b>. كم سنة مضت على انضمامه في عام <b>${N(2026)}</b>؟`, ans: 2026 - r.y, n: 3, id: 'calendars5', msg, kind, opts: { dot: false }, lines: L, hint: 'اطرح السنة الأقدم من الأحدث.' });
     if (r.t === 'month') {
-      sheetOpen(`<h3>📅 موعد بعد أشهر</h3>${msgBox((msg ? msg + ' ' : '') + `سوق الجمعية الكبير في <b>${MONTHS[r.m0]}</b>، والسوق التالي بعد <b>${N(r.k)}</b> أشهر. اضغط شهره.`, kind)}
+      sheetOpen(`<h3>📅 موعد بعد أشهر</h3>${msgBox((msg ? msg + ' ' : '') + `سوق الموازين الكبير في <b>${MONTHS[r.m0]}</b>، والسوق التالي بعد <b>${N(r.k)}</b> أشهر. اضغط شهره.`, kind)}
         <div class="g5cards">${MONTHS.map((x, i) => `<button class="g5card" data-m="${i}">${x}</button>`).join('')}</div><button class="act ghost" id="benchOut">رجوع</button>`);
       panel().querySelectorAll('[data-m]').forEach(b => b.onclick = async e => { e.stopPropagation(); const i = +b.dataset.m;
         if (i === r.m0 + r.k) await advance(this, W, d, 3, 'calendars5', L); else { sfx('cough'); this.open(W, d, `${MONTHS[i]} بعد ${N((i - r.m0 + 12) % 12)} أشهر من ${MONTHS[r.m0]}، وليس بعد ${N(r.k)}.`, 'bad'); } });

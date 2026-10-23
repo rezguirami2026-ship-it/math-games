@@ -3,6 +3,7 @@
 import { rr, shade, ar } from '../core/util.js';
 import { LESSONS } from '../content/lessons.js';
 import { FLAGS, INK, PAL, pattern, kiosk3d, kioskShadow, gateEW, gateEWShadows, palmCached, blobShadow, boxShadow, box3d, lanternString, elev, shrub, workTable, solid } from './art.js';
+import { placeName } from '../content/places.js';
 export const WALL7_Y = 5500, GATE7 = { x0: 1190, x1: 1290 };
 export const ST9 = {
   tiles: { x: 400, y: 5790, sign: 'بلاط حمود', col: '#2F6FB2' }, flag: { x: 820, y: 5790, sign: 'علم آمنة', col: '#C0392B' },
@@ -41,7 +42,7 @@ export function drawWorkshopGround(ctx) {
   PALMS.forEach(p => blobShadow(ctx, p.x, p.y, 22, 70));
 }
 export function workshopDrawables(open, t, allDone) {
-  const out = FLAGS.three ? [] : [{ y: WALL7_Y + 12, draw: c => gateEW(c, 'workgate', WALL7_Y, GATE7.x0, GATE7.x1, open, 'ورشة البنّاء') }];   // في 3D: البوابة مجسّمة
+  const out = FLAGS.three ? [] : [{ y: WALL7_Y + 12, draw: c => gateEW(c, 'workgate', WALL7_Y, GATE7.x0, GATE7.x1, open, placeName('workshop')) }];   // في 3D: البوابة مجسّمة
   if (!FLAGS.three) Object.entries(ST9).forEach(([k, s]) => out.push({ y: s.y - 32, draw: c => kiosk3d(c, k, s, GOODS[k]) }));
   if (!FLAGS.three) out.push({ y: STAGE.y - 10, draw: c => stage(c, t, allDone) });
   if (!FLAGS.three) PALMS.forEach(p => out.push({ y: p.y, draw: c => palmCached(c, p.x, p.y, 1, false, t) }));
@@ -70,4 +71,4 @@ function stage(c, t, allDone) {   // منصة التخرّج: خشب مجسّم�
   if (allDone) for (let i = 0; i < 24; i++) { const a = i * 2.39 + t, r = 30 + ((t * 40 + i * 13) % 90); c.fillStyle = ['#E85D75', '#FFC23D', '#1FC8B5', '#9C6BFF'][i % 4]; c.fillRect(x + Math.cos(a) * r * 1.6, y - 260 + Math.sin(a) * r * .6, 6, 6); }
 }
 
-export const R3D = { kiosks: Object.entries(ST9).map(([k, s]) => Object.assign({ goods: GOODS[k] }, s)), palms: PALMS, shrubs: WSHRUBS.map(([x, y]) => [x, y, '#D9478C', 14]), gateEW: [WALL7_Y, GATE7.x0, GATE7.x1, 'ورشة البنّاء'] };
+export const R3D = { kiosks: Object.entries(ST9).map(([k, s]) => Object.assign({ goods: GOODS[k] }, s)), palms: PALMS, shrubs: WSHRUBS.map(([x, y]) => [x, y, '#D9478C', 14]), gateEW: [WALL7_Y, GATE7.x0, GATE7.x1, placeName('workshop')] };

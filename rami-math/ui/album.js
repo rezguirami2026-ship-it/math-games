@@ -6,12 +6,13 @@ import { sfx } from '../core/sound.js';
 import { ar } from '../core/util.js';
 import { LESSONS, UNITS, SKILL_IDS } from '../content/lessons.js';
 import { GRADE } from '../content/grade.js';
+import { placeName, placeIcon } from '../content/places.js';
 const GRADE_NAME = { 5: 'الخامس', 6: 'السادس', 7: 'السابع' };
 import { levelOf } from '../core/levels.js';
 import { drawHuman } from '../character/human.js';
 import { heroLookWorn } from './wardrobe.js';
 
-const AREAS = { market: ['🛒', 'السوق الأسبوعي', '#EFCB97'], harbor: ['⚓', 'الميناء', '#9FD3EC'], fort: ['🏰', 'القلعة', '#DCC39A'], festival: ['🎪', 'ساحة المهرجان', '#EBCFC0'], datayard: ['📊', 'بستان البيانات', '#CFE3B0'], coop: ['🏪', 'سوق الجمعية', '#D9DDB4'], caravan: ['🐪', 'طريق القافلة', '#EBCB93'], workshop: ['🛠️', 'ورشة البنّاء', '#D8C7AE'] };
+const AREAS = Object.fromEntries(Object.entries({'market': '#EFCB97', 'harbor': '#9FD3EC', 'fort': '#DCC39A', 'festival': '#EBCFC0', 'datayard': '#CFE3B0', 'coop': '#D9DDB4', 'caravan': '#EBCB93', 'workshop': '#D8C7AE'}).map(([k, c]) => [k, [placeIcon(k), placeName(k), c]]));   // الاسم والرمز حسب الصف
 const ADV = { rescue: '🏘️ إنقاذ القرية', storm: '🌪️ العاصفة الكبرى', island: '🏝️ الجزيرة المفقودة', oldcity: '🏛️ سر المدينة القديمة', lanterns: '🏮 فوانيس المهرجان', lighthouse: '🗼 الفنار والضباب', desert: '🏜️ مهمة في الصحراء', mountain: '⛰️ قمة جبل شمس', castle: '🏰 القلعة المظلمة' };
 const date = t => { if (!t || t === 1) return ''; const d = new Date(t); return `${ar(d.getDate())} / ${ar(d.getMonth() + 1)} / ${ar(d.getFullYear())}`; };
 /* الذكريات من الحفظ: [الرمز، العنوان، السطر، اللون، الوقت] */

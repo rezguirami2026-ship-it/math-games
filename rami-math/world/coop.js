@@ -2,6 +2,7 @@
 // الرسم بأسلوب القرية: سوق مبلّط بصفّين من الأكشاك المجسّمة، وحبال فوانيس بين الصفّين
 import { rr, shade } from '../core/util.js';
 import { FLAGS, building3d, box3d, INK, PAL, pattern, kiosk3d, kioskShadow, gateEW, gateEWShadows, palmCached, blobShadow, lanternString, elev, bench, shrub, stoneWell, solid } from './art.js';
+import { placeName } from '../content/places.js';
 export const WALL5_Y = 3500, GATE5 = { x0: 1190, x1: 1290 };
 // صفّان من الأكشاك: لكل درس كشك بلافتة ولون
 export const ST7 = {
@@ -62,7 +63,7 @@ export function drawCoopGround(ctx) {
   if (!FLAGS.three) LANTERNS.forEach(([a, b, y]) => [a, b].forEach(x => blobShadow(ctx, x, y, 5, 80)));
 }
 export function coopDrawables(open, t) {
-  const out = FLAGS.three ? [] : [{ y: WALL5_Y + 12, draw: c => gateEW(c, 'coopgate', WALL5_Y, GATE5.x0, GATE5.x1, open, 'سوق الجمعية') }];   // في 3D: البوابة مجسّمة
+  const out = FLAGS.three ? [] : [{ y: WALL5_Y + 12, draw: c => gateEW(c, 'coopgate', WALL5_Y, GATE5.x0, GATE5.x1, open, placeName('coop')) }];   // في 3D: البوابة مجسّمة
   if (!FLAGS.three) Object.entries(ST7).forEach(([k, s]) => out.push({ y: s.y - 32, draw: c => kiosk3d(c, k, s, GOODS[k]) }));
   if (!FLAGS.three) PALMS.forEach(p => out.push({ y: p.y, draw: c => palmCached(c, p.x, p.y, 1, false, t) }));
   if (!FLAGS.three) LANTERNS.forEach(([a, b, y]) => [a, b].forEach(x => out.push({ y, x, draw: c => { c.fillStyle = PAL.wood; c.fillRect(x - 2, y - 80, 4, 80); c.strokeStyle = INK; c.lineWidth = .7; c.strokeRect(x - 2, y - 80, 4, 80); } })));
@@ -77,4 +78,4 @@ export function coopDrawables(open, t) {
   return out;
 }
 
-export const R3D = { kiosks: Object.entries(ST7).map(([k, s]) => Object.assign({ goods: GOODS[k] }, s)), palms: PALMS, benches: BENCHES, shrubs: SHRUBS.map(([x, y]) => [x, y, '#D9478C', 14]), wells: [[WELL.x, WELL.y, 22]], gateEW: [WALL5_Y, GATE5.x0, GATE5.x1, 'سوق الجمعية'] };
+export const R3D = { kiosks: Object.entries(ST7).map(([k, s]) => Object.assign({ goods: GOODS[k] }, s)), palms: PALMS, benches: BENCHES, shrubs: SHRUBS.map(([x, y]) => [x, y, '#D9478C', 14]), wells: [[WELL.x, WELL.y, 22]], gateEW: [WALL5_Y, GATE5.x0, GATE5.x1, placeName('coop')] };

@@ -3,6 +3,7 @@
 import { rr } from '../core/util.js';
 import { FLAGS, INK, PAL, pattern, sprite, gateEW, gateEWShadows } from './art.js';
 import { FUNPARK } from './festival.js';
+import { placeName } from '../content/places.js';
 export const WALL6_Y = 3040, GATE6 = { x0: 1190, x1: 1290 }, YARD = { x: 0, y: WALL6_Y + 12, w: FUNPARK.x, h: 3500 - WALL6_Y - 12 };
 // أحواض زهور على شكل أعمدة بيانية (زينة أرضية بلا تصادم)
 const BEDS = [[300, 3100, [3, 5, 2, 4]], [1440, 3460, [2, 4, 5, 3]], [2160, 3110, [4, 2, 5, 3]]];
@@ -31,6 +32,6 @@ export function drawDatayardGround(ctx) {
 }
 const shadeSoil = '#8A6A44';
 export function datayardDrawables(open) {
-  return FLAGS.three ? [] : [{ y: WALL6_Y + 12, draw: c => gateEW(c, 'datagate', WALL6_Y, GATE6.x0, GATE6.x1, open, 'بستان البيانات') }];   // في 3D: البوابة مجسّمة
+  return FLAGS.three ? [] : [{ y: WALL6_Y + 12, draw: c => gateEW(c, 'datagate', WALL6_Y, GATE6.x0, GATE6.x1, open, placeName('datayard')) }];   // في 3D: البوابة مجسّمة
 }
-export const R3D = { gateEW: [WALL6_Y, GATE6.x0, GATE6.x1, 'بستان البيانات'], benches: [[700, 3330], [1900, 3290]], shrubs: [[200, 3080, '#7FBF4F', 13], [2400, 3080, '#D9478C', 13], [160, 3470, '#7FBF4F', 13]] };
+export const R3D = { gateEW: [WALL6_Y, GATE6.x0, GATE6.x1, placeName('datayard')], benches: [[700, 3330], [1900, 3290]], shrubs: [[200, 3080, '#7FBF4F', 13], [2400, 3080, '#D9478C', 13], [160, 3470, '#7FBF4F', 13]] };

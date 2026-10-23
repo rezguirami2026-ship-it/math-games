@@ -3,6 +3,7 @@
 import { rr, shade, ar } from '../core/util.js';
 import { FLAGS, INK, PAL, SUN, pattern, sprite, boxShadow, blobShadow, building3d, palmCached, gateNS, wallNSItems, gateNSShadows, workTable, signboard, box3d, solid, tag } from './art.js';
 import { crate3d } from './entities.js';
+import { placeName } from '../content/places.js';
 export const GATE2_X = 2300, SEA_X = 2930;
 export const PIER_Y = [305, 605, 905];
 export const CRATES = { x: 2620, y: 452 };
@@ -97,7 +98,7 @@ export function harborDrawables(open, t) {
     for (let j = -B.yr; j <= B.yr; j++) if (j) axis.push({ y: B.oy - j * B.u + 6, x: B.ox - 18, draw: c => tag(c, B.ox - 18, B.oy - j * B.u + 10, n(j), o) });
     axis.push({ y: B.oy + 8, x: X0 + GW + 34, draw: c => tag(c, X0 + GW + 34, B.oy + 12, 'س', { fs: 18, bg: '#E2475C', line: '#fff', fg: '#fff' }) }, { y: Y0 - 16, x: B.ox, draw: c => tag(c, B.ox, Y0 - 12, 'ص', { fs: 18, bg: '#E2475C', line: '#fff', fg: '#fff' }) }); }
   const out = [];
-  if (!FLAGS.three) out.push({ y: 700, draw: c => gateNS(c, 'htower', GATE2_X, open, 'الميناء') }, ...wallNSItems('htower', GATE2_X));
+  if (!FLAGS.three) out.push({ y: 700, draw: c => gateNS(c, 'htower', GATE2_X, open, placeName('harbor')) }, ...wallNSItems('htower', GATE2_X));
   if (!FLAGS.three) out.push({ y: FRAMES.y + FRAMES.h, draw: c => building3d(c, 'frames', Object.assign({}, FRAMES, { H: H_B, wall: '#DCE4EA', door: '#2F6B73', sign: 'ورشة الهياكل', ac: 1 })) });
   if (!FLAGS.three) out.push({ y: GIFTS.y + GIFTS.h, draw: c => building3d(c, 'gifts', Object.assign({}, GIFTS, { H: H_B, wall: '#F1DCE0', door: '#9E3B5F', sign: 'دكان الهدايا', tank: 1 })) });
   if (!FLAGS.three) [[FRAME_TABLE, 'frames'], [GIFT_TABLE, 'gifts'], [ROOF_TABLE, 'roof']].forEach(([tb, k]) => out.push({ y: tb.y, x: tb.x, draw: c => workTable(c, tb.x, tb.y, k) }));
