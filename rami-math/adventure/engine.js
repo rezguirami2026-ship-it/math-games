@@ -14,8 +14,8 @@ const webglOK = () => { try { const c = document.createElement('canvas'); return
 let createAdv3D = null; export const setAdv3D = f => { createAdv3D = f; };
 export const want3D = () => webglOK() && !WEAK && gfx.d3();
 
-const SOLID_KINDS = new Set(['npc', 'chest', 'block', 'gate', 'door', 'sign', 'fire', 'beacon', 'cage', 'tent', 'crates', 'barrel', 'boat', 'well', 'lever', 'banner', 'house', 'rot', 'tablet', 'crystal', 'beam', 'fence', 'pillar']);
-const ACT_KINDS = new Set(['npc', 'chest', 'lever', 'sign', 'door', 'gate', 'cage', 'beacon', 'boat', 'fire', 'safe', 'block', 'well', 'tent', 'banner', 'house', 'rot', 'tablet', 'crystal', 'animal', 'pillar', 'site', 'beam']);
+const SOLID_KINDS = new Set(['npc', 'chest', 'block', 'gate', 'door', 'sign', 'fire', 'beacon', 'cage', 'tent', 'crates', 'barrel', 'boat', 'well', 'lever', 'banner', 'house', 'rot', 'tablet', 'crystal', 'beam', 'fence', 'pillar', 'cart', 'oil', 'basket']);
+const ACT_KINDS = new Set(['npc', 'chest', 'lever', 'sign', 'door', 'gate', 'cage', 'beacon', 'boat', 'fire', 'safe', 'block', 'well', 'tent', 'banner', 'house', 'rot', 'tablet', 'crystal', 'animal', 'pillar', 'site', 'beam', 'cart', 'oil', 'basket']);   // cart/oil/basket: مغامرة منجم الصف الثامن
 const esc = s => String(s).replace(/[&<>]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;' }[c]));
 const wait = ms => new Promise(r => setTimeout(r, ms));
 
@@ -403,7 +403,7 @@ export function runAdventure(def, onExit) {
     });
   }
   function draw() {
-    const dk = area.dark != null ? area.dark : THEMES[area.theme].night;
+    const dk = (S.flags.weather && S.flags.weather.dark != null) ? S.flags.weather.dark : area.dark != null ? area.dark : THEMES[area.theme].night;   // كالعرض المجسّم: weather.dark يغلب
     // الشريط العلوي (المهمة والأزرار) والأدوات السفلية تغطي أطراف الشاشة: البطل يتوسط المساحة الحرة بينهما،
     // والكاميرا تتجاوز حافة الخريطة بقدرها، فلا يختفي البطل خلف الكتابة حين يقف قرب أعلى الخريطة أو أسفلها (الهاتف خاصة)
     if (!draw.inset || (draw.n = (draw.n || 0) + 1) % 20 === 0) { const tp = $('.advTop').getBoundingClientRect(), iv = $('.advInv'), ib = iv && iv.children.length ? iv.getBoundingClientRect() : null;

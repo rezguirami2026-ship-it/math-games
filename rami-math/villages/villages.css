@@ -128,38 +128,3 @@ body.v89 #panel .sheet { border-radius: 26px; margin: auto; max-width: 680px; bo
 .vadv-tip { position: absolute; bottom: 24px; left: 50%; transform: translateX(-50%); background: rgba(0, 0, 0, .6); color: #fff; padding: 8px 16px; border-radius: 14px; font-weight: 700; transition: opacity .6s; text-align: center; }
 .vadv-tip.off { opacity: 0; }
 .vadvBtn { background: linear-gradient(180deg, #FFD978, #F5A524) !important; color: #2A1A00 !important; }
-
-/* ── مغامرات القرى (villages/quest.js): بطاقة الفصل، الخطوات، اللاسلكي ── */
-.qz { position: fixed; inset: 0; z-index: 260; background: #0B1020; font-family: Cairo, sans-serif; direction: rtl; touch-action: none; user-select: none; }
-.qz-stage { position: absolute; inset: 0; overflow: hidden; }
-.qz-stage canvas { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
-.qz-top { position: absolute; top: 10px; inset-inline: 10px; display: flex; gap: 10px; align-items: center; z-index: 5; pointer-events: none; }
-.qz-top > * { pointer-events: auto; }
-.qz-x { width: 44px; height: 44px; border-radius: 14px; border: 0; background: rgba(255, 255, 255, .92); font-size: 18px; cursor: pointer; }
-.qz-title { flex: 1; background: rgba(255, 253, 246, .95); border: 3px solid #F2C14E; border-radius: 18px; padding: 6px 14px; box-shadow: 0 6px 18px rgba(0, 0, 0, .3); }
-.qz-title b { font-size: 17px; color: #B45309; }
-.qz-chs { display: flex; gap: 5px; margin-top: 3px; flex-wrap: wrap; }
-.qz-chs i { font-style: normal; width: 26px; height: 26px; border-radius: 50%; display: grid; place-items: center; font-weight: 900; font-size: 13px; background: #E2E8F0; color: #475569; }
-.qz-chs i.on { background: #22C55E; color: #fff; } .qz-chs i.cur { background: #F59E0B; color: #fff; box-shadow: 0 0 0 3px #FDE68A; }
-.qz-steps { position: absolute; top: 96px; inset-inline-start: 10px; z-index: 5; display: flex; flex-direction: column; gap: 6px; max-width: min(46vw, 300px); }
-.qz-steps div { display: flex; align-items: center; gap: 8px; background: rgba(255, 253, 246, .92); border-radius: 12px; padding: 6px 10px; font-weight: 800; font-size: 14px; color: #64748B; box-shadow: 0 3px 10px rgba(0, 0, 0, .2); }
-.qz-steps span { width: 24px; height: 24px; flex: none; border-radius: 50%; display: grid; place-items: center; background: #E2E8F0; font-size: 12px; }
-.qz-steps div.cur { color: #1E2433; outline: 3px solid #F59E0B; } .qz-steps div.cur span { background: #F59E0B; color: #fff; }
-.qz-steps div.on { color: #166534; background: #DCFCE7; } .qz-steps div.on span { background: #22C55E; color: #fff; }
-.qz-steps div.on span::after { content: '✓'; position: absolute; } .qz-steps div.on span { font-size: 0; position: relative; } .qz-steps div.on span::after { font-size: 14px; }
-.qz-radio { position: absolute; bottom: 16px; inset-inline-start: 12px; z-index: 6; display: flex; gap: 10px; align-items: center; max-width: min(92vw, 520px); background: #FFFDF6; border: 3px solid #0EA5E9; border-radius: 18px; padding: 8px 14px 8px 10px; box-shadow: 0 10px 26px rgba(0, 0, 0, .35); }
-.qz-radio.pop { animation: qzIn .35s cubic-bezier(.2, 1.4, .4, 1); } @keyframes qzIn { from { transform: translateY(30px); opacity: 0; } }
-.qz-face { width: 52px; height: 52px; flex: none; border-radius: 50%; display: grid; place-items: center; font-size: 30px; background: #E0F2FE; }
-.qz-radio b { color: #0369A1; font-size: 14px; } .qz-radio p { margin: 2px 0 0; font-size: 16px; font-weight: 700; line-height: 1.6; color: #1E2433; }
-.qz-card { position: absolute; inset: 0; z-index: 20; display: grid; place-items: center; background: rgba(8, 12, 30, .72); backdrop-filter: blur(4px); animation: vmIn .3s; padding: 12px; }
-.qz-card > div { width: min(520px, 100%); background: #FFFDF6; border: 4px solid #F2C14E; border-radius: 28px; padding: 22px 22px 18px; text-align: center; box-shadow: 0 30px 70px rgba(0, 0, 0, .5); animation: vmUp .35s cubic-bezier(.2, .9, .3, 1.2); }
-.qz-card small { color: #B45309; font-weight: 900; font-size: 14px; } .qz-card i { display: block; font-style: normal; font-size: 64px; margin: 4px 0; animation: vmPop .6s cubic-bezier(.2, 1.6, .4, 1); }
-.qz-card h2 { margin: 0; font-size: 28px; color: #1E2433; } .qz-card p { margin: 6px 0 10px; font-size: 18px; font-weight: 700; color: #334155; line-height: 1.7; }
-.qz-card ol { text-align: start; margin: 0 0 14px; padding-inline-start: 26px; font-weight: 700; color: #475569; line-height: 1.9; }
-.qz-card button { font: 900 20px Cairo, sans-serif; border: 0; border-radius: 18px; padding: 11px 36px; color: #fff; cursor: pointer; background: linear-gradient(180deg, #22C55E, #15803D); box-shadow: 0 5px 0 #0F5E2E; }
-.qz-rw { display: flex; flex-direction: column; gap: 6px; margin: 8px 0 14px; } .qz-rw span { background: #FEF3C7; border-radius: 12px; padding: 6px; font-weight: 800; } .qz-mut { color: #64748B; }
-.qz-ctl { position: absolute; bottom: 18px; inset-inline-end: 14px; z-index: 6; display: flex; gap: 10px; }
-.qz-ctl button { width: 76px; height: 76px; border-radius: 24px; border: 0; font: 900 30px Cairo, sans-serif; color: #fff; background: linear-gradient(180deg, #3B82F6, #1D4ED8); box-shadow: 0 6px 0 #1E3A8A, 0 10px 20px rgba(0, 0, 0, .35); cursor: pointer; touch-action: none; }
-.qz-ctl button.big { width: 120px; background: linear-gradient(180deg, #F59E0B, #C2410C); box-shadow: 0 6px 0 #7C2D12, 0 10px 20px rgba(0, 0, 0, .35); }
-.qz-ctl button:active, .qz-ctl button.on { transform: translateY(4px); box-shadow: 0 2px 0 #1E3A8A; }
-.qz-steps { cursor: pointer; } .qz-steps.mini div:not(.cur) { display: none; } .qz-steps.mini div.cur::after { content: '⋯'; margin-inline-start: auto; color: #94A3B8; }

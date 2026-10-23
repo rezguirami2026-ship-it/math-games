@@ -119,6 +119,20 @@ export function drawThing(c, e, t, A) {
       c.beginPath(); c.moveTo(x, y - 8); c.lineTo(x + Math.sin(a) * 22, y - 8 - Math.cos(a) * 22); c.stroke(); c.fillStyle = e.color || '#E2475C'; c.beginPath(); c.arc(x + Math.sin(a) * 22, y - 8 - Math.cos(a) * 22, 5.5, 0, 7); c.fill(); break; }
     case 'plate': { const on = A.pressed(e); c.fillStyle = on ? '#C9971C' : '#8C8478'; c.beginPath(); c.roundRect(x - 18, y - 32, 36, 28, 5); c.fill(); c.fillStyle = on ? '#FFD54A' : '#A69E92'; c.beginPath(); c.roundRect(x - 14, y - 28, 28, 20, 4); c.fill();
       c.fillStyle = 'rgba(0,0,0,.25)'; c.font = '900 14px Cairo'; c.textAlign = 'center'; c.fillText('◆', x, y - 13); break; }
+    case 'cart': {   // عربة منجم على السكة (تتحرك بنعومة عبر px/py)، وفيها ما تحمله
+      const bx = (e.px != null ? e.px : e.x) * T + T / 2, by = (e.py != null ? e.py : e.y) * T + T; c.fillStyle = 'rgba(40,25,10,.25)'; c.beginPath(); c.ellipse(bx + 3, by - 5, 24, 7, 0, 0, 7); c.fill();
+      c.fillStyle = '#2B2B2F'; [-14, 14].forEach(o => { c.beginPath(); c.arc(bx + o, by - 8, 6, 0, 7); c.fill(); });
+      c.fillStyle = '#6B6F78'; c.beginPath(); c.moveTo(bx - 22, by - 36); c.lineTo(bx + 22, by - 36); c.lineTo(bx + 17, by - 10); c.lineTo(bx - 17, by - 10); c.closePath(); c.fill(); c.strokeStyle = '#3A3D44'; c.lineWidth = 2; c.stroke();
+      c.fillStyle = '#4A4E58'; c.fillRect(bx - 22, by - 38, 44, 4); if (e.load) { c.fillStyle = e.load; c.beginPath(); c.ellipse(bx, by - 38, 18, 8, 0, Math.PI, 0); c.fill(); } break; }
+    case 'oil': {   // مصباح زيت كبير على قاعدة: يملأ مصباح البطل
+      sh(12); c.fillStyle = '#6A4428'; c.fillRect(x - 12, y - 14, 24, 10); c.fillStyle = '#B88A2E'; c.beginPath(); c.roundRect(x - 9, y - 40, 18, 26, 4); c.fill();
+      const gl = c.createRadialGradient(x, y - 30, 2, x, y - 30, 26); gl.addColorStop(0, `rgba(255,200,110,${e.empty ? .15 : .7 + .2 * Math.sin(t * 6)})`); gl.addColorStop(1, 'rgba(255,200,110,0)'); c.fillStyle = gl; c.fillRect(x - 26, y - 56, 52, 52);
+      c.fillStyle = e.empty ? '#6B5A40' : '#FFE08A'; c.beginPath(); c.arc(x, y - 30, 5, 0, 7); c.fill(); break; }
+    case 'basket': {   // بكرة وسلة فوق الهوّة: تمتلئ بالحجارة فترتفع المنصة
+      sh(18); c.fillStyle = '#6A4428'; c.fillRect(x - 22, y - 70, 5, 66); c.fillRect(x + 17, y - 70, 5, 66); c.fillRect(x - 24, y - 74, 48, 6);
+      c.strokeStyle = '#B88A2E'; c.lineWidth = 4; c.beginPath(); c.arc(x, y - 66, 9, 0, 7); c.stroke(); c.strokeStyle = '#8A6A44'; c.lineWidth = 1.5; c.beginPath(); c.moveTo(x, y - 60); c.lineTo(x, y - 36); c.stroke();
+      c.fillStyle = '#A8723E'; c.beginPath(); c.moveTo(x - 14, y - 36); c.lineTo(x + 14, y - 36); c.lineTo(x + 10, y - 18); c.lineTo(x - 10, y - 18); c.closePath(); c.fill();
+      for (let i = 0; i < (e.n || 0); i++) { c.fillStyle = '#7A6B5C'; c.beginPath(); c.arc(x - 7 + i * 7, y - 38, 5, 0, 7); c.fill(); } break; }
     case 'block': { const bx = (e.px != null ? e.px : e.x) * T + T / 2, by = (e.py != null ? e.py : e.y) * T + T; c.fillStyle = 'rgba(40,25,10,.25)'; c.fillRect(bx - 20, by - 8, 44, 8);
       c.fillStyle = '#A8723E'; c.fillRect(bx - 21, by - 44, 42, 40); c.strokeStyle = '#6E4520'; c.lineWidth = 3; c.strokeRect(bx - 21, by - 44, 42, 40); c.beginPath(); c.moveTo(bx - 21, by - 44); c.lineTo(bx + 21, by - 4); c.moveTo(bx + 21, by - 44); c.lineTo(bx - 21, by - 4); c.stroke(); c.fillStyle = 'rgba(255,255,255,.15)'; c.fillRect(bx - 19, by - 42, 38, 4); break; }
     case 'gate': { if (e.open) { c.fillStyle = 'rgba(0,0,0,.15)'; c.fillRect(x - 24, y - 6, 48, 4); break; } c.fillStyle = '#3A3A44'; for (let i = 0; i < 5; i++) c.fillRect(x - 22 + i * 10, y - 52, 4, 50); c.fillRect(x - 24, y - 54, 48, 5); c.fillRect(x - 24, y - 26, 48, 4); c.fillStyle = '#8A8A96'; for (let i = 0; i < 5; i++) c.fillRect(x - 21 + i * 10, y - 52, 1.4, 50); break; }
