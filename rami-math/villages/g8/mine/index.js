@@ -6,9 +6,18 @@ import { kit2d } from './kit2d.js';
 
 export default {
   id: 'mine',
-  map: [
-    '################################',
-    '######,##############....#....##',
+  map: [   // ٩ صفوف للقرية فوق الأرض (بيوت ونخيل وبئر)، ثم واجهة الجبل ومدخل المنجم، ثم الأنفاق والكهوف
+    '^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^',
+    '^^__________HHH_______________^^',
+    '^^_HHH______HHH________HHHH___^^',
+    '^^_HHH_________________HHHH___^^',
+    '^^____________________________^^',
+    '^^_______________HHH__________^^',
+    '^^_______________HHH_____HHH__^^',
+    '^^_______________________HHH__^^',
+    '#####,,,########################',
+    '#####,,,########################',
+    '#####,,,#############....#....##',
     '##,,,,,,,,,##########.#.....#.##',
     '##,,,,,,,,,##########.........##',
     '##,,,,,,,,,==========.........##',
@@ -37,46 +46,52 @@ export default {
   ],
   legend: {
     '#': { wall: 'rock', h: 1.05 },
+    '^': { wall: 'hill', h: 1.6 },
+    'H': { wall: 'house', h: 1.5 },
+    '_': { floor: 'sand' },
     ',': { floor: 'planks' },
     '.': { floor: 'stone' },
     '=': { floor: 'rail' },
     '~': { floor: 'chasm', block: true }
   },
-  start: { x: 5.5, y: 5.5 },
-  mood: {
-    sky: '#0B0D14', fog: '#0B0D14', fogNear: 520, fogFar: 1350, exposure: 1.05,
-    hemi: ['#B4C4EA', '#5A4634', 1.05], sun: { color: '#C8D4F5', i: .6, dir: [-.4, 1, .55] },
-    accent: '#FFC94A', motes: '#FFD9A0', dark: 'rgba(6,7,14,.86)', sky2d: '#07080E'
+  start: { x: 4.5, y: 5.4 },
+  mood: {   // نهار مشمس فوق الأرض، والأنفاق تُرى بوضوح (لا ظلام أسود)
+    sky: '#8FC7F0', fog: '#CFE6F7', fogNear: 900, fogFar: 2400, exposure: 1,
+    hemi: ['#FFFFFF', '#B08A60', 1.35], sun: { color: '#FFF1D6', i: 2.3, dir: [-.45, 1, .6] },
+    accent: '#FFC94A', sky2d: '#9FD3F5'
   },
-  ambience: 'castle', music: 'castle',
+  ambience: 'village', music: 'village',
   // المحطات: معرّف الدرس، موضعها، وأين يقف البطل
   stations: [
-    { id: 'directed8', x: 6.5, y: 1.6, stand: { x: 6.5, y: 3.2 }, label: 'مصعد المنجم', icon: '🛗', kind: 'elevator' },
-    { id: 'roots8', x: 25.5, y: 2.6, stand: { x: 25.5, y: 4.2 }, label: 'عروق البلّور', icon: '💎', kind: 'crystals' },
-    { id: 'indices8', x: 18.5, y: 18.9, stand: { x: 18.6, y: 20.3 }, label: 'كهف التضاعف', icon: '✨', kind: 'doubler' },
-    { id: 'useIndices8', x: 4.5, y: 16.2, stand: { x: 4.5, y: 17.8 }, label: 'بوابة القوانين', icon: '🚪', kind: 'gate' }
+    { id: 'directed8', x: 10.5, y: 6.3, stand: { x: 10.5, y: 7.4 }, label: 'مصعد المنجم', icon: '🛗', kind: 'elevator' },
+    { id: 'roots8', x: 25.5, y: 11.6, stand: { x: 25.5, y: 13.2 }, label: 'عروق البلّور', icon: '💎', kind: 'crystals' },
+    { id: 'indices8', x: 18.5, y: 27.9, stand: { x: 18.6, y: 29.3 }, label: 'كهف التضاعف', icon: '✨', kind: 'doubler' },
+    { id: 'useIndices8', x: 4.5, y: 25.2, stand: { x: 4.5, y: 26.8 }, label: 'بوابة القوانين', icon: '🚪', kind: 'gate' }
   ],
   // أهل المنجم: كل واحد بجانب محطة درسه (يلتفت إلى البطل حين يقترب، ومنه تخرج فقاعة الكلام)
   people: [
-    { id: 'saleh', x: 8.4, y: 2.9, look: { kind: 'man', skin: '#B5835A', robe: '#5E5040', accent: '#E3B04B', hat: 'cap', vest: '#C9772E', beard: '#2B2118', tool: 'hoe' } },
-    { id: 'maryam', x: 27.2, y: 3.8, look: { kind: 'woman', skin: '#C99A72', robe: '#3E5C76', accent: '#E3B04B', vest: '#C9772E' } },
-    { id: 'noura', x: 16.6, y: 19.6, look: { kind: 'woman', skin: '#B88660', robe: '#4B2E6B', accent: '#FFC94A', elder: true, glasses: true } },
-    { id: 'hamdan', x: 6.3, y: 17.6, look: { kind: 'man', skin: '#A8764E', robe: '#F2EEE4', accent: '#8C1C2B', beard: '#1C1410', tall: true, build: 'big' } }
+    { id: 'saleh', x: 12.3, y: 7.1, look: { kind: 'man', skin: '#B5835A', robe: '#5E5040', accent: '#E3B04B', hat: 'cap', vest: '#C9772E', beard: '#2B2118', tool: 'hoe' } },
+    { id: 'maryam', x: 27.2, y: 12.8, look: { kind: 'woman', skin: '#C99A72', robe: '#3E5C76', accent: '#E3B04B', vest: '#C9772E' } },
+    { id: 'noura', x: 16.6, y: 28.6, look: { kind: 'woman', skin: '#B88660', robe: '#4B2E6B', accent: '#FFC94A', elder: true, glasses: true } },
+    { id: 'hamdan', x: 6.3, y: 26.6, look: { kind: 'man', skin: '#A8764E', robe: '#F2EEE4', accent: '#8C1C2B', beard: '#1C1410', tall: true, build: 'big' } }
   ],
   // المعالم: مصابيح (تضيء الظلام في العرضين)، دعامات خشبية، عربات، بلورات، براميل وأكوام خام
   props: [
-    { kind: 'lamp', x: 2.6, y: 2.6 }, { kind: 'lamp', x: 10.4, y: 2.6 }, { kind: 'lamp', x: 2.6, y: 8.4 }, { kind: 'lamp', x: 10.4, y: 8.4 },
-    { kind: 'beam', x: 13, y: 4, axis: 'y' }, { kind: 'beam', x: 17, y: 4, axis: 'y' }, { kind: 'lamp', x: 15, y: 4.2 },
-    { kind: 'cart', x: 12.6, y: 5.5, ore: '#C98A3B' }, { kind: 'cart', x: 24.5, y: 12.5, ore: '#7FD3FF', axis: 'y' },
-    { kind: 'crystal', x: 21.6, y: 1.6, c: '#5FD3FF', s: 1.1 }, { kind: 'crystal', x: 28.5, y: 3.5, c: '#B28CFF', s: 1.3 }, { kind: 'crystal', x: 21.6, y: 7.6, c: '#5FD3FF', s: .9 },
-    { kind: 'crystal', x: 28.4, y: 8.4, c: '#7CF5C8', s: 1 }, { kind: 'crystal', x: 24.5, y: 9.6, c: '#B28CFF', s: .8 },
-    { kind: 'lamp', x: 21.5, y: 5.5 }, { kind: 'lamp', x: 28.5, y: 6 },
-    { kind: 'beam', x: 25, y: 12, axis: 'x' }, { kind: 'beam', x: 25, y: 14, axis: 'x' },
-    { kind: 'lamp', x: 15.5, y: 15.5 }, { kind: 'lamp', x: 28.5, y: 15.5 }, { kind: 'lamp', x: 28.5, y: 22.4 }, { kind: 'lamp', x: 15.6, y: 22.4 },
-    { kind: 'crystal', x: 21, y: 16, c: '#FFB347', s: .9 }, { kind: 'crystal', x: 26.5, y: 21.5, c: '#5FD3FF', s: 1.2 }, { kind: 'crystal', x: 16.5, y: 16.5, c: '#7CF5C8', s: .8 },
-    { kind: 'barrel', x: 3, y: 6.8 }, { kind: 'barrel', x: 3.6, y: 7.4 }, { kind: 'ore', x: 9.6, y: 7.4, c: '#C98A3B' }, { kind: 'ore', x: 27.8, y: 19.6, c: '#7FD3FF' },
-    { kind: 'beam', x: 10, y: 19, axis: 'y' }, { kind: 'beam', x: 13, y: 19, axis: 'y' },
-    { kind: 'lamp', x: 2.6, y: 20.5 }, { kind: 'lamp', x: 8.4, y: 20.5 }, { kind: 'lamp', x: 2.6, y: 24.4 }, { kind: 'barrel', x: 8.3, y: 23.6 }
+    // القرية فوق الأرض: نخيل وبئر ولافتة المنجم ومصباحا المدخل
+    { kind: 'palm', x: 8.6, y: 2.4 }, { kind: 'palm', x: 15.8, y: 2.2, s: 1.15 }, { kind: 'palm', x: 21.2, y: 3.6 }, { kind: 'palm', x: 28.6, y: 5.4, s: .9 }, { kind: 'palm', x: 2.6, y: 6.6 },
+    { kind: 'well', x: 15.5, y: 5.6 }, { kind: 'sign', x: 3.6, y: 7.4 }, { kind: 'lamp', x: 4.6, y: 7.6 }, { kind: 'lamp', x: 8.4, y: 7.6 },
+    { kind: 'lamp', x: 2.6, y: 11.6 }, { kind: 'lamp', x: 10.4, y: 11.6 }, { kind: 'lamp', x: 2.6, y: 17.4 }, { kind: 'lamp', x: 10.4, y: 17.4 },
+    { kind: 'beam', x: 13, y: 13, axis: 'y' }, { kind: 'beam', x: 17, y: 13, axis: 'y' }, { kind: 'lamp', x: 15, y: 13.2 },
+    { kind: 'cart', x: 12.6, y: 14.5, ore: '#C98A3B' }, { kind: 'cart', x: 24.5, y: 21.5, ore: '#7FD3FF', axis: 'y' },
+    { kind: 'crystal', x: 21.6, y: 10.6, c: '#5FD3FF', s: 1.1 }, { kind: 'crystal', x: 28.5, y: 12.5, c: '#B28CFF', s: 1.3 }, { kind: 'crystal', x: 21.6, y: 16.6, c: '#5FD3FF', s: .9 },
+    { kind: 'crystal', x: 28.4, y: 17.4, c: '#7CF5C8', s: 1 }, { kind: 'crystal', x: 24.5, y: 18.6, c: '#B28CFF', s: .8 },
+    { kind: 'lamp', x: 21.5, y: 14.5 }, { kind: 'lamp', x: 28.5, y: 15 },
+    { kind: 'beam', x: 25, y: 21, axis: 'x' }, { kind: 'beam', x: 25, y: 23, axis: 'x' },
+    { kind: 'lamp', x: 15.5, y: 24.5 }, { kind: 'lamp', x: 28.5, y: 24.5 }, { kind: 'lamp', x: 28.5, y: 31.4 }, { kind: 'lamp', x: 15.6, y: 31.4 },
+    { kind: 'crystal', x: 21, y: 25, c: '#FFB347', s: .9 }, { kind: 'crystal', x: 26.5, y: 30.5, c: '#5FD3FF', s: 1.2 }, { kind: 'crystal', x: 16.5, y: 25.5, c: '#7CF5C8', s: .8 },
+    { kind: 'barrel', x: 3, y: 15.8 }, { kind: 'barrel', x: 3.6, y: 16.4 }, { kind: 'ore', x: 9.6, y: 16.4, c: '#C98A3B' }, { kind: 'ore', x: 27.8, y: 28.6, c: '#7FD3FF' },
+    { kind: 'beam', x: 10, y: 28, axis: 'y' }, { kind: 'beam', x: 13, y: 28, axis: 'y' },
+    { kind: 'lamp', x: 2.6, y: 29.5 }, { kind: 'lamp', x: 8.4, y: 29.5 }, { kind: 'lamp', x: 2.6, y: 33.4 }, { kind: 'barrel', x: 8.3, y: 32.6 }
   ],
   lessons: {   // مهمة كل درس تُحمَّل عند فتح محطتها
     directed8: () => import('./directed8.js'), roots8: () => import('./roots8.js'),

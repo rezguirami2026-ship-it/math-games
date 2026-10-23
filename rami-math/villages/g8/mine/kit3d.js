@@ -2,6 +2,7 @@
 // (في الجودة العالية)، بلورات متوهجة، وأربع محطات: قفص المصعد، عرق البلّور، منصة التضاعف، والبوابة الكبرى بأقفالها.
 import { box, cyl, sphere } from '../../../renderer3d/geom.js';
 import { material } from '../../../renderer3d/textures.js';
+import { signMesh } from '../../../renderer3d/omani.js';
 
 export function kit3d(THREE, { S, Parts, high }) {
   const rock = material('flat', '#5A5048', { rough: .95 }), plank = material('wood', '#7B5232');
@@ -23,10 +24,10 @@ export function kit3d(THREE, { S, Parts, high }) {
     g.computeVertexNormals(); return g;
   }
   const hAt = (vx, vz) => (rnd(Math.round(vx), Math.round(vz), 9) - .5) * 3;   // ارتفاع رؤوس الأرض: نفس القيمة للرأس المشترك بين بلاطتين
-  function ground(cx, cy) {
+  function ground(cx, cy, pal = ['#4A4139', '#52483E', '#463D35']) {
     const g = new THREE.PlaneGeometry(S, S, 2, 2).rotateX(-Math.PI / 2).translate((cx + .5) * S, 0, (cy + .5) * S), p = g.attributes.position;
     for (let k = 0; k < p.count; k++) p.setY(k, hAt(p.getX(k), p.getZ(k)));
-    g.computeVertexNormals(); return paint(g, ['#4A4139', '#52483E', '#463D35'][(cx * 3 + cy) % 3], .3);
+    g.computeVertexNormals(); return paint(g, pal[(cx * 3 + cy) % 3], .3);
   }
   const edge = (c, grid) => [[1, 0], [-1, 0], [0, 1], [0, -1]].some(([dx, dy]) => { const n = grid && grid.at(c.x + dx, c.y + dy); return n && !n.wall; });
   let gridRef = null;
@@ -36,6 +37,7 @@ export function kit3d(THREE, { S, Parts, high }) {
       if (c.floor === 'chasm') {   // هوّة: جدران داخلية مظلمة وقاع يتوهج بلوناً بلّورياً بعيداً
         P.add(material('flat', '#0B0A10', { rough: 1 }), box(S, 2, S, x, -150, z)); return;
       }
+      if (c.floor === 'sand') { P.add(rockM, ground(c.x, c.y, ['#DDBF8A', '#D6B47C', '#E3C795']), { uv: false }); return; }   // ساحة القرية
       if (c.floor === 'planks') {   // ألواح خشب بدرجات بنية متفاوتة وفواصل داكنة بينها
         P.add(rockM, paint(box(S, 2, S, x, -1, z), '#2A1D14', .1), { uv: false });
         for (let i = 0; i < 4; i++) P.add(rockM, paint(box(S - 1.5, 4, S / 4 - 2, x, 1.5 + rnd(c.x, c.y, i) * .8, c.y * S + S / 8 + i * S / 4 + 1), ['#8A5A34', '#7A4E2C', '#946540', '#6F4728'][(c.x + i * 3 + c.y * 2) % 4], .2), { uv: false });
@@ -50,6 +52,20 @@ export function kit3d(THREE, { S, Parts, high }) {
     },
     wall(P, c) {
       const x = (c.x + .5) * S, z = (c.y + .5) * S, h = H(c);
+      if (c.wall === 'house') {   // بيت طيني: جدران جصية، حافة سقف بارزة، وباب ونافذة على الوجه المطل على الساحة
+        P.add(rockM, paint(box(S, h, S, x, h / 2, z), '#E6D3AE', .12, h), { uv: false });
+        P.add(rockM, paint(box(S + 4, 5, S + 4, x, h + 2, z), '#CDB58C', .1), { uv: false });
+        const south = gridRef && gridRef.at(c.x, c.y + 1) && !gridRef.at(c.x, c.y + 1).wall, east = gridRef && gridRef.at(c.x + 1, c.y) && !gridRef.at(c.x + 1, c.y).wall;
+        if (south) P.add(rockM, paint(c.x % 2 ? box(14, 30, 2, x, 15, z + S / 2 + 1) : box(12, 12, 2, x, h * .62, z + S / 2 + 1), c.x % 2 ? '#6B4226' : '#2B4C6F', .05), { uv: false });
+        if (east) P.add(rockM, paint(box(2, 12, 12, x + S / 2 + 1, h * .62, z), '#2B4C6F', .05), { uv: false });
+        return;
+      }
+      if (c.wall === 'hill') {   // تلال من الحجر الرملي حول القرية
+        for (let i = 0; i < 2; i++) { const r = S * (.5 + rnd(c.x, c.y, i + 2) * .2), g = jag(new THREE.IcosahedronGeometry(r, 1), c.x * 5 + i, c.y * 3 + i);
+          g.scale(1, (h + 14) / (r * 1.6), 1); g.translate(x + (rnd(c.x, c.y, i + 5) - .5) * S * .4, (h + 14) * .42, z + (rnd(c.x, c.y, i + 6) - .5) * S * .4);
+          P.add(rockM, paint(g, ['#C9A26E', '#B98E5B', '#D2AE7C'][(c.x + c.y + i) % 3], .16, h), { uv: false }); }
+        return;
+      }
       if (!edge(c, gridRef)) { P.add(rockM, paint(box(S, 6, S, x, h + (rnd(c.x, c.y) - .5) * 10, z), '#1C1814', .25), { uv: false }); return; }   // صخر داخلي: سطح مظلم فقط
       // صخرة حافة: كتلتان أو ثلاث بحواف مكسّرة، أغمق عند القاعدة وأفتح عند القمة
       const n = 2 + (rnd(c.x, c.y, 1) > .5 ? 1 : 0);
@@ -71,7 +87,22 @@ export function kit3d(THREE, { S, Parts, high }) {
     },
     prop(p) {
       const g = new THREE.Group(), Pp = new Parts(); g.position.set(p.x * S, 0, p.y * S);
-      if (p.kind === 'lamp') {
+      if (p.kind === 'palm') {   // نخلة: جذع بحلقات منحنٍ قليلاً وسعف أخضر متدلٍّ
+        const k = p.s || 1, H2 = 120 * k;
+        for (let i = 0; i < 6; i++) Pp.add(rockM, paint(new THREE.CylinderGeometry(4.2 * k, 5 * k, H2 / 6, 7).translate(i * 1.2 * k, H2 / 12 + i * H2 / 6, 0), i % 2 ? '#8B6A45' : '#7A5B3A', .1), { uv: false });
+        for (let i = 0; i < 9; i++) { const a = i / 9 * Math.PI * 2, f = new THREE.ConeGeometry(6 * k, 62 * k, 4); f.scale(1, 1, .25); f.translate(0, 31 * k, 0); f.rotateX(1.15 + (i % 2) * .25); f.rotateY(a); f.translate(7 * k, H2, 0);
+          Pp.add(rockM, paint(f, i % 2 ? '#3F8A3A' : '#4E9E45', .12), { uv: false }); }
+        g.add(Pp.build());
+      } else if (p.kind === 'well') {   // بئر القرية: حلقة حجرية وقائمان وعارضة ودلو
+        Pp.add(rockM, paint(new THREE.CylinderGeometry(20, 22, 20, 14, 1, true).translate(0, 10, 0), '#BFA27A', .2), { uv: false });
+        Pp.add(rockM, paint(new THREE.CylinderGeometry(23, 23, 4, 14).translate(0, 21, 0), '#D8BE96', .1), { uv: false });
+        Pp.add(rockM, paint(new THREE.CircleGeometry(19, 14).rotateX(-Math.PI / 2).translate(0, 8, 0), '#2A5F86', .05), { uv: false });
+        for (const o of [-22, 22]) Pp.add(timber, box(5, 50, 5, o, 25, 0)); Pp.add(timber, box(52, 5, 5, 0, 50, 0)); Pp.add(rockM, paint(box(9, 10, 9, 0, 34, 0), '#6B4226', .1), { uv: false });
+        g.add(Pp.build());
+      } else if (p.kind === 'sign') {   // لافتة المنجم على قائمين
+        for (const o of [-26, 26]) Pp.add(timber, box(5, 60, 5, o, 30, 0)); Pp.add(material('wood', '#5A3A20'), box(64, 26, 4, 0, 52, 0)); g.add(Pp.build());
+        const sg = signMesh('⛏️ منجم الأعماق', 13); sg.position.set(0, 52, 3); g.add(sg);
+      } else if (p.kind === 'lamp') {
         Pp.add(timber, box(6, 70, 6, 0, 35, 0)); Pp.add(timber, box(22, 5, 5, 8, 68, 0)); Pp.add(iron, cyl(5, 6, 3, 16, 64, 0, 8));
         g.add(Pp.build()); const bulb = new THREE.Mesh(new THREE.SphereGeometry(5, 12, 8), glow('#FFC46B')); bulb.position.set(16, 58, 0); g.add(bulb);
         if (high) { const L = new THREE.PointLight('#FFB870', 15000, 300, 2); L.position.set(16, 56, 0); g.add(L); }

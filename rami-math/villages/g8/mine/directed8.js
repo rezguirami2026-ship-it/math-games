@@ -43,7 +43,8 @@ function draw(g, w, h, t, S) {
     g.fillStyle = v > 0 ? '#1D4ED8' : v < 0 ? '#B91C1C' : '#1E2433'; g.direction = 'ltr'; g.fillText(txt, nx + 18, yy + 1); g.direction = 'rtl';
   }
   // سهم العملية حين يُعرض
-  if (r.arrow) { const a = yOf(r.arrow[0]), b = yOf(r.arrow[1]), x = sx + 48; g.strokeStyle = '#F59E0B'; g.lineWidth = 4; g.setLineDash([8, 6]); g.beginPath(); g.moveTo(x, a); g.lineTo(x, b); g.stroke(); g.setLineDash([]); g.fillStyle = '#F59E0B'; g.beginPath(); g.moveTo(x - 9, b + (b > a ? -12 : 12)); g.lineTo(x + 9, b + (b > a ? -12 : 12)); g.lineTo(x, b); g.fill(); }
+  if (r.arrow && S.done) {   // يُرسم بعد الحل فقط: قبل ذلك يكشف الجواب
+    const a = yOf(r.arrow[0]), b = yOf(r.arrow[1]), x = sx + 48; g.strokeStyle = '#F59E0B'; g.lineWidth = 4; g.setLineDash([8, 6]); g.beginPath(); g.moveTo(x, a); g.lineTo(x, b); g.stroke(); g.setLineDash([]); g.fillStyle = '#F59E0B'; g.beginPath(); g.moveTo(x - 9, b + (b > a ? -12 : 12)); g.lineTo(x + 9, b + (b > a ? -12 : 12)); g.lineTo(x, b); g.fill(); }
   // القفص: يتحرك بنعومة نحو القيمة الحالية، وشارة طابقه بجانبه
   const want = S.r && S.r.input.type === 'dial' ? S.v : (S.done && r.answer != null ? r.answer : r.from);
   S.cy = S.cy == null ? want : S.cy + (want - S.cy) * .12;

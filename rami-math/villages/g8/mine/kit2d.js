@@ -28,6 +28,11 @@ export function kit2d({ TW, TH, HZ }) {
         const gr = g.createRadialGradient(sx, sy + TH / 2, 2, sx, sy + TH / 2, TW * .6); gr.addColorStop(0, 'rgba(42,108,255,.55)'); gr.addColorStop(1, 'rgba(42,108,255,0)'); g.fillStyle = gr; dia(g, sx, sy); g.fill();
         return;
       }
+      if (c.floor === 'sand') {   // ساحة القرية الرملية
+        dia(g, sx, sy); g.fillStyle = mix('#D9B985', '#E8CD9C', k); g.fill();
+        g.fillStyle = 'rgba(150,110,60,.18)'; for (let i = 0; i < 5; i++) { g.beginPath(); g.ellipse(sx + (rnd(c.x, c.y, i) - .5) * TW * .6, sy + TH / 2 + (rnd(c.x, c.y, i + 9) - .5) * TH * .5, 2.5, 1.2, 0, 0, 7); g.fill(); }
+        return;
+      }
       if (c.floor === 'planks') {
         dia(g, sx, sy); g.fillStyle = mix('#7B5232', '#A0703F', k); g.fill();
         g.save(); dia(g, sx, sy); g.clip(); g.strokeStyle = 'rgba(40,22,10,.55)'; g.lineWidth = 1.2;
@@ -51,19 +56,43 @@ export function kit2d({ TW, TH, HZ }) {
       grid.cells.forEach(c => { if (c.floor === 'rail') c.railX = grid.at(c.x + 1, c.y)?.floor === 'rail' || grid.at(c.x - 1, c.y)?.floor === 'rail'; });
     },
     wall(g, c, cx, by) {
+      if (c.wall === 'house' || c.wall === 'hill') {   // بيت جصي بنافذة وباب، أو تلة من الحجر الرملي
+        const house = c.wall === 'house', h = (c.h || 1) * HZ + (house ? 0 : (rnd(c.x, c.y) - .5) * 10), k = rnd(c.x, c.y, 2), top = by - TH / 2 - h;
+        const L = house ? mix('#EBDDBE', '#F3E7CC', k) : mix('#C9A26E', '#D6B27E', k), Rr = house ? mix('#CDB58C', '#D7C09A', k) : mix('#A8824F', '#B48D5A', k), Tp = house ? '#D2B98F' : mix('#B48D5A', '#C29C68', k);
+        g.fillStyle = L; g.beginPath(); g.moveTo(cx - TW / 2, by); g.lineTo(cx, by + TH / 2); g.lineTo(cx, by + TH / 2 - h); g.lineTo(cx - TW / 2, by - h); g.fill();
+        g.fillStyle = Rr; g.beginPath(); g.moveTo(cx, by + TH / 2); g.lineTo(cx + TW / 2, by); g.lineTo(cx + TW / 2, by - h); g.lineTo(cx, by + TH / 2 - h); g.fill();
+        dia(g, cx, top); g.fillStyle = Tp; g.fill();
+        if (house) { g.fillStyle = c.x % 2 ? '#6B4226' : '#2B4C6F'; const wx = cx - TW / 4, wy = by + TH / 4;
+          if (c.x % 2) { g.beginPath(); g.moveTo(wx - 5, wy - 2); g.lineTo(wx + 5, wy + 3); g.lineTo(wx + 5, wy - 19); g.lineTo(wx - 5, wy - 24); g.fill(); }
+          else { g.beginPath(); g.moveTo(wx - 5, wy - h * .55); g.lineTo(wx + 5, wy - h * .55 + 5); g.lineTo(wx + 5, wy - h * .55 - 5); g.lineTo(wx - 5, wy - h * .55 - 10); g.fill(); }
+          g.strokeStyle = '#B79C70'; g.lineWidth = 2; g.beginPath(); g.moveTo(cx - TW / 2, by - h); g.lineTo(cx, by + TH / 2 - h); g.lineTo(cx + TW / 2, by - h); g.stroke(); }
+        return;
+      }
       const h = (c.h || 1) * HZ + (rnd(c.x, c.y) - .5) * 8, k = rnd(c.x, c.y, 2);
       const top = by - TH / 2 - h;
       // الوجه الأيسر (مضاء) والأيمن (ظل) والسطح
-      g.fillStyle = mix('#6E6358', '#857868', k); g.beginPath(); g.moveTo(cx - TW / 2, by); g.lineTo(cx, by + TH / 2); g.lineTo(cx, by + TH / 2 - h); g.lineTo(cx - TW / 2, by - h); g.fill();
-      g.fillStyle = mix('#3E3630', '#4E443C', k); g.beginPath(); g.moveTo(cx, by + TH / 2); g.lineTo(cx + TW / 2, by); g.lineTo(cx + TW / 2, by - h); g.lineTo(cx, by + TH / 2 - h); g.fill();
-      dia(g, cx, top); g.fillStyle = mix('#211D19', '#2C2621', k); g.fill();
+      g.fillStyle = mix('#A8896A', '#B89878', k); g.beginPath(); g.moveTo(cx - TW / 2, by); g.lineTo(cx, by + TH / 2); g.lineTo(cx, by + TH / 2 - h); g.lineTo(cx - TW / 2, by - h); g.fill();
+      g.fillStyle = mix('#7E654D', '#8C7258', k); g.beginPath(); g.moveTo(cx, by + TH / 2); g.lineTo(cx + TW / 2, by); g.lineTo(cx + TW / 2, by - h); g.lineTo(cx, by + TH / 2 - h); g.fill();
+      dia(g, cx, top); g.fillStyle = mix('#8A7259', '#977E63', k); g.fill();
       // شقوق وطبقات صخرية على الوجهين
       g.strokeStyle = 'rgba(0,0,0,.28)'; g.lineWidth = 1;
       for (let i = 0; i < 3; i++) { const y = by - h * (.25 + i * .25); g.beginPath(); g.moveTo(cx - TW / 2, y + (rnd(c.x, i) - .5) * 4); g.lineTo(cx, y + TH / 2 + (rnd(c.y, i) - .5) * 4); g.lineTo(cx + TW / 2, y + (rnd(c.x + c.y, i) - .5) * 4); g.stroke(); }
       g.strokeStyle = 'rgba(255,240,220,.12)'; g.beginPath(); g.moveTo(cx - TW / 2, by - h); g.lineTo(cx, top + TH); g.stroke();
     },
     prop(g, p, x, y, t) {
-      if (p.kind === 'lamp') {
+      if (p.kind === 'palm') {   // نخلة بجذع منحنٍ وسعف
+        const k = p.s || 1, H2 = 86 * k;
+        g.strokeStyle = '#7A5B3A'; g.lineWidth = 7 * k; g.lineCap = 'round'; g.beginPath(); g.moveTo(x, y); g.quadraticCurveTo(x + 6 * k, y - H2 / 2, x + 4 * k, y - H2); g.stroke(); g.lineCap = 'butt';
+        for (let i = 0; i < 8; i++) { const a = i / 8 * Math.PI * 2, ex = x + 4 * k + Math.cos(a) * 34 * k, ey = y - H2 + Math.sin(a) * 14 * k + 12 * k;
+          g.strokeStyle = i % 2 ? '#3F8A3A' : '#4E9E45'; g.lineWidth = 5 * k; g.beginPath(); g.moveTo(x + 4 * k, y - H2); g.quadraticCurveTo((x + ex) / 2 + 4 * k, y - H2 - 14 * k, ex, ey); g.stroke(); }
+      } else if (p.kind === 'well') {
+        g.fillStyle = '#BFA27A'; g.beginPath(); g.ellipse(x, y, 22, 11, 0, 0, 7); g.fill(); g.fillRect(x - 22, y - 14, 44, 14); g.fillStyle = '#D8BE96'; g.beginPath(); g.ellipse(x, y - 14, 22, 11, 0, 0, 7); g.fill();
+        g.fillStyle = '#2A5F86'; g.beginPath(); g.ellipse(x, y - 14, 16, 7.5, 0, 0, 7); g.fill();
+        g.fillStyle = '#6A4428'; g.fillRect(x - 22, y - 50, 4, 38); g.fillRect(x + 18, y - 50, 4, 38); g.fillRect(x - 22, y - 52, 44, 4); g.fillRect(x - 4, y - 44, 8, 9);
+      } else if (p.kind === 'sign') {
+        g.fillStyle = '#6A4428'; g.fillRect(x - 24, y - 44, 4, 44); g.fillRect(x + 20, y - 44, 4, 44); g.fillStyle = '#5A3A20'; g.fillRect(x - 34, y - 60, 68, 22);
+        g.fillStyle = '#FFE7A8'; g.font = '800 11px Cairo'; g.textAlign = 'center'; g.direction = 'rtl'; g.fillText('⛏️ منجم الأعماق', x, y - 45);
+      } else if (p.kind === 'lamp') {
         g.fillStyle = '#5A3A22'; g.fillRect(x - 2, y - 60, 4, 60); g.fillRect(x - 2, y - 60, 16, 4);
         g.fillStyle = '#3A3A40'; g.fillRect(x + 9, y - 58, 9, 4);
         glowDot(g, x + 13, y - 50, 12, '#FFE3A0'); g.fillStyle = '#FFD27A'; g.beginPath(); g.arc(x + 13, y - 50, 4, 0, 7); g.fill();

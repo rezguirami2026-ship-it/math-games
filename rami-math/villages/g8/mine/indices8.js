@@ -20,7 +20,9 @@ function draw(g, w, h, t, S) {
   const cx = w / 2, cy = h / 2 - 10, val = b ** e, glow = 0.6 + 0.4 * Math.sin(t * 2.2);
   const gem = (x, y, s, a = 1) => { g.globalAlpha = a; g.fillStyle = '#FFB347'; g.beginPath(); g.moveTo(x, y - s); g.lineTo(x + s * .6, y); g.lineTo(x, y + s); g.lineTo(x - s * .6, y); g.fill(); g.fillStyle = '#FFE1A8'; g.beginPath(); g.moveTo(x, y - s); g.lineTo(x + s * .3, y - s * .1); g.lineTo(x, y); g.fill(); g.globalAlpha = 1; };
   const halo = g.createRadialGradient(cx, cy, 4, cx, cy, 120); halo.addColorStop(0, `rgba(255,179,71,${.25 * glow})`); halo.addColorStop(1, 'rgba(255,179,71,0)'); g.fillStyle = halo; g.fillRect(0, 0, w, h);
-  if (val >= 1) {
+  if (S.r && S.r.input.type !== 'dial' && !S.done) {   // قبل الحل: لا نرسم الجواب
+    g.fillStyle = '#4C1D95'; g.font = '900 64px Cairo'; g.textAlign = 'center'; g.fillText('؟', cx, cy + 22);
+  } else if (val >= 1) {
     const n = Math.min(val, 243), cols = Math.ceil(Math.sqrt(n * 2.2)), s = Math.max(3, Math.min(22, (h - 90) / (Math.ceil(n / cols) * 2.2), (w - 60) / (cols * 1.4)));
     for (let k = 0; k < n; k++) { const row = Math.floor(k / cols), col = k % cols, rows = Math.ceil(n / cols); gem(cx + (col - (cols - 1) / 2) * s * 1.4, cy + (row - (rows - 1) / 2) * s * 2.1, s); }
   } else {   // كسر من بلّورة: نرسم البلّورة شفافة وجزءها الملوّن بنسبة القيمة
@@ -28,7 +30,7 @@ function draw(g, w, h, t, S) {
     g.save(); g.beginPath(); g.rect(cx - s, cy + s - 2 * s * Math.max(val, .02), 2 * s, 2 * s); g.clip(); gem(cx, cy, s); g.restore();
   }
   g.fillStyle = '#4C1D95'; g.font = '900 19px Cairo'; g.textAlign = 'center';
-  g.fillText(val >= 1 ? `${N(b)} أس ${N(e)} = ${N(val)}` : `${N(b)} أس ${N(e)} = ١ ÷ ${N(b ** -e)}`, w / 2, 22);
+  if (S.done) g.fillText(val >= 1 ? `${N(b)} أس ${N(e)} = ${N(val)}` : `${N(b)} أس ${N(e)} = ١ ÷ ${N(b ** -e)}`, w / 2, 22);
 }
 
 function make(i) {
