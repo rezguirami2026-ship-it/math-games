@@ -1,6 +1,7 @@
 // «ورشة البنّاء»: منطقة الوحدة الأخيرة (الهندسة) جنوب طريق القافلة، ومنصة التخرّج بعد الدروس الـ٦٩
 // الرسم بأسلوب القرية: ساحة ببلاط مزخرف، أكشاك مجسّمة، ومنصة خشبية بخلفية ولافتة وزينة
-import { rr, shade } from '../core/util.js';
+import { rr, shade, ar } from '../core/util.js';
+import { LESSONS } from '../content/lessons.js';
 import { FLAGS, INK, PAL, pattern, kiosk3d, kioskShadow, gateEW, gateEWShadows, palmCached, blobShadow, boxShadow, box3d, lanternString, elev, shrub, workTable, solid } from './art.js';
 export const WALL7_Y = 5500, GATE7 = { x0: 1190, x1: 1290 };
 export const ST9 = {
@@ -58,7 +59,7 @@ function stage(c, t, allDone) {   // منصة التخرّج: خشب مجسّم�
     // الخلفية: قائمان ولوح عريض بقوس عُماني
     r.fillStyle = PAL.wood; r.fillRect(x - 150, ry - 120, 8, 124); r.fillRect(x + 142, ry - 120, 8, 124);
     r.fillStyle = allDone ? '#1F7A4A' : '#3F4C59'; r.beginPath(); r.moveTo(x - 150, ry - 70); r.lineTo(x - 150, ry - 128); r.quadraticCurveTo(x, ry - 168, x + 150, ry - 128); r.lineTo(x + 150, ry - 70); r.closePath(); r.fill(); r.strokeStyle = '#E3B04B'; r.lineWidth = 2; r.stroke();
-    r.fillStyle = '#fff'; r.font = '900 15px Cairo, sans-serif'; r.textAlign = 'center'; r.direction = 'rtl'; r.fillText(allDone ? '🎓 مبارك! أكملتَ الدروس الـ٦٩' : 'منصة التخرّج — تنتظر بطل الدروس كلها', x, ry - 100);
+    r.fillStyle = '#fff'; r.font = '900 15px Cairo, sans-serif'; r.textAlign = 'center'; r.direction = 'rtl'; r.fillText(allDone ? '🎓 مبارك! أكملتَ الدروس الـ' + ar(LESSONS.length) : 'منصة التخرّج — تنتظر بطل الدروس كلها', x, ry - 100);
     r.strokeStyle = INK; r.lineWidth = 1; r.strokeRect(x - 150, ry - 120, 8, 124); r.strokeRect(x + 142, ry - 120, 8, 124);
   }, f => {
     const yb = ST.y + ST.h, g = f.createLinearGradient(0, yb - ST.H, 0, yb); g.addColorStop(0, '#9C6438'); g.addColorStop(1, '#6E4524'); f.fillStyle = g; f.fillRect(ST.x, yb - ST.H, ST.w, ST.H);

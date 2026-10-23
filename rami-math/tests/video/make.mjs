@@ -1,5 +1,6 @@
 // مخرج الفيديو التعريفي: يصوّر مشاهد حقيقية من اللعبة بوقت افتراضي (٣٠ لقطة/ث)، مع ترجمة الكلام وصورة المتكلم، ثم يركّب الصوت.
 // الاستعمال (الخادم المحلي على 8000):  python voice.py <OUT>/voice  ثم  node make.mjs <OUT> [scene,scene…]
+// فيديو الصف الخامس: GRADE=5 (النص script5.json، والمهمة والتحدي من دروس الخامس) ← assets/video/intro-g5.mp4
 import { chromium } from 'playwright-core';
 import fs from 'fs';
 import path from 'path';
@@ -7,7 +8,11 @@ import { fileURLToPath } from 'url';
 const HERE = path.dirname(fileURLToPath(import.meta.url));
 const OUT = process.argv[2], ONLY = process.argv[3] ? process.argv[3].split(',') : null;
 const FPS = 30, DT = 1000 / FPS, LEAD = .7, GAP = .45, TAIL = .9, W = 1280, H = 720;
-const SCRIPT = JSON.parse(fs.readFileSync(path.join(HERE, 'script.json'), 'utf8'));
+const G5 = process.env.GRADE === '5';
+const GV = G5 ? { script: 'script5.json', sub: 'لعبة رياضيات الصف الخامس · سلطنة عُمان', game: 'لعبة «قرية الخير» · رياضيات الصف الخامس', first: 'placeValue5', giver: 'rashed', chTitle: 'تحدي العم راشد' }
+  : { script: 'script.json', sub: 'لعبة رياضيات الصف السادس · سلطنة عُمان', game: '', first: 'placeValue', giver: 'salem', chTitle: 'تحدي العم سالم' };
+const GU = u => G5 ? (u ? u + '&grade=5' : '?grade=5') : u;   // الصف في رابط الجلسة
+const SCRIPT = JSON.parse(fs.readFileSync(path.join(HERE, GV.script), 'utf8'));
 const TIMING = JSON.parse(fs.readFileSync(path.join(OUT, 'voice', 'timing.json'), 'utf8'));
 fs.mkdirSync(path.join(OUT, 'frames'), { recursive: true });
 const sleep = ms => new Promise(r => setTimeout(r, ms));
@@ -65,9 +70,9 @@ async function scene(P, id, run, extra = {}) {
 
 // ═════ التحضير: جلستان — A لعبة جديدة (الشاشة الرئيسية والمهمة الأولى)، وB معاينة بكل شيء مفتوح ═════
 const needA = !ONLY || ONLY.includes('hero') || ONLY.includes('mission');
-const A = needA ? await session('') : null;
+const A = needA ? await session(GU('')) : null;
 if (A) await A.until(() => !!document.querySelector('#bNew'), 'الشاشة الرئيسية');
-const B = await session('?preview=1');
+const B = await session(GU('?preview=1'));
 B.ready = async () => { await B.until(() => !!(window.__game && window.__game.W), 'عالم المعاينة'); await B.skip(2); await B.ev(() => { const s = window.__game.state; s.hero.name = 'سالم'; s.hero.kind = 'boy'; s.gems = 350; s.adventures = {}; s.grandSeen = 0;
   s.decor = s.decor || {}; ['swing', 'fountain', 'camel', 'statue', 'bell', 'anchor', 'sundisk', 'festlamp', 'minilight', 'cairn', 'qindeel', 'astrolabe'].forEach(k => s.decor[k] = 1);
   for (let i = 0; i < 12 && document.getElementById('dialog').classList.contains('on'); i++) document.getElementById('dialog').click(); }); };
@@ -81,14 +86,13 @@ const glide = (cap, a, bb, sec) => cap.shoot(sec, ({ i, arg }) => { const [a, b,
 {
   const DL = process.env.CRED_DIR || path.join(OUT, '..', 'cred');   // me.jpg و school.png و moe.png (الشعاران مقصوصان بلا هوامش)
   const data = f => `data:image/${f.endsWith('.png') ? 'png' : 'jpeg'};base64,` + fs.readFileSync(path.join(DL, f)).toString('base64');
-  const img = { me: data('me.jpg'), school: data('school.png'), moe: data('moe.png') };
-  if (!ONLY || ONLY.includes('credits')) { await B.overlayOn(); await B.ev(i => window.__vo.credits(i), img); await B.skip(.3); }
+  if (!ONLY || ONLY.includes('credits')) { const img = { me: data('me.jpg'), school: data('school.png'), moe: data('moe.png'), game: GV.game }; await B.overlayOn(); await B.ev(i => window.__vo.credits(i), img); await B.skip(.3); }
   await scene(B, 'credits', async cap => { await cap.fill(); }, { credits: true, hud: false });
 }
 
 // ═════ ١. المقدمة: بطاقة العنوان فوق القرية ═════
 await focus(760, 640); await B.skip(1);
-await scene(B, 'intro', async cap => { await glide(cap, [700, 600], [980, 760], cap.dur); }, { hud: false, title: { sub: 'لعبة رياضيات الصف السادس · سلطنة عُمان' } });
+await scene(B, 'intro', async cap => { await glide(cap, [700, 600], [980, 760], cap.dur); }, { hud: false, title: { sub: GV.sub } });
 
 // ═════ ٢. اختيار البطل (الجلسة A) ═════
 await scene(A, 'hero', async cap => {
@@ -126,7 +130,7 @@ await A.ev(() => { const i = document.getElementById('hname'); if (!i.value) i.v
 await A.until(() => !!(window.__game && window.__game.W), 'عالم اللعبة الجديدة', 90);
 for (let i = 0; i < 40; i++) { await A.ev(() => { const s = document.querySelector('.screen.on.chapter'); if (s) s.click(); const d = document.getElementById('dialog'); if (d.classList.contains('on')) d.click(); }); await A.skip(.4); }
 // الحديث مع العم سالم يبدأ المهمة (خارج التصوير)
-await A.ev(() => { const g = window.__game, n = g.W.npcs.find(n => n.id === 'salem'), p = g.W.player; p.x = n.x; p.y = n.y + 26; p.route = null; p.target = null; });
+await A.ev(GIVER => { const g = window.__game, n = g.W.npcs.find(n => n.id === GIVER), p = g.W.player; p.x = n.x; p.y = n.y + 26; p.route = null; p.target = null; }, GV.giver);
 await A.skip(.5);
 await A.ev(() => { const b = [...document.querySelectorAll('#actions button')].find(b => b.textContent.startsWith('💬')); if (b) b.click(); });
 for (let i = 0; i < 40; i++) { await A.ev(() => { const d = document.getElementById('dialog'); if (d.classList.contains('on')) d.click(); }); await A.skip(.35); }
@@ -135,7 +139,16 @@ const PILES = [[140, 568, '١٠٠٠'], [205, 568, '١٠٠'], [265, 568, '١٠'],
 const walk = (x, y) => A.ev(([x, y]) => window.__game.eng.onTap({ x, y }), [x, y]);
 const NEAR = ([x, y]) => { const p = window.__game.W.player; return Math.hypot(p.x - x, p.y - y) < 14 && !p.target && !(p.route && p.route.length); };
 const press = (label, prefix) => A.ev(([l, pf]) => { const b = [...document.querySelectorAll('#actions button')].find(b => !b.disabled && (pf ? b.textContent.startsWith(l) : b.textContent === l)); if (b) b.click(); return !!b; }, [label, !!prefix]);
-await scene(A, 'mission', async cap => {
+if (G5) await scene(A, 'mission', async cap => {   // الخامس: عدّاد خزان الماء (عجلات المنازل الست)
+  const ST = [1375, 1395 + 16];
+  await cap.shoot(.8); await walk(...ST); await cap.shootUntil(NEAR, 5, null, ST);
+  await press('💧 عدّاد الخزان'); await cap.shoot(1.4);
+  const r = await A.ev(() => { const d = window.__game.quests.data('placeValue5'); return { ans: d.rounds[d.r].ans, dg: d.dg }; });
+  const want = [100000, 10000, 1000, 100, 10, 1].map(p => Math.floor(r.ans / p) % 10);
+  for (let i = 0; i < 6; i++) for (let k = 0; k < (want[i] - r.dg[i] + 10) % 10 && cap.left() > 2.2; k++) { await A.ev(i => document.querySelector(`#panel [data-w="${i}"][data-v="1"]`).click(), i); await cap.shoot(.16); }
+  if (cap.left() > 1.2) { await A.ev(() => document.getElementById('benchGo').click()); }
+}, { capTop: true });
+else await scene(A, 'mission', async cap => {
   const v = await A.ev(() => window.__game.quests.data('placeValue').rounds[0]), dg = [Math.floor(v / 1000), Math.floor(v / 100) % 10, Math.floor(v / 10) % 10, v % 10];
   await cap.shoot(.8);
   for (let k = 0; k < 4 && cap.left() > 1.5; k++) {
@@ -151,26 +164,27 @@ await scene(A, 'mission', async cap => {
 if (A) { await A.page.context().close(); }   // تحرير ذاكرة الجلسة الأولى
 // ═════ ٥. تحدي الشخصية (B): نشاط الدرس بخطأ ثم صواب ═════
 const openAct = async () => { for (let tries = 0; tries < 12; tries++) {
-  await B.ev(() => { document.getElementById('panel').classList.remove('on'); window.__game.game.busy = false; window.__game.activity('placeValue'); });
+  await B.ev(F => { document.getElementById('panel').classList.remove('on'); window.__game.game.busy = false; window.__game.activity(F); }, GV.first);
   await B.skip(.4); await B.ev(() => document.getElementById('acGo') && document.getElementById('acGo').click()); await B.skip(.6);
-  const ok = await B.ev(() => { const r = window.__game.state.activities.placeValue.run; const it = r && r.ch.items[r.ch.i]; return !!it && (it.type === 'choice' || it.type === 'tf'); });
+  const ok = await B.ev(F => { const r = window.__game.state.activities[F].run; const it = r && r.ch.items[r.ch.i]; return !!it && (it.type === 'choice' || it.type === 'tf'); }, GV.first);
   if (ok) return; } };
 await openAct();
 await scene(B, 'challenge', async cap => {
-  const pick = right => B.ev(rt => { const r = window.__game.state.activities.placeValue.run, it = r.ch.items[r.ch.i]; const k = rt ? it.ans : (it.ans === 0 ? 1 : 0); document.querySelectorAll('#panel .chOpt')[k].click(); }, right);
+  const pick = right => B.ev(([rt, F]) => { const r = window.__game.state.activities[F].run, it = r.ch.items[r.ch.i]; const k = rt ? it.ans : (it.ans === 0 ? 1 : 0); document.querySelectorAll('#panel .chOpt')[k].click(); }, [right, GV.first]);
   await cap.shoot(2.4); await pick(false); await cap.shoot(3); await pick(true); await cap.shoot(3.2);
-  for (let r = 0; r < 3 && cap.left() > 2; r++) { const t = await B.ev(() => { const r = window.__game.state.activities.placeValue.run, it = r && r.ch.items[r.ch.i]; return it ? it.type : ''; });
+  for (let r = 0; r < 3 && cap.left() > 2; r++) { const t = await B.ev(F => { const r = window.__game.state.activities[F].run, it = r && r.ch.items[r.ch.i]; return it ? it.type : ''; }, GV.first);
     if (t === 'choice' || t === 'tf') { await cap.shoot(1.4); await pick(true); await cap.shoot(1.8); } else break; }
 });
 await B.ev(() => { document.getElementById('panel').classList.remove('on'); document.getElementById('panel').innerHTML = ''; window.__game.game.busy = false; });
 
 // ═════ ٥ب. نتعلّم من الخطأ (B): خطآن ثم «كيف نحلّها؟» ثم الحل والجواهر الطائرة، ثم خريطة إتقاني ═════
-await B.ev(() => { const s = window.__game.state, L = ['placeValue', 'compareRound', 'factorsMultiples', 'oddEven', 'primeNumbers', 'powerOf10', 'multiplyStrategies', 'decimalAdd', 'division1', 'sequences', 'lengthMeasure', 'lineDrawing', 'timeTables', 'calendars', 'areaPerimeterT1', 'shapesIdentify', 'shapes3D', 'nets'];
+await B.ev(async G5 => { const s = window.__game.state, L = G5 ? (await import('/content/lessons.js')).LESSONS.slice(0, 18).map(l => l.id) : ['placeValue', 'compareRound', 'factorsMultiples', 'oddEven', 'primeNumbers', 'powerOf10', 'multiplyStrategies', 'decimalAdd', 'division1', 'sequences', 'lengthMeasure', 'lineDrawing', 'timeTables', 'calendars', 'areaPerimeterT1', 'shapesIdentify', 'shapes3D', 'nets'];
   L.forEach((id, k) => { s.quests.done[id] = s.quests.done[id] || Date.now() - 864e5 * (30 - k); const d = window.__game.quests.data(id); d.stars = Math.max(d.stars || 0, [3, 2, 3, 1, 3, 2][k % 6]); });
-  s.expert = { placeValue: { plays: 1, gold: true } }; s.mastered = 4; s.levelSeen = 10;   // بلا نافذة ارتقاء أثناء التصوير
-  s.review = { 'compareRound|Nn11': { n: 1, b: 0, due: Date.now() }, 'division1|Nc10': { n: 1, b: 1, due: Date.now() + 864e5 } }; });
-await B.ev(async () => { const { runChallenge } = await import('/missions/challenge.js'); const m = window.__game.MODS.placeValue; let it = null; for (let k = 0; k < 30 && !it; k++) it = m.challenge.make().find(i => i.type === 'choice' && /قيمة/.test(i.q));
-  window.__d = { ch: { items: [it], i: 0, firstTry: 0, tries: 0, gems: 0, streak: 0 } }; runChallenge(window.__game.W, window.__d, { id: 'placeValue', who: 'salem', title: 'تحدي العم سالم', make: () => [it], exit: () => {}, onDone: () => {} }); });
+  s.expert = { [L[0]]: { plays: 1, gold: true } }; s.mastered = 4; s.levelSeen = 10;   // بلا نافذة ارتقاء أثناء التصوير
+  const { BY_LESSON } = await import('/content/outcomes.js'), rk = (id, o) => G5 ? id + '|' + BY_LESSON[id][0] : o;
+  s.review = { [rk(L[1], 'compareRound|Nn11')]: { n: 1, b: 0, due: Date.now() }, [rk(L[8], 'division1|Nc10')]: { n: 1, b: 1, due: Date.now() + 864e5 } }; }, G5);
+await B.ev(async GV => { const { runChallenge } = await import('/missions/challenge.js'); const m = window.__game.MODS[GV.first]; let it = null; for (let k = 0; k < 30 && !it; k++) it = m.challenge.make().find(i => i.type === 'choice' && /قيمة/.test(i.q));
+  window.__d = { ch: { items: [it], i: 0, firstTry: 0, tries: 0, gems: 0, streak: 0 } }; runChallenge(window.__game.W, window.__d, { id: GV.first, who: GV.giver, title: GV.chTitle, make: () => [it], exit: () => {}, onDone: () => {} }); }, GV);
 await B.skip(.5);
 await scene(B, 'learn', async cap => {
   const wrong = k => B.ev(k => { const it = window.__d.ch.items[0], o = [...document.querySelectorAll('#panel .chOpt')].filter((_, j) => j !== it.ans); o[k % o.length].click(); }, k);

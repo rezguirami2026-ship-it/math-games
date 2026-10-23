@@ -123,6 +123,7 @@ const MODS = Object.assign({}, UNIT1, UNIT2, UNIT3, UNIT4, T2U1, T2U2, T2U3, T2U
       { who: 'umkhalid', text: 'على لوحة كل خزان الجزء الذي يجب أن يمتلئ: كسر أو عدد عشري أو نسبة مئوية. الخزان مقسّم عشرة أقسام.' }
     ],
     onStart: () => { tanks.setup(); game.state.missions.tanks.status = 'active'; },
+    resume: () => { const T = game.state.missions.tanks; if (T.done.every(Boolean)) quests.complete('decimalFractions'); else return hud.dialog([{ who: 'umkhalid', text: 'المهمة تنتظرك: املأ كل خزان بالقدر المكتوب على لوحته' }], people()); },
     goal: () => '💧 املأ كل خزان بالقدر المكتوب على لوحته',
     target: () => { const T = game.state.missions.tanks, k = T.done.findIndex(v => !v); return k >= 0 ? { x: tanks.TANKS[k].x, y: tanks.TANKS[k].y - 40 } : null; }
   }

@@ -10,6 +10,8 @@ import { PIER_Y, SEA_X, SHIP_COLS } from '../world/harbor.js';
 import { PUMPS } from '../world/caravan.js';
 import { STAGE, ST } from '../world/workshop.js';
 import { FI } from '../world/village.js';
+import { LESSONS } from '../content/lessons.js';
+import { ar } from '../core/util.js';
 
 const flat = (c, r = .6, m = 0) => material('flat', c, { rough: r, metal: m });
 
@@ -115,7 +117,7 @@ export function stage3d() {
   const board = new THREE.Mesh(new THREE.PlaneGeometry(300, 62), new THREE.MeshStandardMaterial({ map: tex, transparent: true, roughness: .6 })); board.position.set(x, H + 136, ST.y + 18); g.add(board);
   let last = null; const paint = done => { if (done === last) return; last = done; ctx.clearRect(0, 0, 768, 160);
     ctx.fillStyle = done ? '#1F7A4A' : '#3F4C59'; ctx.beginPath(); ctx.moveTo(0, 160); ctx.lineTo(0, 40); ctx.quadraticCurveTo(384, -30, 768, 40); ctx.lineTo(768, 160); ctx.closePath(); ctx.fill(); ctx.strokeStyle = '#E3B04B'; ctx.lineWidth = 8; ctx.stroke();
-    ctx.fillStyle = '#FFFFFF'; ctx.font = '900 36px Cairo, sans-serif'; ctx.textAlign = 'center'; ctx.direction = 'rtl'; ctx.fillText(done ? '🎓 مبارك! أكملتَ الدروس الـ٦٩' : 'منصة التخرّج — تنتظر بطل الدروس كلها', 384, 110); tex.needsUpdate = true; };
+    ctx.fillStyle = '#FFFFFF'; ctx.font = '900 36px Cairo, sans-serif'; ctx.textAlign = 'center'; ctx.direction = 'rtl'; ctx.fillText(done ? '🎓 مبارك! أكملتَ الدروس الـ' + ar(LESSONS.length) : 'منصة التخرّج — تنتظر بطل الدروس كلها', 384, 110); tex.needsUpdate = true; };
   const conf = []; for (let i = 0; i < 30; i++) { const m = new THREE.Mesh(new THREE.PlaneGeometry(5, 5), new THREE.MeshBasicMaterial({ color: ['#E85D75', '#FFC23D', '#1FC8B5', '#9C6BFF'][i % 4], side: THREE.DoubleSide })); m.visible = false; g.add(m); conf.push(m); }
   g.userData.update = (t, done) => { paint(!!done); conf.forEach((m, i) => { m.visible = !!done; if (!done) return; const k = (t * .4 + i / 30) % 1; m.position.set(x + Math.sin(i * 2.4) * 150, 260 - k * 220, ST.y + 30 + Math.cos(i * 1.7) * 40); m.rotation.set(t * 3 + i, t * 2 + i, 0); }); };
   return g;

@@ -79,7 +79,7 @@
   const LOOK = () => ({ b: heroLook({ kind: 'boy', skin: '#C98E5F', color: '#2F6FB2' }), g: heroLook({ kind: 'girl', skin: '#D9A374', color: '#2E8B57' }) });
   let S = { lines: [], label: '', dur: 0, title: null, dips: [], chips: [] }, curKey = '';
   const V = window.__vo = {
-    credits(img) { cred.querySelector('img.sch').src = img.school; cred.querySelector('img.moe').src = img.moe; cred.querySelector('img.me').src = img.me; },
+    credits(img) { cred.querySelector('img.sch').src = img.school; cred.querySelector('img.moe').src = img.moe; cred.querySelector('img.me').src = img.me; if (img.game) cred.querySelector('.game').textContent = img.game; },
     scene(s) { S = Object.assign({ lines: [], label: '', dur: 0, title: null, dips: [], chips: [], hud: true, capTop: false }, s); curKey = ''; document.body.classList.toggle('noHud', S.hud === false); lbl.classList.toggle('low', !!S.capTop); lbl.textContent = S.label; lbl.classList.remove('on'); cap.classList.remove('on');
       title.classList.toggle('on', !!S.title); cred.classList.toggle('on', !!S.credits); if (S.title) { title.querySelector('.sub').textContent = S.title.sub || ''; title.querySelector('.ctaW').innerHTML = S.title.cta ? `<span class="cta">${S.title.cta}</span>` : ''; } },
     frame(t) {

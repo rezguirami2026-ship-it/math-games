@@ -5,6 +5,8 @@ import { bus } from '../core/events.js';
 import { sfx } from '../core/sound.js';
 import { ar } from '../core/util.js';
 import { LESSONS, UNITS } from '../content/lessons.js';
+import { GRADE } from '../content/grade.js';
+const GRADE_NAME = { 5: 'الخامس', 6: 'السادس', 7: 'السابع' };
 import { levelOf } from '../core/levels.js';
 import { drawHuman } from '../character/human.js';
 import { heroLookWorn } from './wardrobe.js';
@@ -21,7 +23,8 @@ export function memories(s = game.state) {
   Object.entries((s.world && s.world.visited) || {}).forEach(([id, t]) => { const a = AREAS[id]; if (a) M.push([a[0], `دخل ${a[1]}`, 'منطقة جديدة في العالم', a[2], t]); });
   Object.entries(s.adventures || {}).forEach(([id, r]) => { if (r && r.done && ADV[id]) M.push([ADV[id].split(' ')[0], `أكمل مغامرة «${ADV[id].replace(/^\S+ /, '')}»`, `⭐ ${ar(r.best || 0)} من ٥ نجوم مخفية`, '#D9CCF2', r.at]); });
   if (s.grandSeen) M.push(['👑', 'بطل قرية الخير الأكبر', 'أكمل المغامرات التسع كلها', '#FFD54A', s.grandSeen]);
-  if (done.regularPolyhedra) M.push(['🎓', 'أتمّ الدروس التسعة والستين', 'منهج الصف السادس كاملاً', '#C7E8C9', done.regularPolyhedra]);
+  const last = LESSONS[LESSONS.length - 1].id;
+  if (done[last]) M.push(['🎓', `أتمّ الدروس الـ${ar(LESSONS.length)}`, `منهج الصف ${GRADE_NAME[GRADE] || ''} كاملاً`, '#C7E8C9', done[last]]);
   return M.sort((a, b) => (a[4] || 9e15) - (b[4] || 9e15));   // ما لا تاريخ له في الآخر
 }
 

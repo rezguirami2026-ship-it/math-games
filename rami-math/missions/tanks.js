@@ -39,13 +39,14 @@ export async function seal(W, i) {
     say(tk.x, tk.y - 118, 'وصل الماء إلى البيت!', '#1FA05A', 2200);
     earn(15, tk.x, tk.y - 90);
     if (m.done.every(Boolean)) {
-      m.status = 'done'; s.gear.owned.flask = Date.now(); complete('decimalFractions'); changed();
+      m.status = 'done'; s.gear.owned.flask = Date.now(); changed();
       await wait(1200); earn(30, W.player.x, W.player.y - 80); unlock('waterkeeper');
       await W.talk('umkhalid', [
         { who: 'umkhalid', text: 'امتلأت الخزانات كلها بالقدر الذي يحتاجه كل بيت، لا قطرة زائدة ولا ناقصة!' },
         { who: 'umkhalid', text: 'خذ هذه القربة هديةً مني، تجدها في خزانة البطل.' }
       ]);
       W.toast('💧 حصلت على قربة الماء، جرّبها في خزانة البطل');
+      complete('decimalFractions'); changed();   /* بعد الحوار: التحدي لا يُفتح تحت جملة أم خالد */
     }
     return;
   }

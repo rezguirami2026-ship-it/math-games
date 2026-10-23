@@ -23,7 +23,7 @@ export const BADGES = [
   { id: 'b_first3', icon: '🌟', name: 'الإتقان الأول', desc: 'ثلاث نجوم في درس لأول مرة', prog: s => [Math.min(1, full(s, LESSONS.map(l => l.id))), 1] },
   { id: 'b_stars30', icon: '✨', name: 'جامع النجوم', desc: 'اجمع ٣٠ نجمة في الدروس', prog: s => [allStars(s), 30] },
   { id: 'b_stars100', icon: '💫', name: 'سماء النجوم', desc: 'اجمع ١٠٠ نجمة في الدروس', prog: s => [allStars(s), 100] },
-  { id: 'b_stars207', icon: '🌌', name: 'الإتقان الكامل', desc: 'ثلاث نجوم في الدروس الـ٦٩ كلها', prog: s => [allStars(s), 207] },
+  { id: 'b_stars207', icon: '🌌', name: 'الإتقان الكامل', desc: 'ثلاث نجوم في الدروس الـ' + ar(LESSONS.length) + ' كلها', prog: s => [allStars(s), LESSONS.length * 3] },
   { id: 'b_act10', icon: '🎲', name: 'لاعب نشيط', desc: 'العب ١٠ أنشطة', prog: s => [plays(s), 10] },
   { id: 'b_act40', icon: '🏅', name: 'المتدرب المجتهد', desc: 'العب ٤٠ نشاطاً', prog: s => [plays(s), 40] },
   { id: 'b_persist', icon: '💪', name: 'المثابر', desc: 'أكمل ٢٠ جولة بعد محاولة خاطئة (الخطأ طريق التعلم!)', prog: s => [st(s).persist || 0, 20] },

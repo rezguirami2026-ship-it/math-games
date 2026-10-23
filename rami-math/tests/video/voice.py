@@ -1,9 +1,9 @@
 # يولّد صوت كل سطر من script.json بأصوات Microsoft العُمانية (edge-tts)، ويكتب المدد في timing.json
-# الاستعمال: python voice.py <مجلد الإخراج>
+# الاستعمال: python voice.py <مجلد الإخراج> [ملف النص، افتراضياً script.json؛ والخامس script5.json]
 import asyncio, json, os, re, subprocess, sys
 import edge_tts, imageio_ffmpeg
 import edge_tts.constants as _C, edge_tts.communicate as _CM, edge_tts.drm as _D
-for _m in (_C, _CM, _D):   # الخدمة ترفض (403) رقم نسخة المتصفح القديم داخل edge-tts 7.2.8
+for _m in ((_C, _CM, _D) if edge_tts.__version__ == '7.2.8' else ()):   # الخدمة ترفض (403) رقم نسخة المتصفح القديم داخل edge-tts 7.2.8 (والنسخ الأحدث سليمة)
     if hasattr(_m, 'CHROMIUM_FULL_VERSION'): _m.CHROMIUM_FULL_VERSION = '147.0.3700.60'
     if hasattr(_m, 'CHROMIUM_MAJOR_VERSION'): _m.CHROMIUM_MAJOR_VERSION = '147'
     if hasattr(_m, 'SEC_MS_GEC_VERSION'): _m.SEC_MS_GEC_VERSION = '1-147.0.3700.60'
@@ -12,7 +12,7 @@ HERE = os.path.dirname(os.path.abspath(__file__))
 OUT = sys.argv[1]
 os.makedirs(OUT, exist_ok=True)
 FF = imageio_ffmpeg.get_ffmpeg_exe()
-S = json.load(open(os.path.join(HERE, 'script.json'), encoding='utf-8'))
+S = json.load(open(os.path.join(HERE, sys.argv[2] if len(sys.argv) > 2 else 'script.json'), encoding='utf-8'))
 
 def dur(path):
     err = subprocess.run([FF, '-i', path], capture_output=True, text=True, encoding='utf-8', errors='ignore').stderr
