@@ -6,6 +6,10 @@ import { buildPerson, animatePerson } from '../renderer3d/people.js';
 import { makeComposer } from '../renderer3d/post.js';
 import { wind } from '../renderer3d/nature.js';
 import { FLAGS } from '../world/art.js';
+import { Parts, box } from '../renderer3d/geom.js';
+import { material } from '../renderer3d/textures.js';
+import { signMesh } from '../renderer3d/omani.js';
+import { gate3D } from './gate.js';
 
 const FOV = 42, PITCH = 43 * Math.PI / 180, CH = 512;
 export function webglOK() {
@@ -43,6 +47,7 @@ export function createView3D(canvas, grid, def, opts = {}) {
   // القرية: مبانٍ ونخيل ومعالم ومحطات من ملفها
   const K = def.kit3d(THREE, { high, def, grid });
   sc.add(K.group);
+  const GT = def._gate ? gate3D(THREE, def._gate, { Parts, box, material, signMesh }) : null; if (GT) sc.add(GT.group);   // بوابة القرية التالية
   // علامة الهدف ودائرة الوجهة
   const marker = new THREE.Group(), acc = M.accent || '#FFC94A';
   const ring = new THREE.Mesh(new THREE.TorusGeometry(44, 3, 8, 48), new THREE.MeshBasicMaterial({ color: acc, transparent: true, opacity: .85 })); ring.rotation.x = Math.PI / 2; ring.position.y = 3;
@@ -78,11 +83,11 @@ export function createView3D(canvas, grid, def, opts = {}) {
     if (first) { at.copy(goalV); first = false; } else at.lerp(goalV, 1 - Math.exp(-dt * 4));
     cam.position.set(at.x, Math.sin(PITCH) * dist, at.z + Math.cos(PITCH) * dist); cam.lookAt(at.x, 0, at.z);
     sun.position.set(h.x + sunDir.x * 1500, sunDir.y * 1500, h.y + sunDir.z * 1500); sun.target.position.set(h.x, 0, h.y); sun.target.updateMatrixWorld();
-    const goal = st.goal && (def.stations || []).find(s => s.id === st.goal);
+    const goal = st.goalPt;
     marker.visible = !!goal;
     if (goal) { marker.position.set(goal.x, 0, goal.y); gem.position.y = (goal.mh || 150) + Math.sin(t * 2.4) * 8; gem.rotation.y = t * 1.6; ring.material.opacity = .55 + .3 * Math.sin(t * 3); }
     if (st.dest) { dest.position.x = st.dest.x; dest.position.z = st.dest.y; dest.material.opacity = Math.max(0, st.dest.k); dest.scale.setScalar(1.6 - st.dest.k * .6); } else dest.material.opacity = 0;
-    if (K.update) K.update(t, st, cam);
+    if (K.update) K.update(t, st, cam); if (GT) GT.update();
     if (comp) comp.render(); else r.render(sc, cam);
   }
   const ray = new THREE.Raycaster(), ndc = new THREE.Vector2(), plane = new THREE.Plane(new THREE.Vector3(0, 1, 0), 0), hit = new THREE.Vector3();

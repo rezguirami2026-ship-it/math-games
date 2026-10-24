@@ -135,3 +135,9 @@ body.v89 #panel .sheet { border-radius: 26px; margin: auto; max-width: 680px; bo
 .vadv-tip { position: absolute; bottom: 24px; left: 50%; transform: translateX(-50%); background: rgba(0, 0, 0, .6); color: #fff; padding: 8px 16px; border-radius: 14px; font-weight: 700; transition: opacity .6s; text-align: center; }
 .vadv-tip.off { opacity: 0; }
 .vadvBtn { background: linear-gradient(180deg, #FFD978, #F5A524) !important; color: #2A1A00 !important; }
+
+/* الانتقال عبر بوابة القرية إلى القرية التالية */
+.vfade { position: fixed; inset: 0; background: #1E1408; opacity: 0; pointer-events: none; transition: opacity .45s; z-index: 500; } .vfade.on { opacity: 1; }
+.varrow { position: fixed; width: 56px; height: 56px; border-radius: 50%; background: rgba(255,255,255,.92); box-shadow: 0 4px 14px rgba(0,0,0,.25); display: grid; place-items: center; z-index: 30; pointer-events: none; animation: vArrowPulse 1.2s ease-in-out infinite; }
+.varrow[hidden] { display: none; } .varrow i { font-style: normal; font-size: 28px; color: #F59E0B; display: block; line-height: 1; }
+@keyframes vArrowPulse { 50% { transform: scale(1.12); } }

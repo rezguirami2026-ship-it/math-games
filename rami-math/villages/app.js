@@ -40,25 +40,33 @@ function talk(who, lines, where) {
   });
 }
 
-async function enterVillage(u) {
+async function enterVillage(u, o = {}) {
   const U = UNITS[u];
   let mod;
   try { mod = await import(`./g${GRADE}/${U.village}/index.js`); }
   catch (e) { toast(`🚧 ${U.icon} ${U.name}: قيد البناء، تُفتح قريباً`); return openMap(); }
   const def = mod.default, st = game.state, vs = st.vil;
+  const NEXT = UNITS[u + 1], nextBuilt = !!NEXT && unitLessons(u + 1).some(l => l.ready);
   vs.at = U.village; save();
   root.className = 'vroot on';
   window.__villages.api = await runVillage(root, { ...def, name: U.name, icon: U.icon, unitTitle: `الوحدة ${ar(U.n)}: ${U.title}` }, {
     look: () => heroLook(st.hero),
-    pos: (vs.pos || {})[U.village],
+    pos: o.via === 'gate' ? null : (vs.pos || {})[U.village],   // العابر من بوابة القرية السابقة يبدأ عند مدخل القرية
     savePos: p => { (vs.pos = vs.pos || {})[U.village] = p; save(); },
     progress: () => {
       const ls = unitLessons(u), cur = ls.find(l => !isDone(l.id));   // معرّف المحطة = معرّف درسها
       const goal = cur && (def.stations || []).some(s => s.id === cur.id) ? cur.id : null;
       return { lessons: ls.map(l => ({ id: l.id, title: l.title, done: isDone(l.id) })), goal,
+        gate: NEXT ? { open: nextBuilt && (unitDone(u) || PREVIEW), seen: !!(vs.gates || {})[U.village], label: `${NEXT.icon} إلى ${NEXT.name}` } : null,
         adv: def.adventure && (unitDone(u) || PREVIEW) ? ((vs.adv || {})[U.village] ? '🗺️ ' + '★'.repeat(vs.adv[U.village].stars) : '🗺️ المغامرة') : '',
         gems: st.gems || 0, text: cur ? `🎯 ${cur.mission || cur.title}` : `🏅 أنهيتَ دروس ${U.name} كلها!` };
     },
+    gate: NEXT ? {   // بوابة القرية التالية على الحافة الجنوبية
+      seen: () => { (vs.gates = vs.gates || {})[U.village] = 1; save(); toast(`🚪 فُتحت البوابة إلى ${NEXT.icon} ${NEXT.name}!`); },
+      locked: () => toast(nextBuilt ? `🔒 تُفتح البوابة إلى ${NEXT.name} حين تنهي دروس ${U.name}` : `🚧 ${NEXT.name}: قيد البناء، تُفتح قريباً`),
+      through: async () => { const f = document.createElement('div'); f.className = 'vfade'; document.body.append(f); requestAnimationFrame(() => f.classList.add('on')); sfx('pick');
+        await new Promise(r => setTimeout(r, 480)); await enterVillage(u + 1, { via: 'gate' }); f.classList.remove('on'); setTimeout(() => f.remove(), 600); }
+    } : null,
     canOpen: s => isDone(s.id),   // المحطات المنجزة تُعاد للتدرّب
     onStation: async (s, api) => {
       const L = LESSONS.find(l => l.id === s.id), play = def.lessons && def.lessons[s.id];

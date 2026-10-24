@@ -4,6 +4,7 @@
 import { CAM, FLAGS, upright } from '../world/art.js';
 import { drawHuman } from '../character/human.js';
 import { bike2D } from './street.js';
+import { gateItems2D } from './gate.js';
 
 const CH = 512, TEEN = 1.18;   // شخصيات الصف الثامن أكبر من شخصيات العالم المفتوح
 
@@ -38,6 +39,7 @@ export function createView2D(canvas, grid, def) {
     // قائمة الرسم مرتبة بالعمق (أسفل الأرضية)
     const list = kit.items(t, st).filter(i => i.x == null || (i.x > L - 300 && i.x < R + 300 && i.y > T - 60 && i.y < B + 300));
     (def.stations || []).forEach(s => list.push({ y: s.y, draw: c => kit.station(c, s, t, st) }));
+    if (def._gate) list.push(...gateItems2D(def._gate, t));   // بوابة القرية التالية
     (def.people || []).forEach(q => { const dx = h.x - q.x, dy = h.y - q.y, near = Math.hypot(dx, dy) < 160;
       const dir = !near ? (q.dir || 'down') : Math.abs(dx) > Math.abs(dy) ? (dx > 0 ? 'right' : 'left') : (dy > 0 ? 'down' : 'up');
       list.push({ y: q.y, draw: c => person(c, q.look, q.x, q.y, { dir, anim: st.talking === q.id ? 'talk' : null, animT: (t * .8) % 1 }) }); });
@@ -47,7 +49,7 @@ export function createView2D(canvas, grid, def) {
     if (kit.over) kit.over(ctx, t, st);
     // دائرة الوجهة وعلامة المحطة الحالية
     if (st.dest && st.dest.k > 0) { ctx.save(); ctx.globalAlpha = st.dest.k; ctx.strokeStyle = '#fff'; ctx.lineWidth = 3; ctx.beginPath(); ctx.ellipse(st.dest.x, st.dest.y, 16 * (1.6 - st.dest.k * .6), 8 * (1.6 - st.dest.k * .6), 0, 0, 7); ctx.stroke(); ctx.restore(); }
-    const goal = st.goal && (def.stations || []).find(s => s.id === st.goal);
+    const goal = st.goalPt;   // فوق صاحب الدرس الحالي، أو البوابة بعد إنهاء الدروس (runtime.js)
     if (goal) {
       const a = M.accent || '#FFC94A', y = goal.y - (goal.mh || 150) + Math.sin(t * 2.4) * 6, w = 12 * (.75 + .25 * Math.cos(t * 1.6));
       ctx.save(); ctx.globalAlpha = .55 + .3 * Math.sin(t * 3); ctx.strokeStyle = a; ctx.lineWidth = 4; ctx.beginPath(); ctx.ellipse(goal.x, goal.y + 6, 44, 18, 0, 0, 7); ctx.stroke(); ctx.restore();

@@ -62,6 +62,7 @@ export default {
   size: { w: W, h: H }, YARD, TOP,
   HOMES, STREET, life, fac, FORK_PATH, MOSQUE, MINARET, HALL, CHIMNEY, BELT, LAB, TOWERW, PALLETS, DOCK, POND, PALMS, LAMPS, STALLS, RING,
   start: { x: 1050, y: 1740 },
+  gate: { x: 2260, y: 1760 },   // بوابة القرية التالية (villages/gate.js)
   mood: { sky: '#A5D8F5', fog: '#DCEFF9', fogNear: 1800, fogFar: 5600, exposure: .95,
     hemi: ['#FFFFFF', '#A89070', 1.25], sun: { color: '#FFF1D6', i: 2.4, dir: [-.45, 1, .6] }, accent: '#FB923C', sky2d: '#B9E0F7' },
   ambience: 'workshop', music: 'workshop',

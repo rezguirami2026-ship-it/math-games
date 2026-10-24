@@ -60,6 +60,7 @@ export default {
   size: { w: W, h: H }, CLIFF, YARD,
   HOMES, STREET, life, MOSQUE, MINARET, STALLS, WELL, PALMS: PALMS_OK, LAMPS, CAVES, RAILS, CARTS, ORE,
   start: { x: 1050, y: 1740 },
+  gate: { x: 2260, y: 1760 },   // بوابة القرية التالية (villages/gate.js)
   mood: { sky: '#9CCBEF', fog: '#D6E9F7', fogNear: 1800, fogFar: 5600, exposure: .95,
     hemi: ['#FFFFFF', '#B08A60', 1.25], sun: { color: '#FFF1D6', i: 2.4, dir: [-.45, 1, .6] }, accent: '#FFC94A', sky2d: '#B9DCF5' },
   ambience: 'market', music: 'village',

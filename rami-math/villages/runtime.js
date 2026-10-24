@@ -4,6 +4,7 @@ import { buildGrid } from './grid.js';
 import { createView2D } from './view2d.js';
 import { ar } from '../core/util.js';
 import { sfx, ambience, musicTick } from '../core/sound.js';
+import { GATE_W, POST, throughGate } from './gate.js';
 
 const want3D = () => { try { return localStorage.getItem('ramimath_3d') !== '0' && !/[?&]2d=1/.test(location.search); } catch (e) { return true; } };
 const setWant3D = v => { try { localStorage.setItem('ramimath_3d', v ? '1' : '0'); } catch (e) {} };
@@ -21,6 +22,11 @@ export async function runVillage(root, def, hooks) {
   // أهل القرية يمشون ذهاباً وإياباً على مساراتهم (للحياة فقط، لا يعيقون البطل)
   st.walkers = (def.walkers || []).map(w => ({ look: w.look, path: w.path, i: 1, dirn: 1, x: w.path[0][0], y: w.path[0][1], dir: 'down', moving: true, phase: 0, wait: Math.random() * 2 }));
   if (def.blockers) def.blockers(grid, hooks);   // أبواب وعوائق تتبع التقدّم
+  // بوابة القرية التالية على الحافة الجنوبية: برجاها عائقان دائماً، ومصراعاها يسدّان الممر حتى تكتمل دروس القرية
+  const G = def.gate && hooks.gate ? (def._gate = { x: def.gate.x, y: def.gate.y, open: 0, want: false, seen: false, label: '' }) : (def._gate = null);
+  const leaves = G ? [-50, 0, 50].map(o => ({ x: G.x + o, y: G.y - 6, r: 30 })) : [];
+  if (G) { [-1, 1].forEach(s => grid.extra.push({ x: G.x + s * (GATE_W / 2 + POST / 2), y: G.y - 4, r: 20 })); grid.extra.push(...leaves); }
+  let gateNote = false;
 
   root.innerHTML = `<canvas class="vcv"></canvas>
     <div class="vtop"><button class="vbtn" data-a="map" aria-label="خريطة القرى">🗺️</button>
@@ -30,7 +36,7 @@ export async function runVillage(root, def, hooks) {
       <button class="vbtn" data-a="view" aria-label="تبديل العرض"></button></div>
     <div class="vobj"></div>
     <div class="vzoom"><button class="vbtn" data-z="1" aria-label="تقريب">＋</button><button class="vbtn" data-z="-1" aria-label="تبعيد">－</button></div>
-    <div class="vact"></div>`;
+    <div class="vact"></div><div class="varrow" hidden><i>➤</i></div>`;
   const $ = s => root.querySelector(s);
   let view = null, is3D = false, alive = true, raf = 0;
   async function setView(three) {
@@ -94,6 +100,9 @@ export async function runVillage(root, def, hooks) {
     $('.vobj').innerHTML = info.text || '';
     $('[data-gems] b').textContent = ar(info.gems);
     const ab = $('[data-a=adv]'); ab.hidden = !info.adv; if (info.adv) ab.textContent = info.adv;
+    if (G && info.gate) { G.label = info.gate.label; const was = G.want; G.want = info.gate.open; G.seen = info.gate.seen;
+      if (G.want && G.seen) G.open = 1;
+      if (G.want && !was) leaves.forEach(o => { const k = grid.extra.indexOf(o); if (k >= 0) grid.extra.splice(k, 1); }); }
   }
   const api = { st, grid, refresh, open: id => { const s = (def.stations || []).find(s => s.id === id); if (s && !st.busy) openStation(s); }, talk: async (who, lines) => { st.talking = who.id; try { await hooks.talk(who, lines, (x, y, h) => view.project(x, y, h)); } finally { st.talking = null; } }, get view() { return view; }, sfx };
 
@@ -135,15 +144,36 @@ export async function runVillage(root, def, hooks) {
       else { w.x += dx / d * sp; w.y += dy / d * sp; w.phase += sp * .17; w.moving = true; w.dir = Math.abs(dx) > Math.abs(dy) ? (dx > 0 ? 'right' : 'left') : (dy > 0 ? 'down' : 'up'); }
     }
     if (def.update) def.update(dt, st, api);
+    if (G && !st.busy) {   // البوابة: تُفتح بحركة حين يقترب البطل أول مرة بعد إنهاء الدروس، وتعبرها إلى القرية التالية
+      const d = Math.hypot(h.x - G.x, h.y - G.y);
+      if (G.want && G.open < 1 && d < 700) { if (!G.seen) { G.seen = true; hooks.gate.seen(); sfx('win'); } G.open = Math.min(1, G.open + dt * .55); }
+      if (!G.want && d < 130) { if (!gateNote) { gateNote = true; hooks.gate.locked(); } } else if (d > 220) gateNote = false;
+      if (throughGate(G, h)) { st.busy = true; st.path = []; h.y = G.y - 90; exit(() => hooks.gate.through()); }   // يُحفظ موضعه داخل البوابة: إن عاد من الخريطة لا يعبرها ثانية
+    }
+    // علامة الهدف كالصفوف ٥–٧: فوق رأس صاحب الدرس الحالي (الشخص الواقف بجانب محطته)، وبعد إنهاء الدروس فوق بوابة القرية التالية
+    const gs = st.goal && (def.stations || []).find(s => s.id === st.goal);
+    if (gs) { const who = (def.people || []).map(q => [q, Math.hypot(q.x - gs.x, q.y - gs.y)]).filter(([, d]) => d < 230).sort((a, b) => a[1] - b[1])[0];
+      st.goalPt = who ? { x: who[0].x, y: who[0].y, mh: 165 } : gs; }
+    else st.goalPt = G && G.want ? { x: G.x, y: G.y, mh: 215 } : null;
+    pointArrow();
     if (!st.paused) try { view.frame(st); } catch (e) { console.error('[قرية الخير] رسم القرية', e); }
     ambience(def.ambience || 'village', dt); musicTick(def.music || 'village');
     if ((saveT += dt) > 3) { saveT = 0; hooks.savePos({ x: h.x, y: h.y }); }
     raf = requestAnimationFrame(loop);
   }
-  function exit() {
+  // سهم على حافة الشاشة يشير إلى الهدف حين يكون خارجها
+  function pointArrow() {
+    const el = $('.varrow'), g = st.goalPt; if (!el) return;
+    if (!g || st.busy || !view) { el.hidden = true; return; }
+    const p = view.project(g.x, g.y, 60), b = root.getBoundingClientRect(), m = 70;
+    if (p.x > b.left + m && p.x < b.right - m && p.y > b.top + 90 && p.y < b.bottom - m) { el.hidden = true; return; }
+    const cx = b.left + b.width / 2, cy = b.top + b.height / 2, dx = p.x - cx, dy = p.y - cy, k = Math.min((b.width / 2 - m) / Math.abs(dx || 1), (b.height / 2 - m) / Math.abs(dy || 1));
+    el.hidden = false; el.style.left = (cx + dx * k - 28) + 'px'; el.style.top = Math.max(b.top + 100, Math.min(b.bottom - 84, cy + dy * k - 28)) + 'px';   // تحت الشريط العلوي el.firstChild.style.transform = `rotate(${Math.atan2(dy, dx)}rad)`;
+  }
+  function exit(then) {
     alive = false; cancelAnimationFrame(raf); hooks.savePos({ x: st.hero.x, y: st.hero.y });
     removeEventListener('keydown', onKey); removeEventListener('keyup', onKey); removeEventListener('resize', onResize);
-    if (view) view.dispose(); root.innerHTML = ''; hooks.onExit();
+    if (view) view.dispose(); root.innerHTML = ''; if (then) then(); else hooks.onExit();
   }
   await setView(want3D());
   refresh();
