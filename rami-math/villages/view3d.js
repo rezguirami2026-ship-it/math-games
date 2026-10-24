@@ -6,10 +6,6 @@ import { buildPerson, animatePerson } from '../renderer3d/people.js';
 import { makeComposer } from '../renderer3d/post.js';
 import { wind } from '../renderer3d/nature.js';
 import { FLAGS } from '../world/art.js';
-import { Parts, box } from '../renderer3d/geom.js';
-import { material } from '../renderer3d/textures.js';
-import { signMesh } from '../renderer3d/omani.js';
-import { gate3D } from './gate.js';
 
 const FOV = 42, PITCH = 43 * Math.PI / 180, CH = 512;
 export function webglOK() {
@@ -34,12 +30,21 @@ export function createView3D(canvas, grid, def, opts = {}) {
   // الأرض: قطع من رسم العرض العادي نفسه
   FLAGS.three = true;
   const k2 = def.kit2d(def), groundG = new THREE.Group();
-  for (let cy = 0; cy < Math.ceil(grid.H / CH); cy++) for (let cx = 0; cx < Math.ceil(grid.W / CH); cx++) {
+  // تُبنى القطع حول البطل فقط (قطعتان كل إطار) وتُحذف البعيدة: العالم المتصل أعرض من أن يُرسم كله
+  const tiles = new Map(), NC = Math.ceil(grid.W / CH), NR = Math.ceil(grid.H / CH);
+  function makeTile(cx, cy) {
     const c = document.createElement('canvas'); c.width = c.height = CH; const g = c.getContext('2d'); g.translate(-cx * CH, -cy * CH); k2.ground(g, cx * CH, cy * CH, CH, CH);
     const tex = new THREE.CanvasTexture(c); tex.colorSpace = THREE.SRGBColorSpace; tex.anisotropy = 4;
     const m = new THREE.Mesh(new THREE.PlaneGeometry(CH, CH), new THREE.MeshStandardMaterial({ map: tex, roughness: .95, alphaTest: .5 })   /* الشفاف من رسم الأرض (كالبحر) يُظهر ما تحته */);
-    m.rotation.x = -Math.PI / 2; m.position.set(cx * CH + CH / 2, 0, cy * CH + CH / 2); m.receiveShadow = true; groundG.add(m);
+    m.rotation.x = -Math.PI / 2; m.position.set(cx * CH + CH / 2, 0, cy * CH + CH / 2); m.receiveShadow = true; groundG.add(m); return m;
   }
+  function groundAround(hx, budget) {
+    const c0 = Math.floor(hx / CH), want = [];
+    for (let cx = Math.max(0, c0 - 6); cx <= Math.min(NC - 1, c0 + 6); cx++) for (let cy = 0; cy < NR; cy++) if (!tiles.has(cx + ',' + cy)) want.push([cx, cy]);
+    want.sort((a, b) => Math.abs(a[0] - c0) - Math.abs(b[0] - c0)).slice(0, budget).forEach(([cx, cy]) => tiles.set(cx + ',' + cy, makeTile(cx, cy)));
+    tiles.forEach((m, k) => { if (Math.abs(+k.split(',')[0] - c0) > 9) { groundG.remove(m); m.geometry.dispose(); m.material.map.dispose(); m.material.dispose(); tiles.delete(k); } });
+  }
+  groundAround(def.start.x, 28);
   // أرض ممتدة خلف حدود القرية حتى الأفق (لا فراغ عند الأطراف)
   const far = new THREE.Mesh(new THREE.PlaneGeometry(grid.W + 9000, grid.H + 9000), new THREE.MeshStandardMaterial({ color: M.far || '#DDBF8C', roughness: 1 }));
   far.rotation.x = -Math.PI / 2; far.position.set(grid.W / 2, -.6, grid.H / 2); far.receiveShadow = true; groundG.add(far);
@@ -47,7 +52,6 @@ export function createView3D(canvas, grid, def, opts = {}) {
   // القرية: مبانٍ ونخيل ومعالم ومحطات من ملفها
   const K = def.kit3d(THREE, { high, def, grid });
   sc.add(K.group);
-  const GT = def._gate ? gate3D(THREE, def._gate, { Parts, box, material, signMesh }) : null; if (GT) sc.add(GT.group);   // بوابة القرية التالية
   // علامة الهدف ودائرة الوجهة
   const marker = new THREE.Group(), acc = M.accent || '#FFC94A';
   const ring = new THREE.Mesh(new THREE.TorusGeometry(44, 3, 8, 48), new THREE.MeshBasicMaterial({ color: acc, transparent: true, opacity: .85 })); ring.rotation.x = Math.PI / 2; ring.position.y = 3;
@@ -71,7 +75,7 @@ export function createView3D(canvas, grid, def, opts = {}) {
   let t = 0, last = performance.now(), first = true;
   function frame(st) {
     const now = performance.now(), dt = Math.min(.05, (now - last) / 1000); last = now; t += dt; wind.value = t;
-    ensureHero(st.look); FLAGS.three = true;
+    ensureHero(st.look); FLAGS.three = true; groundAround(st.hero.x, 2);
     const h = st.hero;
     animatePerson(hero, { x: h.x, y: h.y, moving: h.moving, phase: h.phase, run: h.run, dir: h.dir2d, anim: h.anim, animT: h.animT, faceCam: true }, dt, t);
     folk.forEach(({ q, P }) => { const near = Math.hypot(q.x - h.x, q.y - h.y) < 160; animatePerson(P, { x: q.x, y: q.y, moving: false, phase: 0, dir: q.dir || 'down', face: near ? { x: h.x, y: h.y } : null, anim: st.talking === q.id ? 'talk' : null, animT: 0 }, dt, t); });
@@ -87,7 +91,7 @@ export function createView3D(canvas, grid, def, opts = {}) {
     marker.visible = !!goal;
     if (goal) { marker.position.set(goal.x, 0, goal.y); gem.position.y = (goal.mh || 150) + Math.sin(t * 2.4) * 8; gem.rotation.y = t * 1.6; ring.material.opacity = .55 + .3 * Math.sin(t * 3); }
     if (st.dest) { dest.position.x = st.dest.x; dest.position.z = st.dest.y; dest.material.opacity = Math.max(0, st.dest.k); dest.scale.setScalar(1.6 - st.dest.k * .6); } else dest.material.opacity = 0;
-    if (K.update) K.update(t, st, cam); if (GT) GT.update();
+    if (K.update) K.update(t, st, cam);
     if (comp) comp.render(); else r.render(sc, cam);
   }
   const ray = new THREE.Raycaster(), ndc = new THREE.Vector2(), plane = new THREE.Plane(new THREE.Vector3(0, 1, 0), 0), hit = new THREE.Vector3();

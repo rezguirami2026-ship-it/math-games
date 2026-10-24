@@ -104,7 +104,7 @@ export function kit3d(THREE, { high, def: D }) {
   });
   // ٩. جمل في السوق، وجبال بعيدة، وسحب
   const camel = buildCamel(); root.add(camel.root); const cst = { x: 1800, y: 1250, dir: -1, moving: false, phase: 0, saddle: true, bells: true };
-  try { root.add(mountains({ x0: 0, z0: 0, x1: W, z1: D.size.h })); } catch (e) { console.error('[قرية الخير] الجبال البعيدة', e); }
+  if (!D._inWorld) try { root.add(mountains({ x0: 0, z0: 0, x1: W, z1: D.size.h })); } catch (e) { console.error('[قرية الخير] الجبال البعيدة', e); }
   let sky = null; try { sky = clouds({ x0: 0, z0: 0, x1: W, z1: D.size.h }); root.add(sky); } catch (e) { sky = null; }
   return { group: root, update(t, st, cam) { ticks.forEach(f => f(t)); street.update(t); animateCamel(camel, cst, 1 / 60, t); if (sky && sky.userData.tick) sky.userData.tick(t, cam); } };
 }

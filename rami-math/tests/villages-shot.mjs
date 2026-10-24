@@ -10,6 +10,6 @@ await p.goto(`http://localhost:8000/?grade=${G}`); await p.waitForTimeout(1200);
 await p.evaluate(async g => { const m = await import('/core/state.js'); const st = m.fresh({ name: 'سالم', kind: 'boy', skin: '#C68A5B', color: '#2F6FB2' }); localStorage.setItem('ramimath_village_v1_g' + g, JSON.stringify(st)); }, G);
 await p.reload(); await p.waitForTimeout(1500); await p.click('#bCont'); await p.waitForTimeout(500);
 await p.evaluate(u => window.__villages.enter(+u), U); await p.waitForTimeout(3000);
-await p.evaluate(([x, y, z]) => { const a = window.__villages.api; if (x) { a.st.hero.x = +x; a.st.hero.y = +y; } a.view.zoom(+z); }, [X, Y, Z]); await p.waitForTimeout(2500);
+await p.evaluate(([x, y, z, u]) => { const a = window.__villages.api, R = window.__villages.world.regions.find(R => R.u === +u); if (x) { a.st.hero.x = +x + R.ox; a.st.hero.y = +y; } a.view.zoom(+z); }, [X, Y, Z, U]); await p.waitForTimeout(2500);
 await p.screenshot({ path: OUT }); if (errs.length) console.log(errs.join('\n'));
 await b.close();

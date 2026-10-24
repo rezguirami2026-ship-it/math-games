@@ -64,7 +64,6 @@ export default {
   size: { w: W, h: H }, YARD, TOP,
   HOMES, STREET, life, kit, MOSQUE, MINARET, HOUSE, POTS, GROVE, MATS, ROSES, STILL, JARS, HIVES, SHOP, TABLE, STALLS, RING, FOUNT, PALMS, LAMPS,
   start: { x: 760, y: 1740 },
-  gate: { x: 2000, y: 1760 },   // بوابة القرية التالية (villages/gate.js)
   mood: { sky: '#AEDCF5', fog: '#F3E6D2', fogNear: 1800, fogFar: 5600, exposure: .97,
     hemi: ['#FFFFFF', '#B08A60', 1.25], sun: { color: '#FFE6C0', i: 2.45, dir: [-.45, 1, .6] }, accent: '#F59E0B', sky2d: '#BFE3F7' },
   ambience: 'market', music: 'festival',

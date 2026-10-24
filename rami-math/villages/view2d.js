@@ -4,7 +4,6 @@
 import { CAM, FLAGS, upright } from '../world/art.js';
 import { drawHuman } from '../character/human.js';
 import { bike2D } from './street.js';
-import { gateItems2D } from './gate.js';
 
 const CH = 512, TEEN = 1.18;   // شخصيات الصف الثامن أكبر من شخصيات العالم المفتوح
 
@@ -35,11 +34,11 @@ export function createView2D(canvas, grid, def) {
     const L = cam.x - halfW - 40, R = cam.x + halfW + 40, T = cam.y - halfH - 60, B = cam.y + halfH + 260;
     for (let cy = Math.max(0, Math.floor(T / CH)); cy <= Math.min(Math.ceil(grid.H / CH) - 1, Math.floor(B / CH)); cy++)
       for (let cx = Math.max(0, Math.floor(L / CH)); cx <= Math.min(Math.ceil(grid.W / CH) - 1, Math.floor(R / CH)); cx++) ctx.drawImage(chunk(cx, cy), 0, 0, CH, CH, cx * CH - .5, cy * CH - .5, CH + 1, CH + 1);   // تداخل نصف بكسل: لا خط بين القطع
+    if (chunks.size > 80) chunks.forEach((c, k) => { if (Math.abs(+k.split(',')[0] * CH - cam.x) > 5000) chunks.delete(k); });   // العالم المتصل: تُنسى القطع البعيدة
     if (kit.groundLive) kit.groundLive(ctx, t, st);
     // قائمة الرسم مرتبة بالعمق (أسفل الأرضية)
     const list = kit.items(t, st).filter(i => i.x == null || (i.x > L - 300 && i.x < R + 300 && i.y > T - 60 && i.y < B + 300));
     (def.stations || []).forEach(s => list.push({ y: s.y, draw: c => kit.station(c, s, t, st) }));
-    if (def._gate) list.push(...gateItems2D(def._gate, t));   // بوابة القرية التالية
     (def.people || []).forEach(q => { const dx = h.x - q.x, dy = h.y - q.y, near = Math.hypot(dx, dy) < 160;
       const dir = !near ? (q.dir || 'down') : Math.abs(dx) > Math.abs(dy) ? (dx > 0 ? 'right' : 'left') : (dy > 0 ? 'down' : 'up');
       list.push({ y: q.y, draw: c => person(c, q.look, q.x, q.y, { dir, anim: st.talking === q.id ? 'talk' : null, animT: (t * .8) % 1 }) }); });

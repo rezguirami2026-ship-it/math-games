@@ -1,6 +1,7 @@
-// تطبيق الصفين الثامن والتاسع: «خريطة القرى» (قرية مستقلة لكل وحدة من وحدات الكتاب) بدل العالم المفتوح.
+// تطبيق الصفين الثامن والتاسع: عالم متصل كالصفوف ٥–٧ (world.js): قرية لكل وحدة من وحدات الكتاب متجاورة على الطريق الكبير، وبينها بوابات،
+// و«خريطة القرى» للانتقال السريع إلى قرية مفتوحة.
 // يستعمل من اللعبة: شاشات البداية والبطل واختيار الصف (ui/screens.js)، الحفظ لكل صف (save/save.js)، الأصوات، والجواهر.
-// كل قرية في مجلدها villages/g<الصف>/<القرية>/index.js وتُحمَّل فقط عند دخولها.
+// كل قرية في مجلدها villages/g<الصف>/<القرية>/index.js، ومجسّماتها تُبنى حين يقترب البطل منها.
 import { GRADE, gradeAsked, gradeChosen, rememberGrade, markGradeAsked } from '../content/grade.js';
 import { UNITS, LESSONS } from '../content/lessons.js';
 import { screens, heroLook } from '../ui/screens.js';
@@ -11,6 +12,7 @@ import { sfx } from '../core/sound.js';
 import { addGems } from '../world/decor.js';
 import { runVillage } from './runtime.js';
 import { openHub } from './hub.js';
+import { composeWorld } from './world.js';
 
 const css = document.createElement('link'); css.rel = 'stylesheet'; css.href = 'villages/villages.css'; document.head.append(css);
 const $ = id => document.getElementById(id);
@@ -40,48 +42,60 @@ function talk(who, lines, where) {
   });
 }
 
+/* العالم المتصل: كل القرى المبنية متجاورة على الطريق الكبير (world.js)، وبينها أودية وأسوار ببوابات تُفتح بإنهاء الوحدة */
+const built = u => unitLessons(u).some(l => l.ready);
+async function loadWorld() {
+  const list = [];
+  for (let u = 0; u < UNITS.length && built(u); u++) {
+    try { list.push({ u, def: (await import(`./g${GRADE}/${UNITS[u].village}/index.js`)).default }); } catch (e) { console.error('[قرية الخير] تحميل القرية', UNITS[u].village, e); break; }
+  }
+  return composeWorld(list.map((e, i) => ({ ...e, next: UNITS[e.u + 1] ? { name: UNITS[e.u + 1].name, icon: UNITS[e.u + 1].icon, built: !!list[i + 1] } : null })));
+}
+
 async function enterVillage(u, o = {}) {
   const U = UNITS[u];
-  let mod;
-  try { mod = await import(`./g${GRADE}/${U.village}/index.js`); }
-  catch (e) { toast(`🚧 ${U.icon} ${U.name}: قيد البناء، تُفتح قريباً`); return openMap(); }
-  const def = mod.default, st = game.state, vs = st.vil;
-  const NEXT = UNITS[u + 1], nextBuilt = !!NEXT && unitLessons(u + 1).some(l => l.ready);
-  vs.at = U.village; save();
+  if (!built(u)) { toast(`🚧 ${U.icon} ${U.name}: قيد البناء، تُفتح قريباً`); return openMap(); }
+  const W = await loadWorld(), R0 = W.regions.find(R => R.u === u);
+  if (!R0) { toast(`🚧 ${U.icon} ${U.name}: قيد البناء، تُفتح قريباً`); return openMap(); }
+  const st = game.state, vs = st.vil;
+  W.start = { x: R0.def.start.x + R0.ox, y: R0.def.start.y };
+  const pos = o.pos && o.pos.x >= 0 && o.pos.x < W.size.w ? o.pos : null;
+  W._cur = W.regionAt(pos ? pos.x : W.start.x);
+  const cur = () => (W._cur || R0).u;
+  vs.at = UNITS[cur()].village; save();
   root.className = 'vroot on';
-  window.__villages.api = await runVillage(root, { ...def, name: U.name, icon: U.icon, unitTitle: `الوحدة ${ar(U.n)}: ${U.title}` }, {
+  W.name = U.name; W.icon = U.icon; W.unitTitle = `الوحدة ${ar(U.n)}: ${U.title}`;
+  window.__villages.world = W;
+  window.__villages.api = await runVillage(root, W, {
     look: () => heroLook(st.hero),
-    pos: o.via === 'gate' ? null : (vs.pos || {})[U.village],   // العابر من بوابة القرية السابقة يبدأ عند مدخل القرية
-    savePos: p => { (vs.pos = vs.pos || {})[U.village] = p; save(); },
+    pos,
+    savePos: p => { vs.wpos = p; save(); },
     progress: () => {
-      const ls = unitLessons(u), cur = ls.find(l => !isDone(l.id));   // معرّف المحطة = معرّف درسها
-      const goal = cur && (def.stations || []).some(s => s.id === cur.id) ? cur.id : null;
-      return { lessons: ls.map(l => ({ id: l.id, title: l.title, done: isDone(l.id) })), goal,
-        gate: NEXT ? { open: nextBuilt && (unitDone(u) || PREVIEW), seen: !!(vs.gates || {})[U.village], label: `${NEXT.icon} إلى ${NEXT.name}` } : null,
-        adv: def.adventure && (unitDone(u) || PREVIEW) ? ((vs.adv || {})[U.village] ? '🗺️ ' + '★'.repeat(vs.adv[U.village].stars) : '🗺️ المغامرة') : '',
-        gems: st.gems || 0, text: cur ? `🎯 ${cur.mission || cur.title}` : `🏅 أنهيتَ دروس ${U.name} كلها!` };
+      const u = cur(), V = UNITS[u], D = W.regions.find(R => R.u === u).def, ls = unitLessons(u), next = ls.find(l => !isDone(l.id));   // معرّف المحطة = معرّف درسها
+      const goal = next && W.stations.some(s => s.id === next.id) ? next.id : null;
+      return { title: `${V.icon} ${V.name}`, sub: `الوحدة ${ar(V.n)}: ${V.title}`, lessons: ls.map(l => ({ id: l.id, title: l.title, done: isDone(l.id) })), goal,
+        adv: D.adventure && (unitDone(u) || PREVIEW) ? ((vs.adv || {})[V.village] ? '🗺️ ' + '★'.repeat(vs.adv[V.village].stars) : '🗺️ المغامرة') : '',
+        gems: st.gems || 0, text: next ? `🎯 ${next.mission || next.title}` : `🏅 أنهيتَ دروس ${V.name} كلها! البوابة شرقاً تنتظرك` };
     },
-    gate: NEXT ? {   // بوابة القرية التالية على الحافة الجنوبية
-      seen: () => { (vs.gates = vs.gates || {})[U.village] = 1; save(); toast(`🚪 فُتحت البوابة إلى ${NEXT.icon} ${NEXT.name}!`); },
-      locked: () => toast(nextBuilt ? `🔒 تُفتح البوابة إلى ${NEXT.name} حين تنهي دروس ${U.name}` : `🚧 ${NEXT.name}: قيد البناء، تُفتح قريباً`),
-      through: async () => { const f = document.createElement('div'); f.className = 'vfade'; document.body.append(f); requestAnimationFrame(() => f.classList.add('on')); sfx('pick');
-        await new Promise(r => setTimeout(r, 480)); await enterVillage(u + 1, { via: 'gate' }); f.classList.remove('on'); setTimeout(() => f.remove(), 600); }
-    } : null,
+    onRegion: u => { vs.at = UNITS[u].village; save(); toast(`${UNITS[u].icon} ${UNITS[u].name}`); },
+    gateState: (u, C) => ({ open: C.built && (unitDone(u) || PREVIEW), seen: !!(vs.gates || {})[UNITS[u].village] }),
+    gateSeen: (u, C) => { (vs.gates = vs.gates || {})[UNITS[u].village] = 1; save(); toast(`🚪 فُتحت البوابة إلى ${C.label}!`); },
+    gateLocked: (u, C) => toast(C.built ? `🔒 تُفتح البوابة إلى ${C.label} حين تنهي دروس ${UNITS[u].name}` : `🚧 ${C.label}: قيد البناء، تُفتح قريباً`),
     canOpen: s => isDone(s.id),   // المحطات المنجزة تُعاد للتدرّب
     onStation: async (s, api) => {
-      const L = LESSONS.find(l => l.id === s.id), play = def.lessons && def.lessons[s.id];
+      const u = s._u, V = UNITS[u], D = s._R.def, L = LESSONS.find(l => l.id === s.id), play = D.lessons && D.lessons[s.id];
       if (!play) { toast(`🚧 «${L ? L.mission || L.title : s.label}»: المهمة قيد البناء`); return; }
       const m = await play();
       const wasDone = unitDone(u);
       await m.default(api, { lesson: L, state: st, done: stars => { st.quests.done[L.id] = st.quests.done[L.id] || Date.now(); const d = (st.quests.data[L.id] = st.quests.data[L.id] || {}); d.stars = Math.max(d.stars || 0, stars || 1); save(); } });
-      if (!wasDone && unitDone(u) && def.adventure) toast(`🎉 أنهيتَ ${U.name}! انتظرتك مغامرة: اضغط 🗺️ المغامرة في الأعلى`);
+      if (!wasDone && unitDone(u)) toast(D.adventure ? `🎉 أنهيتَ ${V.name}! انتظرتك مغامرة (🗺️ في الأعلى)، والبوابة شرقاً فُتحت` : `🎉 أنهيتَ ${V.name}! البوابة شرقاً فُتحت`);
     },
-    talk: (who, lines, proj) => { const p = (def.people || []).find(p => p.id === who.id); return talk(who, lines, p ? () => proj(p.x, p.y, 92) : null); },
-    adventure: async () => {   // مغامرة الوحدة: تُحفظ أفضل نجومها، وجواهرها تُضاف
-      const m = await def.adventure();
-      st._save = save; await new Promise(res => m.playAdventure({ state: st, onDone: r => { if (r) { const a = (vs.adv = vs.adv || {}), old = a[U.village] || { stars: 0 }; a[U.village] = { stars: Math.max(old.stars, r.stars), gems: r.gems }; save(); } res(); } }));
+    talk: (who, lines, proj) => { const p = W.people.find(p => p.id === who.id && p._u === cur()); return talk(who, lines, p ? () => proj(p.x, p.y, 92) : null); },
+    adventure: async () => {   // مغامرة القرية الحالية: تُحفظ أفضل نجومها، وجواهرها تُضاف
+      const V = UNITS[cur()], D = W.regions.find(R => R.u === cur()).def, m = await D.adventure();
+      st._save = save; await new Promise(res => m.playAdventure({ state: st, onDone: r => { if (r) { const a = (vs.adv = vs.adv || {}), old = a[V.village] || { stars: 0 }; a[V.village] = { stars: Math.max(old.stars, r.stars), gems: r.gems }; save(); } res(); } }));
     },
-    onExit: () => { vs.at = null; save(); openMap(); }
+    onExit: () => { openMap(); }
   });
 }
 
@@ -99,7 +113,7 @@ function start(state) {
   root = document.createElement('div'); root.className = 'vroot'; document.body.insertBefore(root, $('dialog'));
   save();
   const at = UNITS.findIndex(U => U.village === s.vil.at);
-  if (at >= 0 && unitOpen(at)) enterVillage(at); else openMap();
+  if (at >= 0 && unitOpen(at)) enterVillage(at, { pos: s.vil.wpos }); else openMap();
 }
 
 function boot() {

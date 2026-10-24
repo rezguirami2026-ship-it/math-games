@@ -52,7 +52,7 @@ export function kit3d(THREE, { def: D }) {
     const sh = signMesh('مصنع التغليف', 26); sh.position.set(D.HALL.x + D.HALL.w / 2, D.HALL.H * SCALE_H + 20, D.HALL.y + D.HALL.h + 4); root.add(sh);
     D.stations.forEach(s => { const m = signMesh(`${s.icon} ${s.label}`, 16); m.position.set(s.x, 92, s.y + 4); root.add(m); }); }
   { const a = new THREE.Vector3(1024, 115, 1000), b = new THREE.Vector3(1276, 115, 1000); for (let k = 0; k < 9; k++) { const u = (k + .5) / 9, p = a.clone().lerp(b, u); p.y -= Math.sin(u * Math.PI) * 22; const f = new THREE.Mesh(new THREE.ConeGeometry(6, 16, 3), flat(['#EA580C', '#FFFFFF', '#2563EB', '#16A34A'][k % 4])); f.rotation.x = Math.PI; f.position.copy(p).add(new THREE.Vector3(0, -8, 0)); root.add(f); ticks.push(t => { f.rotation.z = Math.sin(t * 3 + k) * .15; }); } }
-  try { root.add(mountains({ x0: 0, z0: 0, x1: W, z1: D.size.h })); } catch (e) {}
+  if (!D._inWorld) try { root.add(mountains({ x0: 0, z0: 0, x1: W, z1: D.size.h })); } catch (e) {}
   let sky = null; try { sky = clouds({ x0: 0, z0: 0, x1: W, z1: D.size.h }); root.add(sky); } catch (e) { sky = null; }
   return { group: root, update(t, st, cam) { ticks.forEach(f => f(t)); street.update(t); if (sky && sky.userData.tick) sky.userData.tick(t, cam); } };
 }
