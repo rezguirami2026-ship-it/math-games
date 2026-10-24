@@ -108,12 +108,13 @@ import('../core/events.js').then(m => m.bus.on('save', () => game.state && save(
 function start(state) {
   game.state = upgrade(state);
   const s = game.state; s.grade = GRADE; s.vil = s.vil || {};
+  $('screen').className = 'screen'; $('screen').innerHTML = '';   // تُغلق شاشة البداية/البطل (وإلا بقيت فوق القرية)
   $('hud').style.display = 'none'; $('game').style.display = 'none';
   document.body.classList.add('v89');   // مظهر الصفين ٨ و٩ (villages.css): يشمل لوحة التحدي المشتركة
   root = document.createElement('div'); root.className = 'vroot'; document.body.insertBefore(root, $('dialog'));
   save();
   const at = UNITS.findIndex(U => U.village === s.vil.at);
-  if (at >= 0 && unitOpen(at)) enterVillage(at, { pos: s.vil.wpos }); else openMap();
+  if (at >= 0 && unitOpen(at)) enterVillage(at, { pos: s.vil.wpos }); else if (!s.vil.at) enterVillage(0); else openMap();   // البطل الجديد يدخل القرية الأولى مباشرة
 }
 
 function boot() {
