@@ -143,6 +143,10 @@ export function createAdv3D(canvas) {
       case 'well': return shadowed(well3d(x, z, 22, true));
       case 'belt': { const m = new THREE.Mesh(new THREE.BoxGeometry(T - 4, 4, T - 4), std('#3F3F46', { roughness: .7 })); m.position.y = 2; G.add(m);
         const ar = new THREE.Mesh(new THREE.ConeGeometry(9, 18, 3), new THREE.MeshStandardMaterial({ color: e.col || '#FACC15', emissive: e.col || '#FACC15', emissiveIntensity: .4 })); ar.rotation.set(-Math.PI / 2, 0, [-Math.PI / 2, Math.PI, Math.PI / 2, 0][e.d || 0]); ar.position.y = 6; G.add(ar); G.userData.belt = ar; return G; }
+      case 'tile': { P.add(material('stone', '#E7DCC6'), box(T - 8, 14, T - 8, 0, 7, 0)); G.add(P.build());
+        const c = document.createElement('canvas'); c.width = c.height = 64; const g = c.getContext('2d'); g.fillStyle = '#3B2412'; g.font = '900 44px Cairo'; g.textAlign = 'center'; g.fillText(e.label || '', 32, 48);
+        const tx = new THREE.CanvasTexture(c), top = new THREE.Mesh(new THREE.PlaneGeometry(T - 14, T - 14), new THREE.MeshBasicMaterial({ map: tx, transparent: true })); top.rotation.x = -Math.PI / 2; top.position.y = 14.5; G.add(top); return shadowed(G); }
+      case 'stone': { const m = new THREE.Mesh(new THREE.CylinderGeometry(T * .4, T * .42, 8, 16).scale(1, 1, .75), new THREE.MeshStandardMaterial({ color: '#CBBFA8', emissive: '#FDE68A', emissiveIntensity: .25, roughness: .7 })); m.position.y = 3; G.add(m); G.userData.stone = 1; return G; }
       case 'honey': { const m = new THREE.Mesh(box(T + .5, 3, T + .5, 0, 1.5, 0), new THREE.MeshStandardMaterial({ color: '#F2A90C', emissive: '#8A5203', emissiveIntensity: .3, roughness: .04, metalness: .2 })); G.add(m); return G; }
       case 'cauldron': { P.add(material('stone', '#78716C'), cyl(34, 38, 16, 0, 8, 0, 18)); P.add(std('#C27A3A', { metalness: .65, roughness: .3 }), new THREE.SphereGeometry(30, 20, 12, 0, Math.PI * 2, Math.PI * .45, Math.PI * .55).scale(1, .9, 1).translate(0, 50, 0), { uv: false });
         P.add(std('#8A4F1F', { metalness: .6, roughness: .35 }), new THREE.TorusGeometry(29, 2.6, 8, 24).rotateX(Math.PI / 2).translate(0, 55, 0), { uv: false }); G.add(P.build());
@@ -312,7 +316,8 @@ export function createAdv3D(canvas) {
       if (o.userData.flame) o.userData.flame.scale.y = .8 + Math.sin(t * 9 + e.x) * .3;
       if (o.userData.potTop) o.userData.potTop.material.color.set(e.done ? '#A8481E' : '#6B4A2E');
       if (o.userData.belt) o.userData.belt.rotation.z = [-Math.PI / 2, Math.PI, Math.PI / 2, 0][e.d || 0];   // اتجاه السير يتغير بلوحة التحكم
-      if (e.kind === 'block' || e.kind === 'cart' || e.kind === 'container' || e.kind === 'robot') { const bx = (e.px != null ? e.px : e.x) * T + T / 2, bz = (e.py != null ? e.py : e.y) * T + T / 2; o.position.set(bx, e.kind === 'container' ? (e.lift || 0) : 0, bz); }
+      if (o.userData.stone) o.visible = !!e.lit && !e.hidden;
+      if (e.kind === 'block' || e.kind === 'cart' || e.kind === 'container' || e.kind === 'robot' || e.kind === 'tile') { const bx = (e.px != null ? e.px : e.x) * T + T / 2, bz = (e.py != null ? e.py : e.y) * T + T / 2; o.position.set(bx, e.kind === 'container' ? (e.lift || 0) : 0, bz); }
       if (o.userData.lid) o.userData.lid.rotation.x += ((e.open ? -1.9 : 0) - o.userData.lid.rotation.x) * Math.min(1, dt * 6);
       if (o.userData.arm) o.userData.arm.rotation.z += ((e.on ? -.6 : .6) - o.userData.arm.rotation.z) * Math.min(1, dt * 10);
       if (o.userData.plate) { const pulse = V.pressed(e) ? 1 : 1 + Math.sin(t * 5) * .08; o.userData.plate.scale.set(pulse, 1, pulse); nearL.push([o.position.x, 30, o.position.z, .45]); }

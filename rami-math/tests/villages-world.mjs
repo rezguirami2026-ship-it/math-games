@@ -18,7 +18,7 @@ const tp = (x, y) => page.evaluate(([x, y]) => { const s = window.__villages.api
 const walk = pts => page.evaluate(pts => { window.__villages.api.st.path = pts.map(([x, y]) => ({ x, y })); }, pts);
 // ١. المنجم بلا دروس: البوابة إلى الميناء مغلقة، والعلامة فوق صاحب الدرس الأول
 await setDone(-1); await boot(0);
-let s = await S(); ok('القرى الأربع متجاورة في عالم واحد', s.regions === 4, JSON.stringify(s));
+let s = await S(); ok('القرى المبنية متجاورة في عالم واحد', s.regions >= 5, JSON.stringify(s));
 ok('العلامة فوق صاحب الدرس الأول', !!s.goal && s.goal.mh === 165, JSON.stringify(s.goal)); if (!d3) ok('سهم الحافة يدل على الهدف', s.arrow);   // المجسّم يرى أوسع: الهدف على الشاشة غالباً await shot('w1');
 ok('١. البوابة مغلقة قبل إنهاء دروس المنجم', await blockedAt(s.gate.wx, s.gate.y));
 await tp(s.gate.wx - 160, s.gate.y); await sleep(1500); await shot('w2-closed');

@@ -125,6 +125,16 @@ export function drawThing(c, e, t, A) {
       c.fillStyle = '#3F3F46'; c.fillRect(bx + 2, by + 2, T - 4, T - 4); c.strokeStyle = '#71717A'; c.lineWidth = 2; c.strokeRect(bx + 3, by + 3, T - 6, T - 6);
       c.save(); c.translate(x, y - T / 2); c.rotate(a); c.beginPath(); c.rect(-T / 2 + 4, -T / 2 + 4, T - 8, T - 8); c.clip(); c.fillStyle = e.col || '#FACC15';
       for (let k = -1; k < 2; k++) { const px = (k + off) * T / 2; c.beginPath(); c.moveTo(px - 6, -10); c.lineTo(px + 6, 0); c.lineTo(px - 6, 10); c.lineTo(px - 2, 0); c.closePath(); c.fill(); } c.restore(); break; }
+    case 'tile': {   // لوح حجري منزلق في لغز الباب: رقمه ونقش نجمة، وينزلق بنعومة عبر px/py
+      const bx = (e.px != null ? e.px : e.x) * T + T / 2, by = (e.py != null ? e.py : e.y) * T + T;
+      c.fillStyle = 'rgba(40,25,10,.25)'; c.fillRect(bx - 22, by - 8, 48, 8); c.fillStyle = e.ok ? '#99F6E4' : '#E7DCC6'; c.beginPath(); c.roundRect(bx - 24, by - 44, 48, 40, 6); c.fill();
+      c.strokeStyle = e.ok ? '#0F766E' : '#B49A74'; c.lineWidth = 3; c.stroke(); c.fillStyle = 'rgba(15,118,110,.18)'; c.beginPath(); for (let k = 0; k < 16; k++) { const a = k * Math.PI / 8, r = k % 2 ? 9 : 16; c.lineTo(bx + Math.cos(a) * r, by - 24 + Math.sin(a) * r); } c.closePath(); c.fill();
+      c.fillStyle = '#3B2412'; c.font = '900 22px Cairo'; c.textAlign = 'center'; c.fillText(e.label || '', bx, by - 16); break; }
+    case 'stone': {   // حجر خطوة فوق الماء لا يظهر إلا في ضوء المصباح (e.lit)
+      if (!e.lit) break; const glow = .5 + Math.sin(t * 3 + e.x) * .2;
+      c.fillStyle = `rgba(253,230,138,${glow * .5})`; c.beginPath(); c.ellipse(x, y - T / 2, T * .55, T * .42, 0, 0, 7); c.fill();
+      c.fillStyle = '#CBBFA8'; c.beginPath(); c.ellipse(x, y - T / 2, T * .4, T * .3, 0, 0, 7); c.fill(); c.strokeStyle = '#8C7A62'; c.lineWidth = 2; c.stroke();
+      c.strokeStyle = `rgba(15,118,110,${glow + .2})`; c.lineWidth = 2; c.beginPath(); c.moveTo(x - 8, y - T / 2); c.lineTo(x + 8, y - T / 2); c.moveTo(x, y - T / 2 - 6); c.lineTo(x, y - T / 2 + 6); c.stroke(); break; }
     case 'honey': {   // عسل مسكوب على الأرض: لامع ولزج، يُنزلق عليه البطل حتى يصطدم بشيء
       const bx = x - T / 2, by = y - T, sh2 = (Math.sin(t * 2 + e.x * .7 + e.y) + 1) / 2; c.fillStyle = '#D98E04'; c.beginPath(); c.roundRect(bx + 1, by + 1, T - 2, T - 2, 10); c.fill();
       const hg = c.createRadialGradient(x - 8, by + T * .35, 2, x, by + T / 2, T * .7); hg.addColorStop(0, '#FDE68A'); hg.addColorStop(.5, '#F5B70A'); hg.addColorStop(1, '#C27803'); c.fillStyle = hg; c.beginPath(); c.roundRect(bx + 4, by + 4, T - 8, T - 8, 9); c.fill();

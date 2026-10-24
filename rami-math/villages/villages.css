@@ -141,3 +141,8 @@ body.v89 #panel .sheet { border-radius: 26px; margin: auto; max-width: 680px; bo
 .varrow { position: fixed; width: 56px; height: 56px; border-radius: 50%; background: rgba(255,255,255,.92); box-shadow: 0 4px 14px rgba(0,0,0,.25); display: grid; place-items: center; z-index: 30; pointer-events: none; animation: vArrowPulse 1.2s ease-in-out infinite; }
 .varrow[hidden] { display: none; } .varrow i { font-style: normal; font-size: 28px; color: #F59E0B; display: block; line-height: 1; }
 @keyframes vArrowPulse { 50% { transform: scale(1.12); } }
+.vm-tpl { display: flex; align-items: center; justify-content: center; flex-wrap: wrap; gap: 6px; font: 900 28px Cairo, sans-serif; color: #1E2433; direction: rtl; }
+.vm-tpl button { min-width: 56px; height: 46px; border-radius: 12px; border: 2px solid #BFDBFE; background: #EFF6FF; color: #1D4ED8; font: 900 24px Cairo, sans-serif; cursor: pointer; }
+.vm-tpl button.on { border-color: #F59E0B; background: #FFFBEB; box-shadow: 0 0 0 3px #FDE68A; } .vm-tpl button i { opacity: .45; font-style: normal; }
+.vm-tpl .mq-fr { font-size: 1em; } .vm-tpl .mq-fr > span { display: flex; align-items: center; justify-content: center; gap: 4px; padding: 3px 6px; }
+.vm-tpl .mq-pw sup button { min-width: 40px; height: 34px; font-size: 18px; vertical-align: super; }

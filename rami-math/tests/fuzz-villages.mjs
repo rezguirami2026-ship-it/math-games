@@ -10,7 +10,7 @@ const out = await p.evaluate(async ({ G, V, n }) => {
   const def = (await import(`/villages/g${G}/${V}/index.js`)).default, report = [];
   const plain = h => String(h).replace(/<[^>]+>/g, ' ');
   const fcands = (() => { const fc = []; for (let w = 0; w <= 60; w++) { fc.push({ w, n: 0, d: 1 }); for (let d = 2; d <= 60; d++) for (let n = 1; n < d; n++) fc.push({ w, n, d }); } return fc; })();   // أجوبة لوحة الكسر: عدد صحيح وكسر فعلي
-  const cands = (() => { const c = new Set(); for (let v = -2000; v <= 2000; v++) [1, 10, 100, 1000, 10000].forEach(d => c.add(v / d)); for (let v = 1; v <= 100; v++) [100, 1000, 10000].forEach(m => { c.add(v * m); c.add(-v * m); }); return [...c]; })();   // أجوبة محتملة: صحيحة وعشرية حتى ٤ منازل وكبيرة
+  const cands = (() => { const c = new Set(); for (let v = -2000; v <= 2000; v++) [1, 10, 100, 1000, 10000].forEach(d => c.add(v / d)); for (let v = 1; v <= 100; v++) [100, 1000, 10000].forEach(m => { c.add(v * m); c.add(-v * m); }); for (let v = 2001; v <= 20000; v++) c.add(v / 100); return [...c]; })();   // وأعداد بمنزلتين حتى ٢٠٠   // أجوبة محتملة: صحيحة وعشرية حتى ٤ منازل وكبيرة
   for (const id of Object.keys(def.lessons)) {
     const m = await def.lessons[id](), probs = new Map(), add = k => probs.set(k, (probs.get(k) || 0) + 1);
     for (let k = 0; k < n; k++) {
@@ -21,6 +21,7 @@ const out = await p.evaluate(async ({ G, V, n }) => {
         const I = r.input; let found = false;
         if (I.type === 'pick') { found = I.opts.some((_, j) => r.ok(j)); if (new Set(I.opts).size !== I.opts.length) add(`جولة ${i + 1}: خيارات مكررة`); }
         else if (I.type === 'dial') for (let v = I.min ?? -20; v <= (I.max ?? 20) && !found; v += I.step || 1) found = r.ok(Math.round(v * 1000) / 1000);
+        else if (I.type === 'blanks') { found = Array.isArray(r.sol) && r.ok(r.sol); if (found && r.ok(r.sol.map((v, j) => j ? v : v + 1))) add(`جولة ${i + 1}: جواب خاطئ مقبول`); if (found && !I.neg && r.sol.some(v => v < 0)) add(`جولة ${i + 1}: فراغ سالب بلا إشارة`); if ((I.tpl.match(/\{\}/g) || []).length !== (r.sol || []).length) add(`جولة ${i + 1}: عدد الفراغات لا يطابق الحل`); }
         else if (I.type === 'frac') { const a = fcands.find(v => r.ok(v)); found = !!a; if (a && a.w && !I.mixed) add(`جولة ${i + 1}: الجواب عدد كسري ولوحة الكسر بلا عدد صحيح`); if (a && !a.w && a.n === 0) add(`جولة ${i + 1}: جواب لوحة الكسر صفر`); }
         else found = cands.some(v => r.ok(v));
         if (!found) add(`جولة ${i + 1}: لا جواب صحيح ممكن`);

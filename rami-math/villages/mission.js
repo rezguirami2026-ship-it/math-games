@@ -2,7 +2,7 @@
 // ثم «تحدي الدرس» (محرك missions/challenge.js بأسئلته المتنوعة) ثم شاشة النجوم.
 // spec = { title, icon, who: { name, face }, intro: [سطور], rounds, make(i) → جولة, draw(g, w, h, t, S), outro: [سطور],
 //          challenge: { title, make: () => items } }
-// الجولة: { q: نص، input: { type: 'num'|'pick'|'dial'|'frac' (و mixed للعدد الكسري), ... }, ok(v): صحيح؟، hint: سؤال يوجّه، bad(v): رد على خطأ بعينه، data: لرسم المشهد }
+// الجولة: { q: نص، input: { type: 'num'|'pick'|'dial'|'frac' (و mixed للعدد الكسري)|'blanks' (tpl بفراغات {}، والجواب مصفوفة أعداد؛ r.sol للاختبار), ... }, ok(v): صحيح؟، hint: سؤال يوجّه، bad(v): رد على خطأ بعينه، data: لرسم المشهد }
 import { runChallenge } from '../missions/challenge.js';
 import { sfx } from '../core/sound.js';
 import { addGems } from '../world/decor.js';
@@ -59,7 +59,7 @@ function rounds(spec, api) {
       } else {
         sfx('cough'); S.shake = 1;
         msg(`🤔 ${(S.r.bad && S.r.bad(v)) || ''} ${S.r.hint}`, 'bad');
-        if (S.r.input.type === 'num' || S.r.input.type === 'frac') pad.clear();
+        if (S.r.input.type === 'num' || S.r.input.type === 'frac' || S.r.input.type === 'blanks') pad.clear();
       }
     }
     let pad = null;
@@ -75,6 +75,20 @@ function rounds(spec, api) {
         box2.querySelector('.vm-dial').dir = 'ltr';
         box2.querySelectorAll('[data-d]').forEach(b => b.onclick = () => { S.v = Math.round((S.v + +b.dataset.d * step) * 1000) / 1000; if (I.min != null) S.v = Math.max(I.min, S.v); if (I.max != null) S.v = Math.min(I.max, S.v); sfx('pick'); show(); });
         show(); box2.querySelector('.vm-go').onclick = () => answer(S.v);
+      } else if (I.type === 'blanks') {   // قالب عبارة بفراغات (I.tpl فيه {} لكل فراغ): ينقر الطالب الفراغ ويكتب عدده (بإشارة سالبة إن سمح I.neg)
+        const n = (I.tpl.match(/\{\}/g) || []).length, V = Array(n).fill(''); let cur = 0, k = 0;
+        box2.innerHTML = `<div class="vm-pad vm-fpad"><div class="vm-tpl">${I.tpl.replace(/\{\}/g, () => `<button data-b="${k++}"></button>`)}</div>
+          <div class="vm-keys">${[7, 8, 9, 4, 5, 6, 1, 2, 3].map(q => `<button data-k="${q}">${ar(q)}</button>`).join('')}${I.neg ? '<button data-k="-">−</button>' : '<button data-k="<">⌫</button>'}<button data-k="0">٠</button><button data-k="ok" class="vm-ok">✓</button></div>${I.neg ? '<div class="vm-row"><button data-k="<">⌫</button></div>' : ''}</div>`;
+        const show = () => box2.querySelectorAll('[data-b]').forEach(b => { const v = V[+b.dataset.b]; b.innerHTML = v === '' || v === '-' ? `<i>${v === '-' ? '−' : '؟'}</i>` : (v.startsWith('-') ? ar(v.slice(1)) + '−' : ar(v)); b.classList.toggle('on', +b.dataset.b === cur); });
+        pad = { clear() { V.fill(''); cur = 0; show(); } };
+        box2.querySelectorAll('[data-b]').forEach(b => b.onclick = () => { cur = +b.dataset.b; sfx('pick'); show(); });
+        box2.querySelectorAll('[data-k]').forEach(b => b.onclick = () => {
+          const q = b.dataset.k;
+          if (q === 'ok') { if (V.some(v => v === '' || v === '-')) { msg('🤔 املأ كل الفراغات (انقر الفراغ ثم اكتب عدده).', 'bad'); return; } answer(V.map(Number)); return; }
+          if (q === '<') V[cur] = V[cur].slice(0, -1); else if (q === '-') V[cur] = V[cur].startsWith('-') ? V[cur].slice(1) : '-' + V[cur]; else if (V[cur].replace('-', '').length < 3) { V[cur] += q; }
+          sfx('pick'); show();
+        });
+        pad.clear();
       } else if (I.type === 'frac') {   // لوحة كسر: بسط ومقام مكدّسان (وعدد صحيح على يسارهما إن كان I.mixed)، ينقر الطالب الخانة ثم يكتب أرقامها
         const F = { w: '', n: '', d: '' }; let cur = 'n';
         box2.innerHTML = `<div class="vm-pad vm-fpad"><div class="vm-frac" dir="ltr">${I.mixed ? '<button data-f="w" aria-label="العدد الصحيح"></button>' : ''}<span class="vm-fs"><button data-f="n" aria-label="البسط"></button><i></i><button data-f="d" aria-label="المقام"></button></span></div>
