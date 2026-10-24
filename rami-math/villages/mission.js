@@ -2,7 +2,7 @@
 // ثم «تحدي الدرس» (محرك missions/challenge.js بأسئلته المتنوعة) ثم شاشة النجوم.
 // spec = { title, icon, who: { name, face }, intro: [سطور], rounds, make(i) → جولة, draw(g, w, h, t, S), outro: [سطور],
 //          challenge: { title, make: () => items } }
-// الجولة: { q: نص، input: { type: 'num' (و calc: آلة حاسبة بزر π كما في الكتاب)|'pick'|'dial'|'frac' (و mixed للعدد الكسري)|'blanks' (tpl بفراغات {}، والجواب مصفوفة أعداد؛ r.sol للاختبار), ... }, ok(v): صحيح؟، hint: سؤال يوجّه، bad(v): رد على خطأ بعينه، data: لرسم المشهد }
+// الجولة: { q: نص، input: { type: 'num' (و calc: آلة حاسبة بزر π كما في الكتاب)|'pick'|'dial'|'frac' (و mixed للعدد الكسري)|'blanks' (tpl بفراغات {}، والجواب مصفوفة أعداد؛ r.sol للاختبار)|'cells' (جدول نتائج rows/cols/cell(i, j)/off، والجواب أرقام الخلايا المعلَّمة i × عدد الأعمدة + j مرتبة؛ r.sol للاختبار), ... }, ok(v): صحيح؟، hint: سؤال يوجّه، bad(v): رد على خطأ بعينه، data: لرسم المشهد }
 import { runChallenge } from '../missions/challenge.js';
 import { sfx } from '../core/sound.js';
 import { addGems } from '../world/decor.js';
@@ -89,6 +89,82 @@ function rounds(spec, api) {
           sfx('pick'); show();
         });
         pad.clear();
+      } else if (I.type === 'cells') {   // جدول النتائج (الوحدة ٧): صفوف وأعمدة بعناوينها، ينقر الطالب كل نتيجة تحقق الشرط ثم يثبّت. off: خلية مستحيلة «×»
+        const sel = new Set();
+        box2.innerHTML = `<div class="vm-cells"><table><thead><tr><th class="vm-corner">${I.corner || ''}</th>${I.cols.map(c => `<th>${c}</th>`).join('')}</tr></thead><tbody>${I.rows.map((rw, i) => `<tr><th>${rw}</th>${I.cols.map((_, j) => I.off && I.off(i, j) ? '<td class="off">×</td>' : `<td><button data-c="${i * I.cols.length + j}">${I.cell(i, j)}</button></td>`).join('')}</tr>`).join('')}</tbody></table></div>
+          <div class="vm-row"><button class="vm-clr" data-k="clr">مسح</button><button class="vm-go" data-k="ok">${I.label || '✓ ثبّت النتائج'}</button></div>`;
+        const show = () => box2.querySelectorAll('[data-c]').forEach(b => b.classList.toggle('on', sel.has(+b.dataset.c)));
+        pad = { clear() {} };   // التعليم يبقى بعد الخطأ ليصحّحه الطالب
+        box2.querySelectorAll('[data-c]').forEach(b => b.onclick = () => { const k = +b.dataset.c; if (sel.has(k)) sel.delete(k); else sel.add(k); sfx('pick'); show(); });
+        box2.querySelector('[data-k=clr]').onclick = () => { sel.clear(); sfx('pick'); show(); };
+        box2.querySelector('[data-k=ok]').onclick = () => { if (!sel.size) { msg('🤔 انقر النتائج التي تحقق الشرط في الجدول أولاً.', 'bad'); return; } answer([...sel].sort((a, b) => a - b)); };
+      } else if (I.type === 'chips') {   // قطع النسب (الوحدة ٨): يكوّن الطالب نسبة من قطع سهلة (٥٠٪، ١٠٪، ١٪…) بالجمع والطرح كما في الكتاب، والجواب القطع بإشاراتها (S.v للمشهد)
+        let sgn = 1; S.v = [];
+        const pc = v => ar(String(v)).replace('.', '٫') + '٪';
+        box2.innerHTML = `<div class="vm-chips"><div class="vm-tray"></div><div class="vm-sgn">${I.neg ? '<button data-s="1" class="on">+ أضف</button><button data-s="-1">− اطرح</button>' : ''}</div>
+          <div class="vm-chipk">${I.chips.map(v => `<button data-v="${v}">${pc(v)}</button>`).join('')}</div>
+          <div class="vm-row"><button class="vm-clr" data-k="clr">مسح</button><button class="vm-clr" data-k="<">⌫</button><button class="vm-go" data-k="ok">${I.label || '✓ ثبّت'}</button></div></div>`;
+        const show = () => { const T = S.v.reduce((a, b) => a + b, 0);
+          box2.querySelector('.vm-tray').innerHTML = S.v.length ? `${S.v.map((v, k) => (k ? (v < 0 ? ' − ' : ' + ') : v < 0 ? '− ' : '') + `<b>${pc(Math.abs(v))}</b>`).join('')} <i>= ${T < 0 ? pc(-T) + '−' : pc(Math.round(T * 100) / 100)}</i>` : '<i>انقر القطع لتكوّن النسبة</i>';
+          box2.querySelectorAll('[data-s]').forEach(b => b.classList.toggle('on', +b.dataset.s === sgn)); };
+        pad = { clear() {} };   // القطع تبقى بعد الخطأ ليصحّحها الطالب
+        box2.querySelectorAll('[data-s]').forEach(b => b.onclick = () => { sgn = +b.dataset.s; sfx('pick'); show(); });
+        box2.querySelectorAll('[data-v]').forEach(b => b.onclick = () => { if (S.v.length >= (I.max || 10)) { msg('🤔 قطع كثيرة! هل توجد طريقة بقطع أقل؟', 'bad'); return; } S.v.push(sgn * +b.dataset.v); sfx('pick'); show(); });
+        box2.querySelector('[data-k=clr]').onclick = () => { S.v = []; sfx('pick'); show(); };
+        box2.querySelector('[data-k="<"]').onclick = () => { S.v.pop(); sfx('pick'); show(); };
+        box2.querySelector('[data-k=ok]').onclick = () => { if (!S.v.length) { msg('🤔 انقر القطع أولاً.', 'bad'); return; } answer(S.v.slice()); };
+        show();
+      } else if (I.type === 'mix') {   // حوض الخلط (الوحدة ٩): عدد أجزاء كل صبغ بزرّي + و−، والنسبة تُقرأ من اليمين، ولون الحوض يتغير في المشهد (S.v)
+        S.v = I.parts.map(() => I.start || 0);
+        box2.innerHTML = `<div class="vm-mix">${I.parts.map((p, k) => `${k ? '<b class="vm-mixc">:</b>' : ''}<div class="vm-mixp" style="--c:${p.col}"><small>${p.name}</small><button data-m="${k}" data-d="1" aria-label="زد">+</button><output></output><button data-m="${k}" data-d="-1" aria-label="أنقص">−</button></div>`).join('')}</div>
+          <div class="vm-row"><button class="vm-go" data-k="ok">${I.label || '✓ اخلط'}</button></div>`;
+        const show = () => box2.querySelectorAll('.vm-mixp output').forEach((o, k) => { o.textContent = ar(S.v[k]); });
+        pad = { clear() {} };
+        box2.querySelectorAll('[data-m]').forEach(b => b.onclick = () => { const k = +b.dataset.m; S.v[k] = Math.max(I.min ?? 1, Math.min(I.max || 20, S.v[k] + +b.dataset.d)); sfx('pick'); show(); });
+        box2.querySelector('[data-k=ok]').onclick = () => answer(S.v.slice());
+        show();
+      } else if (I.type === 'steps') {   // خطوات الحل (الوحدة ١٠): المعادلة الحالية وخيارات العملية التالية؛ الصحيحة تحوّل المعادلة، والجواب أرقام الخيارات بالترتيب (r.sol)
+        const got = []; S.v = 0;
+        const show = () => { const st = I.steps[got.length];
+          box2.innerHTML = `<div class="vm-steps"><ol>${I.steps.slice(0, got.length + 1).map((s, k) => `<li class="${k < got.length ? 'done' : 'cur'}">${s.eq}${k < got.length ? `<small>${s.opts[s.ok]}</small>` : ''}</li>`).join('')}</ol>
+            ${st ? `<div class="vm-opts">${st.opts.map((o, k) => `<button data-s="${k}">${o}</button>`).join('')}</div>` : ''}</div>`;
+          box2.querySelectorAll('[data-s]').forEach(b => b.onclick = () => { const k = +b.dataset.s, cur = I.steps[got.length];
+            if (k !== cur.ok) { answer([...got, k]); return; }
+            got.push(k); S.v = got.length; sfx('pick'); msg(''); if (got.length >= I.steps.length) { box2.innerHTML = `<div class="vm-steps"><ol>${I.steps.map(s => `<li class="done">${s.eq}<small>${s.opts[s.ok]}</small></li>`).join('')}<li class="cur">${I.final}</li></ol></div>`; answer(got.slice()); } else show(); }); };
+        pad = { clear() {} };   // الخطوات الصحيحة تبقى بعد الخطأ
+        show();
+      } else if (I.type === 'ray') {   // مجموعة الحل على خط الأعداد (الوحدة ١٠): طرف يتحرك بخطوات، ودائرة مفتوحة أو مغلقة، واتجاه الشعاع؛ الجواب { v, closed, right } (S.v للمشهد)
+        S.v = { v: I.start ?? 0, closed: false, right: true };
+        box2.innerHTML = `<div class="vm-ray"><div class="vm-dial" dir="ltr"><button data-d="-1" aria-label="يسار">◀</button><output></output><button data-d="1" aria-label="يمين">▶</button></div>
+          <div class="vm-sgn"><button data-c="0">○ مفتوحة</button><button data-c="1">● مغلقة</button></div><div class="vm-sgn"><button data-r="0">⟵ نحو الأصغر</button><button data-r="1">نحو الأكبر ⟶</button></div></div>
+          <div class="vm-row"><button class="vm-go" data-k="ok">${I.label || '✓ ثبّت مجموعة الحل'}</button></div>`;
+        const show = () => { box2.querySelector('output').innerHTML = I.show ? I.show(S.v.v) : ar(S.v.v); box2.querySelectorAll('[data-c]').forEach(b => b.classList.toggle('on', !!+b.dataset.c === S.v.closed)); box2.querySelectorAll('[data-r]').forEach(b => b.classList.toggle('on', !!+b.dataset.r === S.v.right)); };
+        pad = { clear() {} };
+        box2.querySelectorAll('[data-d]').forEach(b => b.onclick = () => { S.v.v = Math.max(I.min ?? -20, Math.min(I.max ?? 20, Math.round((S.v.v + +b.dataset.d * (I.step || 1)) * 100) / 100)); sfx('pick'); show(); });
+        box2.querySelectorAll('[data-c]').forEach(b => b.onclick = () => { S.v.closed = !!+b.dataset.c; sfx('pick'); show(); });
+        box2.querySelectorAll('[data-r]').forEach(b => b.onclick = () => { S.v.right = !!+b.dataset.r; sfx('pick'); show(); });
+        box2.querySelector('[data-k=ok]').onclick = () => answer({ ...S.v });
+        show();
+      } else if (I.type === 'grid') {   // المستوى الإحداثي (الوحدة ١١): ينقر الطالب نقاط الشبكة (n نقطة: ١ لنقطة، ٢ لمستقيم يمر بهما)، والجواب مصفوفة [س، ص] (S.v للمشهد)
+        const { x0 = -5, x1 = 5, y0 = -5, y1 = 5, n = 1 } = I, cw = 300 / (x1 - x0), chh = 300 / (y1 - y0), X = x => 20 + (x - x0) * cw, Y = y => 20 + (y1 - y) * chh; S.v = [];
+        const svg = () => { const ln = [], lab = [];
+          for (let x = x0; x <= x1; x++) ln.push(`<line x1="${X(x)}" y1="20" x2="${X(x)}" y2="320" class="${x ? '' : 'ax'}"/>`); for (let y = y0; y <= y1; y++) ln.push(`<line x1="20" y1="${Y(y)}" x2="320" y2="${Y(y)}" class="${y ? '' : 'ax'}"/>`);
+          for (let x = x0; x <= x1; x++) if (x && (x1 - x0 <= 12 || x % 2 === 0)) lab.push(`<text x="${X(x)}" y="${Y(0) + 15}">${ar(Math.abs(x))}${x < 0 ? '−' : ''}</text>`);
+          for (let y = y0; y <= y1; y++) if (y && (y1 - y0 <= 12 || y % 2 === 0)) lab.push(`<text x="${X(0) - 11}" y="${Y(y) + 5}">${ar(Math.abs(y))}${y < 0 ? '−' : ''}</text>`);
+          const given = (I.given || []).map(([x, y, l]) => `<circle cx="${X(x)}" cy="${Y(y)}" r="6" class="gv"/><text x="${X(x) + 12}" y="${Y(y) - 8}" class="gl">${l || ''}</text>`).join('');
+          const seg = (I.segs || []).map(([a, b]) => `<line x1="${X(a[0])}" y1="${Y(a[1])}" x2="${X(b[0])}" y2="${Y(b[1])}" class="sg"/>`).join('');
+          const lines = (I.lines || []).map(([m, c, col]) => `<line x1="${X(x0)}" y1="${Y(m * x0 + c)}" x2="${X(x1)}" y2="${Y(m * x1 + c)}" stroke="${col || '#7C3AED'}" class="ln"/>`).join('');
+          let mine = ''; if (S.v.length === 2 && n === 2) { const [[ax, ay], [bx, by]] = S.v; if (ax !== bx) { const m = (by - ay) / (bx - ax); mine = `<line x1="${X(x0)}" y1="${Y(ay + m * (x0 - ax))}" x2="${X(x1)}" y2="${Y(ay + m * (x1 - ax))}" class="mine"/>`; } else mine = `<line x1="${X(ax)}" y1="20" x2="${X(ax)}" y2="320" class="mine"/>`; }
+          const pts = S.v.map(([x, y]) => `<circle cx="${X(x)}" cy="${Y(y)}" r="7" class="pk"/>`).join('');
+          const hits = []; for (let x = x0; x <= x1; x++) for (let y = y0; y <= y1; y++) hits.push(`<circle cx="${X(x)}" cy="${Y(y)}" r="${Math.min(cw, chh) / 2}" class="hit" data-x="${x}" data-y="${y}"/>`);
+          return `<svg viewBox="0 0 340 340" class="vm-grid" dir="ltr"><defs><clipPath id="vmgc"><rect x="20" y="20" width="300" height="300"/></clipPath></defs>${ln.join('')}<g clip-path="url(#vmgc)">${lines}${seg}${mine}</g>${lab.join('')}${given}${pts}${hits.join('')}</svg>`; };
+        const show = () => { box2.querySelector('.vm-gridw').innerHTML = svg(); box2.querySelector('.vm-gpt').innerHTML = S.v.length ? S.v.map(([x, y]) => `(${ar(Math.abs(x))}${x < 0 ? '−' : ''}، ${ar(Math.abs(y))}${y < 0 ? '−' : ''})`).join(' و ') : `<i>${n === 2 ? 'انقر نقطتين على المستقيم' : 'انقر النقطة'}</i>`;
+          box2.querySelectorAll('.hit').forEach(c => c.onclick = () => { const p = [+c.dataset.x, +c.dataset.y]; if (S.v.length >= n) S.v = []; S.v.push(p); sfx('pick'); show(); }); };
+        box2.innerHTML = `<div class="vm-gridw"></div><div class="vm-gpt"></div><div class="vm-row"><button class="vm-clr" data-k="clr">مسح</button><button class="vm-go" data-k="ok">${I.label || '✓ ثبّت'}</button></div>`;
+        pad = { clear() { S.v = []; show(); } };
+        box2.querySelector('[data-k=clr]').onclick = () => { S.v = []; sfx('pick'); show(); };
+        box2.querySelector('[data-k=ok]').onclick = () => { if (S.v.length < n) { msg(n === 2 ? '🤔 انقر نقطتين على الشبكة.' : '🤔 انقر نقطة على الشبكة.', 'bad'); return; } answer(S.v.map(p => p.slice())); };
+        show();
       } else if (I.type === 'frac') {   // لوحة كسر: بسط ومقام مكدّسان (وعدد صحيح على يسارهما إن كان I.mixed)، ينقر الطالب الخانة ثم يكتب أرقامها
         const F = { w: '', n: '', d: '' }; let cur = 'n';
         box2.innerHTML = `<div class="vm-pad vm-fpad"><div class="vm-frac" dir="ltr">${I.mixed ? '<button data-f="w" aria-label="العدد الصحيح"></button>' : ''}<span class="vm-fs"><button data-f="n" aria-label="البسط"></button><i></i><button data-f="d" aria-label="المقام"></button></span></div>

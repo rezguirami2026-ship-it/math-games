@@ -157,3 +157,48 @@ body.v89 #panel .sheet { border-radius: 26px; margin: auto; max-width: 680px; bo
 .vm-ckeys .vm-cc { background: #B91C1C; } .vm-ckeys .vm-ceq { background: #16A34A; grid-column: span 2; } .vm-ckeys .vm-cx { background: #475569; }
 .vm-row button.vm-calcBtn { width: auto; height: 48px; padding: 0 14px; background: #FEF3C7; border-color: #F59E0B; box-shadow: 0 3px 0 #F59E0B; }
 @media (max-width: 520px) { .vm-calc { top: 12px; bottom: auto; left: 50%; transform: translateX(-50%); } .vm-ckeys button { height: 38px; } }
+/* جدول النتائج (الوحدة ٧ للصف الثامن): ينقر الطالب النتائج التي تحقق الشرط */
+.vm-cells { max-width: 100%; overflow-x: auto; }
+.vm-cells table { border-collapse: separate; border-spacing: 4px; margin: 0 auto; direction: rtl; }
+.vm-cells th { font: 900 16px Cairo, sans-serif; color: #7C2D12; background: #FEF3C7; border-radius: 8px; padding: 2px 6px; min-width: 34px; }
+.vm-cells th.vm-corner { background: transparent; color: #64748B; font-size: 12px; line-height: 1.2; }
+.vm-cells td button { min-width: 50px; height: 34px; padding: 0 4px; border-radius: 9px; border: 2px solid #CBD5E1; background: #fff; color: #1E2433; font: 800 14px Cairo, sans-serif; cursor: pointer; white-space: nowrap; }
+.vm-cells td button.on { border-color: #16A34A; background: #DCFCE7; color: #14532D; box-shadow: 0 0 0 2px #86EFAC; }
+.vm-cells td.off { text-align: center; font: 900 18px Cairo, sans-serif; color: #94A3B8; }
+.vm-row button.vm-clr { width: auto; padding: 0 16px; font-size: 18px; }
+@media (max-width: 520px) { .vm-cells td button { min-width: 40px; height: 30px; font-size: 12px; } .vm-cells th { font-size: 13px; min-width: 26px; padding: 1px 3px; } .vm-cells table { border-spacing: 2px; } }
+/* قطع النسب (الوحدة ٨ للصف الثامن) */
+.vm-chips { display: flex; flex-direction: column; gap: 8px; align-items: center; }
+.vm-tray { min-height: 44px; padding: 6px 14px; border-radius: 14px; background: #FFF7ED; border: 2px dashed #FB923C; font: 800 19px Cairo, sans-serif; color: #7C2D12; direction: rtl; text-align: center; }
+.vm-tray b { display: inline-block; padding: 0 8px; margin: 0 2px; border-radius: 10px; background: #FDBA74; color: #431407; }
+.vm-tray i { font-style: normal; color: #9A3412; }
+.vm-sgn { display: flex; gap: 8px; } .vm-sgn button { font: 800 16px Cairo, sans-serif; padding: 4px 14px; border-radius: 12px; border: 2px solid #CBD5E1; background: #fff; cursor: pointer; }
+.vm-sgn button.on { border-color: #EA580C; background: #FFEDD5; color: #9A3412; }
+.vm-chipk { display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; }
+.vm-chipk button { font: 900 20px Cairo, sans-serif; min-width: 72px; height: 50px; border-radius: 25px; border: 3px solid #EA580C; background: linear-gradient(#FFEDD5, #FDBA74); color: #431407; box-shadow: 0 4px 0 #C2410C; cursor: pointer; }
+.vm-chipk button:active { transform: translateY(3px); box-shadow: 0 1px 0 #C2410C; }
+/* حوض الخلط (الوحدة ٩ للصف الثامن): عمود لكل صبغ بلونه */
+.vm-mix { display: flex; gap: 8px; justify-content: center; align-items: center; direction: rtl; flex-wrap: wrap; }
+.vm-mixc { font: 900 30px Cairo, sans-serif; color: #475569; }
+.vm-mixp { display: flex; flex-direction: column; align-items: center; gap: 4px; padding: 6px 10px; border-radius: 16px; background: color-mix(in srgb, var(--c) 18%, #fff); border: 3px solid var(--c); min-width: 76px; }
+.vm-mixp small { font: 800 14px Cairo, sans-serif; color: #1E2433; }
+.vm-mixp output { font: 900 26px Cairo, sans-serif; color: #1E2433; min-width: 40px; text-align: center; }
+.vm-mixp button { width: 46px; height: 36px; border-radius: 12px; border: 2px solid var(--c); background: #fff; font: 900 22px Cairo, sans-serif; color: #1E2433; cursor: pointer; box-shadow: 0 3px 0 var(--c); }
+.vm-mixp button:active { transform: translateY(2px); box-shadow: 0 1px 0 var(--c); }
+/* خطوات الحل ومجموعة الحل على خط الأعداد (الوحدة ١٠ للصف الثامن) */
+.vm-steps ol { list-style: none; margin: 0 auto 8px; padding: 0; max-width: 520px; direction: rtl; }
+.vm-steps li { font: 800 20px Cairo, sans-serif; color: #1E2433; padding: 4px 12px; border-radius: 12px; margin: 3px 0; display: flex; justify-content: space-between; align-items: center; gap: 10px; }
+.vm-steps li.done { background: #F0FDF4; color: #475569; font-size: 17px; }
+.vm-steps li.done small { font: 700 13px Cairo, sans-serif; color: #15803D; }
+.vm-steps li.cur { background: #FEF9C3; border: 2px solid #FACC15; }
+.vm-steps .vm-opts button { font-size: 16px; min-width: 0; padding: 8px 12px; }
+.vm-ray { display: flex; flex-direction: column; gap: 8px; align-items: center; }
+/* المستوى الإحداثي (الوحدة ١١ للصف الثامن) */
+.vm-gridw { display: flex; justify-content: center; }
+.vm-grid { width: min(300px, 78vw); height: auto; background: #fff; border-radius: 12px; box-shadow: 0 0 0 2px #CBD5E1; touch-action: manipulation; }
+.vm-grid line { stroke: #E2E8F0; stroke-width: 1; } .vm-grid line.ax { stroke: #475569; stroke-width: 2; }
+.vm-grid text { font: 700 11px Cairo, sans-serif; fill: #475569; text-anchor: middle; } .vm-grid text.gl { font-size: 14px; font-weight: 900; fill: #1E3A8A; }
+.vm-grid .ln { stroke-width: 3; } .vm-grid .sg { stroke: #1E3A8A; stroke-width: 3; } .vm-grid .mine { stroke: #EA580C; stroke-width: 3; stroke-dasharray: 8 5; }
+.vm-grid .gv { fill: #1E3A8A; } .vm-grid .pk { fill: #EA580C; stroke: #fff; stroke-width: 2; }
+.vm-grid .hit { fill: transparent; cursor: pointer; } .vm-grid .hit:hover { fill: rgba(234,88,12,.15); }
+.vm-gpt { text-align: center; font: 800 17px Cairo, sans-serif; color: #9A3412; direction: rtl; min-height: 26px; } .vm-gpt i { font-style: normal; color: #94A3B8; }

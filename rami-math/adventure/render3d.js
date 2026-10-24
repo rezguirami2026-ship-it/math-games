@@ -134,6 +134,13 @@ export function createAdv3D(canvas) {
   function thorn(x, z) { const g = shrubs([{ x, y: z, r: 20 }]); const sp = new Parts(), sm = std('#5A3A1A'); for (let i = 0; i < 10; i++) { const a = i * 2.4, r = 14 + (i % 3) * 4; const c = new THREE.ConeGeometry(1.4, 9, 4); c.rotateZ(Math.PI / 2 * (i % 2 ? 1 : -1) * .6); c.translate(x + Math.cos(a) * r, 14 + (i % 4) * 5, z + Math.sin(a) * r); sp.add(sm, c, { uv: false }); } g.add(sp.build()); return g; }
   function tallGrass(x, z) { const P = new Parts(), m = std('#5E8E3A', { side: THREE.DoubleSide }); for (let i = 0; i < 16; i++) { const c = new THREE.ConeGeometry(2.2, 30 + (i * 7 % 13), 3); c.translate(x - 20 + (i % 4) * 13 + (i * 3 % 5), 16, z - 20 + Math.floor(i / 4) * 13); P.add(m, c, { uv: false }); } const g = P.build(); g.userData.sway = 1; return g; }
 
+  /* ── أوجه حجر النرد الكبير (مهرجان الألعاب): نسيج لكل عدد، وترتيب أوجه الصندوق +x، −x، +y، −y، +z (الجنوب)، −z ── */
+  const dieTex = {};
+  function dieMat(n) { if (dieTex[n]) return dieTex[n]; const c = document.createElement('canvas'); c.width = c.height = 128; const g = c.getContext('2d'); g.fillStyle = '#F8FAFC'; g.fillRect(0, 0, 128, 128); g.strokeStyle = '#CBD5E1'; g.lineWidth = 8; g.strokeRect(4, 4, 120, 120);
+    const P = { 1: [[.5, .5]], 2: [[.27, .27], [.73, .73]], 3: [[.25, .25], [.5, .5], [.75, .75]], 4: [[.27, .27], [.73, .27], [.27, .73], [.73, .73]], 5: [[.25, .25], [.75, .25], [.5, .5], [.25, .75], [.75, .75]], 6: [[.27, .2], [.73, .2], [.27, .5], [.73, .5], [.27, .8], [.73, .8]] }[n];
+    g.fillStyle = n === 1 ? '#DC2626' : '#1E293B'; P.forEach(([a, b]) => { g.beginPath(); g.arc(a * 128, b * 128, 13, 0, 7); g.fill(); });
+    const tx = new THREE.CanvasTexture(c); tx.colorSpace = THREE.SRGBColorSpace; return (dieTex[n] = new THREE.MeshStandardMaterial({ map: tx, roughness: .35 })); }
+  const dieKey = d => d.t * 100 + d.n * 10 + d.e, dieFaces3 = ({ t, n, e }) => [dieMat(e), dieMat(7 - e), dieMat(t), dieMat(7 - t), dieMat(7 - n), dieMat(n)];
   /* ── مجسّم لكل نوع عنصر ── */
   function makeEnt(e, V) {
     const x = e.x * T + T / 2, z = e.y * T + T / 2, P = new Parts(), wood = material('wood', '#8A5A30'), dark = std('#3A3A44', { metalness: .4, roughness: .5 });
@@ -162,6 +169,10 @@ export function createAdv3D(canvas) {
         const shadow = new THREE.Mesh(new THREE.PlaneGeometry(22, 5).translate(11, 0, 0).rotateX(-Math.PI / 2), new THREE.MeshBasicMaterial({ color: '#000', transparent: true, opacity: .45, depthWrite: false })); shadow.position.y = 10.5; G.add(shadow);
         const sun = new THREE.Mesh(new THREE.SphereGeometry(6, 12, 8), new THREE.MeshStandardMaterial({ color: '#FBBF24', emissive: '#F59E0B', emissiveIntensity: 1.4 })); G.add(sun);
         G.userData.dial = { shadow, sun }; return shadowed(G); }
+      case 'spring': {   // نطّاطة: إطار دائري ونسيج مشدود وسهم اتجاه القفزة
+        P.add(std(e.blue ? '#1D4ED8' : '#DB2777', { roughness: .5 }), new THREE.TorusGeometry(T * .38, 4, 8, 24).rotateX(Math.PI / 2).translate(0, 8, 0), { uv: false }); for (let k = 0; k < 4; k++) P.add(std('#475569'), cyl(1.6, 1.6, 8, Math.cos(k * 1.57 + .8) * T * .36, 4, Math.sin(k * 1.57 + .8) * T * .36, 6), { uv: false }); G.add(P.build());
+        const mat = new THREE.Mesh(new THREE.CircleGeometry(T * .35, 24).rotateX(-Math.PI / 2), std('#1F2937', { roughness: .6 })); mat.position.y = 8.5; G.add(mat);
+        const ar = new THREE.Mesh(new THREE.ConeGeometry(8, 18, 3), new THREE.MeshStandardMaterial({ color: e.blue ? '#93C5FD' : '#FDE047', emissive: e.blue ? '#3B82F6' : '#F59E0B', emissiveIntensity: .5 })); ar.position.y = 10; G.add(ar); G.userData.spring = { mat, ar }; return G; }
       case 'honey': { const m = new THREE.Mesh(box(T + .5, 3, T + .5, 0, 1.5, 0), new THREE.MeshStandardMaterial({ color: '#F2A90C', emissive: '#8A5203', emissiveIntensity: .3, roughness: .04, metalness: .2 })); G.add(m); return G; }
       case 'cauldron': { P.add(material('stone', '#78716C'), cyl(34, 38, 16, 0, 8, 0, 18)); P.add(std('#C27A3A', { metalness: .65, roughness: .3 }), new THREE.SphereGeometry(30, 20, 12, 0, Math.PI * 2, Math.PI * .45, Math.PI * .55).scale(1, .9, 1).translate(0, 50, 0), { uv: false });
         P.add(std('#8A4F1F', { metalness: .6, roughness: .35 }), new THREE.TorusGeometry(29, 2.6, 8, 24).rotateX(Math.PI / 2).translate(0, 55, 0), { uv: false }); G.add(P.build());
@@ -185,8 +196,25 @@ export function createAdv3D(canvas) {
       case 'basket': { [-20, 20].forEach(o => P.add(material('wood', '#6A4428'), box(5, 72, 5, o, 36, 0))); P.add(material('wood', '#6A4428'), box(48, 6, 6, 0, 72, 0)); P.add(std('#A8723E'), cyl(14, 10, 18, 0, 26, 0, 10), { uv: false }); G.add(P.build()); return shadowed(G); }
       case 'chest': { P.add(wood, box(36, 22, 26, 0, 11, 0, 3)); P.add(material('metal', '#C9971C'), box(38, 3, 28, 0, 15, 0)); G.add(P.build()); const lid = new THREE.Group(); lid.position.set(0, 22, -13); const lm = new THREE.Mesh(box(36, 8, 26, 0, 4, 13, 3), wood); lid.add(lm); G.add(lid); G.userData.lid = lid; break; }
       case 'lever': { P.add(std('#6A6A72'), box(26, 8, 14, 0, 4, 0, 2), { uv: false }); G.add(P.build()); const arm = new THREE.Group(); arm.position.y = 8; const st = new THREE.Mesh(cyl(1.8, 1.8, 26, 0, 13, 0, 8), dark); const kn = new THREE.Mesh(sphere(5, 0, 27, 0), std(e.color || '#E2475C', { emissive: e.color || '#E2475C', emissiveIntensity: .35 })); arm.add(st, kn); G.add(arm); G.userData.arm = arm; break; }
-      case 'plate': { const m = new THREE.Mesh(box(40, 5, 40, 0, 2.5, 0, 2), new THREE.MeshStandardMaterial({ color: '#B89A3A', emissive: '#6A5010', emissiveIntensity: .6, metalness: .5, roughness: .4 })); m.receiveShadow = true; G.add(m); G.userData.plate = m; break; }
-      case 'block': { const hl = new THREE.Mesh(new THREE.RingGeometry(26, 31, 28), new THREE.MeshBasicMaterial({ color: '#FFD54A', transparent: true, opacity: .75, side: THREE.DoubleSide })); hl.rotation.x = -Math.PI / 2; hl.position.y = 1.2; G.add(hl); G.userData.hl = hl;
+      case 'gondola': { P.add(material('wood', '#B98A55'), box(T * .88, 6, T * .88, 0, 3, 0)); [[-1, -1], [1, -1], [-1, 1], [1, 1]].forEach(([a, b]) => P.add(std(e.col || '#0369A1'), box(3, 70, 3, a * T * .42, 35, b * T * .42), { uv: false }));
+        P.add(std(e.col || '#0369A1'), box(T * .9, 4, T * .9, 0, 70, 0), { uv: false }); [[0, -1], [0, 1], [-1, 0], [1, 0]].forEach(([a, b]) => P.add(std(e.col || '#0369A1'), box(a ? 3 : T * .88, 12, b ? 3 : T * .88, a * T * .43, 14, b * T * .43), { uv: false })); G.add(P.build()); break; }
+      case 'print': { const m = new THREE.MeshBasicMaterial({ color: '#3A2414', transparent: true, opacity: .75 }), gl = new THREE.Mesh(new THREE.CircleGeometry(T * .4, 20), new THREE.MeshBasicMaterial({ color: '#FACC15', transparent: true, opacity: .22, depthWrite: false })); gl.rotation.x = -Math.PI / 2; gl.position.y = 1; G.add(gl);
+        [[-7, 6], [7, -6]].forEach(([fx, fz]) => { const f = new THREE.Mesh(new THREE.CircleGeometry(1, 12), m); f.scale.set(5, 9, 1); f.rotation.x = -Math.PI / 2; f.position.set(fx, 1.3, fz); G.add(f); });
+        G.rotation.y = -[0, Math.PI / 2, Math.PI, -Math.PI / 2][e.d || 0] - Math.PI / 2; G.userData.print = true; break; }
+      case 'dyepool': { const wash = e.col === 'wash'; P.add(material('stone', '#8C7352'), cyl(T * .44, T * .46, 6, 0, 3, 0, 20), { uv: false }); G.add(P.build());
+        const m = new THREE.Mesh(new THREE.CircleGeometry(T * .36, 20), std(wash ? '#BAE6FD' : e.col, { roughness: .15 })); m.rotation.x = -Math.PI / 2; m.position.y = 6.3; G.add(m); break; }
+      case 'curtain': { const wd = material('wood', '#6B4320'); P.add(wd, box(5, 64, 5, -T * .46, 32, 0)); P.add(wd, box(5, 64, 5, T * .46, 32, 0)); P.add(wd, box(T, 5, 5, 0, 64, 0)); G.add(P.build());
+        const cm = new THREE.MeshStandardMaterial({ color: e.col, roughness: .5, transparent: true, opacity: .85, side: THREE.DoubleSide }); for (let q = 0; q < 6; q++) { const st = new THREE.Mesh(new THREE.PlaneGeometry(T * .84 / 6 - 1, 56).translate(0, -28, 0), cm); st.position.set(-T * .42 + (q + .5) * T * .84 / 6, 61, 0); G.add(st); }
+        G.userData.curtain = G.children.slice(1); break; }
+      case 'twin': {   // مانيكان على قاعدة (أبيض مرآة بخط تماثل أزرق، أو ذهبي نسخة)
+        const col = e.col || '#F8FAFC', bodyM = std(col, { roughness: .35 }); P.add(std('#57534E'), cyl(14, 15, 4, 0, 2, 0, 18), { uv: false }); P.add(std('#57534E'), cyl(1.6, 1.6, 18, 0, 13, 0, 8), { uv: false });
+        P.add(bodyM, cyl(11, 13, 26, 0, 35, 0, 14), { uv: false }); P.add(bodyM, sphere(8, 0, 58, 0), { uv: false }); P.add(bodyM, cyl(3, 3, 22, -15, 36, 0, 8), { uv: false }); P.add(bodyM, cyl(3, 3, 22, 15, 36, 0, 8), { uv: false });
+        if (e.mode === 'mirror') P.add(std('#2563EB', { emissive: '#1D4ED8', emissiveIntensity: .6 }), box(1.6, 50, 1.6, 0, 42, 13.5), { uv: false }); else P.add(std('#A16207'), box(14, 2, 2, 0, 44, 13), { uv: false });
+        G.add(P.build()); G.userData.twin = true; break; }
+      case 'plate': { const m = new THREE.Mesh(box(40, 5, 40, 0, 2.5, 0, 2), new THREE.MeshStandardMaterial({ color: '#B89A3A', emissive: '#6A5010', emissiveIntensity: .6, metalness: .5, roughness: .4 })); m.receiveShadow = true; G.add(m); G.userData.plate = m;
+        if (e.need) { const f = new THREE.Mesh(new THREE.PlaneGeometry(26, 26), dieMat(e.need)); f.rotation.x = -Math.PI / 2; f.position.y = 5.3; G.add(f); }
+        if (e.col) { const r = new THREE.Mesh(new THREE.RingGeometry(23, 27, 4, 1, Math.PI / 4), new THREE.MeshBasicMaterial({ color: e.col })); r.rotation.x = -Math.PI / 2; r.position.y = 5.4; G.add(r); } break; }
+      case 'block': if (e.die) { const d = new THREE.Mesh(new THREE.BoxGeometry(40, 40, 40), dieFaces3(e.die)); d.position.y = 20; d.castShadow = true; G.add(d); G.userData.die = { m: d, k: dieKey(e.die) }; break; } { const hl = new THREE.Mesh(new THREE.RingGeometry(26, 31, 28), new THREE.MeshBasicMaterial({ color: '#FFD54A', transparent: true, opacity: .75, side: THREE.DoubleSide })); hl.rotation.x = -Math.PI / 2; hl.position.y = 1.2; G.add(hl); G.userData.hl = hl;
         P.add(material('wood', '#C88A4A'), box(42, 40, 42, 0, 20, 0, 2)); P.add(material('wood', '#6E4520'), box(44, 5, 44, 0, 3, 0)); P.add(material('wood', '#6E4520'), box(44, 5, 44, 0, 37, 0)); G.add(P.build()); break; }
       case 'gate': case 'cage': { const n = e.kind === 'cage' ? 7 : 5, wdt = e.kind === 'cage' ? 46 : 44; for (let i = 0; i < n; i++) P.add(dark, cyl(1.8, 1.8, 70, -wdt / 2 + i * wdt / (n - 1), 35, e.kind === 'cage' ? 20 : 0, 8), { uv: false });
         if (e.kind === 'cage') for (let i = 0; i < n; i++) P.add(dark, cyl(1.8, 1.8, 70, -wdt / 2 + i * wdt / (n - 1), 35, -20, 8), { uv: false });
@@ -323,7 +351,7 @@ export function createAdv3D(canvas) {
     weatherFrame(V, dt);
     // البطل
     let hp = people.get('hero'); if (!hp || hp.lookKey !== V.heroKey) { if (hp) scene.remove(hp.root); hp = buildPerson(V.heroLook); hp.root.scale.multiplyScalar(V.peopleK || 1); hp.lookKey = V.heroKey; shadowed(hp.root); scene.add(hp.root); people.set('hero', hp); }
-    animatePerson(hp, { x: V.P.x * T, y: V.P.y * T, moving: V.P.moving, phase: V.P.phase, dir: V.P.dir, faceCam: false }, dt, t);
+    animatePerson(hp, { x: V.P.x * T, y: V.P.y * T, moving: V.P.moving, phase: V.P.phase, dir: V.P.dir, faceCam: false }, dt, t); hp.root.position.y = (V.P.z || 0) * T;   // قفزة النطّاطة
     // العناصر
     const nearL = [];
     objs.forEach((o, e) => {
@@ -333,9 +361,15 @@ export function createAdv3D(canvas) {
       if (o.userData.belt) o.userData.belt.rotation.z = [-Math.PI / 2, Math.PI, Math.PI / 2, 0][e.d || 0];   // اتجاه السير يتغير بلوحة التحكم
       if (o.userData.stone) o.visible = !!e.lit && !e.hidden;
       if (o.userData.hot) { o.userData.hot.shade.visible = !!e.shade; o.userData.hot.heat.visible = !e.shade; o.userData.hot.heat.material.opacity = .13 + Math.sin(t * 2 + e.x + e.y) * .04; }
+      if (o.userData.spring) { const q = o.userData.spring; q.mat.position.y = 8.5 + Math.sin(t * 4 + e.x) * .8; q.ar.rotation.set(-Math.PI / 2, 0, [-Math.PI / 2, Math.PI, Math.PI / 2, 0][e.d || 0]); }
+      if (o.userData.die) { const q = o.userData.die, k = dieKey(e.die), mv = e.px != null;   // يتدحرج على حافته: بالوجوه القديمة حتى يصل ثم تُبدّل
+        if (k !== q.k && !mv) { q.m.material = dieFaces3(e.die); q.k = k; q.m.rotation.set(0, 0, 0); q.m.position.y = 20; }
+        else if (k !== q.k && mv) { const u = 1 - Math.min(1, Math.abs(e.x - e.px) + Math.abs(e.y - e.py)), dx = Math.sign(e.x - e.px), dz = Math.sign(e.y - e.py); q.m.rotation.set(dz * u * Math.PI / 2, 0, -dx * u * Math.PI / 2); q.m.position.y = 20 + Math.sin(u * Math.PI) * 8; } }
       if (o.userData.soil) { const q = o.userData.soil; q.tilled.visible = !e.dug; q.trench.visible = !!e.dug; q.water.visible = !!(e.dug && e.wet); q.ring.visible = !!e.canDig; q.ring.material.opacity = .5 + Math.sin(t * 5) * .35; }
       if (o.userData.dial) { const k = e.sun || 0, d = o.userData.dial; d.shadow.rotation.y = [Math.PI, Math.PI / 2, 0][k]; d.shadow.scale.x = k === 1 ? .4 : 1; d.sun.position.set([26, 0, -26][k], k === 1 ? 70 : 50, k === 1 ? 16 : 0); }
-      if (e.kind === 'block' || e.kind === 'cart' || e.kind === 'container' || e.kind === 'robot' || e.kind === 'tile') { const bx = (e.px != null ? e.px : e.x) * T + T / 2, bz = (e.py != null ? e.py : e.y) * T + T / 2; o.position.set(bx, e.kind === 'container' ? (e.lift || 0) : 0, bz); }
+      if (e.kind === 'block' || e.kind === 'twin' || e.kind === 'gondola' || e.kind === 'cart' || e.kind === 'container' || e.kind === 'robot' || e.kind === 'tile') { const bx = (e.px != null ? e.px : e.x) * T + T / 2, bz = (e.py != null ? e.py : e.y) * T + T / 2; o.position.set(bx, e.kind === 'container' ? (e.lift || 0) : 0, bz); }
+      if (o.userData.print) o.visible = !!(V.A.lensSees && V.A.lensSees(e));
+      if (o.userData.curtain) o.userData.curtain.forEach((m, q) => { m.rotation.x = Math.sin(t * 2 + q + e.y) * .08; });
       if (o.userData.lid) o.userData.lid.rotation.x += ((e.open ? -1.9 : 0) - o.userData.lid.rotation.x) * Math.min(1, dt * 6);
       if (o.userData.arm) o.userData.arm.rotation.z += ((e.on ? -.6 : .6) - o.userData.arm.rotation.z) * Math.min(1, dt * 10);
       if (o.userData.plate) { const pulse = V.pressed(e) ? 1 : 1 + Math.sin(t * 5) * .08; o.userData.plate.scale.set(pulse, 1, pulse); nearL.push([o.position.x, 30, o.position.z, .45]); }

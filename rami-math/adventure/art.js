@@ -109,6 +109,11 @@ export function drawTree(c, kind, x, y, t, seed) {
 }
 
 /* عناصر تفاعلية (العالم بوحدات البلاطة: x,y مركز قاعدة البلاطة) */
+/* نقاط وجه حجر النرد n داخل مستطيل (x, y, w, h) */
+function pips2(c, x, y, w, h, n) {
+  const P = { 1: [[.5, .5]], 2: [[.27, .27], [.73, .73]], 3: [[.25, .25], [.5, .5], [.75, .75]], 4: [[.27, .27], [.73, .27], [.27, .73], [.73, .73]], 5: [[.25, .25], [.75, .25], [.5, .5], [.25, .75], [.75, .75]], 6: [[.27, .2], [.73, .2], [.27, .5], [.73, .5], [.27, .8], [.73, .8]] }[n] || [];
+  c.fillStyle = n === 1 ? '#DC2626' : '#1E293B'; P.forEach(([a, b]) => { c.beginPath(); c.ellipse(x + a * w, y + b * h, Math.min(w, h) * .1, Math.min(w, h) * .1, 0, 0, 7); c.fill(); });
+}
 export function drawThing(c, e, t, A) {
   const x = e.x * T + T / 2, y = e.y * T + T;
   const sh = (rx = 18) => { c.fillStyle = 'rgba(40,25,10,.22)'; c.beginPath(); c.ellipse(x + 3, y - 4, rx, rx * .3, 0, 0, 7); c.fill(); };
@@ -119,6 +124,8 @@ export function drawThing(c, e, t, A) {
     case 'lever': { sh(12); c.fillStyle = '#6A6A72'; c.fillRect(x - 12, y - 10, 24, 8); const a = e.on ? .6 : -.6; c.strokeStyle = '#3A3A40'; c.lineWidth = 4; c.lineCap = 'round';
       c.beginPath(); c.moveTo(x, y - 8); c.lineTo(x + Math.sin(a) * 22, y - 8 - Math.cos(a) * 22); c.stroke(); c.fillStyle = e.color || '#E2475C'; c.beginPath(); c.arc(x + Math.sin(a) * 22, y - 8 - Math.cos(a) * 22, 5.5, 0, 7); c.fill(); break; }
     case 'plate': { const on = A.pressed(e); c.fillStyle = on ? '#C9971C' : '#8C8478'; c.beginPath(); c.roundRect(x - 18, y - 32, 36, 28, 5); c.fill(); c.fillStyle = on ? '#FFD54A' : '#A69E92'; c.beginPath(); c.roundRect(x - 14, y - 28, 28, 20, 4); c.fill();
+      if (e.need) { c.fillStyle = '#FFFFFF'; c.beginPath(); c.roundRect(x - 12, y - 27, 24, 18, 3); c.fill(); pips2(c, x - 12, y - 27, 24, 18, e.need); break; }
+      if (e.col) { c.strokeStyle = e.col; c.lineWidth = 3; c.beginPath(); c.roundRect(x - 20, y - 34, 40, 32, 6); c.stroke(); c.fillStyle = e.col; c.font = '900 15px Cairo'; c.textAlign = 'center'; c.fillText('♦', x, y - 13); break; }   // منصة عرض بلون مانيكانها
       c.fillStyle = 'rgba(0,0,0,.25)'; c.font = '900 14px Cairo'; c.textAlign = 'center'; c.fillText('◆', x, y - 13); break; }
     case 'belt': {   // سير ناقل على الأرض بأسهم تتحرك في اتجاهه (d: ٠ يمين، ١ أسفل، ٢ يسار، ٣ أعلى)
       const bx = x - T / 2, by = y - T, a = [0, Math.PI / 2, Math.PI, -Math.PI / 2][e.d || 0], off = (t * 1.4) % 1;
@@ -152,6 +159,10 @@ export function drawThing(c, e, t, A) {
       const sd = [[-1, 0], [0, -1], [1, 0]][e.sun || 0], L = (e.sun || 0) === 1 ? 8 : 20; c.strokeStyle = 'rgba(40,30,20,.6)'; c.lineWidth = 4; c.lineCap = 'round'; c.beginPath(); c.moveTo(x, y - 12); c.lineTo(x + sd[0] * L, y - 12 + sd[1] * L * .45); c.stroke();
       c.strokeStyle = '#5C3A20'; c.lineWidth = 4; c.beginPath(); c.moveTo(x, y - 12); c.lineTo(x, y - 38); c.stroke(); c.lineCap = 'butt';
       const sx = x - sd[0] * 26, sy = y - 50 - ((e.sun || 0) === 1 ? 10 : 0); c.fillStyle = '#FBBF24'; c.beginPath(); c.arc(sx, sy, 7, 0, 7); c.fill(); c.strokeStyle = '#F59E0B'; c.lineWidth = 2; for (let k = 0; k < 8; k++) { const a = k * Math.PI / 4 + t * .5; c.beginPath(); c.moveTo(sx + Math.cos(a) * 9, sy + Math.sin(a) * 9); c.lineTo(sx + Math.cos(a) * 13, sy + Math.sin(a) * 13); c.stroke(); } break; }
+    case 'spring': {   // نطّاطة: إطار ونسيج مشدود وسهم اتجاه القفزة (d: ٠ يمين، ١ أسفل، ٢ يسار، ٣ أعلى)، والزرقاء تدار بذراع
+      const bx = x - T / 2, by = y - T, bob = Math.sin(t * 4 + e.x) * 1.5; c.fillStyle = 'rgba(40,25,10,.25)'; c.beginPath(); c.ellipse(x + 2, y - 6, T * .42, 7, 0, 0, 7); c.fill();
+      c.fillStyle = e.blue ? '#1D4ED8' : '#DB2777'; c.beginPath(); c.ellipse(x, by + T * .55, T * .44, T * .36, 0, 0, 7); c.fill(); c.fillStyle = '#1F2937'; c.beginPath(); c.ellipse(x, by + T * .52 + bob, T * .34, T * .27, 0, 0, 7); c.fill();
+      const a = [0, Math.PI / 2, Math.PI, -Math.PI / 2][e.d || 0]; c.save(); c.translate(x, by + T * .52 + bob); c.rotate(a); c.fillStyle = e.blue ? '#93C5FD' : '#FDE047'; c.beginPath(); c.moveTo(14, 0); c.lineTo(-4, -10); c.lineTo(-4, -4); c.lineTo(-12, -4); c.lineTo(-12, 4); c.lineTo(-4, 4); c.lineTo(-4, 10); c.closePath(); c.fill(); c.restore(); break; }
     case 'honey': {   // عسل مسكوب على الأرض: لامع ولزج، يُنزلق عليه البطل حتى يصطدم بشيء
       const bx = x - T / 2, by = y - T, sh2 = (Math.sin(t * 2 + e.x * .7 + e.y) + 1) / 2; c.fillStyle = '#D98E04'; c.beginPath(); c.roundRect(bx + 1, by + 1, T - 2, T - 2, 10); c.fill();
       const hg = c.createRadialGradient(x - 8, by + T * .35, 2, x, by + T / 2, T * .7); hg.addColorStop(0, '#FDE68A'); hg.addColorStop(.5, '#F5B70A'); hg.addColorStop(1, '#C27803'); c.fillStyle = hg; c.beginPath(); c.roundRect(bx + 4, by + 4, T - 8, T - 8, 9); c.fill();
@@ -198,7 +209,38 @@ export function drawThing(c, e, t, A) {
       c.strokeStyle = '#B88A2E'; c.lineWidth = 4; c.beginPath(); c.arc(x, y - 66, 9, 0, 7); c.stroke(); c.strokeStyle = '#8A6A44'; c.lineWidth = 1.5; c.beginPath(); c.moveTo(x, y - 60); c.lineTo(x, y - 36); c.stroke();
       c.fillStyle = '#A8723E'; c.beginPath(); c.moveTo(x - 14, y - 36); c.lineTo(x + 14, y - 36); c.lineTo(x + 10, y - 18); c.lineTo(x - 10, y - 18); c.closePath(); c.fill();
       for (let i = 0; i < (e.n || 0); i++) { c.fillStyle = '#7A6B5C'; c.beginPath(); c.arc(x - 7 + i * 7, y - 38, 5, 0, 7); c.fill(); } break; }
+    case 'gondola': {   // عربة التلفريك: منصة خشبية بحاجز وكابل علوي، تتحرك بين محطتين
+      const gx = (e.px != null ? e.px : e.x) * T + T / 2, gy = (e.py != null ? e.py : e.y) * T + T; c.fillStyle = 'rgba(0,0,0,.18)'; c.beginPath(); c.ellipse(gx + 4, gy - 6, T * .42, T * .14, 0, 0, 7); c.fill();
+      c.fillStyle = '#B98A55'; c.fillRect(gx - T * .44, gy - T * .82, T * .88, T * .7); c.strokeStyle = e.col || '#0369A1'; c.lineWidth = 4; c.strokeRect(gx - T * .44, gy - T * .82, T * .88, T * .7);
+      c.strokeStyle = 'rgba(90,55,25,.5)'; c.lineWidth = 1.5; for (let q = 1; q < 5; q++) { c.beginPath(); c.moveTo(gx - T * .44 + q * T * .176, gy - T * .82); c.lineTo(gx - T * .44 + q * T * .176, gy - T * .12); c.stroke(); } break; }
+    case 'print': {   // أثر قدمين خفي: يظهر تحت العدسة قرب البطل فقط، ومقدمته في اتجاه سير اللص (d)
+      if (!A.lensSees || !A.lensSees(e)) break; const cx = x, cy = y - T / 2, a = [0, Math.PI / 2, Math.PI, -Math.PI / 2][e.d || 0] + Math.PI / 2;
+      c.translate(cx, cy); c.rotate(a); c.fillStyle = 'rgba(250,204,21,.22)'; c.beginPath(); c.arc(0, 0, T * .4, 0, 7); c.fill();
+      c.fillStyle = 'rgba(55,35,20,.75)'; [[-7, 6], [7, -6]].forEach(([fx, fy]) => { c.beginPath(); c.ellipse(fx, fy, 5, 9, 0, 0, 7); c.fill(); c.beginPath(); c.ellipse(fx, fy - 12, 4, 4, 0, 0, 7); c.fill(); }); break; }
+    case 'dyepool': {   // حوض صبغ أرضي بلونه (أو نافورة الغسل الزرقاء الفاتحة بفقاعات)
+      const wash = e.col === 'wash', col = wash ? '#BAE6FD' : e.col; c.fillStyle = '#8C7352'; c.beginPath(); c.ellipse(x, y - T * .42, T * .44, T * .3, 0, 0, 7); c.fill();
+      c.fillStyle = col; c.beginPath(); c.ellipse(x, y - T * .44, T * .36, T * .23, 0, 0, 7); c.fill(); c.strokeStyle = 'rgba(255,255,255,.5)'; c.lineWidth = 2; c.beginPath(); c.ellipse(x + Math.sin(t * 1.6 + e.x) * 5, y - T * .46, T * .14, T * .05, 0, 0, 7); c.stroke();
+      if (wash) { for (let q = 0; q < 3; q++) { const u = (t * .8 + q / 3) % 1; c.fillStyle = `rgba(255,255,255,${1 - u})`; c.beginPath(); c.arc(x - 8 + q * 8, y - T * .44 - u * 18, 3, 0, 7); c.fill(); } }
+      break; }
+    case 'curtain': {   // ستارة حرير بلون واحد بين عمودين: لا يعبرها إلا من ثوبه بلونها
+      c.fillStyle = '#6B4320'; c.fillRect(x - T * .48, y - 64, 5, 62); c.fillRect(x + T * .48 - 5, y - 64, 5, 62); c.fillRect(x - T * .5, y - 66, T, 5);
+      for (let q = 0; q < 6; q++) { const sx = x - T * .42 + q * T * .84 / 6, sw = Math.sin(t * 2 + q + e.y) * 2; c.fillStyle = e.col; c.globalAlpha = .88; c.beginPath(); c.moveTo(sx, y - 61); c.lineTo(sx + T * .84 / 6 - 1, y - 61); c.lineTo(sx + T * .84 / 6 - 1 + sw, y - 6); c.lineTo(sx + sw, y - 6); c.closePath(); c.fill(); }
+      c.globalAlpha = 1; c.fillStyle = 'rgba(255,255,255,.25)'; c.fillRect(x - T * .42, y - 61, T * .84, 4); break; }
+    case 'twin': {   // مانيكان على قاعدة: أبيض «مرآة» بخط تماثل، أو ذهبي «نسخة» بسهمين متوازيين
+      const bx = (e.px != null ? e.px : e.x) * T + T / 2, by = (e.py != null ? e.py : e.y) * T + T, col = e.col || '#F8FAFC', ink = e.mode === 'mirror' ? '#64748B' : '#A16207', bob = e.px != null ? -3 : 0;
+      c.fillStyle = 'rgba(40,25,10,.25)'; c.beginPath(); c.ellipse(bx + 3, by - 5, 17, 5, 0, 0, 7); c.fill();
+      c.fillStyle = '#57534E'; c.beginPath(); c.ellipse(bx, by - 7, 14, 4.5, 0, 0, 7); c.fill(); c.fillRect(bx - 1.5, by - 22, 3, 15);
+      c.translate(0, bob); c.fillStyle = col; c.strokeStyle = ink; c.lineWidth = 1.6;
+      c.beginPath(); c.moveTo(bx - 11, by - 22); c.lineTo(bx - 13, by - 44); c.quadraticCurveTo(bx, by - 52, bx + 13, by - 44); c.lineTo(bx + 11, by - 22); c.closePath(); c.fill(); c.stroke();
+      c.beginPath(); c.ellipse(bx, by - 57, 7.5, 9, 0, 0, 7); c.fill(); c.stroke();
+      [-1, 1].forEach(s2 => { c.beginPath(); c.moveTo(bx + s2 * 13, by - 43); c.quadraticCurveTo(bx + s2 * 19, by - 36, bx + s2 * 16, by - 26); c.stroke(); });
+      c.strokeStyle = ink; c.lineWidth = 2; if (e.mode === 'mirror') { c.setLineDash([3, 3]); c.beginPath(); c.moveTo(bx, by - 66); c.lineTo(bx, by - 22); c.stroke(); c.setLineDash([]); }
+      else { [-36, -30].forEach(o => { c.beginPath(); c.moveTo(bx - 6, by + o); c.lineTo(bx + 6, by + o); c.lineTo(bx + 3, by + o - 3); c.stroke(); }); }
+      break; }
     case 'block': { const bx = (e.px != null ? e.px : e.x) * T + T / 2, by = (e.py != null ? e.py : e.y) * T + T; c.fillStyle = 'rgba(40,25,10,.25)'; c.fillRect(bx - 20, by - 8, 44, 8);
+      if (e.die) {   // حجر نرد كبير: الوجه الأعلى e.die.t والأمامي (الجنوبي) ٧ − e.die.n
+        c.fillStyle = '#F8FAFC'; c.strokeStyle = '#64748B'; c.lineWidth = 2.5; c.beginPath(); c.roundRect(bx - 21, by - 34, 42, 30, 6); c.fill(); c.stroke(); pips2(c, bx - 21, by - 34, 42, 30, 7 - e.die.n);
+        c.fillStyle = '#E2E8F0'; c.beginPath(); c.roundRect(bx - 21, by - 62, 42, 30, 6); c.fill(); c.stroke(); pips2(c, bx - 21, by - 62, 42, 30, e.die.t); break; }
       c.fillStyle = '#A8723E'; c.fillRect(bx - 21, by - 44, 42, 40); c.strokeStyle = '#6E4520'; c.lineWidth = 3; c.strokeRect(bx - 21, by - 44, 42, 40); c.beginPath(); c.moveTo(bx - 21, by - 44); c.lineTo(bx + 21, by - 4); c.moveTo(bx + 21, by - 44); c.lineTo(bx - 21, by - 4); c.stroke(); c.fillStyle = 'rgba(255,255,255,.15)'; c.fillRect(bx - 19, by - 42, 38, 4); break; }
     case 'gate': { if (e.open) { c.fillStyle = 'rgba(0,0,0,.15)'; c.fillRect(x - 24, y - 6, 48, 4); break; } c.fillStyle = '#3A3A44'; for (let i = 0; i < 5; i++) c.fillRect(x - 22 + i * 10, y - 52, 4, 50); c.fillRect(x - 24, y - 54, 48, 5); c.fillRect(x - 24, y - 26, 48, 4); c.fillStyle = '#8A8A96'; for (let i = 0; i < 5; i++) c.fillRect(x - 21 + i * 10, y - 52, 1.4, 50); break; }
     case 'door': { if (e.open) break; c.fillStyle = '#6B3E1E'; c.beginPath(); c.roundRect(x - 20, y - 54, 40, 52, [16, 16, 0, 0]); c.fill(); c.strokeStyle = '#4A2A10'; c.lineWidth = 2; c.beginPath(); c.moveTo(x, y - 52); c.lineTo(x, y - 2); c.stroke();
