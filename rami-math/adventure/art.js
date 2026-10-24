@@ -13,6 +13,7 @@ export const THEMES = {
   ruins: { g: ['#D8CDB4', '#D0C4AA', '#DDD3BC'], g2: '#BFB397', path: '#C9BB9C', wall: ['#BFB49C', '#9C907A', '#78705C'], floor: '#B5A98E', water: ['#4FA0B8', '#33809A'], tree: 'round', grass: '#8FAE62', night: .1 },
   storm: { g: ['#C9B98E', '#C2B286', '#CFC096'], g2: '#B8A87A', path: '#A8936A', wall: ['#C9BCA0', '#A39578', '#7E7158'], floor: '#A88E6A', water: ['#5E8EA6', '#47768E'], tree: 'round', grass: '#6E8A4E', night: .3 },
   mountain: { g: ['#B89878', '#B09070', '#C2A486'], g2: '#A6866A', path: '#A88B68', wall: ['#8C6E58', '#6E5644', '#4E3C30'], floor: '#9A7E64', water: ['#4FA0B8', '#33809A'], tree: 'round', grass: '#7FA84E', night: .1 },
+  kitchen: { g: ['#E7C49A', '#E0BB8E', '#ECCDA6'], g2: '#D5AC7C', path: '#DDB88A', wall: ['#F2E6D0', '#D8C4A2', '#B49A74'], floor: '#C99A6A', water: ['#4FA0B8', '#33809A'], tree: 'round', grass: '#8FAE62', night: .1 },   // مطبخ الحلوى: بلاط فخاري دافئ
   castle: { g: ['#7E7A86', '#78747F', '#85818D'], g2: '#6C6875', path: '#8E8A96', wall: ['#5A5664', '#46424F', '#332F3B'], floor: '#6A5E66', water: ['#3D4E7A', '#2C3A60'], tree: 'dead', grass: '#4E5A44', night: .55 }
 };
 
@@ -119,6 +120,31 @@ export function drawThing(c, e, t, A) {
       c.beginPath(); c.moveTo(x, y - 8); c.lineTo(x + Math.sin(a) * 22, y - 8 - Math.cos(a) * 22); c.stroke(); c.fillStyle = e.color || '#E2475C'; c.beginPath(); c.arc(x + Math.sin(a) * 22, y - 8 - Math.cos(a) * 22, 5.5, 0, 7); c.fill(); break; }
     case 'plate': { const on = A.pressed(e); c.fillStyle = on ? '#C9971C' : '#8C8478'; c.beginPath(); c.roundRect(x - 18, y - 32, 36, 28, 5); c.fill(); c.fillStyle = on ? '#FFD54A' : '#A69E92'; c.beginPath(); c.roundRect(x - 14, y - 28, 28, 20, 4); c.fill();
       c.fillStyle = 'rgba(0,0,0,.25)'; c.font = '900 14px Cairo'; c.textAlign = 'center'; c.fillText('◆', x, y - 13); break; }
+    case 'belt': {   // سير ناقل على الأرض بأسهم تتحرك في اتجاهه (d: ٠ يمين، ١ أسفل، ٢ يسار، ٣ أعلى)
+      const bx = x - T / 2, by = y - T, a = [0, Math.PI / 2, Math.PI, -Math.PI / 2][e.d || 0], off = (t * 1.4) % 1;
+      c.fillStyle = '#3F3F46'; c.fillRect(bx + 2, by + 2, T - 4, T - 4); c.strokeStyle = '#71717A'; c.lineWidth = 2; c.strokeRect(bx + 3, by + 3, T - 6, T - 6);
+      c.save(); c.translate(x, y - T / 2); c.rotate(a); c.beginPath(); c.rect(-T / 2 + 4, -T / 2 + 4, T - 8, T - 8); c.clip(); c.fillStyle = e.col || '#FACC15';
+      for (let k = -1; k < 2; k++) { const px = (k + off) * T / 2; c.beginPath(); c.moveTo(px - 6, -10); c.lineTo(px + 6, 0); c.lineTo(px - 6, 10); c.lineTo(px - 2, 0); c.closePath(); c.fill(); } c.restore(); break; }
+    case 'honey': {   // عسل مسكوب على الأرض: لامع ولزج، يُنزلق عليه البطل حتى يصطدم بشيء
+      const bx = x - T / 2, by = y - T, sh2 = (Math.sin(t * 2 + e.x * .7 + e.y) + 1) / 2; c.fillStyle = '#D98E04'; c.beginPath(); c.roundRect(bx + 1, by + 1, T - 2, T - 2, 10); c.fill();
+      const hg = c.createRadialGradient(x - 8, by + T * .35, 2, x, by + T / 2, T * .7); hg.addColorStop(0, '#FDE68A'); hg.addColorStop(.5, '#F5B70A'); hg.addColorStop(1, '#C27803'); c.fillStyle = hg; c.beginPath(); c.roundRect(bx + 4, by + 4, T - 8, T - 8, 9); c.fill();
+      c.fillStyle = `rgba(255,255,255,${.35 + sh2 * .35})`; c.beginPath(); c.ellipse(x - 9, by + T * .32, 9, 3.5, -.4, 0, 7); c.fill(); c.beginPath(); c.arc(x + 10, by + T * .62, 2.4, 0, 7); c.fill(); break; }
+    case 'cauldron': {   // قِدر نحاسي كبير على موقد حجري بنار وبخار (فقاعاته تتلون بنتيجة المحاولة: e.bub)
+      sh(30); c.fillStyle = '#78716C'; c.beginPath(); c.ellipse(x, y - 8, 34, 11, 0, 0, 7); c.fill();
+      for (let i = 0; i < 5; i++) { const f = (Math.sin(t * 9 + i * 2) + 1) / 2; c.fillStyle = i % 2 ? '#F97316' : '#FACC15'; c.beginPath(); c.moveTo(x - 22 + i * 11, y - 8); c.quadraticCurveTo(x - 18 + i * 11, y - 22 - f * 8, x - 14 + i * 11, y - 8); c.fill(); }
+      const gr = c.createLinearGradient(x - 30, 0, x + 30, 0); gr.addColorStop(0, '#8A4F1F'); gr.addColorStop(.35, '#E0A060'); gr.addColorStop(1, '#7A4318'); c.fillStyle = gr; c.beginPath(); c.moveTo(x - 30, y - 50); c.quadraticCurveTo(x - 34, y - 14, x, y - 12); c.quadraticCurveTo(x + 34, y - 14, x + 30, y - 50); c.closePath(); c.fill();
+      c.fillStyle = '#5B2A0E'; c.beginPath(); c.ellipse(x, y - 50, 30, 9, 0, 0, 7); c.fill(); c.fillStyle = e.done ? '#A8481E' : '#6B4A2E'; c.beginPath(); c.ellipse(x, y - 49, 25, 6, 0, 0, 7); c.fill();
+      (e.bub || []).forEach((col, k) => { const u = (t * .7 + k / 3) % 1; c.fillStyle = col; c.globalAlpha = 1 - u; c.beginPath(); c.arc(x - 12 + k * 12, y - 54 - u * 26, 5, 0, 7); c.fill(); c.globalAlpha = 1; });
+      for (let i = 0; i < 3; i++) { const u = (t * .3 + i / 3) % 1; c.fillStyle = `rgba(255,255,255,${.4 * (1 - u)})`; c.beginPath(); c.arc(x - 8 + i * 8, y - 60 - u * 50, 7 + u * 10, 0, 7); c.fill(); } break; }
+    case 'jarshelf': {   // رف خشبي عليه برطمانات ملونة (عسل وزعفران وورد)
+      sh(24); c.fillStyle = '#7C4A1E'; c.fillRect(x - 22, y - 58, 44, 54); c.fillStyle = '#5C3A20'; c.fillRect(x - 20, y - 56, 40, 50); c.fillStyle = '#9A6A3E'; [y - 34, y - 8].forEach(yy => c.fillRect(x - 22, yy, 44, 4));
+      [[-12, -34, '#F59E0B'], [0, -34, '#DB2777'], [12, -34, '#16A34A'], [-12, -8, '#B45309'], [0, -8, '#FACC15'], [12, -8, '#7C2D12']].forEach(([dx, dy, col]) => { c.fillStyle = col; c.fillRect(x + dx - 5, y + dy - 16, 10, 16); c.fillStyle = '#E7E5E4'; c.fillRect(x + dx - 6, y + dy - 19, 12, 4); }); break; }
+    case 'robot': {   // الروبوت رقيم: جسم وشاشة بعين وهوائي، يتحرك بنعومة عبر px/py
+      const bx = (e.px != null ? e.px : e.x) * T + T / 2, by = (e.py != null ? e.py : e.y) * T + T, bob = Math.sin(t * 4) * 1.5;
+      c.fillStyle = 'rgba(40,25,10,.25)'; c.beginPath(); c.ellipse(bx, by - 4, 16, 5, 0, 0, 7); c.fill(); c.fillStyle = '#E5E7EB'; c.beginPath(); c.roundRect(bx - 14, by - 34 + bob, 28, 26, 6); c.fill(); c.strokeStyle = '#64748B'; c.lineWidth = 2; c.stroke();
+      c.fillStyle = '#0F172A'; c.beginPath(); c.roundRect(bx - 10, by - 30 + bob, 20, 12, 3); c.fill(); c.fillStyle = '#22D3EE'; c.beginPath(); c.arc(bx, by - 24 + bob, 3.5, 0, 7); c.fill();
+      c.strokeStyle = '#64748B'; c.beginPath(); c.moveTo(bx, by - 34 + bob); c.lineTo(bx, by - 42 + bob); c.stroke(); c.fillStyle = '#EF4444'; c.beginPath(); c.arc(bx, by - 44 + bob, 3, 0, 7); c.fill();
+      c.fillStyle = '#334155'; [-9, 9].forEach(o => { c.beginPath(); c.arc(bx + o, by - 6, 4, 0, 7); c.fill(); }); if (e.carry) { c.fillStyle = '#FACC15'; c.fillRect(bx + 8, by - 26 + bob, 10, 8); } break; }
     case 'tidewater': {   // ماء المد يغطي البلاطة (يختفي حين ينحسر)
       c.fillStyle = '#2F8FC9'; c.fillRect(x - T / 2, y - T, T, T); c.fillStyle = 'rgba(255,255,255,.35)'; c.fillRect(x - 14 + Math.sin(t * 2 + e.x) * 6, y - T * .6, 18, 2); c.fillRect(x - 4 + Math.sin(t * 2 + e.y) * 6, y - T * .3, 12, 2); break; }
     case 'container': {   // حاوية شحن ملوّنة بأضلاع، تنتقل بنعومة عبر px/py حين ترفعها الرافعة

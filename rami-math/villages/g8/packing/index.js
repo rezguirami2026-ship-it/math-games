@@ -97,5 +97,6 @@ export default {
     { path: [[1300, 1388], [2250, 1388]], look: { kind: 'boy', skin: '#B5835A', robe: '#F7F5EF', accent: '#B8413A' } }
   ],
   lessons: { nets8: () => import('./nets8.js'), angleProps8: () => import('./angleProps8.js'), angleProb8: () => import('./angleProb8.js') },
+  adventure: () => import('./adventure.js'),   // «يوم العطل الكبير» بعد إنهاء الدروس الثلاثة
   kit3d, kit2d
 };

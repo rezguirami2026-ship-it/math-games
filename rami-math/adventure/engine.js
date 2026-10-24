@@ -14,8 +14,8 @@ const webglOK = () => { try { const c = document.createElement('canvas'); return
 let createAdv3D = null; export const setAdv3D = f => { createAdv3D = f; };
 export const want3D = () => webglOK() && !WEAK && gfx.d3();
 
-const SOLID_KINDS = new Set(['npc', 'chest', 'block', 'gate', 'door', 'sign', 'fire', 'beacon', 'cage', 'tent', 'crates', 'barrel', 'boat', 'well', 'lever', 'banner', 'house', 'rot', 'tablet', 'crystal', 'beam', 'fence', 'pillar', 'cart', 'oil', 'basket', 'tidewater', 'container', 'console']);
-const ACT_KINDS = new Set(['npc', 'chest', 'lever', 'sign', 'door', 'gate', 'cage', 'beacon', 'boat', 'fire', 'safe', 'block', 'well', 'tent', 'banner', 'house', 'rot', 'tablet', 'crystal', 'animal', 'pillar', 'site', 'beam', 'cart', 'oil', 'basket', 'container', 'console']);   // مغامرات قرى الصف الثامن: منجم (cart/oil/basket)، ميناء (container/console، والمد tidewater)
+const SOLID_KINDS = new Set(['npc', 'chest', 'block', 'gate', 'door', 'sign', 'fire', 'beacon', 'cage', 'tent', 'crates', 'barrel', 'boat', 'well', 'lever', 'banner', 'house', 'rot', 'tablet', 'crystal', 'beam', 'fence', 'pillar', 'cart', 'oil', 'basket', 'tidewater', 'container', 'console', 'robot', 'cauldron', 'jarshelf']);
+const ACT_KINDS = new Set(['npc', 'chest', 'lever', 'sign', 'door', 'gate', 'cage', 'beacon', 'boat', 'fire', 'safe', 'block', 'well', 'tent', 'banner', 'house', 'rot', 'tablet', 'crystal', 'animal', 'pillar', 'site', 'beam', 'cart', 'oil', 'basket', 'container', 'console', 'cauldron']);   // مغامرات قرى الصف الثامن: منجم (cart/oil/basket)، ميناء (container/console، والمد tidewater)
 const esc = s => String(s).replace(/[&<>]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;' }[c]));
 const wait = ms => new Promise(r => setTimeout(r, ms));
 
@@ -103,6 +103,7 @@ export function runAdventure(def, onExit) {
     tapEnt: id => { const e = A.ent(id); if (e) tapTile(e.kind === 'house' ? e.x + Math.floor((e.w || 3) / 2) : e.x, e.y); },   // كما ينقر اللاعب على الشيء
     busy: () => locked || !!caught || !!(P.path && P.path.length) || pushing,
     tileAt: (x, y) => tileAt(x, y),
+    blockedAt: (x, y) => blocked(x, y),
     setTile: (x, y, ch) => { S.tiles[key(S.area, x, y)] = ch; tilesV++; save(); },
     follow: id => { const e = A.ent(id); if (!e) return; e.follow = true; e.fx = e.x + .5; e.fy = e.y + .5; persist(e, ['follow']); },
     unfollow: (id, x, y) => { const e = A.ent(id); if (!e) return; e.follow = false; if (x != null) { e.x = x; e.y = y; } e.fx = e.fy = null; persist(e, ['follow', 'x', 'y']); },
@@ -171,11 +172,11 @@ export function runAdventure(def, onExit) {
   const fadeTo = v => new Promise(r => { const el = $('.advFade'); el.style.opacity = v; setTimeout(r, 380); });
 
   /* ── المسار (بحث عرضي على البلاطات) ── */
-  function route(tx, ty, near) {
+  function route(tx, ty, near) {   // أقصر طريق، ولا يعبر مخرجاً في الطريق إلى غيره
     const sx = Math.floor(P.x), sy = Math.floor(P.y), Wd = map[0].length, prev = new Map(), q = [[sx, sy]]; prev.set(sx + ',' + sy, null);
     const goal2 = (x, y) => near ? Math.abs(x - tx) + Math.abs(y - ty) === 1 : x === tx && y === ty;
     while (q.length) { const [x, y] = q.shift(); if (goal2(x, y)) { const p = []; let k = x + ',' + y; while (k) { const [a, b] = k.split(',').map(Number); p.unshift([a, b]); k = prev.get(k); } p.shift(); return p; }
-      for (const [dx, dy] of [[1, 0], [-1, 0], [0, 1], [0, -1]]) { const nx = x + dx, ny = y + dy, k = nx + ',' + ny; if (prev.has(k) || nx < 0 || ny < 0 || nx >= Wd || ny >= map.length || blocked(nx, ny)) continue; prev.set(k, x + ',' + y); q.push([nx, ny]); } }
+      for (const [dx, dy] of [[1, 0], [-1, 0], [0, 1], [0, -1]]) { const nx = x + dx, ny = y + dy, k = nx + ',' + ny; if (prev.has(k) || nx < 0 || ny < 0 || nx >= Wd || ny >= map.length || blocked(nx, ny) || ((nx !== tx || ny !== ty) && ents.some(e => e.kind === 'exit' && !e.hidden && e.x === nx && e.y === ny))) continue; prev.set(k, x + ',' + y); q.push([nx, ny]); } }
     return null;
   }
 
@@ -429,7 +430,7 @@ export function runAdventure(def, onExit) {
     if (mark) { mark.t += .016; if (mark.t > .8) mark = null; else { ctx.strokeStyle = `rgba(255,255,255,${.8 - mark.t})`; ctx.lineWidth = 3; ctx.beginPath(); ctx.ellipse(mark.x * T + T / 2, mark.y * T + T * .7, 14 + mark.t * 20, 6 + mark.t * 8, 0, 0, 7); ctx.stroke(); } }
     ents.forEach(e => {
       if (e.hidden || (e.x < x0 - 3 || e.x > x1 + 3 || e.y < y0 - 1 || e.y > y1 + 3) && e.kind !== 'guard') return;
-      if (e.kind === 'plate') { drawThing(ctx, e, t, A); return; }
+      if (e.kind === 'plate' || e.kind === 'belt' || e.kind === 'honey') { drawThing(ctx, e, t, A); return; }   // تحت البطل
       if (e.kind === 'guard') { ctx.save(); drawCone(ctx, e, caught === e); ctx.restore(); list.push({ y: (e.py + 1) * T - 4, draw: () => person(e.px, e.py, e.look, e.ang, !!e.pause, e.ph, caught === e ? '!' : null) }); return; }
       if (e.kind === 'npc') { const nx = e.follow ? e.fx - .5 : e.x, ny = e.follow ? e.fy - .5 : e.y; list.push({ y: (ny + 1) * T - 4, draw: () => person(nx, ny, e.look || def.cast[e.who].look, e.face, !e.moving, e.ph || 0, e.mark ? e.mark(A) : null) }); return; }
       if (e.kind === 'hazard' || e.kind === 'animal') { const hx = e.kind === 'hazard' ? e.px : e.follow ? e.fx - .5 : e.x, hy = e.kind === 'hazard' ? e.py : e.follow ? e.fy - .5 : e.y;

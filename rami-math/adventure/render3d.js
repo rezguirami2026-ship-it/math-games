@@ -141,6 +141,18 @@ export function createAdv3D(canvas) {
     switch (e.kind) {
       case 'house': { const w = (e.w || 3) * T, d = (e.h || 2) * T, g = omaniHouse({ x: e.x * T, y: (e.y - (e.h || 2) + 1) * T, w, h: d, H: (e.h || 2) >= 3 ? 150 : 96, wall: e.roof }); return shadowed(g); }
       case 'well': return shadowed(well3d(x, z, 22, true));
+      case 'belt': { const m = new THREE.Mesh(new THREE.BoxGeometry(T - 4, 4, T - 4), std('#3F3F46', { roughness: .7 })); m.position.y = 2; G.add(m);
+        const ar = new THREE.Mesh(new THREE.ConeGeometry(9, 18, 3), new THREE.MeshStandardMaterial({ color: e.col || '#FACC15', emissive: e.col || '#FACC15', emissiveIntensity: .4 })); ar.rotation.set(-Math.PI / 2, 0, [-Math.PI / 2, Math.PI, Math.PI / 2, 0][e.d || 0]); ar.position.y = 6; G.add(ar); G.userData.belt = ar; return G; }
+      case 'honey': { const m = new THREE.Mesh(box(T - 4, 3, T - 4, 0, 1.5, 0), new THREE.MeshStandardMaterial({ color: '#F5B70A', emissive: '#7A4A02', emissiveIntensity: .25, roughness: .08, metalness: .1 })); G.add(m); return G; }
+      case 'cauldron': { P.add(material('stone', '#78716C'), cyl(34, 38, 16, 0, 8, 0, 18)); P.add(std('#C27A3A', { metalness: .65, roughness: .3 }), new THREE.SphereGeometry(30, 20, 12, 0, Math.PI * 2, Math.PI * .45, Math.PI * .55).scale(1, .9, 1).translate(0, 50, 0), { uv: false });
+        P.add(std('#8A4F1F', { metalness: .6, roughness: .35 }), new THREE.TorusGeometry(29, 2.6, 8, 24).rotateX(Math.PI / 2).translate(0, 55, 0), { uv: false }); G.add(P.build());
+        const top = new THREE.Mesh(new THREE.CircleGeometry(26, 24), new THREE.MeshStandardMaterial({ color: '#6B4A2E', roughness: .3 })); top.rotation.x = -Math.PI / 2; top.position.y = 53; G.add(top); G.userData.potTop = top;
+        const fire = new THREE.Mesh(new THREE.ConeGeometry(10, 22, 7), new THREE.MeshStandardMaterial({ color: '#F97316', emissive: '#F97316', emissiveIntensity: 1.2 })); fire.position.set(0, 22, 26); G.add(fire); G.userData.flame = fire; return shadowed(G); }
+      case 'jarshelf': { P.add(material('wood', '#7C4A1E'), box(44, 60, 22, 0, 30, -4)); [12, 38].forEach(h => P.add(material('wood', '#9A6A3E'), box(46, 3, 24, 0, h, -2)));
+        [[-12, 15, '#F59E0B'], [0, 15, '#DB2777'], [12, 15, '#16A34A'], [-12, 41, '#B45309'], [0, 41, '#FACC15'], [12, 41, '#7C2D12']].forEach(([dx, h, col]) => { P.add(std(col, { roughness: .3 }), cyl(4.5, 4.5, 16, dx, h + 8, 6, 10), { uv: false }); P.add(std('#E7E5E4'), cyl(5, 5, 3, dx, h + 17, 6, 10), { uv: false }); }); G.add(P.build()); return shadowed(G); }
+      case 'robot': { P.add(std('#E5E7EB', { metalness: .4, roughness: .4 }), box(26, 26, 22, 0, 22, 0, 4), { uv: false }); P.add(std('#0F172A'), box(20, 12, 2, 0, 26, 11.5), { uv: false }); P.add(std('#64748B'), cyl(1, 1, 10, 0, 40, 0, 6), { uv: false });
+        [-9, 9].forEach(o => P.add(std('#334155'), cyl(5, 5, 4, 0, 0, 0, 10).rotateZ(Math.PI / 2).translate(o, 5, 0), { uv: false })); G.add(P.build());
+        const eye = new THREE.Mesh(new THREE.SphereGeometry(3, 8, 6), new THREE.MeshStandardMaterial({ color: '#22D3EE', emissive: '#22D3EE', emissiveIntensity: 1.6 })); eye.position.set(0, 26, 13); G.add(eye); return shadowed(G); }
       case 'tidewater': { const m = new THREE.Mesh(new THREE.BoxGeometry(T, 6, T), new THREE.MeshStandardMaterial({ color: '#2F8FC9', roughness: .15, metalness: .1, transparent: true, opacity: .92 })); m.position.y = 2; G.add(m); return G; }
       case 'container': { const c = e.color || '#2563EB'; P.add(std(c, { metalness: .35, roughness: .55 }), box(46, 40, 46, 0, 20, 0, 2), { uv: false }); for (let k = -18; k <= 18; k += 6) P.add(std(c, { metalness: .3, roughness: .6 }), box(2, 38, 47.5, k, 20, 0), { uv: false });
         G.add(P.build()); return shadowed(G); }
@@ -297,7 +309,10 @@ export function createAdv3D(canvas) {
     const nearL = [];
     objs.forEach((o, e) => {
       o.visible = !e.hidden && !e.got;
-      if (e.kind === 'block' || e.kind === 'cart' || e.kind === 'container') { const bx = (e.px != null ? e.px : e.x) * T + T / 2, bz = (e.py != null ? e.py : e.y) * T + T / 2; o.position.set(bx, e.kind === 'container' ? (e.lift || 0) : 0, bz); }
+      if (o.userData.flame) o.userData.flame.scale.y = .8 + Math.sin(t * 9 + e.x) * .3;
+      if (o.userData.potTop) o.userData.potTop.material.color.set(e.done ? '#A8481E' : '#6B4A2E');
+      if (o.userData.belt) o.userData.belt.rotation.z = [-Math.PI / 2, Math.PI, Math.PI / 2, 0][e.d || 0];   // اتجاه السير يتغير بلوحة التحكم
+      if (e.kind === 'block' || e.kind === 'cart' || e.kind === 'container' || e.kind === 'robot') { const bx = (e.px != null ? e.px : e.x) * T + T / 2, bz = (e.py != null ? e.py : e.y) * T + T / 2; o.position.set(bx, e.kind === 'container' ? (e.lift || 0) : 0, bz); }
       if (o.userData.lid) o.userData.lid.rotation.x += ((e.open ? -1.9 : 0) - o.userData.lid.rotation.x) * Math.min(1, dt * 6);
       if (o.userData.arm) o.userData.arm.rotation.z += ((e.on ? -.6 : .6) - o.userData.arm.rotation.z) * Math.min(1, dt * 10);
       if (o.userData.plate) { const pulse = V.pressed(e) ? 1 : 1 + Math.sin(t * 5) * .08; o.userData.plate.scale.set(pulse, 1, pulse); nearL.push([o.position.x, 30, o.position.z, .45]); }
