@@ -14,8 +14,8 @@ const webglOK = () => { try { const c = document.createElement('canvas'); return
 let createAdv3D = null; export const setAdv3D = f => { createAdv3D = f; };
 export const want3D = () => webglOK() && !WEAK && gfx.d3();
 
-const SOLID_KINDS = new Set(['npc', 'chest', 'block', 'gate', 'door', 'sign', 'fire', 'beacon', 'cage', 'tent', 'crates', 'barrel', 'boat', 'well', 'lever', 'banner', 'house', 'rot', 'tablet', 'crystal', 'beam', 'fence', 'pillar', 'cart', 'oil', 'basket', 'tidewater', 'container', 'console', 'robot', 'cauldron', 'jarshelf', 'tile']);
-const ACT_KINDS = new Set(['npc', 'chest', 'lever', 'sign', 'door', 'gate', 'cage', 'beacon', 'boat', 'fire', 'safe', 'block', 'well', 'tent', 'banner', 'house', 'rot', 'tablet', 'crystal', 'animal', 'pillar', 'site', 'beam', 'cart', 'oil', 'basket', 'container', 'console', 'cauldron', 'tile']);   // مغامرات قرى الصف الثامن: منجم (cart/oil/basket)، ميناء (container/console، والمد tidewater)
+const SOLID_KINDS = new Set(['npc', 'chest', 'block', 'gate', 'door', 'sign', 'fire', 'beacon', 'cage', 'tent', 'crates', 'barrel', 'boat', 'well', 'lever', 'banner', 'house', 'rot', 'tablet', 'crystal', 'beam', 'fence', 'pillar', 'cart', 'oil', 'basket', 'tidewater', 'container', 'console', 'robot', 'cauldron', 'jarshelf', 'tile', 'sundial']);
+const ACT_KINDS = new Set(['npc', 'chest', 'lever', 'sign', 'door', 'gate', 'cage', 'beacon', 'boat', 'fire', 'safe', 'block', 'well', 'tent', 'banner', 'house', 'rot', 'tablet', 'crystal', 'animal', 'pillar', 'site', 'beam', 'cart', 'oil', 'basket', 'container', 'console', 'cauldron', 'tile', 'sundial', 'soil']);   // مغامرات قرى الصف الثامن: منجم (cart/oil/basket)، ميناء (container/console، والمد tidewater)
 const esc = s => String(s).replace(/[&<>]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;' }[c]));
 const wait = ms => new Promise(r => setTimeout(r, ms));
 
@@ -61,13 +61,14 @@ export function runAdventure(def, onExit) {
   const tileAt = (x, y) => { if (y < 0 || y >= map.length || x < 0 || x >= map[0].length) return '#'; const k = key(S.area, x, y), o = S.tiles[k]; if (o) return o; return S.cut[k] ? '.' : map[y][x]; };
   const entAt = (x, y, skip) => ents.find(e => e !== skip && !e.hidden && !e.got && footprint(e, x, y) && solidEnt(e)) || ents.find(e => e !== skip && !e.hidden && !e.got && footprint(e, x, y));
   const RANK = { npc: 0, house: 3, cage: 2 };   // عند التداخل: الشخص أولاً، ثم الباب/الرافعة، ثم المبنى
-  const actAt = (x, y) => ents.filter(e => !e.hidden && !e.got && !e.deco && ACT_KINDS.has(e.kind) && !((e.kind === 'door' || e.kind === 'gate') && e.open) && footprint(e, x, y)).sort((a, b) => (RANK[a.kind] ?? 1) - (RANK[b.kind] ?? 1))[0];
+  const actAt = (x, y) => ents.filter(e => !e.hidden && !e.got && !e.deco && ACT_KINDS.has(e.kind) && !(e.kind === 'soil' && !e.canDig) && !((e.kind === 'door' || e.kind === 'gate') && e.open) && footprint(e, x, y)).sort((a, b) => (RANK[a.kind] ?? 1) - (RANK[b.kind] ?? 1))[0];
   function footprint(e, x, y) {
     if (e.kind === 'house') return x >= e.x && x < e.x + (e.w || 3) && y <= e.y && y > e.y - (e.h || 2);
     if (e.kind === 'block') return x === e.x && y === e.y;
     return x === e.x && y === e.y;
   }
-  const solidEnt = e => e && SOLID_KINDS.has(e.kind) && !e.follow && !((e.kind === 'gate' || e.kind === 'door' || e.kind === 'cage') && e.open);
+  // مزارع الأفلاج: الرمل الحار (hot) يُعبر في الظل فقط، والساقية المحفورة (soil) يملؤها الماء فتُغلق
+  const solidEnt = e => e && !e.hidden && (e.kind === 'hot' ? !e.shade : e.kind === 'soil' ? !!(e.dug && e.wet) : SOLID_KINDS.has(e.kind)) && !e.follow && !((e.kind === 'gate' || e.kind === 'door' || e.kind === 'cage') && e.open);
   const stoneAt = (x, y) => ents.some(e => e.kind === 'stone' && e.lit && !e.hidden && e.x === x && e.y === y);   // حجر خطوة ظاهر فوق الماء: يُمشى عليه
   const blocked = (x, y, skip) => (SOLID_TILES.has(tileAt(x, y)) && !stoneAt(x, y)) || solidEnt(entAt(x, y, skip));
   const solidAt = (fx, fy) => blocked(Math.floor(fx), Math.floor(fy));
@@ -191,6 +192,8 @@ export function runAdventure(def, onExit) {
     if (e.kind === 'sign' && e.text) return say([{ who: 'narrator', text: e.text }]);
     if (e.kind === 'lever') { A.set(e.id, { on: !e.on }); sfx('click'); if (area.onLever) area.onLever(A, e); return; }
     if (e.kind === 'rot') { A.set(e.id, { r: ((e.r || 0) + 1) % 4 }); sfx('click'); A.shake(.15); if (area.onRotate) area.onRotate(A, e); return; }
+    if (e.kind === 'sundial') { if (area.onSun) await area.onSun(A, e); return; }
+    if (e.kind === 'soil') { if (area.onSoil) await area.onSoil(A, e); return; }
     if (e.kind === 'tablet') { const n = (def.symbols || ['🌙', '☀️', '⭐', '🌴']).length; A.set(e.id, { sym: ((e.sym || 0) + 1) % n }); sfx('click'); if (area.onTablet) area.onTablet(A, e); return; }
     if (e.kind === 'chest' && !e.open) { A.set(e.id, { open: true }); sfx('win'); if (e.item) A.give(e.item, e.n || 1); return; }
     if ((e.kind === 'door' || e.kind === 'gate') && !e.open) {
@@ -374,7 +377,7 @@ export function runAdventure(def, onExit) {
         cutList: () => Object.keys(S.cut).filter(k => k.startsWith(S.area + ':')).map(k => k.slice(S.area.length + 1)),
         canCut: k => { const [x, y] = k.split(',').map(Number), ch = map[y][x]; return (ch === '"' && A.has(def.cutTool || 'sickle')) || (ch === 'R' && A.has(def.breakTool || 'hammer')); } });
     } else draw();
-    const f = front(), ft = !f && frontTile(); $('.advAct').hidden = !(f || ft) || locked; if (f) $('.advAct').textContent = f.kind === 'npc' || f.kind === 'animal' ? '💬' : f.kind === 'block' ? '👐' : f.kind === 'rot' ? '🔄' : '✋'; else if (ft) $('.advAct').textContent = ft.ch === '"' ? '🌾' : '🔨';
+    const f = front(), ft = !f && frontTile(); $('.advAct').hidden = !(f || ft) || locked; if (f) $('.advAct').textContent = f.kind === 'npc' || f.kind === 'animal' ? '💬' : f.kind === 'block' ? '👐' : f.kind === 'rot' ? '🔄' : f.kind === 'sundial' ? '☀️' : f.kind === 'soil' ? '⛏️' : '✋'; else if (ft) $('.advAct').textContent = ft.ch === '"' ? '🌾' : '🔨';
     raf = requestAnimationFrame(step);
   }
   function update(dt) {
@@ -435,7 +438,7 @@ export function runAdventure(def, onExit) {
     if (mark) { mark.t += .016; if (mark.t > .8) mark = null; else { ctx.strokeStyle = `rgba(255,255,255,${.8 - mark.t})`; ctx.lineWidth = 3; ctx.beginPath(); ctx.ellipse(mark.x * T + T / 2, mark.y * T + T * .7, 14 + mark.t * 20, 6 + mark.t * 8, 0, 0, 7); ctx.stroke(); } }
     ents.forEach(e => {
       if (e.hidden || (e.x < x0 - 3 || e.x > x1 + 3 || e.y < y0 - 1 || e.y > y1 + 3) && e.kind !== 'guard') return;
-      if (e.kind === 'plate' || e.kind === 'belt' || e.kind === 'honey' || e.kind === 'stone') { drawThing(ctx, e, t, A); return; }   // تحت البطل
+      if (e.kind === 'plate' || e.kind === 'belt' || e.kind === 'honey' || e.kind === 'stone' || e.kind === 'hot' || e.kind === 'soil') { drawThing(ctx, e, t, A); return; }   // تحت البطل
       if (e.kind === 'guard') { ctx.save(); drawCone(ctx, e, caught === e); ctx.restore(); list.push({ y: (e.py + 1) * T - 4, draw: () => person(e.px, e.py, e.look, e.ang, !!e.pause, e.ph, caught === e ? '!' : null) }); return; }
       if (e.kind === 'npc') { const nx = e.follow ? e.fx - .5 : e.x, ny = e.follow ? e.fy - .5 : e.y; list.push({ y: (ny + 1) * T - 4, draw: () => person(nx, ny, e.look || def.cast[e.who].look, e.face, !e.moving, e.ph || 0, e.mark ? e.mark(A) : null) }); return; }
       if (e.kind === 'hazard' || e.kind === 'animal') { const hx = e.kind === 'hazard' ? e.px : e.follow ? e.fx - .5 : e.x, hy = e.kind === 'hazard' ? e.py : e.follow ? e.fy - .5 : e.y;

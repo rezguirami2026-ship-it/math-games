@@ -146,3 +146,14 @@ body.v89 #panel .sheet { border-radius: 26px; margin: auto; max-width: 680px; bo
 .vm-tpl button.on { border-color: #F59E0B; background: #FFFBEB; box-shadow: 0 0 0 3px #FDE68A; } .vm-tpl button i { opacity: .45; font-style: normal; }
 .vm-tpl .mq-fr { font-size: 1em; } .vm-tpl .mq-fr > span { display: flex; align-items: center; justify-content: center; gap: 4px; padding: 3px 6px; }
 .vm-tpl .mq-pw sup button { min-width: 40px; height: 34px; font-size: 18px; vertical-align: super; }
+/* الآلة الحاسبة بزر π (الوحدة ٦ للصف الثامن) */
+.vm-calcBtn { font: 800 17px Cairo, sans-serif; border: 2px solid #CBD5E1; border-radius: 14px; padding: 6px 16px; background: #F8FAFC; color: #1E2433; cursor: pointer; box-shadow: 0 3px 0 #CBD5E1; }
+.vm-calc { position: fixed; left: 12px; bottom: 12px; z-index: 120; width: 300px; max-width: calc(100vw - 24px); padding: 10px; border-radius: 20px; background: #1E293B; box-shadow: 0 12px 30px rgba(0, 0, 0, .35); }
+.vm-calc[hidden] { display: none; }
+.vm-cscr { background: #D9F99D; border-radius: 12px; padding: 4px 10px; min-height: 58px; display: flex; flex-direction: column; align-items: flex-end; justify-content: center; font-family: Cairo, sans-serif; color: #1A2E05; overflow: hidden; }
+.vm-cscr small { font-size: 14px; opacity: .7; } .vm-cscr b { font-size: 26px; white-space: nowrap; }
+.vm-ckeys { display: grid; grid-template-columns: repeat(5, 1fr); gap: 6px; margin-top: 8px; }
+.vm-ckeys button { height: 42px; border-radius: 10px; border: 0; font: 900 20px Cairo, sans-serif; color: #fff; background: #334155; cursor: pointer; }
+.vm-ckeys .vm-cc { background: #B91C1C; } .vm-ckeys .vm-ceq { background: #16A34A; grid-column: span 2; } .vm-ckeys .vm-cx { background: #475569; }
+.vm-row button.vm-calcBtn { width: auto; height: 48px; padding: 0 14px; background: #FEF3C7; border-color: #F59E0B; box-shadow: 0 3px 0 #F59E0B; }
+@media (max-width: 520px) { .vm-calc { top: 12px; bottom: auto; left: 50%; transform: translateX(-50%); } .vm-ckeys button { height: 38px; } }

@@ -29,13 +29,14 @@ for (const id of ids) {
     await E(id => window.__villages.api.open(id), id);
     await sleep(600); await talkThrough();
     await until(() => E(() => !!document.querySelector('.vm .vm-scene')), 'لوحة المهمة');
-    for (let i = 0; i < 5; i++) {
-      await until(() => E(i => window.__vm && window.__vm.r && !window.__vm.done && document.querySelector('.vm header small')?.textContent.includes(['١', '٢', '٣', '٤', '٥'][i]), i), `الجولة ${i + 1}`);
+    for (let i = 0; i < 9; i++) {   // عدد الجولات من المهمة نفسها: تنتهي حين تُغلق لوحتها
+      await until(() => E(i => window.__vm && window.__vm.r && !window.__vm.done && document.querySelector('.vm header small')?.textContent.startsWith('الجولة ' + ['١', '٢', '٣', '٤', '٥', '٦', '٧', '٨', '٩'][i]), i), `الجولة ${i + 1}`);
       if (i === 1) await shot(`m_${id}`);
       // خطأ مقصود ثم الصحيح، من بيانات الجولة نفسها
       const res = await E(() => {
         const r = window.__vm.r, I = r.input, cand = [];
         if (I.type === 'pick') I.opts.forEach((_, k) => cand.push(k)); else if (I.type === 'blanks') cand.push(r.sol.map((v, i) => i ? v : v + 1), r.sol); else if (I.type === 'frac') { const fc = []; for (let w = 0; w <= 60; w++) { fc.push({ w, n: 0, d: 1 }); for (let d = 2; d <= 60; d++) for (let n = 1; n < d; n++) fc.push({ w, n, d }); } cand.push({ w: 0, n: 0, d: 0 }, ...fc); } else if (I.type === 'dial') for (let v = I.min; v <= I.max; v += I.step || 1) cand.push(Math.round(v * 1000) / 1000); else { for (let v = -2000; v <= 2000; v++) [1, 10, 100, 1000, 10000].forEach(d => cand.push(v / d)); for (let v = 1; v <= 100; v++) [100, 1000, 10000].forEach(m => cand.push(v * m, -v * m)); for (let v = 2001; v <= 20000; v++) cand.push(v / 100); }
+        if (I.type === 'num' && r.sol != null) cand.unshift(r.sol);   // أجوبة كبيرة أو بمنزلة من الآلة الحاسبة (الوحدة ٦)
         const right = cand.find(v => r.ok(v)), wrong = cand.find(v => !r.ok(v));
         window.__vm.answer(wrong); const bad = document.querySelector('.vm-msg.bad')?.textContent || '';
         window.__vm.answer(right); return { bad, good: !!document.querySelector('.vm-msg.good'), right };
@@ -43,6 +44,7 @@ for (const id of ids) {
       if (!res.bad.trim()) throw new Error(`الجولة ${i + 1}: الخطأ بلا تلميح`);
       if (!res.good) throw new Error(`الجولة ${i + 1}: الجواب الصحيح (${res.right}) لم يُقبل`);
       await E(() => document.querySelector('.vm .vm-go').click());
+      if (!(await E(() => !!document.querySelector('.vm .vm-scene')))) break;
     }
     await sleep(500); await talkThrough();
     // التحدي

@@ -14,7 +14,7 @@ const out = await p.evaluate(async ({ G, V, n }) => {
   for (const id of Object.keys(def.lessons)) {
     const m = await def.lessons[id](), probs = new Map(), add = k => probs.set(k, (probs.get(k) || 0) + 1);
     for (let k = 0; k < n; k++) {
-      for (let i = 0; i < 5; i++) {
+      for (let i = 0; i < (m.ROUNDS || 5); i++) {
         let r; try { r = m.make(i); } catch (e) { add(`جولة ${i + 1}: خطأ ${e.message}`); continue; }
         if (!r || !r.q || typeof r.ok !== 'function' || !r.hint) { add(`جولة ${i + 1}: ناقصة`); continue; }
         if (/[0-9]/.test(plain(r.q) + plain(r.hint))) add(`جولة ${i + 1}: رقم لاتيني`);
@@ -23,9 +23,9 @@ const out = await p.evaluate(async ({ G, V, n }) => {
         else if (I.type === 'dial') for (let v = I.min ?? -20; v <= (I.max ?? 20) && !found; v += I.step || 1) found = r.ok(Math.round(v * 1000) / 1000);
         else if (I.type === 'blanks') { found = Array.isArray(r.sol) && r.ok(r.sol); if (found && r.ok(r.sol.map((v, j) => j ? v : v + 1))) add(`جولة ${i + 1}: جواب خاطئ مقبول`); if (found && !I.neg && r.sol.some(v => v < 0)) add(`جولة ${i + 1}: فراغ سالب بلا إشارة`); if ((I.tpl.match(/\{\}/g) || []).length !== (r.sol || []).length) add(`جولة ${i + 1}: عدد الفراغات لا يطابق الحل`); }
         else if (I.type === 'frac') { const a = fcands.find(v => r.ok(v)); found = !!a; if (a && a.w && !I.mixed) add(`جولة ${i + 1}: الجواب عدد كسري ولوحة الكسر بلا عدد صحيح`); if (a && !a.w && a.n === 0) add(`جولة ${i + 1}: جواب لوحة الكسر صفر`); }
-        else found = cands.some(v => r.ok(v));
+        else found = (r.sol != null && r.ok(r.sol)) || cands.some(v => r.ok(v));
         if (!found) add(`جولة ${i + 1}: لا جواب صحيح ممكن`);
-        if (I.type === 'num' && found) { const a = cands.find(v => r.ok(v)); if (a < 0 && !I.neg) add(`جولة ${i + 1}: الجواب سالب واللوحة بلا إشارة سالبة`); if (a % 1 && !I.dot) add(`جولة ${i + 1}: الجواب عشري واللوحة بلا فاصلة`); }
+        if (I.type === 'num' && found) { const a = r.sol != null && r.ok(r.sol) ? r.sol : cands.find(v => r.ok(v)); if (a < 0 && !I.neg) add(`جولة ${i + 1}: الجواب سالب واللوحة بلا إشارة سالبة`); if (a % 1 && !I.dot) add(`جولة ${i + 1}: الجواب عشري واللوحة بلا فاصلة`); if (String(Math.abs(a)).replace('.', '').length > 7) add(`جولة ${i + 1}: الجواب أطول من سبعة أرقام`); }
       }
       let items; try { items = m.challenge(); } catch (e) { add('التحدي: خطأ ' + e.message); continue; }
       if (items.length < 8) add('التحدي: أقل من ٨ أسئلة');

@@ -147,6 +147,21 @@ export function createAdv3D(canvas) {
         const c = document.createElement('canvas'); c.width = c.height = 64; const g = c.getContext('2d'); g.fillStyle = '#3B2412'; g.font = '900 44px Cairo'; g.textAlign = 'center'; g.fillText(e.label || '', 32, 48);
         const tx = new THREE.CanvasTexture(c), top = new THREE.Mesh(new THREE.PlaneGeometry(T - 14, T - 14), new THREE.MeshBasicMaterial({ map: tx, transparent: true })); top.rotation.x = -Math.PI / 2; top.position.y = 14.5; G.add(top); return shadowed(G); }
       case 'stone': { const m = new THREE.Mesh(new THREE.CylinderGeometry(T * .4, T * .42, 8, 16).scale(1, 1, .75), new THREE.MeshStandardMaterial({ color: '#CBBFA8', emissive: '#FDE68A', emissiveIntensity: .25, roughness: .7 })); m.position.y = 3; G.add(m); G.userData.stone = 1; return G; }
+      case 'hot': {   // رمل حار: توهج برتقالي في الشمس، وظل داكن حين يقع عليه ظل
+        const heat = new THREE.Mesh(new THREE.PlaneGeometry(T, T).rotateX(-Math.PI / 2), new THREE.MeshBasicMaterial({ color: '#FF7A2E', transparent: true, opacity: .16, depthWrite: false })); heat.position.y = .8; G.add(heat);
+        const shade = new THREE.Mesh(new THREE.PlaneGeometry(T, T).rotateX(-Math.PI / 2), new THREE.MeshBasicMaterial({ color: '#2A1E12', transparent: true, opacity: .38, depthWrite: false })); shade.position.y = .9; G.add(shade);
+        G.userData.hot = { heat, shade }; return G; }
+      case 'soil': {   // ساقية تُحفر: تربة محروثة ← خندق ← ماء، وإطار يدل على ما يُحفر
+        const tilled = new THREE.Mesh(box(T - 2, 3, T - 2, 0, 1.5, 0), material('wood', '#8B6B47')); G.add(tilled);
+        const trench = new THREE.Mesh(box(T + .5, 1, T + .5, 0, .5, 0), std('#3F3022', { roughness: 1 })); G.add(trench);
+        const water = new THREE.Mesh(box(T - 6, 2, T - 6, 0, 1.6, 0), new THREE.MeshStandardMaterial({ color: '#3B82C4', roughness: .1, metalness: .2, emissive: '#1E4E7A', emissiveIntensity: .2 })); G.add(water);
+        const ring = new THREE.Mesh(new THREE.RingGeometry(T * .36, T * .46, 4, 1, Math.PI / 4).rotateX(-Math.PI / 2), new THREE.MeshBasicMaterial({ color: '#FACC15', transparent: true, opacity: .8, side: THREE.DoubleSide, depthWrite: false })); ring.position.y = 5; G.add(ring);
+        G.userData.soil = { tilled, trench, water, ring }; return G; }
+      case 'sundial': {   // الأثر: قاعدة حجرية وعمود، وظله يدور مع وقت النهار
+        P.add(material('stone', '#B9B2A8'), cyl(22, 24, 10, 0, 5, 0, 18)); P.add(material('wood', '#5C3A20'), cyl(2.5, 3, 40, 0, 30, 0, 8)); G.add(P.build());
+        const shadow = new THREE.Mesh(new THREE.PlaneGeometry(22, 5).translate(11, 0, 0).rotateX(-Math.PI / 2), new THREE.MeshBasicMaterial({ color: '#000', transparent: true, opacity: .45, depthWrite: false })); shadow.position.y = 10.5; G.add(shadow);
+        const sun = new THREE.Mesh(new THREE.SphereGeometry(6, 12, 8), new THREE.MeshStandardMaterial({ color: '#FBBF24', emissive: '#F59E0B', emissiveIntensity: 1.4 })); G.add(sun);
+        G.userData.dial = { shadow, sun }; return shadowed(G); }
       case 'honey': { const m = new THREE.Mesh(box(T + .5, 3, T + .5, 0, 1.5, 0), new THREE.MeshStandardMaterial({ color: '#F2A90C', emissive: '#8A5203', emissiveIntensity: .3, roughness: .04, metalness: .2 })); G.add(m); return G; }
       case 'cauldron': { P.add(material('stone', '#78716C'), cyl(34, 38, 16, 0, 8, 0, 18)); P.add(std('#C27A3A', { metalness: .65, roughness: .3 }), new THREE.SphereGeometry(30, 20, 12, 0, Math.PI * 2, Math.PI * .45, Math.PI * .55).scale(1, .9, 1).translate(0, 50, 0), { uv: false });
         P.add(std('#8A4F1F', { metalness: .6, roughness: .35 }), new THREE.TorusGeometry(29, 2.6, 8, 24).rotateX(Math.PI / 2).translate(0, 55, 0), { uv: false }); G.add(P.build());
@@ -317,6 +332,9 @@ export function createAdv3D(canvas) {
       if (o.userData.potTop) o.userData.potTop.material.color.set(e.done ? '#A8481E' : '#6B4A2E');
       if (o.userData.belt) o.userData.belt.rotation.z = [-Math.PI / 2, Math.PI, Math.PI / 2, 0][e.d || 0];   // اتجاه السير يتغير بلوحة التحكم
       if (o.userData.stone) o.visible = !!e.lit && !e.hidden;
+      if (o.userData.hot) { o.userData.hot.shade.visible = !!e.shade; o.userData.hot.heat.visible = !e.shade; o.userData.hot.heat.material.opacity = .13 + Math.sin(t * 2 + e.x + e.y) * .04; }
+      if (o.userData.soil) { const q = o.userData.soil; q.tilled.visible = !e.dug; q.trench.visible = !!e.dug; q.water.visible = !!(e.dug && e.wet); q.ring.visible = !!e.canDig; q.ring.material.opacity = .5 + Math.sin(t * 5) * .35; }
+      if (o.userData.dial) { const k = e.sun || 0, d = o.userData.dial; d.shadow.rotation.y = [Math.PI, Math.PI / 2, 0][k]; d.shadow.scale.x = k === 1 ? .4 : 1; d.sun.position.set([26, 0, -26][k], k === 1 ? 70 : 50, k === 1 ? 16 : 0); }
       if (e.kind === 'block' || e.kind === 'cart' || e.kind === 'container' || e.kind === 'robot' || e.kind === 'tile') { const bx = (e.px != null ? e.px : e.x) * T + T / 2, bz = (e.py != null ? e.py : e.y) * T + T / 2; o.position.set(bx, e.kind === 'container' ? (e.lift || 0) : 0, bz); }
       if (o.userData.lid) o.userData.lid.rotation.x += ((e.open ? -1.9 : 0) - o.userData.lid.rotation.x) * Math.min(1, dt * 6);
       if (o.userData.arm) o.userData.arm.rotation.z += ((e.on ? -.6 : .6) - o.userData.arm.rotation.z) * Math.min(1, dt * 10);

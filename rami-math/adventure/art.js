@@ -135,6 +135,23 @@ export function drawThing(c, e, t, A) {
       c.fillStyle = `rgba(253,230,138,${glow * .5})`; c.beginPath(); c.ellipse(x, y - T / 2, T * .55, T * .42, 0, 0, 7); c.fill();
       c.fillStyle = '#CBBFA8'; c.beginPath(); c.ellipse(x, y - T / 2, T * .4, T * .3, 0, 0, 7); c.fill(); c.strokeStyle = '#8C7A62'; c.lineWidth = 2; c.stroke();
       c.strokeStyle = `rgba(15,118,110,${glow + .2})`; c.lineWidth = 2; c.beginPath(); c.moveTo(x - 8, y - T / 2); c.lineTo(x + 8, y - T / 2); c.moveTo(x, y - T / 2 - 6); c.lineTo(x, y - T / 2 + 6); c.stroke(); break; }
+    case 'hot': {   // رمل حار (مزارع الأفلاج): يتوهج ويتموّج ما دام في الشمس، ويُعبر حين يقع عليه ظل (e.shade)
+      const bx = x - T / 2, by = y - T;
+      if (e.shade) { c.fillStyle = 'rgba(52,40,28,.34)'; c.beginPath(); c.roundRect(bx + 1, by + 1, T - 2, T - 2, 8); c.fill(); break; }
+      c.fillStyle = `rgba(255,120,40,${.13 + Math.sin(t * 2 + e.x + e.y) * .04})`; c.fillRect(bx, by, T, T);
+      c.strokeStyle = 'rgba(255,240,200,.45)'; c.lineWidth = 1.3; for (let k = 0; k < 2; k++) { const yy = by + 14 + k * 18 + Math.sin(t * 3 + e.x) * 2; c.beginPath(); c.moveTo(bx + 6, yy); c.quadraticCurveTo(bx + T / 2, yy - 5 + Math.sin(t * 4 + k) * 3, bx + T - 6, yy); c.stroke(); } break; }
+    case 'soil': {   // ساقية تُحفر بالمسحاة: تربة، ثم خندق، ثم ماء يجري (e.wet)
+      const bx = x - T / 2, by = y - T;
+      if (!e.dug) { c.fillStyle = '#9B7B55'; c.fillRect(bx + 1, by + 1, T - 2, T - 2); c.strokeStyle = 'rgba(70,45,20,.35)'; c.lineWidth = 2; for (let k = 1; k < 4; k++) { c.beginPath(); c.moveTo(bx + 4, by + k * 12); c.lineTo(bx + T - 4, by + k * 12); c.stroke(); }
+        if (e.canDig) { c.strokeStyle = `rgba(250,204,21,${.55 + Math.sin(t * 5) * .35})`; c.lineWidth = 3; c.setLineDash([6, 5]); c.strokeRect(bx + 4, by + 4, T - 8, T - 8); c.setLineDash([]); } break; }
+      c.fillStyle = '#4A3828'; c.fillRect(bx, by, T, T); c.fillStyle = '#6B5240'; c.fillRect(bx, by, T, 5); c.fillRect(bx, by + T - 5, T, 5);
+      if (e.wet) { c.fillStyle = '#3B82C4'; c.fillRect(bx + 3, by + 6, T - 6, T - 12); c.strokeStyle = 'rgba(255,255,255,.45)'; c.lineWidth = 1.5; const o = (t * 18 + e.x * 9 + e.y * 5) % 30; c.beginPath(); c.moveTo(bx + 6 + o * .4, by + 18); c.lineTo(bx + 16 + o * .4, by + 18); c.moveTo(bx + 18, by + 30 - o * .2); c.lineTo(bx + 28, by + 30 - o * .2); c.stroke(); }
+      break; }
+    case 'sundial': {   // الأثر: مزولة حجرية يدل ظل عمودها على وقت الماء (e.sun: ٠ صباح، ١ ظهر، ٢ عصر)
+      sh(20); c.fillStyle = '#B9B2A8'; c.beginPath(); c.ellipse(x, y - 12, 22, 9, 0, 0, 7); c.fill(); c.fillStyle = '#9C948A'; c.fillRect(x - 22, y - 12, 44, 6);
+      const sd = [[-1, 0], [0, -1], [1, 0]][e.sun || 0], L = (e.sun || 0) === 1 ? 8 : 20; c.strokeStyle = 'rgba(40,30,20,.6)'; c.lineWidth = 4; c.lineCap = 'round'; c.beginPath(); c.moveTo(x, y - 12); c.lineTo(x + sd[0] * L, y - 12 + sd[1] * L * .45); c.stroke();
+      c.strokeStyle = '#5C3A20'; c.lineWidth = 4; c.beginPath(); c.moveTo(x, y - 12); c.lineTo(x, y - 38); c.stroke(); c.lineCap = 'butt';
+      const sx = x - sd[0] * 26, sy = y - 50 - ((e.sun || 0) === 1 ? 10 : 0); c.fillStyle = '#FBBF24'; c.beginPath(); c.arc(sx, sy, 7, 0, 7); c.fill(); c.strokeStyle = '#F59E0B'; c.lineWidth = 2; for (let k = 0; k < 8; k++) { const a = k * Math.PI / 4 + t * .5; c.beginPath(); c.moveTo(sx + Math.cos(a) * 9, sy + Math.sin(a) * 9); c.lineTo(sx + Math.cos(a) * 13, sy + Math.sin(a) * 13); c.stroke(); } break; }
     case 'honey': {   // عسل مسكوب على الأرض: لامع ولزج، يُنزلق عليه البطل حتى يصطدم بشيء
       const bx = x - T / 2, by = y - T, sh2 = (Math.sin(t * 2 + e.x * .7 + e.y) + 1) / 2; c.fillStyle = '#D98E04'; c.beginPath(); c.roundRect(bx + 1, by + 1, T - 2, T - 2, 10); c.fill();
       const hg = c.createRadialGradient(x - 8, by + T * .35, 2, x, by + T / 2, T * .7); hg.addColorStop(0, '#FDE68A'); hg.addColorStop(.5, '#F5B70A'); hg.addColorStop(1, '#C27803'); c.fillStyle = hg; c.beginPath(); c.roundRect(bx + 4, by + 4, T - 8, T - 8, 9); c.fill();

@@ -2,7 +2,7 @@
 // ثم «تحدي الدرس» (محرك missions/challenge.js بأسئلته المتنوعة) ثم شاشة النجوم.
 // spec = { title, icon, who: { name, face }, intro: [سطور], rounds, make(i) → جولة, draw(g, w, h, t, S), outro: [سطور],
 //          challenge: { title, make: () => items } }
-// الجولة: { q: نص، input: { type: 'num'|'pick'|'dial'|'frac' (و mixed للعدد الكسري)|'blanks' (tpl بفراغات {}، والجواب مصفوفة أعداد؛ r.sol للاختبار), ... }, ok(v): صحيح؟، hint: سؤال يوجّه، bad(v): رد على خطأ بعينه، data: لرسم المشهد }
+// الجولة: { q: نص، input: { type: 'num' (و calc: آلة حاسبة بزر π كما في الكتاب)|'pick'|'dial'|'frac' (و mixed للعدد الكسري)|'blanks' (tpl بفراغات {}، والجواب مصفوفة أعداد؛ r.sol للاختبار), ... }, ok(v): صحيح؟، hint: سؤال يوجّه، bad(v): رد على خطأ بعينه، data: لرسم المشهد }
 import { runChallenge } from '../missions/challenge.js';
 import { sfx } from '../core/sound.js';
 import { addGems } from '../world/decor.js';
@@ -64,7 +64,7 @@ function rounds(spec, api) {
     }
     let pad = null;
     function input(I) {
-      const box2 = $('.vm-in');
+      const box2 = $('.vm-in'); box.querySelectorAll('.vm-calc').forEach(x => x.remove());
       if (I.type === 'pick') {
         box2.innerHTML = `<div class="vm-opts">${I.opts.map((o, k) => `<button data-k="${k}">${o}</button>`).join('')}</div>`;
         box2.querySelectorAll('button').forEach(b => b.onclick = () => answer(+b.dataset.k));
@@ -117,11 +117,45 @@ function rounds(spec, api) {
           sfx('pick'); show();
         });
         show();
+        if (I.calc) calc(box2, box);
       }
     }
     window.__vm = { get r() { return S.r; }, answer, get done() { return !!S.done; } };   // للاختبار الآلي (tests/villages-play.mjs)
     requestAnimationFrame(() => { size(); start(); raf = requestAnimationFrame(loop); });
   });
+}
+
+/* آلة حاسبة بزر π (الوحدة ٦ للصف الثامن: «استخدم زر π في الآلة الحاسبة»): تحسب فقط، والطالب يقرّب ويكتب جوابه بنفسه */
+function calc(host, card) {
+  const b = document.createElement('button'); b.className = 'vm-calcBtn'; b.textContent = '🧮 π'; b.setAttribute('aria-label', 'الآلة الحاسبة'); b.title = 'الآلة الحاسبة'; (host.querySelector('.vm-row') || host).prepend(b);
+  const K = ['7', '8', '9', '÷', '(', '4', '5', '6', '×', ')', '1', '2', '3', '−', '²', '0', '.', 'π', '+', '√'];
+  const box = el(`<div class="vm-calc" hidden><div class="vm-cscr" dir="ltr"><small></small><b>٠</b></div><div class="vm-ckeys" dir="ltr">${K.map(k => `<button data-c="${k}">${k === '.' ? '٫' : /\d/.test(k) ? ar(+k) : k}</button>`).join('')}
+    <button data-c="C" class="vm-cc">C</button><button data-c="<">⌫</button><button data-c="=" class="vm-ceq">=</button><button data-c="x" class="vm-cx">✕</button></div></div>`);
+  card.querySelector('.vm-card').append(box);
+  let e = '', res = '';
+  const hin = s => s.replace(/\d/g, d => ar(+d)).replace(/\./g, '٫');
+  const show = () => { box.querySelector('small').textContent = res ? hin(e) + ' =' : ''; box.querySelector('b').textContent = res ? hin(res) : (e ? hin(e) : '٠'); };
+  b.onclick = () => { box.hidden = !box.hidden; sfx('pick'); };
+  box.querySelectorAll('[data-c]').forEach(q => q.onclick = () => {
+    const c = q.dataset.c; sfx('pick');
+    if (c === 'x') { box.hidden = true; return; }
+    if (c === 'C') { e = res = ''; } else if (c === '<') { if (res) res = ''; else e = e.slice(0, -1); }
+    else if (c === '=') { const v = evalCalc(e); res = v == null ? 'خطأ' : String(+v.toPrecision(10)).replace('-', '−'); }
+    else { if (res) { e = res !== 'خطأ' && /[+−×÷²]/.test(c) ? res : ''; res = ''; } if (e.length < 40) e += c; }
+    show();
+  });
+  show();
+}
+/* حساب عبارة الآلة: + − × ÷ وأقواس و² و√ وπ، والضرب ضمني بين «٢π» أو «٣(٤)» */
+export function evalCalc(s) {
+  const T = s.match(/\d+\.?\d*|\.\d+|[+−×÷()²√π]/g) || []; let i = 0;
+  const peek = () => T[i], eat = () => T[i++];
+  const prim = () => { const t = eat(); if (t == null) throw 0; if (t === 'π') return Math.PI; if (t === '(') { const v = sum(); if (peek() === ')') eat(); return v; } if (/^[\d.]/.test(t)) return +t; throw 0; };
+  const post = () => { let v = prim(); while (peek() === '²') { eat(); v *= v; } return v; };
+  const un = () => { if (peek() === '−') { eat(); return -un(); } if (peek() === '√') { eat(); const v = un(); if (v < 0) throw 0; return Math.sqrt(v); } return post(); };
+  const prod = () => { let v = un(); for (;;) { const t = peek(); if (t === '×') { eat(); v *= un(); } else if (t === '÷') { eat(); const d = un(); if (!d) throw 0; v /= d; } else if (t != null && /^[\d.(π√]/.test(t)) v *= un(); else return v; } };
+  const sum = () => { let v = prod(); for (;;) { const t = peek(); if (t === '+') { eat(); v += prod(); } else if (t === '−') { eat(); v -= prod(); } else return v; } };
+  try { const v = sum(); return i === T.length && isFinite(v) ? v : null; } catch (x) { return null; }
 }
 
 /* شاشة النهاية: النجوم والجواهر */
