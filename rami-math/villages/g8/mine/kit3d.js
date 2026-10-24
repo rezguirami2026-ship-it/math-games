@@ -28,7 +28,7 @@ export function kit3d(THREE, { high, def: D }) {
   // ٢. النخيل والإنارة والبئر
   root.add(palms(D.PALMS.map(([x, y, s]) => ({ x, y, s }))));
   // بساتين نخيل خارج حدود القرية (شرقاً وغرباً وجنوباً) تملأ الأفق
-  { const ring = []; for (let i = 0; i < 70; i++) { const side = i % 3, u = rnd(i, 21), v = rnd(i, 22);
+  if (!D._inWorld) { const ring = []; for (let i = 0; i < 70; i++) { const side = i % 3, u = rnd(i, 21), v = rnd(i, 22);
       ring.push(side === 0 ? { x: -60 - v * 500, y: 500 + u * 1500, s: .9 + v * .4 } : side === 1 ? { x: W + 60 + v * 500, y: 500 + u * 1500, s: .9 + v * .4 } : { x: u * W, y: D.size.h + 60 + v * 500, s: .9 + v * .4 }); }
     root.add(palms(ring)); }
   const lamps = streetLamps(D.LAMPS.map(([x, y]) => ({ x, y }))); lamps.setLit(false); root.add(lamps.group);

@@ -91,8 +91,20 @@ export function createView3D(canvas, grid, def, opts = {}) {
     marker.visible = !!goal;
     if (goal) { marker.position.set(goal.x, 0, goal.y); gem.position.y = (goal.mh || 150) + Math.sin(t * 2.4) * 8; gem.rotation.y = t * 1.6; ring.material.opacity = .55 + .3 * Math.sin(t * 3); }
     if (st.dest) { dest.position.x = st.dest.x; dest.position.z = st.dest.y; dest.material.opacity = Math.max(0, st.dest.k); dest.scale.setScalar(1.6 - st.dest.k * .6); } else dest.material.opacity = 0;
+    fadeBetween(h);
     if (K.update) K.update(t, st, cam);
     if (comp) comp.render(); else r.render(sc, cam);
+  }
+  // ما بين الكاميرا والبطل (مبنى، نخلة، سور) يصير شفافاً بنسخة من مادته، ويعود حين يبتعد البطل؛ والشبكات الضخمة المدموجة لا تُمسّ
+  const fadeRay = new THREE.Raycaster(), fadeDir = new THREE.Vector3(), faded = new Set(), fadeMats = new WeakMap(); let fadeN = 0;
+  const ghostOf = m => { let g = fadeMats.get(m); if (!g) { g = m.clone(); g.transparent = true; g.opacity = .28; g.depthWrite = false; fadeMats.set(m, g); } return g; };
+  function fadeBetween(h) {
+    if (++fadeN % 3) return;
+    const now = new Set();
+    [30, 95].forEach(hh => { fadeDir.set(h.x, hh, h.y).sub(cam.position); const d = fadeDir.length(); fadeDir.normalize(); fadeRay.set(cam.position, fadeDir); fadeRay.far = d - 26;
+      fadeRay.intersectObject(K.group, true).forEach(x => { const o = x.object; if (!o.isMesh || !o.geometry) return; if (!o.geometry.boundingSphere) o.geometry.computeBoundingSphere(); if (o.geometry.boundingSphere.radius < 650) now.add(o); }); });
+    faded.forEach(o => { if (!now.has(o)) { o.material = o.userData.solidMat; faded.delete(o); } });
+    now.forEach(o => { if (faded.has(o)) return; o.userData.solidMat = o.material; o.material = Array.isArray(o.material) ? o.material.map(ghostOf) : ghostOf(o.material); faded.add(o); });
   }
   const ray = new THREE.Raycaster(), ndc = new THREE.Vector2(), plane = new THREE.Plane(new THREE.Vector3(0, 1, 0), 0), hit = new THREE.Vector3();
   function pick(cx, cy) { const b = canvas.getBoundingClientRect(); ndc.set(((cx - b.left) / b.width) * 2 - 1, -((cy - b.top) / b.height) * 2 + 1); ray.setFromCamera(ndc, cam); return ray.ray.intersectPlane(plane, hit) ? { x: hit.x, y: hit.z } : null; }

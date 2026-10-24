@@ -6,6 +6,7 @@
 import { CAM, pattern, upright, signboard, stoneBox, sidrCached, boxShadow, shade } from '../world/art.js';
 
 export const CW = 420;   // عرض الوادي بين قريتين
+export const SOUTH = 420;   // صحراء يمشي فيها البطل أمام القرى (جنوبها) على طول العالم
 const NEAR = 2600;       // ما يُرسم من القرى حول البطل (بكسل)
 
 export function composeWorld(entries) {
@@ -21,7 +22,9 @@ export function composeWorld(entries) {
       x += CW;
     }
   });
-  const H = Math.max(...regions.map(r => r.def.size.h)), W = x;
+  const VH = Math.max(...regions.map(r => r.def.size.h)), H = VH + SOUTH, W = x;
+  // زينة الصحراء الجنوبية: سدر وصخور وكثبان صغيرة (لا في الأودية، فسورها يمتد جنوباً)
+  const DESERT = []; for (let gx = 120, k = 0; gx < W - 80; gx += 170 + (k * 53) % 120, k++) { if (connectors.some(C => gx > C.x0 - 40 && gx < C.x1 + 40)) continue; DESERT.push({ x: gx, y: VH + 90 + (k * 97) % (SOUTH - 160), kind: ['sidr', 'rock', 'sidr', 'dune', 'rock'][k % 5], s: .8 + (k % 4) * .12 }); }
   const shift = (o, ox) => ({ ...o, x: o.x + ox });
   const regionAt = gx => { let best = regions[0]; regions.forEach(r => { if (gx >= r.ox - CW / 2) best = r; }); return best; };
 
@@ -35,6 +38,7 @@ export function composeWorld(entries) {
     (d.walkers || []).forEach(w => walkers.push({ ...w, path: w.path.map(([a, b]) => [a + o, b]) })); });
   connectors.forEach(C => { solids.push({ x: C.x0, y: 0, w: CW, h: C.y0 - 28 }, { x: C.x0, y: C.y1 + 28, w: CW, h: H - C.y1 - 28 }); });
   if (!connectors.length || !connectors[connectors.length - 1].last) solids.push({ x: W - 4, y: 0, w: 4, h: H });
+  DESERT.forEach(d => { if (d.kind !== 'dune') obstacles.push({ x: d.x, y: d.y - 4, r: d.kind === 'sidr' ? 16 : 20 }); });
 
   // حياة القرى: كل قرية تُحدَّث بنسخة من الحالة إحداثياتها محلية، وما تضيفه من مارّة (أطفال، دراجة، جالسون) يُعاد مزاحاً
   const wrapped = new WeakMap();
@@ -44,7 +48,7 @@ export function composeWorld(entries) {
   const near = (R, hx, d = NEAR) => hx > R.ox - d && hx < R.ox + R.w + d;
 
   const def = {
-    id: 'world', size: { w: W, h: H }, regions, connectors, regionAt,
+    id: 'world', size: { w: W, h: H }, VH, DESERT, regions, connectors, regionAt,
     start: { ...regions[0].def.start }, mood: regions[0].def.mood,
     solids, obstacles, stations, people, walkers,
     lessons: Object.assign({}, ...regions.map(R => R.def.lessons || {})),
@@ -68,6 +72,7 @@ function kit2dWorld(D) {
   const local = (R, c, f) => { c.save(); c.translate(R.ox, 0); CAM.x -= R.ox; try { f(); } finally { CAM.x += R.ox; c.restore(); } };
   function ground(g, x0, y0, w, h) {
     D.regions.forEach(R => { if (R.ox > x0 + w || R.ox + R.w < x0) return; g.save(); g.beginPath(); g.rect(R.ox, 0, R.w, H); g.clip(); g.translate(R.ox, 0); kitOf(R).ground(g, x0 - R.ox, y0, w, h); g.restore(); });
+    if (y0 + h > D.VH) desert(g, x0, w, D);
     D.connectors.forEach(C => { if (C.x0 > x0 + w || C.x1 < x0) return; g.save(); g.beginPath(); g.rect(C.x0, 0, CW, H); g.clip(); wadi(g, C, H); g.restore(); });
   }
   function items(t, st) {
@@ -75,6 +80,7 @@ function kit2dWorld(D) {
     vis(st).forEach(R => { const s = D._bindSt(R, st);
       kitOf(R).items(t, s).forEach(i => out.push({ x: i.x != null ? i.x + R.ox : undefined, y: i.y, draw: c => local(R, c, () => i.draw(c)) })); });
     D.connectors.forEach(C => { if (Math.abs(st.hero.x - C.wx) < NEAR) out.push(...connectorItems(C, t, H)); });
+    D.DESERT.forEach(d => { if (Math.abs(st.hero.x - d.x) < NEAR && d.kind !== 'dune') out.push({ x: d.x, y: d.y, draw: c => d.kind === 'sidr' ? sidrCached(c, d.x, d.y, d.s, t) : rocks(c, d.x, d.y, d.s) }); });
     return out;
   }
   return {
@@ -84,6 +90,19 @@ function kit2dWorld(D) {
     station: (c, s, t, st) => { const R = s._R; local(R, c, () => kitOf(R).station(c, s._local, t, D._bindSt(R, st))); }
   };
 }
+
+/* الصحراء أمام القرى: رمل بتموجات، وطرف يلتقي بعشب القرى، وكثبان صغيرة */
+function desert(g, x0, w, D) {
+  const y = D.VH, H = D.size.h, edge = g.createLinearGradient(0, y - 10, 0, y + 40);
+  g.fillStyle = '#E8CF9E'; g.fillRect(x0, y, w, H - y); g.fillStyle = pattern(g, 'sand'); g.fillRect(x0, y, w, H - y);
+  edge.addColorStop(0, 'rgba(156,196,106,.9)'); edge.addColorStop(1, 'rgba(232,207,158,0)'); g.fillStyle = edge; g.fillRect(x0, y - 10, w, 50);
+  g.strokeStyle = 'rgba(176,138,90,.35)'; g.lineWidth = 2;
+  for (let yy = y + 60; yy < H - 20; yy += 44) { g.beginPath(); for (let xx = x0 - (x0 % 40); xx < x0 + w + 40; xx += 40) g.lineTo(xx, yy + Math.sin(xx * .013 + yy) * 7); g.stroke(); }
+  D.DESERT.filter(d => d.kind === 'dune' && d.x > x0 - 200 && d.x < x0 + w + 200).forEach(d => { const gr = g.createRadialGradient(d.x - 20, d.y - 10, 4, d.x, d.y, 110); gr.addColorStop(0, '#F3DDB0'); gr.addColorStop(1, 'rgba(214,180,120,0)'); g.fillStyle = gr; g.beginPath(); g.ellipse(d.x, d.y, 120, 46, 0, 0, 7); g.fill(); });
+  g.fillStyle = 'rgba(160,120,70,.35)'; g.fillRect(x0, H - 8, w, 8);
+}
+/* صخرتان أو ثلاث */
+function rocks(c, x, y, s) { upright(c, x, y, cc => { [[-12, 0, 16], [10, 2, 12], [0, -6, 10]].forEach(([dx, dy, r], i) => { cc.fillStyle = ['#A8A29E', '#8C7A62', '#C4B8A8'][i]; cc.beginPath(); cc.ellipse(x + dx * s, y + dy * s - r * s * .5, r * s, r * s * .7, 0, 0, 7); cc.fill(); }); }); }
 
 /* أرض الوادي: رمل وتلال الحافة الشمالية، ومجرى سيل جاف بحصى، والطريق جسر بحاجزين فوقه */
 function wadi(g, C, H) {
@@ -126,6 +145,9 @@ function kit3dWorld(THREE, o, D) {
   ensureLib().then(L => {
     gates.forEach(G => { G.g = gate3D(THREE, G.C, L, D.size.h); root.add(G.g.group); });
     try { root.add(L.mountains({ x0: 0, z0: 0, x1: D.size.w, z1: D.size.h })); } catch (e) {}
+    const P = new L.Parts(), rk = [L.material('stone', '#A8A29E'), L.material('stone', '#8C7A62')];
+    D.DESERT.forEach((d, k) => { if (d.kind === 'sidr') root.add(L.sidrTree(d.x, d.y, d.s)); else if (d.kind === 'rock') [[-12, 0, 16], [10, 2, 12]].forEach(([dx, dy, r], i) => P.add(rk[i], new THREE.DodecahedronGeometry(r * d.s, 0).scale(1.2, .75, 1).translate(d.x + dx, r * .5, d.y + dy))); });
+    root.add(P.build());
   });
   let pending = false;
   function ensure(hx) {

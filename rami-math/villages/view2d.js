@@ -44,7 +44,11 @@ export function createView2D(canvas, grid, def) {
       list.push({ y: q.y, draw: c => person(c, q.look, q.x, q.y, { dir, anim: st.talking === q.id ? 'talk' : null, animT: (t * .8) % 1 }) }); });
     (st.walkers || []).concat(st.walkersExtra || []).forEach(w => list.push({ y: w.y, draw: c => { if (w.bike) upright(c, w.x, w.y, cc => bike2D(cc, w)); person(c, w.look, w.x, w.bike ? w.y - 12 : w.y, { dir: w.dir, moving: w.bike ? false : w.moving, phase: w.phase, anim: w.anim, animT: (t * .8) % 1 }); } }));
     list.push({ y: h.y + .1, draw: c => person(c, st.look, h.x, h.y, { dir: h.dir2d || 'down', phase: h.phase, moving: h.moving, anim: h.anim || (h.run && h.moving ? 'run' : null), animT: h.animT }) });
-    list.sort((a, b) => a.y - b.y).forEach(i => { try { i.draw(ctx); } catch (e) { if (!frame.err) { frame.err = 1; console.error('[قرية الخير] رسم عنصر في القرية', e && e.stack || e); } } });
+    // ما يقف أمام البطل وقريباً منه (مبنى، نخلة، شجرة) يُرسم شفافاً حتى لا يختفي البطل خلفه
+    const fades = i => i.x != null && i.y > h.y + 4 && i.y < h.y + 340 && Math.abs(i.x - h.x) < (i.w || 190);
+    list.sort((a, b) => a.y - b.y).forEach(i => { const f = fades(i); if (f) { ctx.save(); ctx.globalAlpha = .4; } try { i.draw(ctx); } catch (e) { if (!frame.err) { frame.err = 1; console.error('[قرية الخير] رسم عنصر في القرية', e && e.stack || e); } } finally { if (f) ctx.restore(); } });
+    // خيال البطل فوق كل شيء (يظهر عبر الجدران، ولا يغيّر شكله حين يكون ظاهراً)
+    ctx.save(); ctx.globalAlpha = .35; try { person(ctx, st.look, h.x, h.y, { dir: h.dir2d || 'down', phase: h.phase, moving: h.moving, anim: h.anim || (h.run && h.moving ? 'run' : null), animT: h.animT }); } catch (e) {} ctx.restore();
     if (kit.over) kit.over(ctx, t, st);
     // دائرة الوجهة وعلامة المحطة الحالية
     if (st.dest && st.dest.k > 0) { ctx.save(); ctx.globalAlpha = st.dest.k; ctx.strokeStyle = '#fff'; ctx.lineWidth = 3; ctx.beginPath(); ctx.ellipse(st.dest.x, st.dest.y, 16 * (1.6 - st.dest.k * .6), 8 * (1.6 - st.dest.k * .6), 0, 0, 7); ctx.stroke(); ctx.restore(); }

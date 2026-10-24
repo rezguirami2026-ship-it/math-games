@@ -25,7 +25,7 @@ await tp(s.gate.wx - 160, s.gate.y); await sleep(1500); await shot('w2-closed');
 // ٢. بعد إنهاء دروس المنجم: العلامة فوق البوابة، تُفتح حين يقترب البطل، والمشي يُدخل الميناء
 await setDone(0); await boot(0);
 s = await S(); ok('بعد الدروس: العلامة فوق البوابة', !!s.goal && s.goal.x === s.gate.wx, JSON.stringify(s.goal));
-await tp(s.gate.wx - 300, s.gate.y); await sleep(3000); s = await S(); await shot('w3-open');
+await tp(s.gate.wx - 300, s.gate.y); for (let i = 0; i < 50 && (await S()).gate.open < 1; i++) await sleep(200); s = await S(); await shot('w3-open');
 ok('٢. البوابة فُتحت وحُفظ أنها رُئيت', s.gate.open === 1 && !(await blockedAt(s.gate.wx, s.gate.y)) && await page.evaluate(() => !!(window.__villages.state.vil.gates || {}).mine));
 await walk([[s.gate.wx + 520, s.gate.y]]); await sleep(4500); s = await S(); await shot('w4-scales');
 ok('٣. المشي عبر البوابة يُدخل ميناء الموازين', s.at === 'scales' && s.title.includes('ميناء'), JSON.stringify(s));
