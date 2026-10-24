@@ -1,0 +1,47 @@
+// اختبار مغامرة مضمار السباق «راية البداية» كاملة كاللاعب: عادل، الحاجز يرتفع وينخفض بإيقاعه، لا طريق والحاجز منخفض، العبور حين يرتفع
+// (الحواجز الثلاثة)، الراية من البرج، العودة، النجوم الثلاث، وعادل والختام.
+// node adv-g8race.mjs [مجلد اللقطات] [--3d] (الخادم على 8000)
+import { chromium } from 'playwright-core';
+const out = process.argv[2] && !process.argv[2].startsWith('--') ? process.argv[2] : null, d3 = process.argv.includes('--3d');
+const sleep = ms => new Promise(r => setTimeout(r, ms)), results = [], ok = (n, c, i = '') => { results.push([c ? '✅' : '❌', n, i]); console.log(c ? '✅' : '❌', n, i); };
+const b = await chromium.launch({ channel: 'chrome', args: ['--use-angle=d3d11', '--ignore-gpu-blocklist'] }); const page = await b.newPage({ viewport: { width: 1100, height: 700 } });
+const errs = []; page.on('pageerror', e => errs.push(e.message)); page.on('console', m => { if (m.type() === 'error') errs.push(m.text()); });
+await page.addInitScript(d3 => { localStorage.setItem('ramimath_grade_asked', '1'); localStorage.setItem('ramimath_grade', '8'); localStorage.setItem('ramimath_3d', d3 ? '1' : '0'); }, d3);
+await page.goto('http://localhost:8000/?grade=8' + (d3 ? '' : '&2d=1')); await sleep(1200);
+await page.evaluate(async () => { const m = await import('/core/state.js'), { LESSONS } = await import('/content/lessons.js'); const s = m.fresh({ name: 'سالم', kind: 'boy', skin: '#C68A5B', color: '#2F6FB2' });
+  LESSONS.filter(l => l.u <= 13).forEach(l => { s.quests.done[l.id] = Date.now(); s.quests.data[l.id] = { stars: 3 }; }); localStorage.setItem('ramimath_village_v1_g8', JSON.stringify(s)); });
+await page.reload(); await sleep(1500); await page.click('#bCont'); await sleep(400);
+await page.evaluate(() => window.__villages.enter(13)); await sleep(3000);
+ok('زر المغامرة ظاهر بعد إنهاء دروس المضمار', await page.evaluate(() => !document.querySelector('[data-a=adv]').hidden));
+await page.click('[data-a=adv]'); await page.waitForFunction(() => window.__adv, null, { timeout: 30000 });
+await page.evaluate(() => { const z = ms => new Promise(r => setTimeout(r, ms));
+  window.__do = async fn => { let fin = false; const p = Promise.resolve(fn(window.__adv)).then(v => { fin = true; return v; });
+    for (let i = 0; i < 600; i++) { await z(120); const d = document.querySelector('.advDlg.on'); if (d && !d.querySelector('[data-o]')) { d.click(); continue; } if (fin && !window.__adv.busy()) break; } return p; }; });
+const act = src => page.evaluate(`window.__do(A => ${src})`), st = () => page.evaluate(() => { const A = window.__adv; return { area: A.area, flags: A.S.flags, inv: A.S.inv, stars: A.S.stars, h: A.hero() }; });
+const shot = async n => { if (out) await page.screenshot({ path: `${out}/${n}.png` }); };
+const at = async (x, y) => { const h = (await st()).h; return h.x === x && h.y === y; };
+const isOpen = id => page.evaluate(id => !!window.__adv.ent(id).open, id), waitOpen = async (id, want = true) => { for (let k = 0; k < 120; k++) { if ((await isOpen(id)) === want) return true; await sleep(80); } return false; };
+const cross = async (id, [ax, ay], [bx, by]) => { await act(`A.goTile(${ax}, ${ay})`); await waitOpen(id, false); await waitOpen(id, true); await act(`A.goTile(${bx}, ${by})`); return at(bx, by); };
+const step = async (x, y) => { await act(`A.goTile(${x}, ${y})`); await act('new Promise(r => setTimeout(r, 400))'); };
+const walk = async P => { for (const [x, y] of P) { await act(`A.goTile(${x}, ${y})`); await sleep(120); } };
+await act('new Promise(r => setTimeout(r, 900))');
+ok('البداية على رصيف المضمار', (await st()).area === 'track');
+await act("A.tapEnt('adel')"); ok('١. عادل يشرح', !!(await st()).flags.met);
+ok('الحاجز يرتفع وينخفض بإيقاعه', await waitOpen('b1', true) && await waitOpen('b1', false));
+await act('A.goTile(3, 6)'); await waitOpen('b1', false); ok('لا طريق والحاجز منخفض', await page.evaluate(() => window.__adv.blockedAt(4, 6)));
+ok('٢. عبور الحاجز الأول حين يرتفع', await cross('b1', [3, 6], [5, 6]), JSON.stringify((await st()).h)); await shot('ra-1');
+await act('A.goTile(5, 2)'); ok('نجمة الجزيرة الأولى', (await st()).stars >= 1);
+ok('عبور الحاجز الثاني', await cross('b2', [7, 6], [9, 6]));
+await act('A.goTile(11, 9)'); ok('نجمة الجزيرة الثانية', (await st()).stars >= 2);
+ok('عبور الحاجز الثالث', await cross('b3', [11, 6], [13, 6]));
+await act('A.goTile(16, 10)'); await act("A.tapEnt('tower')"); ok('٣. راية البداية والنجوم الثلاث', (await st()).inv.flag === 1 && (await st()).stars === 3); await shot('ra-2');
+ok('العودة عبر الحواجز', await cross('b3', [13, 6], [11, 6]) && await cross('b2', [9, 6], [7, 6]) && await cross('b1', [5, 6], [3, 6]), JSON.stringify((await st()).h));
+page.evaluate("window.__do(A => A.tapEnt('adel'))").catch(() => {});
+await page.waitForFunction(() => !!document.querySelector('.advEnd'), null, { timeout: 90000 }).catch(() => {});
+ok('٤. الراية لعادل وبطاقة المكافآت', await page.evaluate(() => !!document.querySelector('.advEnd'))); await shot('ra-3');
+await page.click('.advEnd [data-home]').catch(() => {}); await sleep(800);
+const rec = await page.evaluate(() => ({ adv: window.__villages.state.vil.adv, badge: !!((window.__villages.state.vil.badges || {}).raceHero) }));
+ok('النتيجة محفوظة والوسام ممنوح', !!(rec.adv && rec.adv.race) && rec.badge, JSON.stringify(rec));
+ok('لا أخطاء في الكونسول', errs.length === 0, errs.slice(0, 3).join(' | '));
+console.log(`النتيجة: ${results.filter(r => r[0] === '✅').length} من ${results.length}`);
+await b.close();

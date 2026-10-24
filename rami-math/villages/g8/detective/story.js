@@ -22,8 +22,8 @@ const dirOf = (a, b) => b[0] > a[0] ? 0 : b[1] > a[1] ? 1 : b[0] < a[0] ? 2 : 3;
 const PRINTS = PATH.slice(1, -1).map((p, k) => ({ id: 'gp' + k, kind: 'print', x: p[0], y: p[1], d: dirOf(p, PATH[k + 2]), n: k }));
 const CLUES = [['thread', PATH[Math.floor(PATH.length * .3)]], ['ticket', PATH[Math.floor(PATH.length * .65)]], ['sandal', PATH[PATH.length - 3]]];
 // نجوم في نهايات مسدودة بعيدة عن الطريق
-const STARS = (() => { const dist = new Map(PATH.map(p => [p + '', 0])), q = PATH.slice();
-  while (q.length) { const [x, y] = q.shift(), d = dist.get([x, y] + ''); for (const [dx, dy] of [[1, 0], [-1, 0], [0, 1], [0, -1]]) { const nx = x + dx, ny = y + dy; if (GD[ny] && GD[ny][nx] === '.' && !dist.has([nx, ny] + '')) { dist.set([nx, ny] + '', d + 1); q.push([nx, ny]); } } }
+const STARS = (() => { const P2 = PATH.slice(0, -1), dist = new Map(P2.map(p => [p + '', 0])), q = P2.slice();   // المخزن نفسه يسدّ ما خلفه
+  while (q.length) { const [x, y] = q.shift(), d = dist.get([x, y] + ''); for (const [dx, dy] of [[1, 0], [-1, 0], [0, 1], [0, -1]]) { const nx = x + dx, ny = y + dy; if (GD[ny] && GD[ny][nx] === '.' && !(nx === SHED[0] && ny === SHED[1]) && !dist.has([nx, ny] + '')) { dist.set([nx, ny] + '', d + 1); q.push([nx, ny]); } } }
   const out = []; for (let y = 1; y < GD.length - 1; y++) for (let x = 1; x < 18; x++) { const d = dist.get([x, y] + ''); if (GD[y][x] !== '.' || !d || d > 20) continue;
     if ([[1, 0], [-1, 0], [0, 1], [0, -1]].filter(([dx, dy]) => GD[y + dy] && GD[y + dy][x + dx] === '.').length === 1) out.push([x, y, d]); }
   return out.sort((a, b) => a[2] - b[2]).map(([x, y]) => [x, y]); })();   // نجوم في أقرب النهايات المسدودة إلى طريق الآثار

@@ -202,3 +202,7 @@ body.v89 #panel .sheet { border-radius: 26px; margin: auto; max-width: 680px; bo
 .vm-grid .gv { fill: #1E3A8A; } .vm-grid .pk { fill: #EA580C; stroke: #fff; stroke-width: 2; }
 .vm-grid .hit { fill: transparent; cursor: pointer; } .vm-grid .hit:hover { fill: rgba(234,88,12,.15); }
 .vm-gpt { text-align: center; font: 800 17px Cairo, sans-serif; color: #9A3412; direction: rtl; min-height: 26px; } .vm-gpt i { font-style: normal; color: #94A3B8; }
+/* الترتيب (الوحدة ١٣ للصف الثامن) */
+.vm-seqrow { min-height: 42px; display: flex; flex-wrap: wrap; gap: 6px; justify-content: center; direction: rtl; padding: 6px; border-radius: 12px; background: #F0F9FF; border: 2px dashed #38BDF8; margin-bottom: 8px; }
+.vm-seqrow b { font: 900 18px Cairo, sans-serif; color: #075985; background: #BAE6FD; border-radius: 9px; padding: 0 9px; } .vm-seqrow i { font: 700 15px Cairo, sans-serif; color: #94A3B8; font-style: normal; }
+.vm-seqk button { min-width: 56px; font-size: 18px; padding: 8px 10px; } .vm-seqk button:disabled { opacity: .3; }

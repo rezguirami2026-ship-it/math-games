@@ -41,7 +41,7 @@ await act("A.tapEnt('shed')"); ok('٣. الجرّة', (await st()).inv.jar === 1
 const walkMaze = async (tx, ty) => { const steps = await page.evaluate(async ([tx, ty]) => { const GD = (await import('/villages/g8/detective/story.js')).default.areas.garden.map, h = window.__adv.hero(), k = (x, y) => x + ',' + y, prev = new Map([[k(h.x, h.y), null]]), q = [[h.x, h.y]];
   while (q.length) { const [x, y] = q.shift(); if (x === tx && y === ty) break; for (const [dx, dy] of [[1, 0], [-1, 0], [0, 1], [0, -1]]) { const nx = x + dx, ny = y + dy; if (GD[ny] && GD[ny][nx] === '.' && nx > 0 && !prev.has(k(nx, ny))) { prev.set(k(nx, ny), [x, y]); q.push([nx, ny]); } } }
   const out = []; let c = [tx, ty]; while (c) { out.unshift(c); c = prev.get(k(...c)); } return out; }, [tx, ty]); for (const [x, y] of steps.slice(1)) await act(`A.goTile(${x}, ${y})`); };
-for (const [x, y] of stars) await walkMaze(x, y); ok('النجوم الثلاث', (await st()).stars === 3, String((await st()).stars));
+const tr = []; for (const [x, y] of stars) { await walkMaze(x, y); tr.push([x, y, (await st()).h, (await st()).stars]); } ok('النجوم الثلاث', (await st()).stars === 3, String((await st()).stars) + JSON.stringify(tr));
 await walkMaze(1, 7); await page.evaluate(() => window.__adv.tapTile(0, 7)); await sleep(2500); await act('Promise.resolve()');
 ok('العودة إلى القاعة', (await st()).area === 'museum');
 await act("A.tapEnt('badr')"); await act("A.tapEnt('zayed')");

@@ -14,7 +14,7 @@ const webglOK = () => { try { const c = document.createElement('canvas'); return
 let createAdv3D = null; export const setAdv3D = f => { createAdv3D = f; };
 export const want3D = () => webglOK() && !WEAK && gfx.d3();
 
-const SOLID_KINDS = new Set(['npc', 'chest', 'block', 'gate', 'door', 'sign', 'fire', 'beacon', 'cage', 'tent', 'crates', 'barrel', 'boat', 'well', 'lever', 'banner', 'house', 'rot', 'tablet', 'crystal', 'beam', 'fence', 'pillar', 'cart', 'oil', 'basket', 'tidewater', 'container', 'console', 'robot', 'cauldron', 'jarshelf', 'tile', 'sundial', 'twin']);
+const SOLID_KINDS = new Set(['npc', 'chest', 'block', 'gate', 'door', 'sign', 'fire', 'beacon', 'cage', 'tent', 'crates', 'barrel', 'boat', 'well', 'lever', 'banner', 'house', 'rot', 'tablet', 'crystal', 'beam', 'fence', 'pillar', 'cart', 'oil', 'basket', 'tidewater', 'container', 'console', 'robot', 'cauldron', 'jarshelf', 'tile', 'sundial', 'twin', 'balloon']);
 const ACT_KINDS = new Set(['npc', 'chest', 'lever', 'sign', 'door', 'gate', 'cage', 'beacon', 'boat', 'fire', 'safe', 'block', 'well', 'tent', 'banner', 'house', 'rot', 'tablet', 'crystal', 'animal', 'pillar', 'site', 'beam', 'cart', 'oil', 'basket', 'container', 'console', 'cauldron', 'tile', 'sundial', 'soil']);   // مغامرات قرى الصف الثامن: منجم (cart/oil/basket)، ميناء (container/console، والمد tidewater)
 // حجر نرد كبير يتدحرج حين يُدفع (مهرجان الألعاب): t الوجه الأعلى، n الشمالي، e الشرقي، والمقابل يكمل ٧
 export const rollDie = ({ t, n, e }, dx, dy) => dx > 0 ? { t: 7 - e, n, e: t } : dx < 0 ? { t: e, n, e: 7 - t } : dy > 0 ? { t: n, n: 7 - t, e } : { t: 7 - n, n: t, e };
@@ -71,7 +71,7 @@ export function runAdventure(def, onExit) {
     return x === e.x && y === e.y;
   }
   // مزارع الأفلاج: الرمل الحار (hot) يُعبر في الظل فقط، والساقية المحفورة (soil) يملؤها الماء فتُغلق
-  const solidEnt = e => e && !e.hidden && (e.kind === 'curtain' ? !(def.tint && def.tint(A) === e.col) : e.kind === 'hot' ? !e.shade : e.kind === 'soil' ? !!(e.dug && e.wet) : SOLID_KINDS.has(e.kind)) && !e.follow && !((e.kind === 'gate' || e.kind === 'door' || e.kind === 'cage') && e.open);
+  const solidEnt = e => e && !e.hidden && (e.kind === 'boom' ? !e.open : e.kind === 'curtain' ? !(def.tint && def.tint(A) === e.col) : e.kind === 'hot' ? !e.shade : e.kind === 'soil' ? !!(e.dug && e.wet) : SOLID_KINDS.has(e.kind)) && !e.follow && !((e.kind === 'gate' || e.kind === 'door' || e.kind === 'cage') && e.open);
   const stoneAt = (x, y) => ents.some(e => ((e.kind === 'stone' && e.lit) || e.kind === 'gondola') && !e.hidden && e.x === x && e.y === y);   // منحدرات التزلج: عربة التلفريك فوق الماء يُوقف عليها أيضاً   // حجر خطوة ظاهر فوق الماء: يُمشى عليه
   const blocked = (x, y, skip) => (SOLID_TILES.has(tileAt(x, y)) && !stoneAt(x, y)) || solidEnt(entAt(x, y, skip));
   const solidAt = (fx, fy) => blocked(Math.floor(fx), Math.floor(fy));
@@ -109,6 +109,7 @@ export function runAdventure(def, onExit) {
     busy: () => locked || !!caught || !!(P.path && P.path.length) || pushing,
     tileAt: (x, y) => tileAt(x, y),
     blockedAt: (x, y) => blocked(x, y),
+    heroPath: () => (P.path || []).map(p => p.slice()),   // مضمار السباق: الحاجز لا ينغلق على طريق البطل
     lensSees: e => A.has(def.lens || 'lens') && Math.hypot(P.x - .5 - e.x, P.y - .5 - e.y) <= (e.r || 2.6),   // مكتب المحقق: آثار الأقدام تظهر تحت العدسة قرب البطل فقط
     setTile: (x, y, ch) => { S.tiles[key(S.area, x, y)] = ch; tilesV++; save(); },
     follow: id => { const e = A.ent(id); if (!e) return; e.follow = true; e.fx = e.x + .5; e.fy = e.y + .5; persist(e, ['follow']); },
@@ -382,7 +383,7 @@ export function runAdventure(def, onExit) {
     if (jumpS) { const J = jumpS; J.u = Math.min(1, J.u + dt / J.dur); P.x = J.x0 + (J.x1 - J.x0) * J.u; P.y = J.y0 + (J.y1 - J.y0) * J.u; P.z = Math.sin(J.u * Math.PI) * 1.4; P.moving = true; P.phase += dt * 6;
       if (J.u >= 1) { P.z = 0; jumpS = null; locked = false; P.moving = false; save(); J.r(); } }
     if (!locked && !caught) { update(dt); followStep(dt); twinCheck(dt); }
-    ents.forEach(e => { if (e.kind === 'guard') { updGuard(e, dt); if (!locked && !caught && sees(e)) getCaught(e); } if (e.kind === 'hazard') { updGuard(e, dt); if (!locked && !caught && touches(e)) getCaught(e); } if ((e.kind === 'block' || e.kind === 'twin' || e.kind === 'gondola') && e.px != null) { e.px += (e.x - e.px) * Math.min(1, dt * 14); e.py += (e.y - e.py) * Math.min(1, dt * 14); if (Math.abs(e.px - e.x) + Math.abs(e.py - e.y) < .01) { e.px = e.py = null; } } });
+    ents.forEach(e => { if (e.kind === 'guard') { updGuard(e, dt); if (!locked && !caught && sees(e)) getCaught(e); } if (e.kind === 'hazard') { updGuard(e, dt); if (!locked && !caught && touches(e)) getCaught(e); } if ((e.kind === 'block' || e.kind === 'twin' || e.kind === 'gondola' || e.kind === 'balloon') && e.px != null) { e.px += (e.x - e.px) * Math.min(1, dt * 14); e.py += (e.y - e.py) * Math.min(1, dt * 14); if (Math.abs(e.px - e.x) + Math.abs(e.py - e.y) < .01) { e.px = e.py = null; } } });
     if (area.tick) area.tick(A, dt);
     if (ents.some(e => e.kind === 'beam')) traceBeams(); else if (beams.length) beams = [];
     windStep(dt); lightning(dt);
@@ -465,7 +466,7 @@ export function runAdventure(def, onExit) {
     if (mark) { mark.t += .016; if (mark.t > .8) mark = null; else { ctx.strokeStyle = `rgba(255,255,255,${.8 - mark.t})`; ctx.lineWidth = 3; ctx.beginPath(); ctx.ellipse(mark.x * T + T / 2, mark.y * T + T * .7, 14 + mark.t * 20, 6 + mark.t * 8, 0, 0, 7); ctx.stroke(); } }
     ents.forEach(e => {
       if (e.hidden || (e.x < x0 - 3 || e.x > x1 + 3 || e.y < y0 - 1 || e.y > y1 + 3) && e.kind !== 'guard') return;
-      if (e.kind === 'plate' || e.kind === 'belt' || e.kind === 'honey' || e.kind === 'stone' || e.kind === 'hot' || e.kind === 'soil' || e.kind === 'spring' || e.kind === 'dyepool' || e.kind === 'print' || e.kind === 'gondola') { drawThing(ctx, e, t, A); return; }   // تحت البطل
+      if (e.kind === 'plate' || e.kind === 'belt' || e.kind === 'honey' || e.kind === 'stone' || e.kind === 'hot' || e.kind === 'soil' || e.kind === 'spring' || e.kind === 'dyepool' || e.kind === 'print' || e.kind === 'gondola' || e.kind === 'flip') { drawThing(ctx, e, t, A); return; }   // تحت البطل
       if (e.kind === 'guard') { ctx.save(); drawCone(ctx, e, caught === e); ctx.restore(); list.push({ y: (e.py + 1) * T - 4, draw: () => person(e.px, e.py, e.look, e.ang, !!e.pause, e.ph, caught === e ? '!' : null) }); return; }
       if (e.kind === 'npc') { const nx = e.follow ? e.fx - .5 : e.x, ny = e.follow ? e.fy - .5 : e.y; list.push({ y: (ny + 1) * T - 4, draw: () => person(nx, ny, e.look || def.cast[e.who].look, e.face, !e.moving, e.ph || 0, e.mark ? e.mark(A) : null) }); return; }
       if (e.kind === 'hazard' || e.kind === 'animal') { const hx = e.kind === 'hazard' ? e.px : e.follow ? e.fx - .5 : e.x, hy = e.kind === 'hazard' ? e.py : e.follow ? e.fy - .5 : e.y;

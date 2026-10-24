@@ -209,6 +209,16 @@ export function drawThing(c, e, t, A) {
       c.strokeStyle = '#B88A2E'; c.lineWidth = 4; c.beginPath(); c.arc(x, y - 66, 9, 0, 7); c.stroke(); c.strokeStyle = '#8A6A44'; c.lineWidth = 1.5; c.beginPath(); c.moveTo(x, y - 60); c.lineTo(x, y - 36); c.stroke();
       c.fillStyle = '#A8723E'; c.beginPath(); c.moveTo(x - 14, y - 36); c.lineTo(x + 14, y - 36); c.lineTo(x + 10, y - 18); c.lineTo(x - 10, y - 18); c.closePath(); c.fill();
       for (let i = 0; i < (e.n || 0); i++) { c.fillStyle = '#7A6B5C'; c.beginPath(); c.arc(x - 7 + i * 7, y - 38, 5, 0, 7); c.fill(); } break; }
+    case 'boom': {   // حاجز مضمار: عمود وذراع مخططة بالأحمر والأبيض، أفقية حين يغلق ومرفوعة حين يفتح
+      const a2 = e.open ? -1.35 : 0, px = x - T * .42, py = y - T * .62; c.fillStyle = '#334155'; c.fillRect(px - 4, py - 4, 8, T * .62 + 2); c.save(); c.translate(px, py); c.rotate(a2);
+      for (let q = 0; q < 6; q++) { c.fillStyle = q % 2 ? '#FFFFFF' : '#DC2626'; c.fillRect(q * T * .15, -4, T * .15, 8); } c.restore(); c.fillStyle = e.open ? '#22C55E' : '#EF4444'; c.beginPath(); c.arc(px, py - 10, 4, 0, 7); c.fill(); break; }
+    case 'balloon': {   // منطاد رصد أبيض بصندوق برتقالي، يطفو ويتمايل
+      const bx = (e.px != null ? e.px : e.x) * T + T / 2, by = (e.py != null ? e.py : e.y) * T + T, f = Math.sin(t * 2 + e.x) * 3; c.fillStyle = 'rgba(40,25,10,.2)'; c.beginPath(); c.ellipse(bx + 4, by - 6, 14, 5, 0, 0, 7); c.fill();
+      c.strokeStyle = '#334155'; c.lineWidth = 1.2; c.beginPath(); c.moveTo(bx, by - 30 + f); c.lineTo(bx, by - 16); c.stroke(); c.fillStyle = '#F97316'; c.fillRect(bx - 6, by - 18, 12, 10);
+      c.fillStyle = '#F8FAFC'; c.strokeStyle = '#94A3B8'; c.lineWidth = 2; c.beginPath(); c.ellipse(bx, by - 52 + f, 20, 24, 0, 0, 7); c.fill(); c.stroke(); c.fillStyle = 'rgba(255,255,255,.9)'; c.beginPath(); c.ellipse(bx - 7, by - 60 + f, 5, 8, -.4, 0, 7); c.fill(); break; }
+    case 'flip': {   // بلاطة فسيفساء تنقلب: ذهبية (on) أو زرقاء، بنجمة ثمانية
+      const on = !!e.on, cy = y - T / 2; c.fillStyle = on ? '#FDE68A' : '#1E3A8A'; c.fillRect(x - T * .46, cy - T * .46, T * .92, T * .92); c.strokeStyle = on ? '#B45309' : '#93C5FD'; c.lineWidth = 2; c.strokeRect(x - T * .46, cy - T * .46, T * .92, T * .92);
+      c.fillStyle = on ? '#D97706' : '#60A5FA'; c.beginPath(); for (let k = 0; k < 16; k++) { const a = k * Math.PI / 8 + Math.PI / 16, rr = k % 2 ? T * .14 : T * .32; c.lineTo(x + Math.cos(a) * rr, cy + Math.sin(a) * rr); } c.closePath(); c.fill(); break; }
     case 'gondola': {   // عربة التلفريك: منصة خشبية بحاجز وكابل علوي، تتحرك بين محطتين
       const gx = (e.px != null ? e.px : e.x) * T + T / 2, gy = (e.py != null ? e.py : e.y) * T + T; c.fillStyle = 'rgba(0,0,0,.18)'; c.beginPath(); c.ellipse(gx + 4, gy - 6, T * .42, T * .14, 0, 0, 7); c.fill();
       c.fillStyle = '#B98A55'; c.fillRect(gx - T * .44, gy - T * .82, T * .88, T * .7); c.strokeStyle = e.col || '#0369A1'; c.lineWidth = 4; c.strokeRect(gx - T * .44, gy - T * .82, T * .88, T * .7);

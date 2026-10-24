@@ -100,12 +100,12 @@ function rounds(spec, api) {
         box2.querySelector('[data-k=ok]').onclick = () => { if (!sel.size) { msg('🤔 انقر النتائج التي تحقق الشرط في الجدول أولاً.', 'bad'); return; } answer([...sel].sort((a, b) => a - b)); };
       } else if (I.type === 'chips') {   // قطع النسب (الوحدة ٨): يكوّن الطالب نسبة من قطع سهلة (٥٠٪، ١٠٪، ١٪…) بالجمع والطرح كما في الكتاب، والجواب القطع بإشاراتها (S.v للمشهد)
         let sgn = 1; S.v = [];
-        const pc = v => ar(String(v)).replace('.', '٫') + '٪';
+        const pc = v => ar(String(v)).replace('.', '٫') + (I.unit ?? '٪');   // الوحدة ١٢: زوايا بالدرجات (unit: '°')
         box2.innerHTML = `<div class="vm-chips"><div class="vm-tray"></div><div class="vm-sgn">${I.neg ? '<button data-s="1" class="on">+ أضف</button><button data-s="-1">− اطرح</button>' : ''}</div>
           <div class="vm-chipk">${I.chips.map(v => `<button data-v="${v}">${pc(v)}</button>`).join('')}</div>
           <div class="vm-row"><button class="vm-clr" data-k="clr">مسح</button><button class="vm-clr" data-k="<">⌫</button><button class="vm-go" data-k="ok">${I.label || '✓ ثبّت'}</button></div></div>`;
         const show = () => { const T = S.v.reduce((a, b) => a + b, 0);
-          box2.querySelector('.vm-tray').innerHTML = S.v.length ? `${S.v.map((v, k) => (k ? (v < 0 ? ' − ' : ' + ') : v < 0 ? '− ' : '') + `<b>${pc(Math.abs(v))}</b>`).join('')} <i>= ${T < 0 ? pc(-T) + '−' : pc(Math.round(T * 100) / 100)}</i>` : '<i>انقر القطع لتكوّن النسبة</i>';
+          box2.querySelector('.vm-tray').innerHTML = S.v.length ? `${S.v.map((v, k) => (k ? (v < 0 ? ' − ' : ' + ') : v < 0 ? '− ' : '') + `<b>${pc(Math.abs(v))}</b>`).join('')} <i>= ${T < 0 ? pc(-T) + '−' : pc(Math.round(T * 100) / 100)}</i>` : `<i>${I.unit ? 'انقر القطع لتملأ الزاوية' : 'انقر القطع لتكوّن النسبة'}</i>`;
           box2.querySelectorAll('[data-s]').forEach(b => b.classList.toggle('on', +b.dataset.s === sgn)); };
         pad = { clear() {} };   // القطع تبقى بعد الخطأ ليصحّحها الطالب
         box2.querySelectorAll('[data-s]').forEach(b => b.onclick = () => { sgn = +b.dataset.s; sfx('pick'); show(); });
@@ -164,6 +164,18 @@ function rounds(spec, api) {
         pad = { clear() { S.v = []; show(); } };
         box2.querySelector('[data-k=clr]').onclick = () => { S.v = []; sfx('pick'); show(); };
         box2.querySelector('[data-k=ok]').onclick = () => { if (S.v.length < n) { msg(n === 2 ? '🤔 انقر نقطتين على الشبكة.' : '🤔 انقر نقطة على الشبكة.', 'bad'); return; } answer(S.v.map(p => p.slice())); };
+        show();
+      } else if (I.type === 'seq') {   // الترتيب (الوحدة ١٣): ينقر الطالب القيم بالترتيب فتصطف في صفّ، والجواب أرقام البطاقات بترتيب النقر (S.v للمشهد)
+        S.v = [];
+        const show = () => { box2.querySelector('.vm-seqrow').innerHTML = S.v.length ? S.v.map(k => `<b>${I.items[k]}</b>`).join('') : `<i>${I.place || 'انقر القيم بالترتيب'}</i>`;
+          box2.querySelectorAll('[data-q]').forEach(b => { b.disabled = S.v.includes(+b.dataset.q); }); };
+        box2.innerHTML = `<div class="vm-seqrow"></div><div class="vm-opts vm-seqk">${I.items.map((t, k) => `<button data-q="${k}">${t}</button>`).join('')}</div>
+          <div class="vm-row"><button class="vm-clr" data-k="clr">مسح</button><button class="vm-clr" data-k="<">⌫</button><button class="vm-go" data-k="ok">${I.label || '✓ ثبّت الترتيب'}</button></div>`;
+        pad = { clear() {} };
+        box2.querySelectorAll('[data-q]').forEach(b => b.onclick = () => { S.v.push(+b.dataset.q); sfx('pick'); show(); });
+        box2.querySelector('[data-k=clr]').onclick = () => { S.v = []; sfx('pick'); show(); };
+        box2.querySelector('[data-k="<"]').onclick = () => { S.v.pop(); sfx('pick'); show(); };
+        box2.querySelector('[data-k=ok]').onclick = () => { if (S.v.length < I.items.length) { msg('🤔 رتّب القيم كلها أولاً.', 'bad'); return; } answer(S.v.slice()); };
         show();
       } else if (I.type === 'frac') {   // لوحة كسر: بسط ومقام مكدّسان (وعدد صحيح على يسارهما إن كان I.mixed)، ينقر الطالب الخانة ثم يكتب أرقامها
         const F = { w: '', n: '', d: '' }; let cur = 'n';

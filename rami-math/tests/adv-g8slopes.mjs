@@ -29,7 +29,7 @@ const walk = async P => { for (const [x, y] of P) { await act(`A.goTile(${x}, ${
 await act('new Promise(r => setTimeout(r, 900))');
 ok('البداية على شاطئ البحيرة', (await st()).area === 'lake');
 await act("A.tapEnt('majid')"); ok('١. ماجد يشرح', !!(await st()).flags.met);
-ok('الماء لا يُمشى عليه', await blk(5, 6) && !(await act('A.goTile(10, 6)')));
+ok('الماء لا يُمشى عليه', await blk(6, 9) && !(await act('A.goTile(10, 6)')));
 await act('A.goTile(3, 6)'); ok('٢. العربة الزرقاء تحمل البطل إلى طرفها', await board('g1', 0, [4, 6], [9, 6]), JSON.stringify((await st()).h)); await shot('sl-1');
 await act('A.goTile(10, 6)'); ok('النزول إلى الجزيرة', !!(await st()).flags.isle);
 await act('A.goTile(13, 4)'); ok('نجمة الجزيرة', (await st()).stars >= 1);

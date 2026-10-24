@@ -32,8 +32,9 @@ ok('٣. المشي عبر البوابة يُدخل ميناء الموازين'
 ok('والهدف صار درس الميناء الأول', !!s.goal && s.goal.mh === 165);
 // ٣. مطبخ الحلوى منتهٍ والقرية الخامسة لم تُبنَ: بوابتها مغلقة
 await setDone(3); await boot(3);
-const last = await page.evaluate(() => { const C = window.__villages.world.connectors.at(-1); return { wx: C.wx, y: (C.y0 + C.y1) / 2, built: C.built }; });
-ok('٤. البوابة إلى قرية لم تُبنَ مغلقة', !last.built && await blockedAt(last.wx, last.y));
+// بعد اكتمال قرى الصف كلها: البوابة بعد قرية لم تنتهِ دروسها (الخامسة) مغلقة، وإن بقيت قرية لم تُبنَ فبوابتها مغلقة
+const last = await page.evaluate(() => { const Cs = window.__villages.world.connectors, C = Cs.find(c => !c.built) || Cs[4]; return { wx: C.wx, y: (C.y0 + C.y1) / 2, built: C.built }; });
+ok('٤. البوابة إلى قرية لم تُبنَ أو بعد قرية لم تنتهِ مغلقة', await blockedAt(last.wx, last.y));
 await tp(last.wx - 200, last.y); await sleep(2000); await shot('w5-last');
 ok('لا أخطاء في الكونسول', errs.length === 0, errs.slice(0, 3).join(' | '));
 console.log(results.map(r => r.join(' ')).join('\n')); console.log(`النتيجة: ${results.filter(r => r[0] === '✅').length} من ${results.length}`);

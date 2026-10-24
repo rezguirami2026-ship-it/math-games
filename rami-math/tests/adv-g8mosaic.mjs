@@ -1,0 +1,46 @@
+// اختبار مغامرة دار الفسيفساء «بلاط الفناء السحري» كاملة كاللاعب: نزار، الباب مغلق، الوقوف على بلاطة يقلبها وجاراتها، الوقوف مرتين يعيدها،
+// ذراع الإعادة، الحل بالنقرات الأربع (من القصة)، الباب ينفتح، النجوم الثلاث، النجمة الذهبية والختام.
+// node adv-g8mosaic.mjs [مجلد اللقطات] [--3d] (الخادم على 8000)
+import { chromium } from 'playwright-core';
+const out = process.argv[2] && !process.argv[2].startsWith('--') ? process.argv[2] : null, d3 = process.argv.includes('--3d');
+const sleep = ms => new Promise(r => setTimeout(r, ms)), results = [], ok = (n, c, i = '') => { results.push([c ? '✅' : '❌', n, i]); console.log(c ? '✅' : '❌', n, i); };
+const b = await chromium.launch({ channel: 'chrome', args: ['--use-angle=d3d11', '--ignore-gpu-blocklist'] }); const page = await b.newPage({ viewport: { width: 1100, height: 700 } });
+const errs = []; page.on('pageerror', e => errs.push(e.message)); page.on('console', m => { if (m.type() === 'error') errs.push(m.text()); });
+await page.addInitScript(d3 => { localStorage.setItem('ramimath_grade_asked', '1'); localStorage.setItem('ramimath_grade', '8'); localStorage.setItem('ramimath_3d', d3 ? '1' : '0'); }, d3);
+await page.goto('http://localhost:8000/?grade=8' + (d3 ? '' : '&2d=1')); await sleep(1200);
+await page.evaluate(async () => { const m = await import('/core/state.js'), { LESSONS } = await import('/content/lessons.js'); const s = m.fresh({ name: 'سالم', kind: 'boy', skin: '#C68A5B', color: '#2F6FB2' });
+  LESSONS.filter(l => l.u <= 11).forEach(l => { s.quests.done[l.id] = Date.now(); s.quests.data[l.id] = { stars: 3 }; }); localStorage.setItem('ramimath_village_v1_g8', JSON.stringify(s)); });
+await page.reload(); await sleep(1500); await page.click('#bCont'); await sleep(400);
+await page.evaluate(() => window.__villages.enter(11)); await sleep(3000);
+ok('زر المغامرة ظاهر بعد إنهاء دروس الدار', await page.evaluate(() => !document.querySelector('[data-a=adv]').hidden));
+await page.click('[data-a=adv]'); await page.waitForFunction(() => window.__adv, null, { timeout: 30000 });
+await page.evaluate(() => { const z = ms => new Promise(r => setTimeout(r, ms));
+  window.__do = async fn => { let fin = false; const p = Promise.resolve(fn(window.__adv)).then(v => { fin = true; return v; });
+    for (let i = 0; i < 600; i++) { await z(120); const d = document.querySelector('.advDlg.on'); if (d && !d.querySelector('[data-o]')) { d.click(); continue; } if (fin && !window.__adv.busy()) break; } return p; }; });
+const act = src => page.evaluate(`window.__do(A => ${src})`), st = () => page.evaluate(() => { const A = window.__adv; return { area: A.area, flags: A.S.flags, inv: A.S.inv, stars: A.S.stars, h: A.hero() }; });
+const shot = async n => { if (out) await page.screenshot({ path: `${out}/${n}.png` }); };
+const at = async (x, y) => { const h = (await st()).h; return h.x === x && h.y === y; };
+const tiles = () => page.evaluate(() => Object.fromEntries([...Array(4)].flatMap((_, y) => [...Array(4)].map((_, x) => { const e = window.__adv.ent(`f${x + 5}_${y + 4}`); return [e.id, !!e.on]; })))), blk = (x, y) => page.evaluate(([x, y]) => window.__adv.blockedAt(x, y), [x, y]);
+const step = async (x, y) => { await act(`A.goTile(${x}, ${y})`); await act('new Promise(r => setTimeout(r, 400))'); };
+const walk = async P => { for (const [x, y] of P) { await act(`A.goTile(${x}, ${y})`); await sleep(120); } };
+await act('new Promise(r => setTimeout(r, 900))');
+ok('البداية في الفناء', (await st()).area === 'court');
+await act("A.tapEnt('nizar')"); ok('١. نزار يشرح', !!(await st()).flags.met);
+ok('باب الخزانة مغلق', await blk(7, 2));
+const t0 = await tiles(); await step(6, 5); const t1 = await tiles(); const changed = Object.keys(t0).filter(k => t0[k] !== t1[k]).sort();
+ok('الوقوف على بلاطة يقلبها وجاراتها الأربع', changed.join() === ['f5_5', 'f6_4', 'f6_5', 'f6_6', 'f7_5'].sort().join(), changed.join());
+await step(6, 4); await step(6, 5); const t2 = await tiles(); ok('الوقوف مرتين يعيد البلاط', Object.keys(t2).filter(k => t2[k] !== t1[k]).length === 5);
+await act("A.use('reset')"); ok('ذراع الإعادة', JSON.stringify(await tiles()) === JSON.stringify(t0)); await shot('ms-1');
+const P = await page.evaluate(async () => (await import('/villages/g8/mosaic/story.js')).PRESSES);
+for (const [x, y] of P) await step(x, y);
+ok('٢. البلاط كله ذهبي والباب مفتوح', Object.values(await tiles()).every(Boolean) && !!(await st()).flags.open && !(await blk(7, 2))); await shot('ms-2');
+for (const [x, y] of [[1, 3], [12, 10], [12, 3]]) await step(x, y); ok('النجوم الثلاث', (await st()).stars === 3, String((await st()).stars));
+page.evaluate("window.__do(A => A.tapEnt('cabinet'))").catch(() => {});
+await page.waitForFunction(() => !!document.querySelector('.advEnd'), null, { timeout: 90000 }).catch(() => {});
+ok('٣. النجمة الذهبية وبطاقة المكافآت', await page.evaluate(() => !!document.querySelector('.advEnd'))); await shot('ms-3');
+await page.click('.advEnd [data-home]').catch(() => {}); await sleep(800);
+const rec = await page.evaluate(() => ({ adv: window.__villages.state.vil.adv, badge: !!((window.__villages.state.vil.badges || {}).mosaicHero) }));
+ok('النتيجة محفوظة والوسام ممنوح', !!(rec.adv && rec.adv.mosaic) && rec.badge, JSON.stringify(rec));
+ok('لا أخطاء في الكونسول', errs.length === 0, errs.slice(0, 3).join(' | '));
+console.log(`النتيجة: ${results.filter(r => r[0] === '✅').length} من ${results.length}`);
+await b.close();
