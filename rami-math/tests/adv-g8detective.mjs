@@ -1,0 +1,58 @@
+// اختبار مغامرة مكتب المحقق «لغز الجرّة المسروقة» كاملة كاللاعب: فهد والعدسة، الآثار خفية بلا عدسة وظاهرة قربها فقط، اتباع آثار القاعة،
+// متاهة الحديقة على طريق الآثار (من القصة نفسها) والأدلة الثلاثة، الجرّة، المشتبه بهم الثلاثة، الاختيار الخاطئ يلمّح، والصحيح يختم.
+// node adv-g8detective.mjs [مجلد اللقطات] [--3d] (الخادم على 8000)
+import { chromium } from 'playwright-core';
+const out = process.argv[2] && !process.argv[2].startsWith('--') ? process.argv[2] : null, d3 = process.argv.includes('--3d');
+const sleep = ms => new Promise(r => setTimeout(r, ms)), results = [], ok = (n, c, i = '') => { results.push([c ? '✅' : '❌', n, i]); console.log(c ? '✅' : '❌', n, i); };
+const b = await chromium.launch({ channel: 'chrome', args: ['--use-angle=d3d11', '--ignore-gpu-blocklist'] }); const page = await b.newPage({ viewport: { width: 1100, height: 700 } });
+const errs = []; page.on('pageerror', e => errs.push(e.message)); page.on('console', m => { if (m.type() === 'error') errs.push(m.text()); });
+await page.addInitScript(d3 => { localStorage.setItem('ramimath_grade_asked', '1'); localStorage.setItem('ramimath_grade', '8'); localStorage.setItem('ramimath_3d', d3 ? '1' : '0'); }, d3);
+await page.goto('http://localhost:8000/?grade=8' + (d3 ? '' : '&2d=1')); await sleep(1200);
+await page.evaluate(async () => { const m = await import('/core/state.js'), { LESSONS } = await import('/content/lessons.js'); const s = m.fresh({ name: 'سالم', kind: 'boy', skin: '#C68A5B', color: '#2F6FB2' });
+  LESSONS.filter(l => l.u <= 9).forEach(l => { s.quests.done[l.id] = Date.now(); s.quests.data[l.id] = { stars: 3 }; }); localStorage.setItem('ramimath_village_v1_g8', JSON.stringify(s)); });
+await page.reload(); await sleep(1500); await page.click('#bCont'); await sleep(400);
+await page.evaluate(() => window.__villages.enter(9)); await sleep(3000);
+ok('زر المغامرة ظاهر بعد إنهاء دروس مكتب المحقق', await page.evaluate(() => !document.querySelector('[data-a=adv]').hidden));
+await page.click('[data-a=adv]'); await page.waitForFunction(() => window.__adv, null, { timeout: 30000 });
+await page.evaluate(() => { const z = ms => new Promise(r => setTimeout(r, ms));
+  window.__do = async fn => { let fin = false; const p = Promise.resolve(fn(window.__adv)).then(v => { fin = true; return v; });
+    for (let i = 0; i < 600; i++) { await z(120); const d = document.querySelector('.advDlg.on'); if (d && !d.querySelector('[data-o]')) { d.click(); continue; } if (fin && !window.__adv.busy()) break; } return p; }; });
+const act = src => page.evaluate(`window.__do(A => ${src})`), st = () => page.evaluate(() => { const A = window.__adv; return { area: A.area, flags: A.S.flags, inv: A.S.inv, stars: A.S.stars, h: A.hero() }; });
+const shot = async n => { if (out) await page.screenshot({ path: `${out}/${n}.png` }); };
+const at = async (x, y) => { const h = (await st()).h; return h.x === x && h.y === y; };
+const sees = id => page.evaluate(id => { const A = window.__adv; return A.lensSees(A.ent(id)); }, id);
+const step = async (x, y) => { await act(`A.goTile(${x}, ${y})`); await act('new Promise(r => setTimeout(r, 400))'); };
+const walk = async P => { for (const [x, y] of P) { await act(`A.goTile(${x}, ${y})`); await sleep(120); } };
+await act('new Promise(r => setTimeout(r, 900))');
+ok('البداية في قاعة المتحف', (await st()).area === 'museum');
+ok('الآثار خفية بلا عدسة', !(await sees('mp0')));
+await act("A.tapEnt('fahad')"); ok('١. فهد يعطي العدسة', !!(await st()).flags.met && (await st()).inv.lens === 1);
+ok('بالعدسة: الأثر البعيد خفي', !(await sees('mp7')));
+await step(8, 6); ok('بالعدسة: الأثر القريب ظاهر', await sees('mp0') && await sees('mp1')); await shot('dt-1');
+for (const [x, y] of [[10, 6], [12, 6], [14, 6]]) await step(x, y);
+await step(14, 1); ok('نجمة القاعة', (await st()).stars >= 1);
+await page.evaluate(() => window.__adv.tapTile(15, 6)); await sleep(2500); await act('Promise.resolve()');
+ok('٢. متاهة الحديقة', (await st()).area === 'garden' && !!(await st()).flags.garden);
+const path = await page.evaluate(async () => (await import('/villages/g8/detective/story.js')).PATH);
+const stars = await page.evaluate(async () => (await import('/villages/g8/detective/story.js')).STARS.slice(0, 2));
+for (const [x, y] of path.slice(1, -1)) await act(`A.goTile(${x}, ${y})`);
+const inv = (await st()).inv; ok('على طريق الآثار: الأدلة الثلاثة', inv.thread === 1 && inv.ticket === 1 && inv.sandal === 1, JSON.stringify(inv)); await shot('dt-2');
+await act("A.tapEnt('shed')"); ok('٣. الجرّة', (await st()).inv.jar === 1);
+const walkMaze = async (tx, ty) => { const steps = await page.evaluate(async ([tx, ty]) => { const GD = (await import('/villages/g8/detective/story.js')).default.areas.garden.map, h = window.__adv.hero(), k = (x, y) => x + ',' + y, prev = new Map([[k(h.x, h.y), null]]), q = [[h.x, h.y]];
+  while (q.length) { const [x, y] = q.shift(); if (x === tx && y === ty) break; for (const [dx, dy] of [[1, 0], [-1, 0], [0, 1], [0, -1]]) { const nx = x + dx, ny = y + dy; if (GD[ny] && GD[ny][nx] === '.' && nx > 0 && !prev.has(k(nx, ny))) { prev.set(k(nx, ny), [x, y]); q.push([nx, ny]); } } }
+  const out = []; let c = [tx, ty]; while (c) { out.unshift(c); c = prev.get(k(...c)); } return out; }, [tx, ty]); for (const [x, y] of steps.slice(1)) await act(`A.goTile(${x}, ${y})`); };
+const tr = []; for (const [x, y] of stars) { await walkMaze(x, y); tr.push([x, y, (await st()).h, (await st()).stars]); } ok('النجوم الثلاث', (await st()).stars === 3, String((await st()).stars) + JSON.stringify(tr));
+await walkMaze(1, 7); await page.evaluate(() => window.__adv.tapTile(0, 7)); await sleep(2500); await act('Promise.resolve()');
+ok('العودة إلى القاعة', (await st()).area === 'museum');
+await act("A.tapEnt('badr')"); await act("A.tapEnt('zayed')");
+const pickOpt = async k => { await page.waitForFunction(() => !!document.querySelector('.advDlg.on [data-o]'), null, { timeout: 20000 }); await page.click(`.advDlg.on [data-o="${k}"]`); };
+let p = page.evaluate("window.__do(A => A.tapEnt('fahad'))"); await pickOpt(0); await p; ok('الاختيار الخاطئ يلمّح ولا ينهي', !(await st()).flags.done);
+page.evaluate("window.__do(A => A.tapEnt('fahad'))").catch(() => {}); await pickOpt(1);
+await page.waitForFunction(() => !!document.querySelector('.advEnd'), null, { timeout: 90000 }).catch(() => {});
+ok('٤. بدر يعترف وتعود الجرّة وبطاقة المكافآت', await page.evaluate(() => !!document.querySelector('.advEnd'))); await shot('dt-3');
+await page.click('.advEnd [data-home]').catch(() => {}); await sleep(800);
+const rec = await page.evaluate(() => ({ adv: window.__villages.state.vil.adv, badge: !!((window.__villages.state.vil.badges || {}).detectiveHero) }));
+ok('النتيجة محفوظة والوسام ممنوح', !!(rec.adv && rec.adv.detective) && rec.badge, JSON.stringify(rec));
+ok('لا أخطاء في الكونسول', errs.length === 0, errs.slice(0, 3).join(' | '));
+console.log(`النتيجة: ${results.filter(r => r[0] === '✅').length} من ${results.length}`);
+await b.close();

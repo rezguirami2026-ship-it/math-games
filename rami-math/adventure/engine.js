@@ -14,8 +14,10 @@ const webglOK = () => { try { const c = document.createElement('canvas'); return
 let createAdv3D = null; export const setAdv3D = f => { createAdv3D = f; };
 export const want3D = () => webglOK() && !WEAK && gfx.d3();
 
-const SOLID_KINDS = new Set(['npc', 'chest', 'block', 'gate', 'door', 'sign', 'fire', 'beacon', 'cage', 'tent', 'crates', 'barrel', 'boat', 'well', 'lever', 'banner', 'house', 'rot', 'tablet', 'crystal', 'beam', 'fence', 'pillar']);
-const ACT_KINDS = new Set(['npc', 'chest', 'lever', 'sign', 'door', 'gate', 'cage', 'beacon', 'boat', 'fire', 'safe', 'block', 'well', 'tent', 'banner', 'house', 'rot', 'tablet', 'crystal', 'animal', 'pillar', 'site', 'beam']);
+const SOLID_KINDS = new Set(['npc', 'chest', 'block', 'gate', 'door', 'sign', 'fire', 'beacon', 'cage', 'tent', 'crates', 'barrel', 'boat', 'well', 'lever', 'banner', 'house', 'rot', 'tablet', 'crystal', 'beam', 'fence', 'pillar', 'cart', 'oil', 'basket', 'tidewater', 'container', 'console', 'robot', 'cauldron', 'jarshelf', 'tile', 'sundial', 'twin', 'balloon']);
+const ACT_KINDS = new Set(['npc', 'chest', 'lever', 'sign', 'door', 'gate', 'cage', 'beacon', 'boat', 'fire', 'safe', 'block', 'well', 'tent', 'banner', 'house', 'rot', 'tablet', 'crystal', 'animal', 'pillar', 'site', 'beam', 'cart', 'oil', 'basket', 'container', 'console', 'cauldron', 'tile', 'sundial', 'soil']);   // مغامرات قرى الصف الثامن: منجم (cart/oil/basket)، ميناء (container/console، والمد tidewater)
+// حجر نرد كبير يتدحرج حين يُدفع (مهرجان الألعاب): t الوجه الأعلى، n الشمالي، e الشرقي، والمقابل يكمل ٧
+export const rollDie = ({ t, n, e }, dx, dy) => dx > 0 ? { t: 7 - e, n, e: t } : dx < 0 ? { t: e, n, e: 7 - t } : dy > 0 ? { t: n, n: 7 - t, e } : { t: 7 - n, n: t, e };
 const esc = s => String(s).replace(/[&<>]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;' }[c]));
 const wait = ms => new Promise(r => setTimeout(r, ms));
 
@@ -39,7 +41,8 @@ export function runAdventure(def, onExit) {
   try { if (createAdv3D && want3D()) { r3 = createAdv3D($('.advCv3')); $('.advCv3').hidden = false; cv.hidden = true; } } catch (e) { console.warn('[adv3d]', e); r3 = null; }
   let W = 0, H = 0, dpr = 1, Z = 1, frameN = 0, camOff = 0;
   function resize() { dpr = Math.min(devicePixelRatio || 1, 2); W = innerWidth; H = innerHeight; cv.width = W * dpr; cv.height = H * dpr; cv.style.width = W + 'px'; cv.style.height = H + 'px';
-    Z = Math.max(.62, Math.min(1.5, Math.min(W / ((W < H ? 9 : 15) * T), H / ((W < H ? 13 : 10) * T)))); if (r3) r3.resize(W, H); }
+    const vt = (def.view && def.view.tiles) || [9, 13, 15, 10];   // def.view: مغامرات قرى الصف الثامن (كاميرا أقرب وشخصيات أكبر)
+    Z = Math.max(.62, Math.min(def.view ? 2.4 : 1.5, Math.min(W / ((W < H ? vt[0] : vt[2]) * T), H / ((W < H ? vt[1] : vt[3]) * T)))); if (r3) r3.resize(W, H); }
   resize(); addEventListener('resize', resize);
   game.busy = true; bus.emit('pauseWorld', true);
 
@@ -50,24 +53,27 @@ export function runAdventure(def, onExit) {
   function load(aId, x, y) {
     area = def.areas[aId]; S.area = aId; map = area.map.map(r => r.padEnd(area.map[0].length, '#'));
     ents = area.ents.map(e => { const o = Object.assign({}, e, S.ent[aId + ':' + e.id] || {}); if (o.kind === 'guard' || o.kind === 'hazard') { o.px = o.path[0][0]; o.py = o.path[0][1]; o.wp = 1 % o.path.length; o.ang = o.ang0 || 0; o.pause = 0; } if (o.follow) { o.fx = o.x + .5; o.fy = o.y + .5; } return o; });
-    trail.length = 0;
+    trail.length = 0; twinT = null;
     if (x != null) { P.x = x + .5; P.y = y + .5; } P.path = null; cam.x = P.x * T; cam.y = P.y * T;
     if (P.onArrive) { const f = P.onArrive; P.onArrive = null; f(); }   // انتقال لمنطقة أخرى أثناء المشي: الوصول تمّ
     if (area.enter) setTimeout(() => area.enter(A), 50);
   }
+  const heroLookNow = () => { const L = heroLookWorn(game.state), c = def.tint && def.tint(A); if (c) L.robe = c; return L; };   // مصبغة الألوان: ثوب البطل بلون صبغه
   const save = () => { S.x = Math.floor(P.x); S.y = Math.floor(P.y); bus.emit('save'); };
   const persist = (e, k) => { const s = (S.ent[S.area + ':' + e.id] = S.ent[S.area + ':' + e.id] || {}); k.forEach(f => { s[f] = e[f]; }); };
   const tileAt = (x, y) => { if (y < 0 || y >= map.length || x < 0 || x >= map[0].length) return '#'; const k = key(S.area, x, y), o = S.tiles[k]; if (o) return o; return S.cut[k] ? '.' : map[y][x]; };
   const entAt = (x, y, skip) => ents.find(e => e !== skip && !e.hidden && !e.got && footprint(e, x, y) && solidEnt(e)) || ents.find(e => e !== skip && !e.hidden && !e.got && footprint(e, x, y));
   const RANK = { npc: 0, house: 3, cage: 2 };   // عند التداخل: الشخص أولاً، ثم الباب/الرافعة، ثم المبنى
-  const actAt = (x, y) => ents.filter(e => !e.hidden && !e.got && ACT_KINDS.has(e.kind) && footprint(e, x, y)).sort((a, b) => (RANK[a.kind] ?? 1) - (RANK[b.kind] ?? 1))[0];
+  const actAt = (x, y) => ents.filter(e => !e.hidden && !e.got && !e.deco && ACT_KINDS.has(e.kind) && !(e.kind === 'soil' && !e.canDig) && !((e.kind === 'door' || e.kind === 'gate') && e.open) && footprint(e, x, y)).sort((a, b) => (RANK[a.kind] ?? 1) - (RANK[b.kind] ?? 1))[0];
   function footprint(e, x, y) {
     if (e.kind === 'house') return x >= e.x && x < e.x + (e.w || 3) && y <= e.y && y > e.y - (e.h || 2);
     if (e.kind === 'block') return x === e.x && y === e.y;
     return x === e.x && y === e.y;
   }
-  const solidEnt = e => e && SOLID_KINDS.has(e.kind) && !e.follow && !((e.kind === 'gate' || e.kind === 'door' || e.kind === 'cage') && e.open);
-  const blocked = (x, y, skip) => SOLID_TILES.has(tileAt(x, y)) || solidEnt(entAt(x, y, skip));
+  // مزارع الأفلاج: الرمل الحار (hot) يُعبر في الظل فقط، والساقية المحفورة (soil) يملؤها الماء فتُغلق
+  const solidEnt = e => e && !e.hidden && (e.kind === 'boom' ? !e.open : e.kind === 'curtain' ? !(def.tint && def.tint(A) === e.col) : e.kind === 'hot' ? !e.shade : e.kind === 'soil' ? !!(e.dug && e.wet) : SOLID_KINDS.has(e.kind)) && !e.follow && !((e.kind === 'gate' || e.kind === 'door' || e.kind === 'cage') && e.open);
+  const stoneAt = (x, y) => ents.some(e => ((e.kind === 'stone' && e.lit) || e.kind === 'gondola') && !e.hidden && e.x === x && e.y === y);   // منحدرات التزلج: عربة التلفريك فوق الماء يُوقف عليها أيضاً   // حجر خطوة ظاهر فوق الماء: يُمشى عليه
+  const blocked = (x, y, skip) => (SOLID_TILES.has(tileAt(x, y)) && !stoneAt(x, y)) || solidEnt(entAt(x, y, skip));
   const solidAt = (fx, fy) => blocked(Math.floor(fx), Math.floor(fy));
 
   /* ── واجهة السكربت ── */
@@ -82,7 +88,7 @@ export function runAdventure(def, onExit) {
     ent: id => ents.find(e => e.id === id),
     set: (id, props) => { const e = A.ent(id); if (e) { Object.assign(e, props); persist(e, Object.keys(props)); } goal(); save(); },
     hide: id => A.set(id, { hidden: true }), show: id => A.set(id, { hidden: false }),
-    pressed: e => !!ents.find(o => o.kind === 'block' && o.x === e.x && o.y === e.y) || (Math.floor(P.x) === e.x && Math.floor(P.y) === e.y),
+    pressed: e => !!ents.find(o => (o.kind === 'block' || o.kind === 'twin') && o.x === e.x && o.y === e.y) || (Math.floor(P.x) === e.x && Math.floor(P.y) === e.y),
     say, choose, toast, sfx, goal, save,
     shake: (k = 1) => { shakeK = Math.max(shakeK, k); },
     sparkle: (x, y, col) => burst(x * T + T / 2, y * T + T / 2, 16, col),
@@ -102,14 +108,20 @@ export function runAdventure(def, onExit) {
     tapEnt: id => { const e = A.ent(id); if (e) tapTile(e.kind === 'house' ? e.x + Math.floor((e.w || 3) / 2) : e.x, e.y); },   // كما ينقر اللاعب على الشيء
     busy: () => locked || !!caught || !!(P.path && P.path.length) || pushing,
     tileAt: (x, y) => tileAt(x, y),
+    blockedAt: (x, y) => blocked(x, y),
+    heroPath: () => (P.path || []).map(p => p.slice()),   // مضمار السباق: الحاجز لا ينغلق على طريق البطل
+    lensSees: e => A.has(def.lens || 'lens') && Math.hypot(P.x - .5 - e.x, P.y - .5 - e.y) <= (e.r || 2.6),   // مكتب المحقق: آثار الأقدام تظهر تحت العدسة قرب البطل فقط
     setTile: (x, y, ch) => { S.tiles[key(S.area, x, y)] = ch; tilesV++; save(); },
     follow: id => { const e = A.ent(id); if (!e) return; e.follow = true; e.fx = e.x + .5; e.fy = e.y + .5; persist(e, ['follow']); },
     unfollow: (id, x, y) => { const e = A.ent(id); if (!e) return; e.follow = false; if (x != null) { e.x = x; e.y = y; } e.fx = e.fy = null; persist(e, ['follow', 'x', 'y']); },
     near: (id, x0, y0, x1, y1) => { const e = A.ent(id); if (!e) return false; const ex = e.follow ? Math.floor(e.fx) : e.x, ey = e.follow ? Math.floor(e.fy) : e.y; return ex >= x0 && ex <= x1 && ey >= y0 && ey <= y1; },
     heroIn: (x0, y0, x1, y1) => { const x = Math.floor(P.x), y = Math.floor(P.y); return x >= x0 && x <= x1 && y >= y0 && y <= y1; },
     weather: w => { S.flags.weather = Object.assign({}, S.flags.weather || {}, w); save(); },
-    beams: () => beams
+    beams: () => beams,
+    // مهرجان الألعاب: قفزة بقوس من البلاطة الحالية إلى (x, y) فوق ما بينهما (النطّاطة)
+    jump: (x, y, dur = .6) => new Promise(r => { P.path = null; P.onArrive = null; jumpS = { x0: P.x, y0: P.y, x1: x + .5, y1: y + .5, u: 0, dur, r }; locked = true; P.dir = x > P.x ? 'right' : x < P.x - .6 ? 'left' : y > P.y ? 'down' : 'up'; })
   };
+  let jumpS = null;
   let tilesV = 0;
   const trail = [];
   /* ── شعاع الضوء: ينطلق من مصدر، وتعكسه المرايا (rot بنمط mirror)، ويُضيء البلّورة التي يصلها ── */
@@ -134,7 +146,7 @@ export function runAdventure(def, onExit) {
   const dlg = $('.advDlg'), face = $('.advFace'), fctx = face.getContext('2d');
   function drawFace(who) {
     fctx.setTransform(1, 0, 0, 1, 0, 0); fctx.clearRect(0, 0, 120, 120);
-    const c = who === 'hero' ? heroLookWorn(game.state) : def.cast[who] && def.cast[who].look;
+    const c = who === 'hero' ? heroLookNow() : def.cast[who] && def.cast[who].look;
     face.hidden = !c; if (!c) return;
     fctx.setTransform(2.2, 0, 0, 2.2, 60, 192); drawHuman(fctx, Object.assign({}, c, { x: 0, y: 0, dir: 'down', anim: 'talk', animT: (t * 2) % 1 }));
   }
@@ -170,11 +182,11 @@ export function runAdventure(def, onExit) {
   const fadeTo = v => new Promise(r => { const el = $('.advFade'); el.style.opacity = v; setTimeout(r, 380); });
 
   /* ── المسار (بحث عرضي على البلاطات) ── */
-  function route(tx, ty, near) {
+  function route(tx, ty, near) {   // أقصر طريق، ولا يعبر مخرجاً في الطريق إلى غيره
     const sx = Math.floor(P.x), sy = Math.floor(P.y), Wd = map[0].length, prev = new Map(), q = [[sx, sy]]; prev.set(sx + ',' + sy, null);
     const goal2 = (x, y) => near ? Math.abs(x - tx) + Math.abs(y - ty) === 1 : x === tx && y === ty;
     while (q.length) { const [x, y] = q.shift(); if (goal2(x, y)) { const p = []; let k = x + ',' + y; while (k) { const [a, b] = k.split(',').map(Number); p.unshift([a, b]); k = prev.get(k); } p.shift(); return p; }
-      for (const [dx, dy] of [[1, 0], [-1, 0], [0, 1], [0, -1]]) { const nx = x + dx, ny = y + dy, k = nx + ',' + ny; if (prev.has(k) || nx < 0 || ny < 0 || nx >= Wd || ny >= map.length || blocked(nx, ny)) continue; prev.set(k, x + ',' + y); q.push([nx, ny]); } }
+      for (const [dx, dy] of [[1, 0], [-1, 0], [0, 1], [0, -1]]) { const nx = x + dx, ny = y + dy, k = nx + ',' + ny; if (prev.has(k) || nx < 0 || ny < 0 || nx >= Wd || ny >= map.length || blocked(nx, ny) || ((nx !== tx || ny !== ty) && ents.some(e => (e.kind === 'exit' || e.kind === 'spring' || e.kind === 'dyepool' || e.kind === 'gondola') && !e.hidden && e.x === nx && e.y === ny))) continue; prev.set(k, x + ',' + y); q.push([nx, ny]); } }
     return null;
   }
 
@@ -188,6 +200,8 @@ export function runAdventure(def, onExit) {
     if (e.kind === 'sign' && e.text) return say([{ who: 'narrator', text: e.text }]);
     if (e.kind === 'lever') { A.set(e.id, { on: !e.on }); sfx('click'); if (area.onLever) area.onLever(A, e); return; }
     if (e.kind === 'rot') { A.set(e.id, { r: ((e.r || 0) + 1) % 4 }); sfx('click'); A.shake(.15); if (area.onRotate) area.onRotate(A, e); return; }
+    if (e.kind === 'sundial') { if (area.onSun) await area.onSun(A, e); return; }
+    if (e.kind === 'soil') { if (area.onSoil) await area.onSoil(A, e); return; }
     if (e.kind === 'tablet') { const n = (def.symbols || ['🌙', '☀️', '⭐', '🌴']).length; A.set(e.id, { sym: ((e.sym || 0) + 1) % n }); sfx('click'); if (area.onTablet) area.onTablet(A, e); return; }
     if (e.kind === 'chest' && !e.open) { A.set(e.id, { open: true }); sfx('win'); if (e.item) A.give(e.item, e.n || 1); return; }
     if ((e.kind === 'door' || e.kind === 'gate') && !e.open) {
@@ -211,8 +225,8 @@ export function runAdventure(def, onExit) {
   function pushBlock(b, dx, dy) {
     const nx = b.x + dx, ny = b.y + dy;
     if (!dx && !dy) return false;
-    if (blocked(nx, ny, b) || ents.find(o => o.kind === 'block' && o.x === nx && o.y === ny)) { toast('🧱 لا يتحرك من هذه الجهة'); return false; }
-    b.px = b.x; b.py = b.y; b.x = nx; b.y = ny; persist(b, ['x', 'y']); sfx('drop'); A.shake(.3); save(); goal();
+    if (blocked(nx, ny, b) || ents.find(o => (o.kind === 'block' || o.kind === 'exit' || o.kind === 'gate') && !o.hidden && o.x === nx && o.y === ny)) { toast(b.die ? '🎲 لا يتدحرج من هذه الجهة' : '🧱 لا يتحرك من هذه الجهة'); return false; }
+    b.px = b.x; b.py = b.y; b.x = nx; b.y = ny; if (b.die) b.die = rollDie(b.die, dx, dy); persist(b, b.die ? ['x', 'y', 'die'] : ['x', 'y']); sfx('drop'); A.shake(.3); save(); goal();
     const pl = b.to && A.ent(b.to); if (pl && b.x === pl.x && b.y === pl.y) { burst(pl.x * T + T / 2, pl.y * T + T / 2, 18, '#FFD54A'); toast('✨ الصندوق على اللوحة!'); }
     return true;
   }
@@ -225,6 +239,10 @@ export function runAdventure(def, onExit) {
   function tapTile(tx, ty) {   // نقرة على بلاطة (من الشاشة أو من الاختبار)
     if (locked || caught) return;
     const e = actAt(tx, ty) || actAt(tx, ty + 1);
+    if (e && e.remote) {   // يُستعمل من بعيد (ألواح لغز الباب): قريباً يكفي، وإلا يمشي البطل إلى موقفه e.stand
+      if (Math.abs(e.x - Math.floor(P.x)) + Math.abs(e.y - Math.floor(P.y)) <= 5) return interact(e);
+      const [sx, sy] = e.stand || [e.x, e.y + 2]; P.path = route(sx, sy); P.onArrive = () => interact(e); if (!P.path) toast('🚧 لا طريق إلى هناك الآن'); mark = { x: sx, y: sy, t: 0 }; return;
+    }
     if (e) {
       const ex = e.kind === 'house' ? e.x + Math.floor((e.w || 3) / 2) : e.x, ey = e.y;
       if (Math.abs(ex - Math.floor(P.x)) + Math.abs(ey - Math.floor(P.y)) === 1) return interact(e);
@@ -336,6 +354,24 @@ export function runAdventure(def, onExit) {
       if (d > 8) { e.fx = P.x; e.fy = P.y; } e.x = Math.floor(e.fx); e.y = Math.floor(e.fy); });
   }
 
+  /* سوق العروض: المانيكان (twin) يتحرك مع كل خطوة يكملها البطل إلى وسط بلاطة: «مرآة» (mode: 'mirror') بعكس الاتجاه الأفقي ونفس العمودي،
+     و«نسخة» بالاتجاه نفسه؛ ولا يتحرك إن كان مكانه الجديد مسدوداً (جدار أو شيء أو البطل). تمرّ فوق الألواح والنجوم فقط */
+  let twinT = null;
+  const TWIN_PASS = new Set(['plate', 'star']);
+  function twinCheck(dt) {
+    if (!ents.some(e => e.kind === 'twin')) return;
+    if (P.moving && !(P.path && P.path.length)) { const k = Math.min(1, dt * 10), up = P.dir === 'up' || P.dir === 'down';   // المشي بالأسهم: يُشدّ البطل إلى منتصف صفّه حتى يمرّ بمراكز البلاطات
+      if (up) P.x += (Math.floor(P.x) + .5 - P.x) * k; else P.y += (Math.floor(P.y) + .5 - P.y) * k; }
+    const hx = Math.floor(P.x), hy = Math.floor(P.y); if (Math.abs(P.x - hx - .5) > .2 || Math.abs(P.y - hy - .5) > .2) return;
+    if (!twinT) { twinT = [hx, hy]; return; } const dx = hx - twinT[0], dy = hy - twinT[1]; if (!dx && !dy) return; twinT = [hx, hy]; if (Math.abs(dx) + Math.abs(dy) !== 1) return;
+    let moved = false;
+    ents.filter(e => e.kind === 'twin' && !e.hidden && !e.frozen).forEach(e => { const tx = e.x + (e.mode === 'mirror' ? -dx : dx), ty = e.y + dy;
+      if (tileAt(tx, ty) === '#' || blocked(tx, ty) || (tx === hx && ty === hy) || ents.some(o => o !== e && !o.hidden && !o.got && o.x === tx && o.y === ty && !TWIN_PASS.has(o.kind))) return;
+      e.px = e.x; e.py = e.y; e.x = tx; e.y = ty; persist(e, ['x', 'y']); moved = true; });
+    if (moved) { sfx('pick'); if (area.onTwin) area.onTwin(A);
+      if (P.path && P.path.some(([x, y]) => blocked(x, y))) { const [lx, ly] = P.path[P.path.length - 1], np = (P.rr = (P.rr || 0) + 1) > 8 ? null : route(lx, ly); if (np && np.length) P.path = np; else { P.path = null; const f = P.onArrive; P.onArrive = null; if (f) f(); toast('🚧 المانيكان سدّ الطريق'); } } }
+  }
+
   /* ── تأثيرات ── */
   const fx = []; let shakeK = 0;
   function burst(x, y, n, col) { for (let i = 0; i < n; i++) { const a = Math.random() * 7, s = 40 + Math.random() * 90; fx.push({ x, y, vx: Math.cos(a) * s, vy: Math.sin(a) * s - 60, life: .7 + Math.random() * .4, col: col || ['#FFD54A', '#FF7AB6', '#7CD6FF'][i % 3] }); } }
@@ -344,8 +380,10 @@ export function runAdventure(def, onExit) {
   let raf = 0, last = performance.now(), goalT = 0;
   function step(now) {
     const dt = Math.min(.05, (now - last) / 1000); last = now; t += dt;
-    if (!locked && !caught) { update(dt); followStep(dt); }
-    ents.forEach(e => { if (e.kind === 'guard') { updGuard(e, dt); if (!locked && !caught && sees(e)) getCaught(e); } if (e.kind === 'hazard') { updGuard(e, dt); if (!locked && !caught && touches(e)) getCaught(e); } if (e.kind === 'block' && e.px != null) { e.px += (e.x - e.px) * Math.min(1, dt * 14); e.py += (e.y - e.py) * Math.min(1, dt * 14); if (Math.abs(e.px - e.x) + Math.abs(e.py - e.y) < .01) { e.px = e.py = null; } } });
+    if (jumpS) { const J = jumpS; J.u = Math.min(1, J.u + dt / J.dur); P.x = J.x0 + (J.x1 - J.x0) * J.u; P.y = J.y0 + (J.y1 - J.y0) * J.u; P.z = Math.sin(J.u * Math.PI) * 1.4; P.moving = true; P.phase += dt * 6;
+      if (J.u >= 1) { P.z = 0; jumpS = null; locked = false; P.moving = false; save(); J.r(); } }
+    if (!locked && !caught) { update(dt); followStep(dt); twinCheck(dt); }
+    ents.forEach(e => { if (e.kind === 'guard') { updGuard(e, dt); if (!locked && !caught && sees(e)) getCaught(e); } if (e.kind === 'hazard') { updGuard(e, dt); if (!locked && !caught && touches(e)) getCaught(e); } if ((e.kind === 'block' || e.kind === 'twin' || e.kind === 'gondola' || e.kind === 'balloon') && e.px != null) { e.px += (e.x - e.px) * Math.min(1, dt * 14); e.py += (e.y - e.py) * Math.min(1, dt * 14); if (Math.abs(e.px - e.x) + Math.abs(e.py - e.y) < .01) { e.px = e.py = null; } } });
     if (area.tick) area.tick(A, dt);
     if (ents.some(e => e.kind === 'beam')) traceBeams(); else if (beams.length) beams = [];
     windStep(dt); lightning(dt);
@@ -361,13 +399,13 @@ export function runAdventure(def, onExit) {
       cam.x += (P.x * T - cam.x) * Math.min(1, dt * 6); cam.y += (P.y * T - camOff - cam.y) * Math.min(1, dt * 6);
       r3.frame({ areaId: S.area, map, theme: area.theme, scenery: area.scenery, dark: (S.flags.weather && S.flags.weather.dark != null) ? S.flags.weather.dark : area.dark != null ? area.dark : THEMES[area.theme].night, tileAt, ents, P, t, A, caught,
         look: e => e.look || def.cast[e.who].look, itemIcon: A.itemIcon, pressed: A.pressed,
-        heroLook: heroLookWorn(game.state), heroKey: JSON.stringify(heroLookWorn(game.state)), lantern: A.has('lantern'), goalAt: goalAt(),
-        fx: fx.map(p => ({ x: p.x, y: p.y, h: Math.max(0, -p.vy * .1), col: p.col })), cam, zoom: Z / (W < H ? .9 : 1.1), userZoom, cine, shake: shakeK,
+        heroLook: heroLookNow(), heroKey: JSON.stringify(heroLookNow()), lantern: A.has('lantern'), goalAt: goalAt(),
+        fx: fx.map(p => ({ x: p.x, y: p.y, h: Math.max(0, -p.vy * .1), col: p.col })), cam, zoom: Z / (W < H ? .9 : 1.1), peopleK: (def.view && def.view.people) || 1, userZoom, cine, shake: shakeK,
         tilesV, beams, symbols: def.symbols || ['🌙', '☀️', '⭐', '🌴'], wind: area.wind ? { gust, dx: area.wind.dx, dy: area.wind.dy, on: !(area.wind.until && area.wind.until(A)) } : null, weather: Object.assign({ rain: area.rain, sand: area.sand, fog: area.fog && !(area.fogUntil && area.fogUntil(A)) }, S.flags.weather || {}), defItems: items,
         cutList: () => Object.keys(S.cut).filter(k => k.startsWith(S.area + ':')).map(k => k.slice(S.area.length + 1)),
         canCut: k => { const [x, y] = k.split(',').map(Number), ch = map[y][x]; return (ch === '"' && A.has(def.cutTool || 'sickle')) || (ch === 'R' && A.has(def.breakTool || 'hammer')); } });
     } else draw();
-    const f = front(), ft = !f && frontTile(); $('.advAct').hidden = !(f || ft) || locked; if (f) $('.advAct').textContent = f.kind === 'npc' || f.kind === 'animal' ? '💬' : f.kind === 'block' ? '👐' : f.kind === 'rot' ? '🔄' : '✋'; else if (ft) $('.advAct').textContent = ft.ch === '"' ? '🌾' : '🔨';
+    const f = front(), ft = !f && frontTile(); $('.advAct').hidden = !(f || ft) || locked; if (f) $('.advAct').textContent = f.kind === 'npc' || f.kind === 'animal' ? '💬' : f.kind === 'block' ? '👐' : f.kind === 'rot' ? '🔄' : f.kind === 'sundial' ? '☀️' : f.kind === 'soil' ? '⛏️' : '✋'; else if (ft) $('.advAct').textContent = ft.ch === '"' ? '🌾' : '🔨';
     raf = requestAnimationFrame(step);
   }
   function update(dt) {
@@ -377,7 +415,7 @@ export function runAdventure(def, onExit) {
     if (stick.drag && !locked && !caught) { vx = stick.vx; vy = stick.vy; }   // عصا اللمس
     if (vx || vy) P.path = null;
     if (!vx && !vy && P.path && P.path.length) { const [tx, ty] = P.path[0], dx = tx + .5 - P.x, dy = ty + .5 - P.y, d = Math.hypot(dx, dy);
-      if (d < .08) { P.path.shift(); if (!P.path.length) { P.path = null; const f = P.onArrive; P.onArrive = null; if (f) f(); } } else { vx = dx / d; vy = dy / d; } }
+      if (d < .08) { P.path.shift(); if (!P.path.length) { P.path = null; P.rr = 0; const f = P.onArrive; P.onArrive = null; if (f) f(); } } else { vx = dx / d; vy = dy / d; } }
     const sp = 3.6 * dt, n = Math.hypot(vx, vy); P.moving = n > 0;
     if (n) { vx /= n; vy /= n; P.dir = Math.abs(vx) > Math.abs(vy) ? (vx > 0 ? 'right' : 'left') : (vy > 0 ? 'down' : 'up'); P.phase += sp * 3.2;
       const r = .28, can = (x, y) => !solidAt(x - r, y - r * .6) && !solidAt(x + r, y - r * .6) && !solidAt(x - r, y + r * .6) && !solidAt(x + r, y + r * .6);
@@ -403,7 +441,7 @@ export function runAdventure(def, onExit) {
     });
   }
   function draw() {
-    const dk = area.dark != null ? area.dark : THEMES[area.theme].night;
+    const dk = (S.flags.weather && S.flags.weather.dark != null) ? S.flags.weather.dark : area.dark != null ? area.dark : THEMES[area.theme].night;   // كالعرض المجسّم: weather.dark يغلب
     // الشريط العلوي (المهمة والأزرار) والأدوات السفلية تغطي أطراف الشاشة: البطل يتوسط المساحة الحرة بينهما،
     // والكاميرا تتجاوز حافة الخريطة بقدرها، فلا يختفي البطل خلف الكتابة حين يقف قرب أعلى الخريطة أو أسفلها (الهاتف خاصة)
     if (!draw.inset || (draw.n = (draw.n || 0) + 1) % 20 === 0) { const tp = $('.advTop').getBoundingClientRect(), iv = $('.advInv'), ib = iv && iv.children.length ? iv.getBoundingClientRect() : null;
@@ -428,7 +466,7 @@ export function runAdventure(def, onExit) {
     if (mark) { mark.t += .016; if (mark.t > .8) mark = null; else { ctx.strokeStyle = `rgba(255,255,255,${.8 - mark.t})`; ctx.lineWidth = 3; ctx.beginPath(); ctx.ellipse(mark.x * T + T / 2, mark.y * T + T * .7, 14 + mark.t * 20, 6 + mark.t * 8, 0, 0, 7); ctx.stroke(); } }
     ents.forEach(e => {
       if (e.hidden || (e.x < x0 - 3 || e.x > x1 + 3 || e.y < y0 - 1 || e.y > y1 + 3) && e.kind !== 'guard') return;
-      if (e.kind === 'plate') { drawThing(ctx, e, t, A); return; }
+      if (e.kind === 'plate' || e.kind === 'belt' || e.kind === 'honey' || e.kind === 'stone' || e.kind === 'hot' || e.kind === 'soil' || e.kind === 'spring' || e.kind === 'dyepool' || e.kind === 'print' || e.kind === 'gondola' || e.kind === 'flip') { drawThing(ctx, e, t, A); return; }   // تحت البطل
       if (e.kind === 'guard') { ctx.save(); drawCone(ctx, e, caught === e); ctx.restore(); list.push({ y: (e.py + 1) * T - 4, draw: () => person(e.px, e.py, e.look, e.ang, !!e.pause, e.ph, caught === e ? '!' : null) }); return; }
       if (e.kind === 'npc') { const nx = e.follow ? e.fx - .5 : e.x, ny = e.follow ? e.fy - .5 : e.y; list.push({ y: (ny + 1) * T - 4, draw: () => person(nx, ny, e.look || def.cast[e.who].look, e.face, !e.moving, e.ph || 0, e.mark ? e.mark(A) : null) }); return; }
       if (e.kind === 'hazard' || e.kind === 'animal') { const hx = e.kind === 'hazard' ? e.px : e.follow ? e.fx - .5 : e.x, hy = e.kind === 'hazard' ? e.py : e.follow ? e.fy - .5 : e.y;
@@ -436,7 +474,7 @@ export function runAdventure(def, onExit) {
       if (e.kind === 'exit' || e.kind === 'trigger' || e.kind === 'safe') { if (e.kind === 'safe') list.push({ y: (e.y + 1) * T - 8, draw: () => drawThing(ctx, Object.assign({}, e, { kind: 'fire' }), t, A) }); if (e.kind === 'exit' && e.arrow) arrow(e); return; }
       list.push({ y: (e.kind === 'block' && e.py != null ? e.py : e.y) * T + T - 2 + (e.kind === 'door' || e.kind === 'gate' || e.kind === 'cage' ? 1 : 0), draw: () => drawThing(ctx, e, t, A) });
     });
-    list.push({ y: P.y * T + T * .35, draw: () => { const h = Object.assign({}, heroLookWorn(game.state), { x: P.x * T, y: P.y * T + T * .35, dir: P.dir, moving: P.moving, phase: P.phase, s: .95 }); ctx.fillStyle = 'rgba(40,25,10,.25)'; ctx.beginPath(); ctx.ellipse(h.x + 3, h.y, 13, 4, 0, 0, 7); ctx.fill(); drawHuman(ctx, h);
+    list.push({ y: P.y * T + T * .35, draw: () => { const h = Object.assign({}, heroLookNow(), { x: P.x * T, y: P.y * T + T * .35 - (P.z || 0) * T, dir: P.dir, moving: P.moving, phase: P.phase, s: .95 }); ctx.fillStyle = 'rgba(40,25,10,.25)'; ctx.beginPath(); ctx.ellipse(h.x + 3, P.y * T + T * .35, 13 - (P.z || 0) * 4, 4, 0, 0, 7); ctx.fill(); drawHuman(ctx, h);
       if (tileAt(Math.floor(P.x), Math.floor(P.y)) === ';') grass(Math.floor(P.x), Math.floor(P.y), true); } });
     ents.forEach(b => { const pl = b.kind === 'block' && b.to && A.ent(b.to); if (!pl || (b.x === pl.x && b.y === pl.y)) return; ctx.save(); ctx.setLineDash([8, 8]); ctx.lineDashOffset = -t * 30; ctx.strokeStyle = 'rgba(255,214,90,.85)'; ctx.lineWidth = 4;
       ctx.beginPath(); ctx.moveTo(b.x * T + T / 2, b.y * T + T * .7); ctx.lineTo(pl.x * T + T / 2, pl.y * T + T * .7); ctx.stroke(); ctx.restore(); });   // دليل: من الصندوق إلى لوحته
@@ -449,7 +487,7 @@ export function runAdventure(def, onExit) {
   function arrow(e) { const b = Math.sin(t * 4) * 4; ctx.fillStyle = 'rgba(255,255,255,.85)'; ctx.font = '900 26px Cairo'; ctx.textAlign = 'center'; ctx.fillText(e.arrow, e.x * T + T / 2, e.y * T + T / 2 + b + 8); }
   function person(x, y, look, ang, idle, ph, markTxt) {
     const dir = typeof ang === 'string' ? ang : Math.abs(Math.cos(ang)) > Math.abs(Math.sin(ang)) ? (Math.cos(ang) > 0 ? 'right' : 'left') : (Math.sin(ang) > 0 ? 'down' : 'up');
-    const h = Object.assign({}, look, { x: x * T + T / 2, y: y * T + T * .85, dir: dir || 'down', moving: !idle && ph > 0, phase: ph || 0, s: (look.s || 1) * .95 });
+    const h = Object.assign({}, look, { x: x * T + T / 2, y: y * T + T * .85, dir: dir || 'down', moving: !idle && ph > 0, phase: ph || 0, s: (look.s || 1) * .95 * ((def.view && def.view.people) || 1) });
     ctx.fillStyle = 'rgba(40,25,10,.25)'; ctx.beginPath(); ctx.ellipse(h.x + 3, h.y, 13, 4, 0, 0, 7); ctx.fill(); drawHuman(ctx, h);
     if (markTxt) { const b = Math.sin(t * 5) * 3; ctx.fillStyle = markTxt === '!' ? '#E2475C' : '#FFC23D'; ctx.beginPath(); ctx.arc(h.x, h.y - 78 + b, 11, 0, 7); ctx.fill(); ctx.fillStyle = '#fff'; ctx.font = '900 15px Cairo'; ctx.textAlign = 'center'; ctx.fillText(markTxt, h.x, h.y - 72 + b); }
   }

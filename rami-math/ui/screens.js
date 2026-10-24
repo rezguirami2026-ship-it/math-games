@@ -36,7 +36,7 @@ export const screens = {
   grade(done) {
     const el = $('screen'); el.className = 'screen on hero p2on';
     el.innerHTML = `${P2HEAD('اختر صفّك', 'لكل صف دروسه ونجومه ومغامرته، وتستطيع التغيير لاحقاً من زر «🏫 الصف» في الشاشة الرئيسية')}<div class="p2body">
-      <div class="grades2">${GRADES.map(g => `<button class="gcard${g.n === GRADE ? ' on' : ''}" data-g="${g.n}"${g.ready ? '' : ' disabled'}><b>${ar(g.n)}</b><span>الصف ${g.name}</span>${g.ready ? '' : '<small>قريباً</small>'}</button>`).join('')}</div>
+      <div class="grades2">${GRADES.map(g => `<button class="gcard${g.n === GRADE ? ' on' : ''}" data-g="${g.n}"${g.ready || g.n === GRADE ? '' : ' disabled'}><b>${ar(g.n)}</b><span>الصف ${g.name}</span>${g.ready ? '' : g.n === GRADE ? '<small>معاينة المعلم</small>' : '<small>قريباً</small>'}</button>`).join('')}</div>
       <button class="pgo" id="bGo"><span>⭐</span>متابعة<em>‹</em></button></div>`;
     let pick = GRADE;
     const cards = [...el.querySelectorAll('.gcard')];

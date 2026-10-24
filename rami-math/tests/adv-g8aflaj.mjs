@@ -1,0 +1,58 @@
+// اختبار مغامرة مزارع الأفلاج «الفلج العطشان» كاملة كاللاعب: راشد، الرمضاء لا تُعبر ظهراً ولا عصراً، الأثر إلى الصباح فالعبور في الظل
+// إلى الصخرة (ونجمة)، أثر الصخرة إلى العصر فالعبور شرقاً (ونجمة)، المسحاة، المدرّجات: الحفر بعيداً عن الساقية مرفوض، الحفر من الفوهة
+// يجري فيه الماء ويغلقه، إغلاق بوابة الفلج يجففه، ثم ثلاث سواقٍ إلى الحقول الثلاثة، والختام والوسام.
+// node adv-g8aflaj.mjs [مجلد اللقطات] [--3d] (الخادم على 8000)
+import { chromium } from 'playwright-core';
+const out = process.argv[2] && !process.argv[2].startsWith('--') ? process.argv[2] : null, d3 = process.argv.includes('--3d');
+const sleep = ms => new Promise(r => setTimeout(r, ms)), results = [], ok = (n, c, i = '') => results.push([c ? '✅' : '❌', n, i]);
+const b = await chromium.launch({ channel: 'chrome', args: ['--use-angle=d3d11', '--ignore-gpu-blocklist'] }); const page = await b.newPage({ viewport: { width: 1100, height: 700 } });
+const errs = []; page.on('pageerror', e => errs.push(e.message)); page.on('console', m => { if (m.type() === 'error') errs.push(m.text()); });
+await page.addInitScript(d3 => { localStorage.setItem('ramimath_grade_asked', '1'); localStorage.setItem('ramimath_grade', '8'); localStorage.setItem('ramimath_3d', d3 ? '1' : '0'); }, d3);
+await page.goto('http://localhost:8000/?grade=8' + (d3 ? '' : '&2d=1')); await sleep(1200);
+await page.evaluate(async () => { const m = await import('/core/state.js'), { LESSONS } = await import('/content/lessons.js'); const s = m.fresh({ name: 'سالم', kind: 'boy', skin: '#C68A5B', color: '#2F6FB2' });
+  LESSONS.filter(l => l.u <= 5).forEach(l => { s.quests.done[l.id] = Date.now(); s.quests.data[l.id] = { stars: 3 }; }); localStorage.setItem('ramimath_village_v1_g8', JSON.stringify(s)); });
+await page.reload(); await sleep(1500); await page.click('#bCont'); await sleep(400);
+await page.evaluate(() => window.__villages.enter(5)); await sleep(3000);
+ok('زر المغامرة ظاهر بعد إنهاء دروس المزارع', await page.evaluate(() => !document.querySelector('[data-a=adv]').hidden));
+await page.click('[data-a=adv]'); await page.waitForFunction(() => window.__adv, null, { timeout: 30000 });
+await page.evaluate(() => { const z = ms => new Promise(r => setTimeout(r, ms));
+  window.__do = async fn => { let fin = false; const p = Promise.resolve(fn(window.__adv)).then(v => { fin = true; return v; });
+    for (let i = 0; i < 600; i++) { await z(120); const d = document.querySelector('.advDlg.on'); if (d && !d.querySelector('[data-o]')) { d.click(); continue; } if (fin && !window.__adv.busy()) break; } return p; }; });
+const act = src => page.evaluate(`window.__do(A => ${src})`), st = () => page.evaluate(() => { const A = window.__adv; return { area: A.area, flags: A.S.flags, inv: A.S.inv, stars: A.S.stars, h: A.hero() }; });
+const shot = async n => { if (out) await page.screenshot({ path: `${out}/${n}.png` }); };
+const blocked = (x, y) => page.evaluate(([x, y]) => window.__adv.blockedAt(x, y), [x, y]);
+await act('new Promise(r => setTimeout(r, 900))');
+ok('البداية في سهل الرمضاء ظهراً', (await st()).area === 'flats' && (await st()).flags.sun === 1); await shot('af-1');
+await act("A.tapEnt('rashid')"); ok('١. راشد يشرح', !!(await st()).flags.met);
+ok('الرمل الحار لا يُعبر ظهراً', await blocked(4, 5));
+await act("A.use('dial1')"); ok('العصر: الظلال شرقاً ولا طريق بعد', (await st()).flags.sun === 2 && await blocked(4, 5));
+await act("A.use('dial1')"); ok('الصباح: ظل النخلة على الرمل', (await st()).flags.sun === 0 && !(await blocked(4, 5))); await shot('af-2');
+await act('A.goTile(9, 7)'); await act('A.goTile(10, 5)');
+let s = await st(); ok('٢. العبور في الظل إلى الصخرة', s.flags.island && s.h.x === 10 && s.h.y === 5, JSON.stringify(s.h)); ok('نجمة في ظل الصباح', s.stars >= 1);
+ok('من الصخرة لا طريق شرقاً صباحاً', !(await act('A.goTile(17, 6)')) || (await st()).h.x !== 17);
+await act("A.use('dial2')"); await act("A.use('dial2')"); ok('أثر الصخرة إلى العصر', (await st()).flags.sun === 2);
+await act('A.goTile(14, 8)'); await act('A.goTile(17, 6)'); s = await st(); ok('العبور شرقاً في ظل العصر', s.h.x === 17 && s.h.y === 6, JSON.stringify(s.h)); ok('نجمة في ظل العصر', s.stars >= 2); await shot('af-3');
+await act("A.tapEnt('chest')"); ok('٣. المسحاة', (await st()).inv.spade === 1);
+await page.evaluate(() => window.__adv.tapTile(20, 6)); await sleep(2500); await act('Promise.resolve()');
+ok('دخول المدرّجات', (await st()).area === 'terraces');
+const soil = id => page.evaluate(id => { const e = window.__adv.ent(id); return e && { dug: !!e.dug, wet: !!e.wet }; }, id);
+await act("A.use('d9_8')"); ok('الحفر بعيداً عن الساقية مرفوض', !(await soil('d9_8')).dug);
+const dig = async (x, y) => { await act(`A.use('d${x}_${y}')`); for (let k = 0; k < 20 && !(await soil(`d${x}_${y}`)).wet; k++) await sleep(80); };
+for (let x = 3; x <= 6; x++) await dig(x, 2);
+ok('الماء يجري فيما حُفر ويغلقه', (await soil('d6_2')).wet && await blocked(6, 2)); await shot('af-4');
+await act("A.use('sluice')"); await sleep(400); ok('إغلاق بوابة الفلج يجفف الساقية', !(await soil('d4_2')).wet && !(await blocked(4, 2)));
+await act("A.use('sluice')"); await sleep(1200); ok('وفتحها يعيد الماء', (await soil('d6_2')).wet);
+for (let x = 7; x <= 16; x++) await dig(x, 2);
+for (let y = 3; y <= 9; y++) await dig(16, y);
+ok('حقلان ارتويا', !!(await st()).flags.w_fA && !!(await st()).flags.w_fC, await page.evaluate(() => { const A = window.__adv; return JSON.stringify({ f: Object.keys(A.S.flags).filter(k => k.startsWith('w_')), col: [3, 4, 5, 6, 7, 8, 9].map(y => { const e = A.ent('d16_' + y); return e ? (e.dug ? 1 : 0) + (e.wet ? 'w' : '') : '-'; }), fA: A.ent('fA').wet, h: A.hero() }); }));
+await act('A.goTile(18, 1)'); await act('A.goTile(18, 11)');
+for (let y = 3; y <= 7; y++) await dig(2, y);
+page.evaluate("window.__do(A => A.use('d2_8'))").catch(() => {});
+await page.waitForFunction(() => !!document.querySelector('.advEnd'), null, { timeout: 60000 }).catch(() => {});
+ok('٤. ارتوت الحقول الثلاثة وبطاقة المكافآت', await page.evaluate(() => !!document.querySelector('.advEnd'))); await shot('af-5');
+await page.click('.advEnd [data-home]').catch(() => {}); await sleep(800);
+const rec = await page.evaluate(() => ({ adv: window.__villages.state.vil.adv, badge: !!((window.__villages.state.vil.badges || {}).falajKeeper) }));
+ok('النتيجة محفوظة والوسام ممنوح', !!(rec.adv && rec.adv.aflaj) && rec.badge, JSON.stringify(rec));
+ok('لا أخطاء في الكونسول', errs.length === 0, errs.slice(0, 3).join(' | '));
+console.log(results.map(r => r.join(' ')).join('\n')); console.log(`النتيجة: ${results.filter(r => r[0] === '✅').length} من ${results.length}`);
+await b.close();

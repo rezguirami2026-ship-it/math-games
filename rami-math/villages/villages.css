@@ -1,0 +1,208 @@
+/* القرى (الصفان الثامن والتاسع): خريطة القرى، وشريط القرية، والحوار. الخط Cairo من اللعبة نفسها */
+.vroot { position: fixed; inset: 0; display: none; z-index: 5; font-family: Cairo, system-ui, sans-serif; direction: rtl; color: #1E2433; }
+.vroot.on { display: block; }
+.vcv { position: absolute; inset: 0; width: 100%; height: 100%; touch-action: none; display: block; }
+
+/* ── شريط القرية العلوي ── */
+.vtop { position: absolute; top: 10px; inset-inline: 10px; display: flex; gap: 8px; align-items: center; pointer-events: none; }
+.vtop > * { pointer-events: auto; }
+.vbtn { min-width: 46px; height: 46px; border-radius: 14px; border: 0; background: rgba(255, 255, 255, .92); box-shadow: 0 4px 14px rgba(0, 0, 0, .25); font: 800 15px Cairo, sans-serif; color: #1E2433; cursor: pointer; padding: 0 10px; }
+.vbtn:active { transform: scale(.95); }
+.vtitle { flex: 1; min-width: 0; background: linear-gradient(135deg, rgba(20, 24, 38, .82), rgba(36, 42, 64, .78)); color: #fff; border-radius: 16px; padding: 6px 14px; box-shadow: 0 4px 16px rgba(0, 0, 0, .3); backdrop-filter: blur(6px); }
+.vtitle b { display: block; font-size: 16px; line-height: 1.3; }
+.vtitle small { display: block; font-size: 11.5px; opacity: .8; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.vdots { display: flex; gap: 5px; margin-top: 4px; }
+.vdots i { width: 18px; height: 6px; border-radius: 3px; background: rgba(255, 255, 255, .25); }
+.vdots i.on { background: #4ADE80; } .vdots i.cur { background: #FFD54A; animation: vpulse 1.2s ease-in-out infinite; }
+@keyframes vpulse { 50% { opacity: .45; } }
+.vpill { height: 46px; display: flex; align-items: center; gap: 4px; padding: 0 12px; border-radius: 14px; background: rgba(255, 255, 255, .92); font-weight: 800; box-shadow: 0 4px 14px rgba(0, 0, 0, .25); }
+.vobj { position: absolute; top: 66px; inset-inline-start: 10px; max-width: min(78vw, 420px); background: rgba(255, 249, 230, .94); border-radius: 12px; padding: 6px 12px; font-weight: 700; font-size: 14px; box-shadow: 0 3px 10px rgba(0, 0, 0, .2); }
+.vobj:empty { display: none; }
+.vzoom { position: absolute; bottom: 18px; inset-inline-start: 12px; display: flex; flex-direction: column; gap: 8px; }
+.vact { position: absolute; bottom: 22px; left: 50%; transform: translateX(-50%); }
+.vgo { font: 900 19px Cairo, sans-serif; color: #fff; border: 0; border-radius: 18px; padding: 12px 26px; background: linear-gradient(180deg, #2BB673, #138A52); box-shadow: 0 6px 0 #0B5E37, 0 10px 24px rgba(0, 0, 0, .35); cursor: pointer; animation: vin .25s ease-out; }
+.vgo:active { transform: translateY(4px); box-shadow: 0 2px 0 #0B5E37; }
+@keyframes vin { from { transform: translateY(20px); opacity: 0; } }
+
+/* ── فقاعة الحوار ── */
+.vtalk { position: fixed; z-index: 120; left: 50%; bottom: 24px; transform: none; inset-inline-start: auto; max-width: min(88vw, 440px); background: #fff; border-radius: 18px; padding: 10px 16px 12px 30px; box-shadow: 0 10px 30px rgba(0, 0, 0, .3); font-family: Cairo, sans-serif; direction: rtl; animation: vin .2s ease-out; }
+.vtalk:not(.anch) { left: 50%; transform: translateX(-50%); }
+.vtalk b { color: #B45309; font-size: 14px; } .vtalk p { margin: 2px 0 0; font-size: 17px; font-weight: 700; line-height: 1.6; }
+.vtalk .vnext { position: absolute; bottom: 6px; left: 10px; color: #B45309; animation: vpulse 1s infinite; }
+.vtalk.anch::after { content: ''; position: absolute; bottom: -9px; left: 50%; margin-left: -9px; border: 9px solid transparent; border-bottom: 0; border-top-color: #fff; }
+
+/* ── خريطة القرى ── */
+.hub { position: absolute; inset: 0; display: flex; flex-direction: column; background: radial-gradient(1200px 600px at 80% -10%, #FFE9B8 0%, transparent 60%), linear-gradient(180deg, #F6E7C8, #E9D3A6); }
+.hub.g9 { background: radial-gradient(1200px 600px at 80% -10%, #CFE8FF 0%, transparent 60%), linear-gradient(180deg, #DCEBF7, #BCD3E8); }
+.hhead { display: flex; align-items: center; gap: 10px; padding: 14px 16px 10px; }
+.hhead > div:first-child { flex: 1; } .hhead small { font-weight: 700; opacity: .7; }
+.hhead h1 { margin: 0; font-size: 26px; font-weight: 900; }
+.hsum { background: #fff; border-radius: 14px; padding: 6px 12px; text-align: center; box-shadow: 0 3px 10px rgba(0, 0, 0, .12); font-weight: 800; }
+.hsum small { display: block; font-size: 11px; opacity: .7; }
+.hscroll { flex: 1; overflow-y: auto; padding: 0 12px 40px; -webkit-overflow-scrolling: touch; }
+.hterm h2 { font-size: 15px; margin: 14px 6px 10px; opacity: .75; }
+.hpath { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 300px), 1fr)); gap: 12px; position: relative; }
+.hnode { --c: #888; display: flex; align-items: center; gap: 12px; text-align: start; border: 0; cursor: pointer; padding: 10px 12px; border-radius: 22px; background: #fff; box-shadow: 0 5px 0 color-mix(in srgb, var(--c) 55%, #000), 0 10px 22px rgba(0, 0, 0, .12); font-family: Cairo, sans-serif; color: inherit; transition: transform .15s; }
+.hnode:hover { transform: translateY(-2px); } .hnode:active { transform: translateY(3px); }
+.hmed { position: relative; width: 78px; height: 78px; flex: none; }
+.hmed svg { position: absolute; inset: 0; transform: rotate(-90deg); }
+.hmed .hbg { fill: color-mix(in srgb, var(--c) 14%, #fff); stroke: color-mix(in srgb, var(--c) 22%, #fff); stroke-width: 7; }
+.hmed .hpr { fill: none; stroke: var(--c); stroke-width: 7; stroke-linecap: round; transition: stroke-dashoffset .6s; }
+.hmed i { position: absolute; inset: 0; display: grid; place-items: center; font-size: 34px; font-style: normal; }
+.hmed em { position: absolute; bottom: -2px; left: -2px; width: 26px; height: 26px; border-radius: 50%; background: #16A34A; color: #fff; font-style: normal; font-weight: 900; display: grid; place-items: center; border: 3px solid #fff; }
+.hlab { display: flex; flex-direction: column; min-width: 0; }
+.hlab small { color: var(--c); font-weight: 900; font-size: 12px; } .hlab b { font-size: 18px; line-height: 1.3; }
+.hlab > span:not(.hmeta) { font-size: 12.5px; opacity: .75; line-height: 1.4; }
+.hmeta { font-size: 12.5px; font-weight: 800; margin-top: 3px; color: #475569; }
+.hnode.lock { filter: grayscale(1); opacity: .62; cursor: not-allowed; }
+.hnode.cur { outline: 3px solid var(--c); outline-offset: 3px; animation: hglow 1.6s ease-in-out infinite; }
+@keyframes hglow { 50% { outline-color: transparent; } }
+.hnode.shake { animation: hshake .35s; } @keyframes hshake { 25% { transform: translateX(-6px); } 75% { transform: translateX(6px); } }
+
+/* ── الكتابة الرياضية (villages/math.js) كما في كتاب الطالب ── */
+.mq-pw { white-space: nowrap; }
+.mq-pw sup { font-size: .68em; margin-inline-end: .06em; }
+.mq-rt { display: inline-flex; align-items: stretch; white-space: nowrap; direction: rtl; vertical-align: middle; }
+.mq-rad { position: relative; display: inline-block; transform: scaleX(-1); font-size: 1.15em; line-height: 1; padding-top: .08em; }
+.mq-rad i { position: absolute; font-style: normal; font-size: .45em; top: .05em; left: -.15em; transform: scaleX(-1); }
+.mq-ov { border-top: .09em solid currentColor; padding: .06em .12em 0; margin-top: .14em; }
+.mq-fr { display: inline-flex; flex-direction: column; text-align: center; vertical-align: middle; line-height: 1.15; margin: 0 .12em; }
+.mq-fr > span:first-child { border-bottom: .08em solid currentColor; padding: 0 .15em; }
+
+/* ── لوحة مهمة الدرس (villages/mission.js): مظهر فاتح واضح، والمشهد كبير ── */
+.vm { position: fixed; inset: 0; z-index: 80; display: grid; place-items: center; background: rgba(20, 24, 40, .45); backdrop-filter: blur(3px); font-family: Cairo, system-ui, sans-serif; direction: rtl; animation: vmIn .25s ease-out; padding: 10px; }
+@keyframes vmIn { from { opacity: 0; } }
+.vm-card { width: min(900px, 100%); max-height: 100%; overflow-y: auto; display: flex; flex-direction: column; gap: 10px; padding: 14px 16px 16px; border-radius: 26px; color: #1E2433;
+  background: #FFFDF6; border: 3px solid #F2C14E; box-shadow: 0 24px 60px rgba(0, 0, 0, .35); animation: vmUp .3s cubic-bezier(.2, .9, .3, 1.2); }
+@keyframes vmUp { from { transform: translateY(24px) scale(.97); } }
+.vm header { display: flex; align-items: center; gap: 10px; }
+.vm header > div { flex: 1; } .vm header b { font-size: 21px; display: block; color: #B45309; }
+.vm header small { font-size: 14px; color: #475569; display: flex; align-items: center; gap: 8px; font-weight: 700; }
+.vm-face { width: 50px; height: 50px; border-radius: 16px; display: grid; place-items: center; font-size: 30px; background: #FFF1CC; border: 2px solid #F2C14E; }
+.vm-x { width: 44px; height: 44px; border-radius: 14px; border: 0; background: #EEF0F5; color: #1E2433; font-size: 20px; cursor: pointer; }
+.vm-dots { display: inline-flex; gap: 5px; } .vm-dots i { width: 20px; height: 7px; border-radius: 4px; background: #E2E8F0; }
+.vm-dots i.on { background: #22C55E; } .vm-dots i.cur { background: #F59E0B; }
+.vm-scene { width: 100%; height: clamp(190px, 38vh, 400px); border-radius: 18px; display: block; box-shadow: inset 0 0 0 2px #EADFC4; }
+.vm-q { font-size: 22px; font-weight: 800; line-height: 1.8; text-align: center; padding: 4px 8px; color: #1E2433; }
+.vm-q b { color: #C2410C; font-size: 1.08em; }
+.vm-msg { font-size: 17px; font-weight: 700; text-align: center; border-radius: 14px; padding: 0 10px; line-height: 1.75; }
+.vm-msg.good { background: #DCFCE7; color: #166534; padding: 8px 12px; }
+.vm-msg.bad { background: #FFEDD5; color: #9A3412; padding: 8px 12px; animation: vmShake .35s; }
+@keyframes vmShake { 25% { transform: translateX(-5px); } 75% { transform: translateX(5px); } }
+.vm-in { display: flex; flex-direction: column; align-items: center; gap: 10px; }
+.vm-go { font: 900 20px Cairo, sans-serif; border: 0; border-radius: 18px; padding: 11px 32px; color: #fff; cursor: pointer; background: linear-gradient(180deg, #22C55E, #15803D); box-shadow: 0 5px 0 #0F5E2E, 0 10px 20px rgba(0, 0, 0, .2); }
+.vm-go:active { transform: translateY(3px); box-shadow: 0 2px 0 #0F5E2E; }
+.vm-opts { display: flex; flex-wrap: wrap; gap: 10px; justify-content: center; }
+.vm-opts button { font: 800 20px Cairo, sans-serif; min-width: 100px; padding: 11px 18px; border-radius: 16px; border: 2px solid #CBD5E1; background: #fff; color: #1E2433; cursor: pointer; box-shadow: 0 4px 0 #CBD5E1; }
+.vm-opts button:active { transform: translateY(3px); box-shadow: 0 1px 0 #CBD5E1; }
+.vm-dial { display: flex; align-items: center; gap: 16px; }
+.vm-dial button { width: 62px; height: 62px; border-radius: 20px; border: 0; font: 900 32px Cairo, sans-serif; color: #fff; background: linear-gradient(180deg, #3B82F6, #1D4ED8); box-shadow: 0 5px 0 #1E3A8A; cursor: pointer; }
+.vm-dial output { min-width: 130px; text-align: center; font: 900 36px Cairo, sans-serif; color: #1D4ED8; background: #EFF6FF; border-radius: 16px; padding: 2px 14px; }
+.vm-pad { display: flex; flex-direction: column; align-items: center; gap: 6px; }
+.vm-pad output { min-width: 170px; padding: 4px 14px; border-radius: 14px; text-align: center; font: 900 30px Cairo, sans-serif; color: #1D4ED8; background: #EFF6FF; border: 2px solid #BFDBFE; }
+.vm-pad output i { opacity: .4; font-style: normal; }
+.vm-keys { display: grid; grid-template-columns: repeat(3, 64px); gap: 7px; direction: ltr; }
+.vm-keys button, .vm-row button:not(.vm-go) { height: 48px; border-radius: 14px; border: 2px solid #CBD5E1; font: 900 24px Cairo, sans-serif; color: #1E2433; background: #fff; box-shadow: 0 3px 0 #CBD5E1; cursor: pointer; }
+.vm-keys button:active { transform: translateY(2px); box-shadow: none; }
+.vm-frac { display: flex; align-items: center; gap: 10px; }
+.vm-frac button { min-width: 64px; height: 44px; border-radius: 12px; border: 2px solid #BFDBFE; background: #EFF6FF; color: #1D4ED8; font: 900 26px Cairo, sans-serif; cursor: pointer; }
+.vm-frac button[data-f=w] { height: 64px; font-size: 32px; }
+.vm-frac button.on { border-color: #F59E0B; background: #FFFBEB; box-shadow: 0 0 0 3px #FDE68A; }
+.vm-frac button i { opacity: .4; font-style: normal; }
+.vm-fs { display: flex; flex-direction: column; align-items: center; gap: 4px; } .vm-fs > i { width: 76px; height: 4px; border-radius: 2px; background: #1E2433; }
+.vm-keys .vm-ok { background: #16A34A; color: #fff; border-color: #15803D; box-shadow: 0 3px 0 #15803D; }
+.vm-row { display: flex; gap: 8px; } .vm-row button:not(.vm-go) { width: 64px; }
+.vm-end .vm-card { align-items: center; text-align: center; padding: 24px; width: min(520px, 100%); }
+.vm-burst { font-size: 68px; animation: vmPop .6s cubic-bezier(.2, 1.6, .4, 1); }
+@keyframes vmPop { from { transform: scale(0) rotate(-20deg); } }
+.vm-stars { display: flex; gap: 8px; font-size: 56px; }
+.vm-stars span { color: #E2E8F0; } .vm-stars span.on { color: #F59E0B; text-shadow: 0 2px 0 #B45309; animation: vmPop .5s both; }
+.vm-end h3 { margin: 4px 0; font-size: 26px; color: #B45309; } .vm-end p { margin: 2px 0; font-weight: 700; } .vm-mut { color: #64748B; font-size: 15px; }
+@media (max-width: 520px) { .vm-q { font-size: 18px; } .vm-keys { grid-template-columns: repeat(3, 56px); } }
+@media (max-height: 800px) { .vm-scene { height: clamp(150px, 30vh, 260px); } .vm-q { font-size: 18px; line-height: 1.6; } .vm-card { gap: 6px; padding: 10px 12px; } }
+
+/* ── لوحة «تحدي الدرس» في الصفين ٨ و٩: مظهر اللعبة الفاتح نفسه، في وسط الشاشة ── */
+body.v89 .panel { align-items: center; }
+body.v89 #panel .sheet { border-radius: 26px; margin: auto; max-width: 680px; border: 3px solid #F2C14E; }
+
+/* ── مغامرة القرية (رحلة العربة وأمثالها) ── */
+.vadv { position: fixed; inset: 0; z-index: 300; background: #000; font-family: Cairo, sans-serif; direction: rtl; touch-action: none; }
+.vadv canvas { display: block; }
+.vadv-top { position: absolute; top: 10px; inset-inline: 10px; display: flex; align-items: center; gap: 10px; color: #fff; }
+.vadv-top b { font-size: 18px; color: #FFD27A; } .vadv-gem { background: rgba(255, 255, 255, .12); border-radius: 12px; padding: 4px 12px; font-weight: 800; }
+.vadv-bar { flex: 1; height: 8px; border-radius: 4px; background: rgba(255, 255, 255, .15); overflow: hidden; } .vadv-bar i { display: block; height: 100%; width: 0; background: linear-gradient(90deg, #FFC94A, #FF8A3D); }
+.vadv-x { width: 40px; height: 40px; border-radius: 12px; border: 0; background: rgba(255, 255, 255, .12); color: #fff; font-size: 18px; }
+.vadv-tip { position: absolute; bottom: 24px; left: 50%; transform: translateX(-50%); background: rgba(0, 0, 0, .6); color: #fff; padding: 8px 16px; border-radius: 14px; font-weight: 700; transition: opacity .6s; text-align: center; }
+.vadv-tip.off { opacity: 0; }
+.vadvBtn { background: linear-gradient(180deg, #FFD978, #F5A524) !important; color: #2A1A00 !important; }
+
+/* الانتقال عبر بوابة القرية إلى القرية التالية */
+.vfade { position: fixed; inset: 0; background: #1E1408; opacity: 0; pointer-events: none; transition: opacity .45s; z-index: 500; } .vfade.on { opacity: 1; }
+.varrow { position: fixed; width: 56px; height: 56px; border-radius: 50%; background: rgba(255,255,255,.92); box-shadow: 0 4px 14px rgba(0,0,0,.25); display: grid; place-items: center; z-index: 30; pointer-events: none; animation: vArrowPulse 1.2s ease-in-out infinite; }
+.varrow[hidden] { display: none; } .varrow i { font-style: normal; font-size: 28px; color: #F59E0B; display: block; line-height: 1; }
+@keyframes vArrowPulse { 50% { transform: scale(1.12); } }
+.vm-tpl { display: flex; align-items: center; justify-content: center; flex-wrap: wrap; gap: 6px; font: 900 28px Cairo, sans-serif; color: #1E2433; direction: rtl; }
+.vm-tpl button { min-width: 56px; height: 46px; border-radius: 12px; border: 2px solid #BFDBFE; background: #EFF6FF; color: #1D4ED8; font: 900 24px Cairo, sans-serif; cursor: pointer; }
+.vm-tpl button.on { border-color: #F59E0B; background: #FFFBEB; box-shadow: 0 0 0 3px #FDE68A; } .vm-tpl button i { opacity: .45; font-style: normal; }
+.vm-tpl .mq-fr { font-size: 1em; } .vm-tpl .mq-fr > span { display: flex; align-items: center; justify-content: center; gap: 4px; padding: 3px 6px; }
+.vm-tpl .mq-pw sup button { min-width: 40px; height: 34px; font-size: 18px; vertical-align: super; }
+/* الآلة الحاسبة بزر π (الوحدة ٦ للصف الثامن) */
+.vm-calcBtn { font: 800 17px Cairo, sans-serif; border: 2px solid #CBD5E1; border-radius: 14px; padding: 6px 16px; background: #F8FAFC; color: #1E2433; cursor: pointer; box-shadow: 0 3px 0 #CBD5E1; }
+.vm-calc { position: fixed; left: 12px; bottom: 12px; z-index: 120; width: 300px; max-width: calc(100vw - 24px); padding: 10px; border-radius: 20px; background: #1E293B; box-shadow: 0 12px 30px rgba(0, 0, 0, .35); }
+.vm-calc[hidden] { display: none; }
+.vm-cscr { background: #D9F99D; border-radius: 12px; padding: 4px 10px; min-height: 58px; display: flex; flex-direction: column; align-items: flex-end; justify-content: center; font-family: Cairo, sans-serif; color: #1A2E05; overflow: hidden; }
+.vm-cscr small { font-size: 14px; opacity: .7; } .vm-cscr b { font-size: 26px; white-space: nowrap; }
+.vm-ckeys { display: grid; grid-template-columns: repeat(5, 1fr); gap: 6px; margin-top: 8px; }
+.vm-ckeys button { height: 42px; border-radius: 10px; border: 0; font: 900 20px Cairo, sans-serif; color: #fff; background: #334155; cursor: pointer; }
+.vm-ckeys .vm-cc { background: #B91C1C; } .vm-ckeys .vm-ceq { background: #16A34A; grid-column: span 2; } .vm-ckeys .vm-cx { background: #475569; }
+.vm-row button.vm-calcBtn { width: auto; height: 48px; padding: 0 14px; background: #FEF3C7; border-color: #F59E0B; box-shadow: 0 3px 0 #F59E0B; }
+@media (max-width: 520px) { .vm-calc { top: 12px; bottom: auto; left: 50%; transform: translateX(-50%); } .vm-ckeys button { height: 38px; } }
+/* جدول النتائج (الوحدة ٧ للصف الثامن): ينقر الطالب النتائج التي تحقق الشرط */
+.vm-cells { max-width: 100%; overflow-x: auto; }
+.vm-cells table { border-collapse: separate; border-spacing: 4px; margin: 0 auto; direction: rtl; }
+.vm-cells th { font: 900 16px Cairo, sans-serif; color: #7C2D12; background: #FEF3C7; border-radius: 8px; padding: 2px 6px; min-width: 34px; }
+.vm-cells th.vm-corner { background: transparent; color: #64748B; font-size: 12px; line-height: 1.2; }
+.vm-cells td button { min-width: 50px; height: 34px; padding: 0 4px; border-radius: 9px; border: 2px solid #CBD5E1; background: #fff; color: #1E2433; font: 800 14px Cairo, sans-serif; cursor: pointer; white-space: nowrap; }
+.vm-cells td button.on { border-color: #16A34A; background: #DCFCE7; color: #14532D; box-shadow: 0 0 0 2px #86EFAC; }
+.vm-cells td.off { text-align: center; font: 900 18px Cairo, sans-serif; color: #94A3B8; }
+.vm-row button.vm-clr { width: auto; padding: 0 16px; font-size: 18px; }
+@media (max-width: 520px) { .vm-cells td button { min-width: 40px; height: 30px; font-size: 12px; } .vm-cells th { font-size: 13px; min-width: 26px; padding: 1px 3px; } .vm-cells table { border-spacing: 2px; } }
+/* قطع النسب (الوحدة ٨ للصف الثامن) */
+.vm-chips { display: flex; flex-direction: column; gap: 8px; align-items: center; }
+.vm-tray { min-height: 44px; padding: 6px 14px; border-radius: 14px; background: #FFF7ED; border: 2px dashed #FB923C; font: 800 19px Cairo, sans-serif; color: #7C2D12; direction: rtl; text-align: center; }
+.vm-tray b { display: inline-block; padding: 0 8px; margin: 0 2px; border-radius: 10px; background: #FDBA74; color: #431407; }
+.vm-tray i { font-style: normal; color: #9A3412; }
+.vm-sgn { display: flex; gap: 8px; } .vm-sgn button { font: 800 16px Cairo, sans-serif; padding: 4px 14px; border-radius: 12px; border: 2px solid #CBD5E1; background: #fff; cursor: pointer; }
+.vm-sgn button.on { border-color: #EA580C; background: #FFEDD5; color: #9A3412; }
+.vm-chipk { display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; }
+.vm-chipk button { font: 900 20px Cairo, sans-serif; min-width: 72px; height: 50px; border-radius: 25px; border: 3px solid #EA580C; background: linear-gradient(#FFEDD5, #FDBA74); color: #431407; box-shadow: 0 4px 0 #C2410C; cursor: pointer; }
+.vm-chipk button:active { transform: translateY(3px); box-shadow: 0 1px 0 #C2410C; }
+/* حوض الخلط (الوحدة ٩ للصف الثامن): عمود لكل صبغ بلونه */
+.vm-mix { display: flex; gap: 8px; justify-content: center; align-items: center; direction: rtl; flex-wrap: wrap; }
+.vm-mixc { font: 900 30px Cairo, sans-serif; color: #475569; }
+.vm-mixp { display: flex; flex-direction: column; align-items: center; gap: 4px; padding: 6px 10px; border-radius: 16px; background: color-mix(in srgb, var(--c) 18%, #fff); border: 3px solid var(--c); min-width: 76px; }
+.vm-mixp small { font: 800 14px Cairo, sans-serif; color: #1E2433; }
+.vm-mixp output { font: 900 26px Cairo, sans-serif; color: #1E2433; min-width: 40px; text-align: center; }
+.vm-mixp button { width: 46px; height: 36px; border-radius: 12px; border: 2px solid var(--c); background: #fff; font: 900 22px Cairo, sans-serif; color: #1E2433; cursor: pointer; box-shadow: 0 3px 0 var(--c); }
+.vm-mixp button:active { transform: translateY(2px); box-shadow: 0 1px 0 var(--c); }
+/* خطوات الحل ومجموعة الحل على خط الأعداد (الوحدة ١٠ للصف الثامن) */
+.vm-steps ol { list-style: none; margin: 0 auto 8px; padding: 0; max-width: 520px; direction: rtl; }
+.vm-steps li { font: 800 20px Cairo, sans-serif; color: #1E2433; padding: 4px 12px; border-radius: 12px; margin: 3px 0; display: flex; justify-content: space-between; align-items: center; gap: 10px; }
+.vm-steps li.done { background: #F0FDF4; color: #475569; font-size: 17px; }
+.vm-steps li.done small { font: 700 13px Cairo, sans-serif; color: #15803D; }
+.vm-steps li.cur { background: #FEF9C3; border: 2px solid #FACC15; }
+.vm-steps .vm-opts button { font-size: 16px; min-width: 0; padding: 8px 12px; }
+.vm-ray { display: flex; flex-direction: column; gap: 8px; align-items: center; }
+/* المستوى الإحداثي (الوحدة ١١ للصف الثامن) */
+.vm-gridw { display: flex; justify-content: center; }
+.vm-grid { width: min(300px, 78vw); height: auto; background: #fff; border-radius: 12px; box-shadow: 0 0 0 2px #CBD5E1; touch-action: manipulation; }
+.vm-grid line { stroke: #E2E8F0; stroke-width: 1; } .vm-grid line.ax { stroke: #475569; stroke-width: 2; }
+.vm-grid text { font: 700 11px Cairo, sans-serif; fill: #475569; text-anchor: middle; } .vm-grid text.gl { font-size: 14px; font-weight: 900; fill: #1E3A8A; }
+.vm-grid .ln { stroke-width: 3; } .vm-grid .sg { stroke: #1E3A8A; stroke-width: 3; } .vm-grid .mine { stroke: #EA580C; stroke-width: 3; stroke-dasharray: 8 5; }
+.vm-grid .gv { fill: #1E3A8A; } .vm-grid .pk { fill: #EA580C; stroke: #fff; stroke-width: 2; }
+.vm-grid .hit { fill: transparent; cursor: pointer; } .vm-grid .hit:hover { fill: rgba(234,88,12,.15); }
+.vm-gpt { text-align: center; font: 800 17px Cairo, sans-serif; color: #9A3412; direction: rtl; min-height: 26px; } .vm-gpt i { font-style: normal; color: #94A3B8; }
+/* الترتيب (الوحدة ١٣ للصف الثامن) */
+.vm-seqrow { min-height: 42px; display: flex; flex-wrap: wrap; gap: 6px; justify-content: center; direction: rtl; padding: 6px; border-radius: 12px; background: #F0F9FF; border: 2px dashed #38BDF8; margin-bottom: 8px; }
+.vm-seqrow b { font: 900 18px Cairo, sans-serif; color: #075985; background: #BAE6FD; border-radius: 9px; padding: 0 9px; } .vm-seqrow i { font: 700 15px Cairo, sans-serif; color: #94A3B8; font-style: normal; }
+.vm-seqk button { min-width: 56px; font-size: 18px; padding: 8px 10px; } .vm-seqk button:disabled { opacity: .3; }

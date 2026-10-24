@@ -83,6 +83,7 @@ export function sfx(k) {
   bus.emit('sfx', k);
   if (k === 'pick') tone(520, .07, 'triangle', .1);
   if (k === 'drop') tone(330, .09, 'triangle', .12);
+  if (k === 'jump') { tone(240, .09, 'sine', .12); tone(480, .14, 'sine', .1, .07); }   // نطّاطة المهرجان
   if (k === 'cough') { tone(90, .25, 'sawtooth', .07); tone(70, .3, 'sawtooth', .06, .25); }
   if (k === 'engine') { tone(110, .6, 'sawtooth', .05); tone(150, .6, 'sawtooth', .04, .3); }
   if (k === 'win') [523, 659, 784, 1046].forEach((f, i) => tone(f, .25, 'triangle', .11, i * .12));
