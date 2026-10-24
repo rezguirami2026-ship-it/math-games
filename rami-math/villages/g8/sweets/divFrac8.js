@@ -42,7 +42,7 @@ function make(i) {
     return { q: `القسمة على ${fr(a, b)} تساوي الضرب في:`, input: { type: 'pick', opts }, ok: k => opts[k] === fr(b, a),
       hint: `كم ${fr(a, b)} في الواحد الصحيح؟`, bad: k => opts[k] === fr(a, b) ? 'الضرب في الكسر نفسه يعطي ناتجاً مختلفاً عن القسمة عليه.' : '', good: 'أحسنت! نقلب الكسر الثاني ونضرب.', data: { mode: 'board', A: ['n', 1], B: ['f', a, b], flip: [b, a], rn: b, rd: a } }; }
   if (i === 2) { for (let t = 0; t < 80; t++) { const [a, b] = pf(2, 9), W = R(5, 30); if (a > 1 && (W * b) % a !== 0 && W * b / a < 60) { const [rn, rd] = red(W * b, a);
-    return { q: `${N(W)} كغ من الحلوى تُعبّأ في علب، كل علبة ${fr(a, b)} كغ. كم علبة تمتلئ؟ (${N(W)} ÷ ${fr(a, b)}، وقد يبقى جزء من علبة)`, input: { type: 'frac', mixed: true }, ok: v => fOk(v, rn, rd),
+    return { q: `${N(W)} كغ من الحلوى تُعبّأ في علب، كل علبة ${fr(a, b)} كغ. كم علبة تمتلئ؟`, input: { type: 'frac', mixed: true }, ok: v => fOk(v, rn, rd),
       hint: 'اقلب الكسر الثاني ثم اضرب. هل يمكن الحذف قبل الضرب؟', bad: v => fBad(v, rn, rd) || (fEq(v, W * a, b) ? 'ضربتَ في الكسر نفسه: في القسمة نقلبه أولاً.' : ''),
       good: 'أحسنت! والجزء الكسري علبة غير ممتلئة.', data: { mode: 'board', A: ['n', W], B: ['f', a, b], flip: [b, a], rn, rd } }; } } }
   if (i === 3) { let a, b, c, e; do { [a, b] = pf(2, 9); [c, e] = pf(2, 9); } while (red(a * e, b * c)[1] > 40); const [rn, rd] = red(a * e, b * c);

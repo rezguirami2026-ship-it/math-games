@@ -32,7 +32,7 @@ function make(i) {
     let a, b, c, d, op, n, D; for (let k = 0; k < 80; k++) { b = [2, 3, 4, 5, 6, 8, 9][R(0, 6)]; d = [2, 3, 4, 5, 6, 9, 10][R(0, 6)]; a = R(1, 5); c = R(1, 5); op = i === 1 ? -1 : 1; if (i === 0) d = b;
       const L = lcm(b, d); [n, D] = red(a * L / b + op * c * L / d, L); if (n > 0 && D > 1 && L <= 30 && (i === 0 || b !== d)) break; }
     const sol = n === 1 ? [D] : [n, D], tpl = fr(n === 1 ? V : `${BL}${V}`, BL);
-    return { q: `بسّط: ${fb(T(a, V), b)} ${op > 0 ? '+' : '−'} ${fb(T(c, V), d)} (في أبسط صورة)`, input: { type: 'blanks', tpl }, sol, ok: x => x.length === sol.length && x.every((v, k) => v === sol[k]),
+    return { q: `بسّط: ${fb(T(a, V), b)} ${op > 0 ? '+' : '−'} ${fb(T(c, V), d)}`, input: { type: 'blanks', tpl }, sol, ok: x => x.length === sol.length && x.every((v, k) => v === sol[k]),
       hint: b === d ? 'المقامان متساويان: ماذا تفعل بالبسطين؟ ثم هل يمكن التبسيط؟' : 'ما المضاعف المشترك الأصغر للمقامين؟ أعد كتابة كل كسر به.',
       bad: x => x[x.length - 1] === b + d ? 'المقامات لا تُجمع: وحّدها أولاً.' : '', good: 'أحسنت!',
       data: { a: [T(a, V), N(b)], b: [T(c, V), N(d)], op: op > 0 ? '+' : '−', res: [n === 1 ? V : T(n, V), N(D)] } }; }
