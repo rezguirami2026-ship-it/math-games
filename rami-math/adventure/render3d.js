@@ -143,7 +143,7 @@ export function createAdv3D(canvas) {
       case 'well': return shadowed(well3d(x, z, 22, true));
       case 'belt': { const m = new THREE.Mesh(new THREE.BoxGeometry(T - 4, 4, T - 4), std('#3F3F46', { roughness: .7 })); m.position.y = 2; G.add(m);
         const ar = new THREE.Mesh(new THREE.ConeGeometry(9, 18, 3), new THREE.MeshStandardMaterial({ color: e.col || '#FACC15', emissive: e.col || '#FACC15', emissiveIntensity: .4 })); ar.rotation.set(-Math.PI / 2, 0, [-Math.PI / 2, Math.PI, Math.PI / 2, 0][e.d || 0]); ar.position.y = 6; G.add(ar); G.userData.belt = ar; return G; }
-      case 'honey': { const m = new THREE.Mesh(box(T - 4, 3, T - 4, 0, 1.5, 0), new THREE.MeshStandardMaterial({ color: '#F5B70A', emissive: '#7A4A02', emissiveIntensity: .25, roughness: .08, metalness: .1 })); G.add(m); return G; }
+      case 'honey': { const m = new THREE.Mesh(box(T + .5, 3, T + .5, 0, 1.5, 0), new THREE.MeshStandardMaterial({ color: '#F2A90C', emissive: '#8A5203', emissiveIntensity: .3, roughness: .04, metalness: .2 })); G.add(m); return G; }
       case 'cauldron': { P.add(material('stone', '#78716C'), cyl(34, 38, 16, 0, 8, 0, 18)); P.add(std('#C27A3A', { metalness: .65, roughness: .3 }), new THREE.SphereGeometry(30, 20, 12, 0, Math.PI * 2, Math.PI * .45, Math.PI * .55).scale(1, .9, 1).translate(0, 50, 0), { uv: false });
         P.add(std('#8A4F1F', { metalness: .6, roughness: .35 }), new THREE.TorusGeometry(29, 2.6, 8, 24).rotateX(Math.PI / 2).translate(0, 55, 0), { uv: false }); G.add(P.build());
         const top = new THREE.Mesh(new THREE.CircleGeometry(26, 24), new THREE.MeshStandardMaterial({ color: '#6B4A2E', roughness: .3 })); top.rotation.x = -Math.PI / 2; top.position.y = 53; G.add(top); G.userData.potTop = top;

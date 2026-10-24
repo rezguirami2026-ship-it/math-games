@@ -104,6 +104,13 @@
 .vm-keys { display: grid; grid-template-columns: repeat(3, 64px); gap: 7px; direction: ltr; }
 .vm-keys button, .vm-row button:not(.vm-go) { height: 48px; border-radius: 14px; border: 2px solid #CBD5E1; font: 900 24px Cairo, sans-serif; color: #1E2433; background: #fff; box-shadow: 0 3px 0 #CBD5E1; cursor: pointer; }
 .vm-keys button:active { transform: translateY(2px); box-shadow: none; }
+.vm-frac { display: flex; align-items: center; gap: 10px; }
+.vm-frac button { min-width: 64px; height: 44px; border-radius: 12px; border: 2px solid #BFDBFE; background: #EFF6FF; color: #1D4ED8; font: 900 26px Cairo, sans-serif; cursor: pointer; }
+.vm-frac button[data-f=w] { height: 64px; font-size: 32px; }
+.vm-frac button.on { border-color: #F59E0B; background: #FFFBEB; box-shadow: 0 0 0 3px #FDE68A; }
+.vm-frac button i { opacity: .4; font-style: normal; }
+.vm-fs { display: flex; flex-direction: column; align-items: center; gap: 4px; } .vm-fs > i { width: 76px; height: 4px; border-radius: 2px; background: #1E2433; }
+.vm-keys .vm-ok { background: #16A34A; color: #fff; border-color: #15803D; box-shadow: 0 3px 0 #15803D; }
 .vm-row { display: flex; gap: 8px; } .vm-row button:not(.vm-go) { width: 64px; }
 .vm-end .vm-card { align-items: center; text-align: center; padding: 24px; width: min(520px, 100%); }
 .vm-burst { font-size: 68px; animation: vmPop .6s cubic-bezier(.2, 1.6, .4, 1); }

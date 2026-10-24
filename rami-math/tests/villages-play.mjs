@@ -35,7 +35,7 @@ for (const id of ids) {
       // خطأ مقصود ثم الصحيح، من بيانات الجولة نفسها
       const res = await E(() => {
         const r = window.__vm.r, I = r.input, cand = [];
-        if (I.type === 'pick') I.opts.forEach((_, k) => cand.push(k)); else if (I.type === 'dial') for (let v = I.min; v <= I.max; v += I.step || 1) cand.push(Math.round(v * 1000) / 1000); else { for (let v = -2000; v <= 2000; v++) [1, 10, 100, 1000, 10000].forEach(d => cand.push(v / d)); for (let v = 1; v <= 100; v++) [100, 1000, 10000].forEach(m => cand.push(v * m, -v * m)); }
+        if (I.type === 'pick') I.opts.forEach((_, k) => cand.push(k)); else if (I.type === 'frac') { const fc = []; for (let w = 0; w <= 60; w++) { fc.push({ w, n: 0, d: 1 }); for (let d = 2; d <= 60; d++) for (let n = 1; n < d; n++) fc.push({ w, n, d }); } cand.push({ w: 0, n: 0, d: 0 }, ...fc); } else if (I.type === 'dial') for (let v = I.min; v <= I.max; v += I.step || 1) cand.push(Math.round(v * 1000) / 1000); else { for (let v = -2000; v <= 2000; v++) [1, 10, 100, 1000, 10000].forEach(d => cand.push(v / d)); for (let v = 1; v <= 100; v++) [100, 1000, 10000].forEach(m => cand.push(v * m, -v * m)); }
         const right = cand.find(v => r.ok(v)), wrong = cand.find(v => !r.ok(v));
         window.__vm.answer(wrong); const bad = document.querySelector('.vm-msg.bad')?.textContent || '';
         window.__vm.answer(right); return { bad, good: !!document.querySelector('.vm-msg.good'), right };
@@ -74,7 +74,11 @@ await sleep(800); await shot('z_after');
 // مغامرة القرية بعد إنهاء دروسها: لاعب آلي يقرأ السكة أمامه (يتفادى الصخور ويقفز فوق الكسور)
 if (passed === ids.length && await E(() => { const b = document.querySelector('[data-a=adv]'); return !!b && !b.hidden; })) {
   try {
-    await E(() => document.querySelector('[data-a=adv]').click()); await until(() => E(() => !!window.__vadv), 'بدء المغامرة');
+    await E(() => document.querySelector('[data-a=adv]').click()); await until(() => E(() => !!(window.__vadv || window.__adv)), 'بدء المغامرة');
+    if (await E(() => !window.__vadv && !!window.__adv)) {   // مغامرة بمحرك البلاطات (adventure/engine.js): تُلعب كاملة في اختبارها tests/adv-g8<القرية>.mjs
+      await sleep(2500); await shot('adv_tile'); await E(() => document.querySelector('.advX').click()); await sleep(1500);
+      console.log('🗺️ المغامرة بدأت وأُغلقت (تُلعب كاملة في اختبار adv-g8 الخاص بها)'); throw { skip: 1 };
+    }
     const t0 = Date.now(); let shotDone = false;
     while (Date.now() - t0 < 240000 && !(await E(() => !!document.querySelector('.vm-end')))) {
       await E(() => { const S = window.__vadv; if (!S || S.done) return; const key = k => dispatchEvent(new KeyboardEvent('keydown', { key: k }));
@@ -92,7 +96,7 @@ if (passed === ids.length && await E(() => { const b = document.querySelector('[
     await E(() => document.querySelector('.vm-end .vm-go').click()); await sleep(500);
     const saved = await E(() => JSON.stringify((window.__villages.state.vil.adv || {})));
     console.log(`🎢 المغامرة انتهت: ${r.gems} بلّورة، ${r.hits} اصطدام — المحفوظ: ${saved}`);
-  } catch (e) { console.log('❌ المغامرة: ' + e.message); await shot('fail_adv'); }
+  } catch (e) { if (!e.skip) { console.log('❌ المغامرة: ' + e.message); await shot('fail_adv'); } }
 }
 // بعد إنهاء القرية: القرية التالية مفتوحة في الخريطة
 await E(() => document.querySelector('[data-a=map]').click()); await sleep(1200);

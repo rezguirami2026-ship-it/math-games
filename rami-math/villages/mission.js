@@ -2,7 +2,7 @@
 // ثم «تحدي الدرس» (محرك missions/challenge.js بأسئلته المتنوعة) ثم شاشة النجوم.
 // spec = { title, icon, who: { name, face }, intro: [سطور], rounds, make(i) → جولة, draw(g, w, h, t, S), outro: [سطور],
 //          challenge: { title, make: () => items } }
-// الجولة: { q: نص، input: { type: 'num'|'pick'|'dial', ... }, ok(v): صحيح؟، hint: سؤال يوجّه، bad(v): رد على خطأ بعينه، data: لرسم المشهد }
+// الجولة: { q: نص، input: { type: 'num'|'pick'|'dial'|'frac' (و mixed للعدد الكسري), ... }, ok(v): صحيح؟، hint: سؤال يوجّه، bad(v): رد على خطأ بعينه، data: لرسم المشهد }
 import { runChallenge } from '../missions/challenge.js';
 import { sfx } from '../core/sound.js';
 import { addGems } from '../world/decor.js';
@@ -59,7 +59,7 @@ function rounds(spec, api) {
       } else {
         sfx('cough'); S.shake = 1;
         msg(`🤔 ${(S.r.bad && S.r.bad(v)) || ''} ${S.r.hint}`, 'bad');
-        if (S.r.input.type === 'num') pad.clear();
+        if (S.r.input.type === 'num' || S.r.input.type === 'frac') pad.clear();
       }
     }
     let pad = null;
@@ -75,6 +75,22 @@ function rounds(spec, api) {
         box2.querySelector('.vm-dial').dir = 'ltr';
         box2.querySelectorAll('[data-d]').forEach(b => b.onclick = () => { S.v = Math.round((S.v + +b.dataset.d * step) * 1000) / 1000; if (I.min != null) S.v = Math.max(I.min, S.v); if (I.max != null) S.v = Math.min(I.max, S.v); sfx('pick'); show(); });
         show(); box2.querySelector('.vm-go').onclick = () => answer(S.v);
+      } else if (I.type === 'frac') {   // لوحة كسر: بسط ومقام مكدّسان (وعدد صحيح على يسارهما إن كان I.mixed)، ينقر الطالب الخانة ثم يكتب أرقامها
+        const F = { w: '', n: '', d: '' }; let cur = 'n';
+        box2.innerHTML = `<div class="vm-pad vm-fpad"><div class="vm-frac" dir="ltr">${I.mixed ? '<button data-f="w" aria-label="العدد الصحيح"></button>' : ''}<span class="vm-fs"><button data-f="n" aria-label="البسط"></button><i></i><button data-f="d" aria-label="المقام"></button></span></div>
+          <div class="vm-keys">${[7, 8, 9, 4, 5, 6, 1, 2, 3].map(k => `<button data-k="${k}">${ar(k)}</button>`).join('')}<button data-k="<">⌫</button><button data-k="0">٠</button><button data-k="ok" class="vm-ok">✓</button></div></div>`;
+        const show = () => box2.querySelectorAll('[data-f]').forEach(b => { b.innerHTML = F[b.dataset.f] ? ar(F[b.dataset.f]) : '<i>؟</i>'; b.classList.toggle('on', b.dataset.f === cur); });
+        pad = { clear() { F.w = F.n = F.d = ''; cur = I.mixed ? 'w' : 'n'; show(); } };
+        box2.querySelectorAll('[data-f]').forEach(b => b.onclick = () => { cur = b.dataset.f; sfx('pick'); show(); });
+        box2.querySelectorAll('[data-k]').forEach(b => b.onclick = () => {
+          const k = b.dataset.k;
+          if (k === 'ok') { const v = { w: +F.w || 0, n: +F.n || 0, d: +F.d || 0 };
+            if (F.w && !F.n && !F.d) v.d = 1; else if (!F.n || !F.d) { msg('🤔 اكتب البسط والمقام كليهما (انقر الخانة ثم اكتب).', 'bad'); return; }
+            answer(v); return; }
+          if (k === '<') F[cur] = F[cur].slice(0, -1); else if (F[cur].length < 3) F[cur] += k;
+          sfx('pick'); show();
+        });
+        pad.clear();
       } else {   // لوحة أرقام بإشارة سالبة وفاصلة عشرية حسب الجولة
         box2.innerHTML = `<div class="vm-pad"><output dir="ltr"></output><div class="vm-keys">${[7, 8, 9, 4, 5, 6, 1, 2, 3].map(k => `<button data-k="${k}">${ar(k)}</button>`).join('')}${I.neg ? '<button data-k="-">−</button>' : '<span></span>'}<button data-k="0">٠</button>${I.dot ? '<button data-k=".">٫</button>' : '<button data-k="<">⌫</button>'}</div><div class="vm-row">${I.dot ? '<button data-k="<">⌫</button>' : ''}<button class="vm-go" data-k="ok">${I.label || '✓ الجواب'}</button></div></div>`;
         let s = '';

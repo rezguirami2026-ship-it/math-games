@@ -15,6 +15,17 @@ export const rt = (v, k = 2) => `<span class="mq-rt"><span class="mq-rad">${k ==
 export const fr = (a, b) => `<span class="mq-fr"><span>${typeof a === 'number' ? N(a) : a}</span><span>${typeof b === 'number' ? N(b) : b}</span></span>`;
 /* العدد الكسري كما في الكتاب: العدد الصحيح يساراً والكسر يمينه «٢ ١/٥» */
 export const mx = (w, a, b) => `<span class="mq-mx" dir="ltr">${N(w)} ${fr(a, b)}</span>`;
+/* الكسور (الوحدة ٤ للصف الثامن): القاسم المشترك الأكبر، والمضاعف المشترك الأصغر */
+export const gcd = (a, b) => b ? gcd(b, a % b) : Math.abs(a);
+export const lcm = (a, b) => a / gcd(a, b) * b;
+/* الكسر a/b في أبسط صورة وعدداً كسرياً إن أمكن: «٣ ٨/٩» أو «٢٠/٦٣» أو «١٢» */
+export const fx = (a, b) => { const g = gcd(a, b); a /= g; b /= g; if (b === 1) return N(a); return a > b ? mx(Math.floor(a / b), a % b, b) : fr(a, b); };
+/* جواب لوحة الكسر { w, n, d }: قيمته تساوي a/b؟ */
+export const fEq = (v, a, b) => !!v && v.d > 0 && (v.w * v.d + v.n) * b === a * v.d;
+/* وفي أبسط صورة: بلا عامل مشترك، والجزء الكسري أقل من الواحد (عدد كسري إن زاد على الواحد) */
+export const fOk = (v, a, b) => fEq(v, a, b) && (v.n === 0 ? true : gcd(v.n, v.d) === 1 && v.n < v.d);
+/* رد على جواب قيمته صحيحة وصورته غير مكتملة (وإلا نص فارغ) */
+export const fBad = (v, a, b) => !fEq(v, a, b) ? '' : v.n && gcd(v.n, v.d) > 1 ? 'القيمة صحيحة! لكن هل للبسط والمقام عامل مشترك بعد؟' : v.n >= v.d ? 'القيمة صحيحة! لكن البسط أكبر من المقام: اكتبه عدداً كسرياً.' : '';
 /* عملية تُقرأ من اليمين إلى اليسار: op(5, '+', -3) = «٥ + (٣−)» */
 export const op = (...parts) => parts.map(p => typeof p === 'number' ? P(p) : p).join(' ');
 /* عدد عشوائي صحيح [a, b] (بلا الصفر إن طُلب) */
