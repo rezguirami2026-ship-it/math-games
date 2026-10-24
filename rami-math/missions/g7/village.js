@@ -81,7 +81,7 @@ export const mulDivInt7 = Object.assign({
   goal: d => `📒 رتّب دفتر العم ناصر ${step(d, 3)}`,
   open(W, d, msg, kind) {
     const r = d.rounds[d.r], L = [{ who: 'naser', text: 'دفتر مضبوط! إشارات الضرب والقسمة لا تخدعك أبداً.' }];
-    if (r.t === 'loss') return kp(this, W, d, { title: '📒 دفتر الدكان', text: `خسر الدكان <b>${ar(r.l)}</b> ريالات كل يوم لمدة <b>${ar(r.k)}</b> أيام. اكتب التغيّر في الرصيد بإشارته (الخسارة سالبة).`, ans: -r.l * r.k, n: 3, id: 'mulDivInt7', msg, kind, opts: NEG, lines: L,
+    if (r.t === 'loss') return kp(this, W, d, { title: '📒 دفتر الدكان', text: `خسر الدكان <b>${ar(r.l)}</b> ريالات كل يوم لمدة <b>${ar(r.k)}</b> أيام. ما التغيّر في الرصيد؟`, ans: -r.l * r.k, n: 3, id: 'mulDivInt7', msg, kind, opts: NEG, lines: L,
       hint: 'ليس هذا التغيّر: الخسارة اليومية عدد سالب، اضربه في عدد الأيام وانتبه للإشارة (زر −).' });
     if (r.t === 'debt') return kp(this, W, d, { title: '📒 تقسيط الدَّين', text: `على الدكان دَين <b>${ar(-r.q * r.m)}</b> ريالاً، يُسدَّد بالتساوي في <b>${ar(r.m)}</b> أيام. اكتب نصيب اليوم الواحد بإشارته.`, ans: -r.q, n: 3, id: 'mulDivInt7', msg, kind, opts: NEG, lines: L,
       hint: 'ليس هذا النصيب: اقسم الدَّين (سالب) على عدد الأيام (موجب): ما إشارة الناتج؟ تحقّق بالضرب.' });

@@ -56,7 +56,7 @@ export const formulas7b = mission({
     return [{ t: 'kp', a, b, x, ans: a * x + b, neg: true, dot: false }, { t: 'kp', c, d, y, ans: c * y * y + d, neg: true, dot: false }, { t: 'kp', e, g, v: e * z + g, ans: z, dot: false }];
   },
   view(r) {
-    if (r.x != null) return { text: `كمية الماء (لتر): <b>م = ${E([[r.a, 'ح'], [r.b]])}</b>، ودرجة الحرارة ح = <b>${N(r.x)}</b>. كم لتراً؟`, visual: big(`${N(r.a)} × (${N(r.x)}) + ${N(r.b)}`), hint: 'اضرب المعامل في العدد السالب (الناتج سالب)، ثم أضف.', bad: v => v === r.a * -r.x + r.b ? 'نسيتَ الإشارة السالبة.' : null };
+    if (r.x != null) return { text: `كمية الماء باللتر: <b>م = ${E([[r.a, 'ح'], [r.b]])}</b>، ودرجة الحرارة ح = <b>${N(r.x)}</b>. كم لتراً؟`, visual: big(`${N(r.a)} × (${N(r.x)}) + ${N(r.b)}`), hint: 'اضرب المعامل في العدد السالب (الناتج سالب)، ثم أضف.', bad: v => v === r.a * -r.x + r.b ? 'نسيتَ الإشارة السالبة.' : null };
     if (r.y != null) return { text: `صيغة الإسمنت: <b>${E([[r.c, 'س²'], [r.d]])}</b>. احسبها حين س = <b>${N(r.y)}</b>.`, visual: big(`${N(r.c)} × (${N(r.y)})² + ${N(r.d)}`), hint: 'ربّع س أولاً: (سالب)² موجب. ثم اضرب ثم أضف.', bad: v => v === -r.c * r.y * r.y + r.d ? 'مربع العدد السالب موجب.' : v === (r.c * r.y) ** 2 + r.d ? 'القوة على س وحدها قبل الضرب في المعامل.' : null };
     return { text: `الخلطة تتبع <b>ص = ${E([[r.e, 'س'], [r.g]])}</b>، واحتجنا ص = <b>${N(r.v)}</b>. كم س؟`, visual: big(`${N(r.v)} = ${E([[r.e, 'س'], [r.g]])}`), hint: 'عوّض ص ثم حلّ: اطرح الثابت ثم اقسم على المعامل.' };
   }
