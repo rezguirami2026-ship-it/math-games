@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex">
+<title>منصة رامي ماث انتقلت إلى عنوان جديد</title>
+<link rel="canonical" href="https://math-grade6.rezgui-rami2026.workers.dev/">
+<link rel="icon" href="favicon-32.png">
+<style>body{margin:0;min-height:100vh;display:grid;place-items:center;background:#1A103A;color:#FFF6E2;font:700 18px/1.8 system-ui,sans-serif;text-align:center;padding:20px}a{color:#FFD54A}</style>
+</head>
+<body>
+<div><p>منصة رامي ماث انتقلت إلى عنوان جديد…</p><p><a id="go" href="https://math-grade6.rezgui-rami2026.workers.dev/">اضغط هنا إن لم تنتقل تلقائياً</a></p></div>
+<script>
+/* صفحة التحويل: «منصة رامي ماث» صارت على عنوان مستقل، حتى لا تتشارك تخزين المتصفح مع «قرية الخير» (rami-math/) في هذا العنوان.
+   تنقل بيانات المنصة المحفوظة على الجهاز (مفاتيحها فقط، لا «قرية الخير») إلى العنوان الجديد داخل جزء الرابط بعد # (لا يُرسل لأي خادم)،
+   وتلغي عامل الخدمة القديم للمنصة وحده. */
+(async function () {
+  var NEW = 'https://math-grade6.rezgui-rami2026.workers.dev/', OK = /^(math|mathGame|mathgame|iqImage_|rami-math-backup-)/;
+  try { var regs = await navigator.serviceWorker.getRegistrations(); await Promise.all(regs.filter(function (r) { return /\/math-games\/$/.test(r.scope); }).map(function (r) { return r.unregister(); })); } catch (e) {}
+  var hash = location.hash, path = location.pathname.replace(/^\/math-games\/?/, '').replace(/^index\.html$/, '');
+  if (!hash) try {
+    var o = {}, n = 0; for (var i = 0; i < localStorage.length; i++) { var k = localStorage.key(i); if (OK.test(k)) { o[k] = localStorage.getItem(k); n++; } }
+    if (n) {
+      var bytes = new TextEncoder().encode(JSON.stringify(o)), kind = 'p';
+      if (typeof CompressionStream !== 'undefined') { bytes = new Uint8Array(await new Response(new Blob([bytes]).stream().pipeThrough(new CompressionStream('deflate-raw'))).arrayBuffer()); kind = 'z'; }
+      var s = ''; for (var j = 0; j < bytes.length; j += 0x8000) s += String.fromCharCode.apply(null, bytes.subarray(j, j + 0x8000));
+      var b64 = btoa(s).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
+      if (b64.length < 1500000) hash = '#mv=' + kind + b64;
+    }
+  } catch (e) {}
+  location.replace(NEW + path + location.search + hash);
+})();
+</script>
+</body>
+</html>
